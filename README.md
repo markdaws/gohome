@@ -1,2 +1,2 @@
 # gohome
-golang powered home automation server
+golang powered home automation server 
