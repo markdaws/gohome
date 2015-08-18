@@ -8,7 +8,7 @@ import (
 )
 
 type Server interface {
-	ListenAndServe(port string)
+	ListenAndServe(port string) error
 }
 
 type wwwServer struct {
@@ -19,7 +19,7 @@ func NewServer(rootPath string) Server {
 	return &wwwServer{rootPath: rootPath}
 }
 
-func (s *wwwServer) ListenAndServe(port string) {
+func (s *wwwServer) ListenAndServe(port string) error {
 	r := mux.NewRouter()
 
 	mime.AddExtensionType(".jsx", "text/jsx")
@@ -33,7 +33,7 @@ func (s *wwwServer) ListenAndServe(port string) {
 	r.Handle("/assets/jsx/{filename}", http.StripPrefix("/assets/jsx/", jsxHandler))
 	r.Handle("/assets/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
 	r.HandleFunc("/", rootHandler(s.rootPath))
-	http.ListenAndServe(port, r)
+	return http.ListenAndServe(port, r)
 }
 
 func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
