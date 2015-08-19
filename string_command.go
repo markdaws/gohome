@@ -1,9 +1,10 @@
 package gohome
 
 type StringCommand struct {
-	Value string
+	Value  string
+	Device Device
 }
 
-func (c *StringCommand) Data() []byte {
-	return []byte(c.Value)
+func (c *StringCommand) Execute() {
+	c.Device.Connection.Send([]byte(c.Value))
 }

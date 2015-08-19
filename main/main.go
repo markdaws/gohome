@@ -22,8 +22,8 @@ func main() {
 	}()
 
 	fmt.Println("creating system")
-	dev := createSystem()
-	err := dev.Connection.Connect()
+	system := createSystem()
+	err := system.Devices[0].Connection.Connect()
 	if err != nil {
 		fmt.Println("failed to connect")
 	} else {
@@ -45,10 +45,10 @@ func main() {
 			return func() {
 				if on {
 					// Off
-					dev.SetScene(&dev.Scenes[4])
+					system.Scenes[5].Execute()
 				} else {
 					// On
-					dev.SetScene(&dev.Scenes[3])
+					system.Scenes[6].Execute()
 				}
 				on = !on
 			}
@@ -67,49 +67,63 @@ func main() {
 	//	<-serverDone
 }
 
-func createSystem() *gohome.Device {
-	system := gohome.System{gohome.Identifiable{
-		Id:   "Home",
-		Name: "My Home"}}
+func createSystem() *gohome.System {
 
 	var sbp gohome.Device
 	sbp = gohome.Device{gohome.Identifiable{
 		Id:   "sbp1",
 		Name: "Lutron Smart Bridge Pro"},
-		system,
 		&gohome.TelnetConnection{
 			Network:  "tcp",
 			Address:  "192.168.0.10:23",
 			Login:    "lutron",
 			Password: "integration",
+		}}
+
+	system := &gohome.System{Identifiable: gohome.Identifiable{
+		Id:          "Home",
+		Name:        "My Home",
+		Description: "This is my home"},
+		Devices: []gohome.Device{
+			sbp,
 		},
-		[]gohome.Scene{
+		Scenes: []gohome.Scene{
 			gohome.Scene{gohome.Identifiable{Id: "1",
 				Name:        "All On",
-				Description: "Turns on all the lights"}, &sbp,
-				[]gohome.Command{&gohome.StringCommand{Value: "#DEVICE,1,1,3\r\n"}},
+				Description: "Turns on all the lights"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,1,3\r\n"}},
 			},
 			gohome.Scene{gohome.Identifiable{Id: "2",
 				Name:        "All Off",
-				Description: "Turns off all of the lights"}, &sbp,
-				[]gohome.Command{&gohome.StringCommand{Value: "#DEVICE,2,2,3\r\n"}},
+				Description: "Turns off all of the lights"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,2,3\r\n"}},
 			},
-			gohome.Scene{gohome.Identifiable{Id: "2",
+			gohome.Scene{gohome.Identifiable{Id: "3",
 				Name:        "Movie",
-				Description: "Sets up movie mode"}, &sbp,
-				[]gohome.Command{&gohome.StringCommand{Value: "#DEVICE,3,3,3\r\n"}},
+				Description: "Sets up movie mode"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,3,3\r\n"}},
 			},
-			gohome.Scene{gohome.Identifiable{Id: "2",
+			gohome.Scene{gohome.Identifiable{Id: "4",
 				Name:        "Front Door On",
-				Description: "Turns front door lights on"}, &sbp,
-				[]gohome.Command{&gohome.StringCommand{Value: "#DEVICE,1,6,3\r\n"}},
+				Description: "Turns front door lights on"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,6,3\r\n"}},
 			},
-			gohome.Scene{gohome.Identifiable{Id: "2",
+			gohome.Scene{gohome.Identifiable{Id: "5",
 				Name:        "Front Door Off",
-				Description: "Turns front door lights off"}, &sbp,
-				[]gohome.Command{&gohome.StringCommand{Value: "#DEVICE,1,7,3\r\n"}},
+				Description: "Turns front door lights off"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,7,3\r\n"}},
+			},
+			gohome.Scene{gohome.Identifiable{Id: "6",
+				Name:        "Dining On",
+				Description: "Turns dining area lights on"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,8,3\r\n"}},
+			},
+			gohome.Scene{gohome.Identifiable{Id: "7",
+				Name:        "Dining Off",
+				Description: "Turns dining area lights off"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,9,3\r\n"}},
 			},
 		}}
 
-	return &sbp
+	return system
 }
