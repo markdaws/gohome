@@ -9,27 +9,29 @@ import (
 )
 
 func main() {
-	fmt.Println("hi")
 
-	//	serverDone := make(chan bool)
+	fmt.Println("creating system")
+	system := createSystem()
+	//err := system.Devices[0].Connection.Connect()
+
+	/*if err != nil {
+		panic("Failed to connect to device")
+	} else {
+		fmt.Println("connected")
+	}*/
+
+	serverDone := make(chan bool)
 	go func() {
-		s := www.NewServer("./www")
+		s := www.NewServer("./www", system)
 		err := s.ListenAndServe(":8000")
 		if err != nil {
 			fmt.Println("error with server")
 		}
-		//close(serverDone)
+		close(serverDone)
 	}()
 
-	fmt.Println("creating system")
-	system := createSystem()
-	err := system.Devices[0].Connection.Connect()
-	if err != nil {
-		fmt.Println("failed to connect")
-	} else {
-		fmt.Println("connected")
-	}
-
+	// How to codify this?
+	// Triggers/Actions ... Entity can support one or more of either
 	r := &gohome.Recipe{
 		Id:          "123",
 		Name:        "Test",
@@ -37,7 +39,7 @@ func main() {
 		Trigger: &gohome.TimeTrigger{
 			Iterations: 5,
 			Forever:    true,
-			Interval:   time.Second * 10,
+			Interval:   time.Second * 2,
 			At:         time.Now(),
 		},
 		Action: &gohome.FuncAction{Func: func() func() {
@@ -54,7 +56,7 @@ func main() {
 			}
 		}()},
 	}
-	doneChan := r.Start()
+	//doneChan := r.Start()
 
 	go func() {
 		time.Sleep(time.Second * 60)
@@ -63,8 +65,8 @@ func main() {
 	}()
 
 	//What is the lifetime of a recipe? How to know when done?
-	<-doneChan
-	//	<-serverDone
+	//<-doneChan
+	<-serverDone
 }
 
 func createSystem() *gohome.System {
