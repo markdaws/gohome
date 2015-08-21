@@ -12,13 +12,14 @@ func main() {
 
 	fmt.Println("creating system")
 	system := createSystem()
-	//err := system.Devices[0].Connection.Connect()
 
-	/*if err != nil {
+	// TODO: Connection Pool, plus loop through connecting to devices? Only on demand?
+	err := system.Devices[0].Connection.Connect()
+	if err != nil {
 		panic("Failed to connect to device")
 	} else {
 		fmt.Println("connected")
-	}*/
+	}
 
 	serverDone := make(chan bool)
 	go func() {
@@ -56,21 +57,23 @@ func main() {
 			}
 		}()},
 	}
+	_ = r
 	//doneChan := r.Start()
 
-	go func() {
-		time.Sleep(time.Second * 60)
-		fmt.Println("stopping")
-		r.Stop()
-	}()
+	/*
+		go func() {
+			time.Sleep(time.Second * 60)
+			fmt.Println("stopping")
+			r.Stop()
+		}()*/
 
-	//What is the lifetime of a recipe? How to know when done?
 	//<-doneChan
 	<-serverDone
 }
 
 func createSystem() *gohome.System {
 
+	//TODO: Read in from configuration file
 	var sbp gohome.Device
 	sbp = gohome.Device{gohome.Identifiable{
 		Id:   "sbp1",

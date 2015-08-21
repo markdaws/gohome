@@ -42,18 +42,32 @@
     });
 
     var Scene = React.createClass({
+        handleClick: function(event) {
+            $.ajax({
+                url: '/api/v1/systems/1/scenes/active',
+                type: 'POST',
+                dataType: 'json',
+                contnetType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ id: this.props.id }),
+                success: function(data) {
+                    console.log('set the scene');
+                }.bind(this),
+                error: function(xhr, status, err) {
+                    console.error(err.toString());
+                }.bind(this)
+            });
+        },
+
         render: function() {
             return (
-                <div>{this.props.id} : {this.props.name} : {this.props.description}</div>
+                <div>
+                    <span>{this.props.id} : {this.props.name} : {this.props.description}</span>
+                    <a onClick={this.handleClick}> [Set]</a>
+                </div>
             )
         }
     });
 
-    var scenes = [
-        {id:1, name:"one", description:"desc1"},
-        {id:2, name:"two", description:"desc2"},
-        {id:3, name:"three", description:"desc3"}
-    ];
-    var apiUrl='/api/systems/123/scenes';
+    var apiUrl='/api/v1/systems/123/scenes';
     React.render(<App url={apiUrl}/>, document.body);
 })();
