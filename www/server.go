@@ -2,6 +2,7 @@ package www
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -34,7 +35,11 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	imageHandler := http.FileServer(http.Dir(s.rootPath + "/assets/images/"))
 
 	//TODO: Move api into separate http server
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system))
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
+
+	//TODO: GET vs. POST
+	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system))
 
 	//TODO: Make for POST only
 	//TODO: Have GET version to see the currently active scenes
@@ -63,6 +68,49 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 		if err := json.NewEncoder(w).Encode(system.Scenes); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+		//TODO: Need ok?
+	}
+}
+
+func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		if err := json.NewEncoder(w).Encode(system.Zones); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+
+func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
+		if err != nil {
+			fmt.Println("a")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var x struct {
+			Value float32 `json:"value"`
+		}
+		if err = json.Unmarshal(body, &x); err != nil {
+			fmt.Println("b")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		vars := mux.Vars(r)
+		zone, ok := system.Zones[vars["id"]]
+		if !ok {
+			fmt.Println("c")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		zone.SetCommand.Execute(x.Value)
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(struct{}{})
 	}
 }
 

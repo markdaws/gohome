@@ -1,5 +1,5 @@
 package gohome
 
 type Command interface {
-	Execute()
+	Execute(args ...interface{})
 }
