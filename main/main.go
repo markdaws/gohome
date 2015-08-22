@@ -26,13 +26,13 @@ func main() {
 	system := createSystem()
 
 	// TODO: Connection Pool, plus loop through connecting to devices? Only on demand?
-	err := system.Devices["sbp1"].Connection.Connect()
-	if err != nil {
-		panic("Failed to connect to device")
-	} else {
-		fmt.Println("connected")
-	}
-
+	/*	err := system.Devices["sbp1"].Connection.Connect()
+		if err != nil {
+			panic("Failed to connect to device")
+		} else {
+			fmt.Println("connected")
+		}
+	*/
 	serverDone := make(chan bool)
 	go func() {
 		s := www.NewServer("./www", system)
@@ -81,6 +81,10 @@ func main() {
 
 	//<-doneChan
 	<-serverDone
+}
+
+func importSystem() *gohome.System {
+	return nil
 }
 
 func createSystem() *gohome.System {

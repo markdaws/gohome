@@ -64,8 +64,20 @@ func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
 func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-		//TODO: Explicitly pull out required fields
-		if err := json.NewEncoder(w).Encode(system.Scenes); err != nil {
+
+		type jsonScene struct {
+			Id          string `json:"id"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+		}
+		//TODO: Return in a consistent order
+		scenes := make([]jsonScene, len(system.Scenes), len(system.Scenes))
+		var i int32 = 0
+		for _, scene := range system.Scenes {
+			scenes[i] = jsonScene{Id: scene.Id, Name: scene.Name, Description: scene.Description}
+			i++
+		}
+		if err := json.NewEncoder(w).Encode(scenes); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		//TODO: Need ok?
@@ -75,7 +87,21 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		if err := json.NewEncoder(w).Encode(system.Zones); err != nil {
+
+		type jsonZone struct {
+			Id          string `json:"id"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+		}
+		//TODO: Returns in a consistent order
+		zones := make([]jsonZone, len(system.Zones), len(system.Zones))
+		var i int32 = 0
+		for _, zone := range system.Zones {
+			zones[i] = jsonZone{Id: zone.Id, Name: zone.Name, Description: zone.Description}
+			i++
+		}
+
+		if err := json.NewEncoder(w).Encode(zones); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}

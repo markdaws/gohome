@@ -3,9 +3,9 @@ package gohome
 import "fmt"
 
 type Identifiable struct {
-	Id          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Id          string
+	Name        string
+	Description string
 }
 
 func (i Identifiable) String() string {

@@ -2,7 +2,7 @@ package gohome
 
 type Scene struct {
 	Identifiable
-	Commands []Command `json:"-"`
+	Commands []Command
 }
 
 func (s *Scene) Execute() {
