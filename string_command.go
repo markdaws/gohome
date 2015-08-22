@@ -2,7 +2,7 @@ package gohome
 
 type StringCommand struct {
 	Value  string
-	Device Device
+	Device *Device
 }
 
 func (c *StringCommand) Execute() {

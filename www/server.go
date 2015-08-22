@@ -2,7 +2,6 @@ package www
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -74,10 +73,6 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if err := r.Body.Close(); err != nil {
-			//TODO: Error
-			fmt.Println("Can't close body")
-		}
 
 		var x struct {
 			Id string `json:"id"`
@@ -87,18 +82,12 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 			return
 		}
 
-		var foundScene bool = false
-		for _, scene := range system.Scenes {
-			if scene.Id == x.Id {
-				foundScene = true
-				scene.Execute()
-				break
-			}
-		}
-		if !foundScene {
+		scene, ok := system.Scenes[x.Id]
+		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		scene.Execute()
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)

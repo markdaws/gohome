@@ -2,6 +2,6 @@ package gohome
 
 type System struct {
 	Identifiable
-	Devices []Device
-	Scenes  []Scene
+	Devices map[string]*Device
+	Scenes  map[string]*Scene
 }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strings"
 )
 
 type TelnetConnection struct {
@@ -12,6 +13,25 @@ type TelnetConnection struct {
 	Network  string
 	Address  string
 	conn     net.Conn
+}
+
+func stream(c net.Conn) {
+	buf := make([]byte, 4096)
+	for {
+		n, err := c.Read(buf)
+		if err != nil || n == 0 {
+			fmt.Println("connection closed")
+			c.Close()
+			return
+		}
+		str := string(buf[0:n])
+
+		events := strings.Split(str, "\r\n")
+		for _, event := range events {
+			//#,~,?
+			fmt.Printf("%s\n", event)
+		}
+	}
 }
 
 func (c *TelnetConnection) Connect() error {
@@ -51,6 +71,10 @@ func (c *TelnetConnection) Connect() error {
 	//	conn.Write([]byte("#DEVICE,1,4,3\r\n"))
 
 	//	time.Sleep(time.Second * 3)
+
+	go func() {
+		stream(conn)
+	}()
 	return nil
 }
 
