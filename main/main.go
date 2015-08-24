@@ -19,7 +19,7 @@ func main() {
 	var sbpID = "1"
 	system, err := importSystem("main/ip.json", sbpID)
 	if err != nil {
-		fmt.Println("Failed to import", err)
+		panic("Failed to import: " + err.Error())
 		return
 	}
 
@@ -29,12 +29,20 @@ func main() {
 	//TODO: Log disconnect/reconnect to devicesfor diagnostics purposes
 
 	// TODO: Connection Pool, plus loop through connecting to devices? Only on demand?
-	err = system.Devices[sbpID].Connection.Connect()
+	sbpDevice := system.Devices[sbpID]
+	err = sbpDevice.Connection.Connect()
 	if err != nil {
 		panic("Failed to connect to device")
 	} else {
 		fmt.Println("connected")
 	}
+
+	//Events
+	eventWatcher := gohome.NewWatcher()
+	go func() {
+		eventWatcher.Start()
+	}()
+	eventWatcher.AddProducer(sbpDevice)
 
 	serverDone := make(chan bool)
 	go func() {
@@ -86,9 +94,9 @@ func main() {
 	<-serverDone
 }
 
+//TODO: Should be moved into own file
 func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.System, error) {
 
-	//TODO: dynamic path
 	bytes, err := ioutil.ReadFile(integrationReportPath)
 	if err != nil {
 		return nil, err
@@ -238,87 +246,3 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 
 	return system, nil
 }
-
-/*
-func createSystem() *gohome.System {
-
-	sbp := &gohome.Device{gohome.Identifiable{
-		Id:   "sbp1",
-		Name: "Lutron Smart Bridge Pro"},
-		&gohome.TelnetConnection{
-			Network:  "tcp",
-			Address:  "192.168.0.10:23",
-			Login:    "lutron",
-			Password: "integration",
-		}}
-
-	system := &gohome.System{Identifiable: gohome.Identifiable{
-		Id:          "Home",
-		Name:        "My Home",
-		Description: "This is my home"},
-		Devices: map[string]*gohome.Device{
-			sbp.Id: sbp,
-		},
-		Zones: map[string]*gohome.Zone{
-			"16": &gohome.Zone{Identifiable: gohome.Identifiable{
-				Id:          "16",
-				Name:        "Dining Area",
-				Description: "The dining area light"},
-				SetCommand: &gohome.StringCommand{Device: sbp, Value: "#OUTPUT,16,1,%.2f\r\n"},
-				//TODO: Get? command how to know what the level will be
-			},
-			"23": &gohome.Zone{Identifiable: gohome.Identifiable{
-				Id:          "23",
-				Name:        "Living Room Shade",
-				Description: "The shade over the main living room window"},
-				SetCommand: &gohome.StringCommand{Device: sbp, Value: "#OUTPUT,23,1,%.2f\r\n"},
-				//TODO: Get? command how to know what the level will be
-			},
-		},
-		Scenes: map[string]*gohome.Scene{
-			"1": &gohome.Scene{gohome.Identifiable{Id: "1",
-				Name:        "All On",
-				Description: "Turns on all the lights"},
-				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,1,3\r\n"}},
-			},
-			"2": &gohome.Scene{gohome.Identifiable{Id: "2",
-				Name:        "All Off",
-				Description: "Turns off all of the lights"},
-				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,2,3\r\n"}},
-			},
-			"3": &gohome.Scene{gohome.Identifiable{Id: "3",
-				Name:        "Movie",
-				Description: "Sets up movie mode"},
-				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,3,3\r\n"}},
-			},
-			"4": &gohome.Scene{gohome.Identifiable{Id: "4",
-				Name:        "Front Door On",
-				Description: "Turns front door lights on"},
-				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,6,3\r\n"}},
-			},
-			"5": &gohome.Scene{gohome.Identifiable{Id: "5",
-				Name:        "Front Door Off",
-				Description: "Turns front door lights off"},
-				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,7,3\r\n"}},
-			},
-			"6": &gohome.Scene{gohome.Identifiable{Id: "6",
-				Name:        "Dining On",
-				Description: "Turns dining area lights on"},
-				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,8,3\r\n#DEVICE,1,8,4\r\n"}},
-			},
-			"7": &gohome.Scene{gohome.Identifiable{Id: "7",
-				Name:        "Dining Off",
-				Description: "Turns dining area lights off"},
-				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,9,3\r\n#DEVICE,1,9,4\r\n"}},
-			},
-		}}
-
-	//TODO: Commands
-	// - Set a scene
-	// - Create/Configure a scene
-	// - Get list of current active scenes
-	// - Set Zone Intensity
-	// - Get Zone Intensity
-	return system
-}
-*/

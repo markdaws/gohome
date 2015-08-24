@@ -15,11 +15,14 @@ type TelnetConnection struct {
 	conn     net.Conn
 }
 
+// TODO: Implement reader interface
+// TODO: Should be processed inside device?
 func stream(c net.Conn) {
 	buf := make([]byte, 4096)
 	for {
 		n, err := c.Read(buf)
 		if err != nil || n == 0 {
+			//TODO: Handle this case, try to re-connect
 			fmt.Println("connection closed")
 			c.Close()
 			return
@@ -27,6 +30,7 @@ func stream(c net.Conn) {
 		str := string(buf[0:n])
 
 		events := strings.Split(str, "\r\n")
+		//TODO: What if no /r/n  just keep reading more data until file one
 		for _, event := range events {
 			//#,~,?
 			fmt.Printf("%s\n", event)
@@ -68,10 +72,7 @@ func (c *TelnetConnection) Connect() error {
 	}
 	fmt.Println("wrote password")
 
-	//	conn.Write([]byte("#DEVICE,1,4,3\r\n"))
-
-	//	time.Sleep(time.Second * 3)
-
+	//TODO: Should be an option
 	go func() {
 		stream(conn)
 	}()
