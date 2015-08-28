@@ -1,6 +1,8 @@
 package gohome
 
+import "net"
+
 type Connection interface {
-	Connect() error
+	Connect() (net.Conn, error)
 	Send([]byte)
 }

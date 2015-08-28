@@ -14,8 +14,7 @@ import (
 )
 
 func main() {
-
-	fmt.Println("creating system")
+	//TODO: get from config
 	var sbpID = "1"
 	system, err := importSystem("main/ip.json", sbpID)
 	if err != nil {
@@ -23,27 +22,19 @@ func main() {
 		return
 	}
 
-	//TODO: When to connect, on demand or on start?
-	//TODO: Automatic retry for failed commands?
-	//TODO: Option to listen for events or not, permanent connection
-	//TODO: Log disconnect/reconnect to devicesfor diagnostics purposes
-
 	// TODO: Connection Pool, plus loop through connecting to devices? Only on demand?
 	sbpDevice := system.Devices[sbpID]
-	err = sbpDevice.Connection.Connect()
-	if err != nil {
-		panic("Failed to connect to device")
-	} else {
-		fmt.Println("connected")
-	}
+	/*	err = sbpDevice.Connect()
+		if err != nil {
+			panic("Failed to connect to device")
+		} else {
+			fmt.Println("connected")
+		}
+	*/
+	eventBroker := gohome.NewEventBroker()
+	eventBroker.AddProducer(sbpDevice)
 
-	//Events
-	eventWatcher := gohome.NewWatcher()
-	go func() {
-		eventWatcher.Start()
-	}()
-	eventWatcher.AddProducer(sbpDevice)
-
+	// Start www server
 	serverDone := make(chan bool)
 	go func() {
 		s := www.NewServer("./www", system)
@@ -102,9 +93,8 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 		return nil, err
 	}
 
-	//TODO: Rename x
-	var x map[string]interface{}
-	if err = json.Unmarshal(bytes, &x); err != nil {
+	var configJson map[string]interface{}
+	if err = json.Unmarshal(bytes, &configJson); err != nil {
 		return nil, err
 	}
 
@@ -119,7 +109,7 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 		Zones:   make(map[string]*gohome.Zone),
 	}
 
-	root, ok := x["LIPIdList"].(map[string]interface{})
+	root, ok := configJson["LIPIdList"].(map[string]interface{})
 	if !ok {
 		return nil, errors.New("Missing LIPIdList key, or value not a map")
 	}
@@ -194,6 +184,7 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 		}
 		var deviceID string = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
+			//ModelNumber: L-BDGPRO2-WH
 			sbp = makeDevice(device)
 			makeScenes(system.Scenes, device, sbp)
 			break

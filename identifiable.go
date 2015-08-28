@@ -3,6 +3,7 @@ package gohome
 import "fmt"
 
 type Identifiable struct {
+	//TODO: Rename ID
 	Id          string
 	Name        string
 	Description string
