@@ -1,7 +1,7 @@
 package gohome
 
 type Recipe struct {
-	Id          string
+	ID          string
 	Name        string
 	Description string
 	Trigger     Trigger

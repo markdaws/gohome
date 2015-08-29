@@ -24,15 +24,18 @@ func main() {
 
 	// TODO: Connection Pool, plus loop through connecting to devices? Only on demand?
 	sbpDevice := system.Devices[sbpID]
-	/*	err = sbpDevice.Connect()
-		if err != nil {
-			panic("Failed to connect to device")
-		} else {
-			fmt.Println("connected")
-		}
-	*/
+	err = sbpDevice.Connect()
+	if err != nil {
+		panic("Failed to connect to device")
+	} else {
+		fmt.Println("connected")
+	}
+
 	eventBroker := gohome.NewEventBroker()
 	eventBroker.AddProducer(sbpDevice)
+	//TODO: Add fmt printer consumer
+	//TODO: Consumer that stores on AWS
+	//TODO: Users should be able to specify consumers in a config file
 
 	// Start www server
 	serverDone := make(chan bool)
@@ -48,7 +51,7 @@ func main() {
 	// How to codify this?
 	// Triggers/Actions ... Entity can support one or more of either
 	r := &gohome.Recipe{
-		Id:          "123",
+		ID:          "123",
 		Name:        "Test",
 		Description: "Test desc",
 		Trigger: &gohome.TimeTrigger{
@@ -100,7 +103,7 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 
 	system := &gohome.System{
 		Identifiable: gohome.Identifiable{
-			Id:          "1",
+			ID:          "1",
 			Name:        "Lutron Smart Bridge Pro",
 			Description: "Lutron Smart Bridge Pro - imported //TODO: Date",
 		},
@@ -120,15 +123,16 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 
 	fmt.Println("\nDEVICES")
 
-	var makeDevice = func(deviceMap map[string]interface{}) *gohome.Device {
+	var makeDevice = func(deviceMap map[string]interface{}, sys *gohome.System) *gohome.Device {
 		var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
 		var deviceName string = deviceMap["Name"].(string)
 
 		return &gohome.Device{
 			Identifiable: gohome.Identifiable{
-				Id:          deviceID,
+				ID:          deviceID,
 				Name:        deviceName,
 				Description: deviceName},
+			System: sys,
 			//TODO: Shouldn't set here, comes in from user
 			Connection: &gohome.TelnetConnection{
 				Network:  "tcp",
@@ -161,7 +165,7 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 
 				sceneContainer[uniqueID] = &gohome.Scene{
 					Identifiable: gohome.Identifiable{
-						Id:          uniqueID,
+						ID:          uniqueID,
 						Name:        buttonName,
 						Description: buttonName},
 					Commands: []gohome.Command{&gohome.StringCommand{
@@ -185,7 +189,7 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 		var deviceID string = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
 			//ModelNumber: L-BDGPRO2-WH
-			sbp = makeDevice(device)
+			sbp = makeDevice(device, system)
 			makeScenes(system.Scenes, device, sbp)
 			break
 		}
@@ -209,8 +213,8 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 		if deviceID == smartBridgeProID {
 			continue
 		}
-		gohomeDevice := makeDevice(device)
-		system.Devices[gohomeDevice.Id] = gohomeDevice
+		gohomeDevice := makeDevice(device, system)
+		system.Devices[gohomeDevice.ID] = gohomeDevice
 		makeScenes(system.Scenes, device, sbp)
 	}
 
@@ -228,9 +232,10 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 		var zoneName string = zone["Name"].(string)
 		system.Zones[zoneID] = &gohome.Zone{
 			Identifiable: gohome.Identifiable{
-				Id:          zoneID,
+				ID:          zoneID,
 				Name:        zoneName,
 				Description: zoneName},
+			Type:       gohome.ZTLight,
 			SetCommand: &gohome.StringCommand{Device: sbp, Value: "#OUTPUT," + zoneID + ",1,%.2f\r\n"},
 		}
 	}

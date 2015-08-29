@@ -1,0 +1,249 @@
+
+/*
+func createSystem() *gohome.System {
+
+	sbp := &gohome.Device{gohome.Identifiable{
+		Id:   "sbp1",
+		Name: "Lutron Smart Bridge Pro"},
+		&gohome.TelnetConnection{
+			Network:  "tcp",
+			Address:  "192.168.0.10:23",
+			Login:    "lutron",
+			Password: "integration",
+		}}
+
+	system := &gohome.System{Identifiable: gohome.Identifiable{
+		Id:          "Home",
+		Name:        "My Home",
+		Description: "This is my home"},
+		Devices: map[string]*gohome.Device{
+			sbp.Id: sbp,
+		},
+		Zones: map[string]*gohome.Zone{
+			"16": &gohome.Zone{Identifiable: gohome.Identifiable{
+				Id:          "16",
+				Name:        "Dining Area",
+				Description: "The dining area light"},
+				SetCommand: &gohome.StringCommand{Device: sbp, Value: "#OUTPUT,16,1,%.2f\r\n"},
+				//TODO: Get? command how to know what the level will be
+			},
+			"23": &gohome.Zone{Identifiable: gohome.Identifiable{
+				Id:          "23",
+				Name:        "Living Room Shade",
+				Description: "The shade over the main living room window"},
+				SetCommand: &gohome.StringCommand{Device: sbp, Value: "#OUTPUT,23,1,%.2f\r\n"},
+				//TODO: Get? command how to know what the level will be
+			},
+		},
+		Scenes: map[string]*gohome.Scene{
+			"1": &gohome.Scene{gohome.Identifiable{Id: "1",
+				Name:        "All On",
+				Description: "Turns on all the lights"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,1,3\r\n"}},
+			},
+			"2": &gohome.Scene{gohome.Identifiable{Id: "2",
+				Name:        "All Off",
+				Description: "Turns off all of the lights"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,2,3\r\n"}},
+			},
+			"3": &gohome.Scene{gohome.Identifiable{Id: "3",
+				Name:        "Movie",
+				Description: "Sets up movie mode"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,3,3\r\n"}},
+			},
+			"4": &gohome.Scene{gohome.Identifiable{Id: "4",
+				Name:        "Front Door On",
+				Description: "Turns front door lights on"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,6,3\r\n"}},
+			},
+			"5": &gohome.Scene{gohome.Identifiable{Id: "5",
+				Name:        "Front Door Off",
+				Description: "Turns front door lights off"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,7,3\r\n"}},
+			},
+			"6": &gohome.Scene{gohome.Identifiable{Id: "6",
+				Name:        "Dining On",
+				Description: "Turns dining area lights on"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,8,3\r\n#DEVICE,1,8,4\r\n"}},
+			},
+			"7": &gohome.Scene{gohome.Identifiable{Id: "7",
+				Name:        "Dining Off",
+				Description: "Turns dining area lights off"},
+				[]gohome.Command{&gohome.StringCommand{Device: sbp, Value: "#DEVICE,1,9,3\r\n#DEVICE,1,9,4\r\n"}},
+			},
+		}}
+
+	//TODO: Commands
+	// - Set a scene
+	// - Create/Configure a scene
+	// - Get list of current active scenes
+	// - Set Zone Intensity
+	// - Get Zone Intensity
+	return system
+}
+*/
+
+
+/*
+
+
+
+type FakeReader struct {
+	count int
+}
+
+func (r *FakeReader) Read(p []byte) (n int, err error) {
+	var data = []string{
+		"GNET>\r\n",
+		"GNET>\r\n",
+		"GNET>\r\n",
+		"GNET> ~OUTPUT,2,1,25.00\r\n",
+		"~OUTPUT,2,1,0.00\r\n",
+		"~DEVICE,1,9,3\r\n",
+		"~OUTPUT,16,1,0.00\r\n",
+		"~DEVICE,1,9,4\r\n",
+		"\r\n",
+		"GNET>\r\n",
+		"GNET> ~DEVICE,1,7,3\r\n",
+		"~OUTPUT,21,1,0.00\r\n",
+		"~DEVICE,1,7,4\r\n",
+	}
+
+	if r.count >= len(data) {
+		return 0, io.EOF
+	}
+
+	bts := []byte(data[r.count])
+	for i, b := range bts {
+		p[i] = b
+	}
+	n = len(bts)
+	err = nil
+	r.count++
+	return
+}
+
+func main3() {
+	//	var in string = "~DEVICE,1,3,1\r\n~DEVICE,9,6,2\r\n"
+	//	scanner := bufio.NewScanner(strings.NewReader(in))
+	scanner := bufio.NewScanner(&FakeReader{})
+	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		//Remove leading GET>
+		//Remove leading spaces
+		//find first instance of \r\n return if one
+		//TODO: Replace with regex
+		str := string(data[0:])
+		origLen := len(str)
+		str = strings.TrimLeft(str, "GNET>")
+		str = strings.TrimLeft(str, " ")
+		offsetTotal := origLen - len(str)
+		index := strings.Index(str, "\r\n")
+		//		fmt.Println("index:", index)
+		if index != -1 {
+			// Ignore lines with just \r\n
+			if index == 0 {
+				token = nil
+			} else {
+				//TODO: handle unicode
+				token = []byte(string([]rune(str)[0:index]))
+			}
+			advance = index + 2 + offsetTotal
+			err = nil
+		} else {
+			//fmt.Printf("XX(%t)%sYY\n", atEOF, str)
+			advance = 0
+			token = nil
+			err = nil
+		}
+		return
+	}
+	scanner.Split(split)
+	for scanner.Scan() {
+		//		fmt.Println("scanning")
+		fmt.Printf("%s\n", scanner.Text())
+	}
+
+	fmt.Println("Done scanning")
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("something happened", err)
+	}
+}
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type EventConsumer interface {
+	ComsumeEvent(e Event)
+}
+
+func (e *Event) ToCommand() Command {
+	//TODO: replace ...
+	//TODO: Could be nil if we can't convert to a command
+
+	//TODO: Open Questions
+	// - How to know how string converts to command - config information based on device id
+	// - Given a device, must have a command formatter
+	return &StringCommand{
+		Time:   time.Now(),
+		Device: e.Device,
+		Value:  strings.Replace(e.StringValue, "~", "#", 1),
+	}
+}
+
+type EventWatcher interface {
+	AddProducer(EventProducer)
+	AddConsumer(EventConsumer)
+}
+
+type printEventConsumer struct {
+}
+
+func (c *PrintEventConsumer) ConsumeEvent(e Event) {
+	fmt.Printf("Got event: %s\n", e.StringValue)
+}
+
+func NewPrintEventConsumer() EventConsumer {
+	return printEventConsumer{}
+}
+
+
+func (e *watcher) AddConsumer(c EventConsumer) {
+	//TODO: Implement
+	//1. Keep track of a list of consumers
+	//2. Loop through consumers, passing event to each one to handle
+}
+
+
+
+func (e *watcher) AddProducer(p EventProducer) {
+	ec, dc := p.GetEventProducerChans()
+	go func() {
+		for {
+			select {
+			case e := <-ec:
+				//Got a new event, process
+				fmt.Println("got an event:", e.String())
+
+				//TODO: Store somewhere permanent
+				time.Sleep(time.Second * 10)
+				e.ToCommand().Execute()
+			case <-dc:
+				// Producer has stopped producing, can stop listening
+				// TODO: Needed , should producer do this???
+				fmt.Println("Producer has stopped")
+				return
+			}
+		}
+	}()
+}

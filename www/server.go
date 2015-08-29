@@ -66,7 +66,7 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 		type jsonScene struct {
-			Id          string `json:"id"`
+			ID          string `json:"id"`
 			Name        string `json:"name"`
 			Description string `json:"description"`
 		}
@@ -74,7 +74,7 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 		scenes := make([]jsonScene, len(system.Scenes), len(system.Scenes))
 		var i int32 = 0
 		for _, scene := range system.Scenes {
-			scenes[i] = jsonScene{Id: scene.Id, Name: scene.Name, Description: scene.Description}
+			scenes[i] = jsonScene{ID: scene.ID, Name: scene.Name, Description: scene.Description}
 			i++
 		}
 		if err := json.NewEncoder(w).Encode(scenes); err != nil {
@@ -89,7 +89,7 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		type jsonZone struct {
-			Id          string `json:"id"`
+			ID          string `json:"id"`
 			Name        string `json:"name"`
 			Description string `json:"description"`
 		}
@@ -97,7 +97,7 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 		zones := make([]jsonZone, len(system.Zones), len(system.Zones))
 		var i int32 = 0
 		for _, zone := range system.Zones {
-			zones[i] = jsonZone{Id: zone.Id, Name: zone.Name, Description: zone.Description}
+			zones[i] = jsonZone{ID: zone.ID, Name: zone.Name, Description: zone.Description}
 			i++
 		}
 

@@ -1,26 +1,13 @@
 package gohome
 
-import (
-	"fmt"
-	"time"
-)
-
-type EventProducer interface {
-	GetEventProducerChans() (<-chan Event, <-chan bool)
-}
-
-type Event struct {
-	Time        time.Time
-	StringValue string
-	Device      *Device
-}
-
-func (e *Event) String() string {
-	return e.StringValue
-}
+import "fmt"
 
 type EventBroker interface {
 	AddProducer(EventProducer)
+}
+
+type EventProducer interface {
+	GetEventProducerChans() (<-chan Event, <-chan bool)
 }
 
 func NewEventBroker() EventBroker {
