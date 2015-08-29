@@ -7,7 +7,7 @@ type EventBroker interface {
 }
 
 type EventProducer interface {
-	GetEventProducerChans() (<-chan Event, <-chan bool)
+	StartProducingEvents() (<-chan Event, <-chan bool)
 }
 
 func NewEventBroker() EventBroker {
@@ -18,7 +18,7 @@ type broker struct {
 }
 
 func (e *broker) AddProducer(p EventProducer) {
-	ec, dc := p.GetEventProducerChans()
+	ec, dc := p.StartProducingEvents()
 	go func() {
 		for {
 			select {

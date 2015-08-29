@@ -25,7 +25,7 @@ func ParseCommandString(d *Device, cmd string) Command {
 
 	default:
 		//TODO: Error?
-		fmt.Println("unknown")
+		//fmt.Println("unknown: " + cmd)
 		return nil
 	}
 }

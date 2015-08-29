@@ -15,6 +15,8 @@ import (
 
 func main() {
 	//TODO: get from config
+	//TODO: Parse buttons and phantom buttons
+	//TODO: Get levels for zone
 	var sbpID = "1"
 	system, err := importSystem("main/ip.json", sbpID)
 	if err != nil {

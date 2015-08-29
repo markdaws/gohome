@@ -21,5 +21,9 @@ func NewEvent(d *Device, cmd Command, orig string) Event {
 
 func (e *Event) String() string {
 	//TODO: Time + Device
-	return e.OriginalString + " : " + e.ReplayCommand.FriendlyString()
+	out := e.OriginalString
+	if e.ReplayCommand != nil {
+		out += e.ReplayCommand.FriendlyString()
+	}
+	return out
 }
