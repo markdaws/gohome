@@ -6,6 +6,7 @@ type StringCommand struct {
 	Value    string
 	Friendly string
 	Device   *Device
+	Type     CommandType
 }
 
 //TODO: return error
@@ -24,4 +25,8 @@ func (c *StringCommand) String() string {
 
 func (c *StringCommand) FriendlyString() string {
 	return c.Friendly
+}
+
+func (c *StringCommand) GetType() CommandType {
+	return c.Type
 }

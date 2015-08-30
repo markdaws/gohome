@@ -35,6 +35,7 @@ func main() {
 
 	eventBroker := gohome.NewEventBroker()
 	eventBroker.AddProducer(sbpDevice)
+
 	//TODO: Add fmt printer consumer
 	//TODO: Consumer that stores on AWS
 	//TODO: Users should be able to specify consumers in a config file
@@ -77,6 +78,38 @@ func main() {
 		}()},
 	}
 	_ = r
+
+	r2 := &gohome.Recipe{
+		ID:          "2",
+		Name:        "Button Press Set Scene",
+		Description: "Test desc",
+		Trigger: &gohome.ButtonTrigger{
+			MaxDuration: time.Duration(3) * time.Second,
+			PressCount:  3,
+		},
+		Action: &gohome.FuncAction{Func: func() func() {
+			var on bool = false
+			return func() {
+				if on {
+					// Off front door
+					system.Scenes["1:7"].Execute()
+				} else {
+					// On front door
+					system.Scenes["1:6"].Execute()
+				}
+				on = !on
+			}
+		}()},
+	}
+	_ = r2
+
+	bt, ok := r2.Trigger.(*gohome.ButtonTrigger)
+	if ok {
+		fmt.Println("got button trigger")
+		eventBroker.AddConsumer(bt)
+	}
+	_ = r2.Start()
+
 	//doneChan := r.Start()
 
 	/*
@@ -171,8 +204,10 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 						Name:        buttonName,
 						Description: buttonName},
 					Commands: []gohome.Command{&gohome.StringCommand{
-						Device: sbp,
-						Value:  pressCommand + releaseCommand,
+						Device:   sbp,
+						Value:    pressCommand + releaseCommand,
+						Friendly: "//TODO: Friendly",
+						Type:     gohome.CTSystemSetScene,
 					}},
 				}
 			}
@@ -237,8 +272,13 @@ func importSystem(integrationReportPath, smartBridgeProID string) (*gohome.Syste
 				ID:          zoneID,
 				Name:        zoneName,
 				Description: zoneName},
-			Type:       gohome.ZTLight,
-			SetCommand: &gohome.StringCommand{Device: sbp, Value: "#OUTPUT," + zoneID + ",1,%.2f\r\n"},
+			Type: gohome.ZTLight,
+			SetCommand: &gohome.StringCommand{
+				Device:   sbp,
+				Value:    "#OUTPUT," + zoneID + ",1,%.2f\r\n",
+				Friendly: "//TODO: Friendly",
+				Type:     gohome.CTZoneSetLevel,
+			},
 		}
 	}
 
