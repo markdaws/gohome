@@ -7,7 +7,7 @@ import "time"
 // After a certain delay every 5 minutes
 // Iterations - certain number of times
 // TODO: Be able to get sunrise/sunset time for a location: https://github.com/cpucycle/astrotime
-// Days of week
+// Days of week - e.g. Tues/Wed/Sun
 type TimeTrigger struct {
 	Iterations uint64
 	Forever    bool

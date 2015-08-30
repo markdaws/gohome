@@ -3,6 +3,7 @@ package gohome
 import "fmt"
 
 type Action interface {
+	//TODO: Return error
 	Execute()
 }
 
@@ -20,3 +21,13 @@ type FuncAction struct {
 func (a *FuncAction) Execute() {
 	a.Func()
 }
+
+type SetSceneAction struct {
+	Scene *Scene
+}
+
+func (a *SetSceneAction) Execute() {
+	a.Scene.Execute()
+}
+
+//ZoneSetLevelAction
