@@ -76,13 +76,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 				Name:        deviceName,
 				Description: deviceName},
 			System: sys,
-			//TODO: Shouldn't set here, comes in from user
-			Connection: &TelnetConnection{
-				Network:  "tcp",
-				Address:  "192.168.0.10:23",
-				Login:    "lutron",
-				Password: "integration",
-			}}
+		}
 	}
 
 	var makeScenes = func(sceneContainer map[string]*Scene, deviceMap map[string]interface{}, sbp *Device) error {
@@ -131,10 +125,18 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 		if !ok {
 			return nil, errors.New("Expected Devices elements to be objects")
 		}
+
 		var deviceID string = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
 			//ModelNumber: L-BDGPRO2-WH
 			sbp = makeDevice(device, system)
+			//TODO: Shouldn't set here, comes in from user
+			sbp.ConnectionInfo = ConnectionInfo{
+				Network:  "tcp",
+				Address:  "192.168.0.10:23",
+				Login:    "lutron",
+				Password: "integration",
+			}
 			makeScenes(system.Scenes, device, sbp)
 			break
 		}

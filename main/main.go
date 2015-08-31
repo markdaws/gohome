@@ -21,12 +21,19 @@ func main() {
 
 	// TODO: Connection Pool, plus loop through connecting to devices? Only on demand?
 	sbpDevice := system.Devices[sbpID]
-	err = sbpDevice.Connect()
+	conn, err := sbpDevice.Connect()
 	if err != nil {
 		panic("Failed to connect to device")
 	} else {
 		fmt.Println("connected")
 	}
+
+	//TOO: Fix this, shouldn't be here
+	//TODO: Should be an option to persist connection
+	go func() {
+		gohome.Stream(sbpDevice, conn)
+		//TODO defer Close
+	}()
 
 	eventBroker := gohome.NewEventBroker()
 	eventBroker.AddProducer(sbpDevice)
@@ -46,6 +53,7 @@ func main() {
 		close(serverDone)
 	}()
 
+	//TODO: RecipeLoader - store/load recipes from a separate file
 	r := &gohome.Recipe{
 		ID:          "123",
 		Name:        "Test",

@@ -1,8 +1,11 @@
 package gohome
 
-import "net"
+import "io"
 
 type Connection interface {
-	Connect() (net.Conn, error)
-	Send([]byte)
+	Open() error
+	Close() error
+	io.Reader
+	io.Writer
+	SetConnectionInfo(ConnectionInfo)
 }

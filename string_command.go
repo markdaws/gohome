@@ -9,14 +9,22 @@ type StringCommand struct {
 	Type     CommandType
 }
 
-//TODO: return error
-func (c *StringCommand) Execute(args ...interface{}) {
+func (c *StringCommand) Execute(args ...interface{}) error {
 	str := fmt.Sprintf(c.Value, args...)
 	fmt.Println("Setting command:", str)
 
-	//TODO: Should use connection pool, don't assume connection is
-	//just open to send on
-	c.Device.Connection.Send([]byte(str))
+	conn, err := c.Device.Connect()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		conn.Close()
+	}()
+
+	//TODO: If n < data, keep going
+	_, err = conn.Write([]byte(str))
+	return err
 }
 
 func (c *StringCommand) String() string {

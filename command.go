@@ -8,7 +8,7 @@ import (
 )
 
 type Command interface {
-	Execute(args ...interface{})
+	Execute(args ...interface{}) error
 	String() string
 	FriendlyString() string
 	GetType() CommandType

@@ -9,25 +9,31 @@ import (
 
 type Device struct {
 	Identifiable
-	System     *System
-	Connection Connection
-	evpDone    chan bool
-	evpFire    chan Event
+	System         *System
+	ConnectionInfo ConnectionInfo
+
+	evpDone chan bool
+	evpFire chan Event
+	conn    Connection
 }
 
-func (d *Device) Connect() error {
-	conn, err := d.Connection.Connect()
-	if err != nil {
-		return err
+func (d *Device) Connect() (Connection, error) {
+	if d.conn != nil {
+		return d.conn, nil
 	}
 
-	//TODO: This should be a connection pool ...
-	//TODO: Should be an option to persist connection
-	go func() {
-		Stream(d, conn)
-	}()
+	//TODO: When we support more than telnet, will use ConnectionInfo to
+	//determine what type of connection we need to make
+	conn := &TelnetConnection{}
+	conn.SetConnectionInfo(d.ConnectionInfo)
+	err := conn.Open()
+	if err != nil {
+		return nil, err
+	}
 
-	return nil
+	//TODO: Proper connection pooling
+	d.conn = conn
+	return conn, nil
 }
 
 func (d *Device) StartProducingEvents() (<-chan Event, <-chan bool) {
@@ -37,6 +43,7 @@ func (d *Device) StartProducingEvents() (<-chan Event, <-chan bool) {
 	return d.evpFire, d.evpDone
 }
 
+//TODO: How to stop this?
 func Stream(d *Device, r io.Reader) {
 	scanner := bufio.NewScanner(r)
 	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
