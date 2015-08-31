@@ -11,6 +11,7 @@ type Device struct {
 	Identifiable
 	System         *System
 	ConnectionInfo ConnectionInfo
+	Buttons        map[string]*Button
 
 	evpDone chan bool
 	evpFire chan Event

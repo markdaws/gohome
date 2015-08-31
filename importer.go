@@ -70,13 +70,36 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 		var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
 		var deviceName string = deviceMap["Name"].(string)
 
-		return &Device{
+		device := &Device{
 			Identifiable: Identifiable{
 				ID:          deviceID,
 				Name:        deviceName,
 				Description: deviceName},
-			System: sys,
+			System:  sys,
+			Buttons: make(map[string]*Button),
 		}
+
+		for _, buttonMap := range deviceMap["Buttons"].([]interface{}) {
+			button := buttonMap.(map[string]interface{})
+			btnNumber := strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
+
+			var btnName string
+			if name, ok := button["Name"]; ok {
+				btnName = name.(string)
+			} else {
+				btnName = "Button " + btnNumber
+			}
+			device.Buttons[btnNumber] = &Button{
+				Identifiable: Identifiable{
+					ID:          btnNumber,
+					Name:        btnName,
+					Description: btnName,
+				},
+				Device: device,
+			}
+		}
+
+		return device
 	}
 
 	var makeScenes = func(sceneContainer map[string]*Scene, deviceMap map[string]interface{}, sbp *Device) error {
@@ -162,7 +185,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 		}
 		gohomeDevice := makeDevice(device, system)
 		system.Devices[gohomeDevice.ID] = gohomeDevice
-		makeScenes(system.Scenes, device, sbp)
+		//Only SBP has scenes that map to buttons, other devices are really buttons
+		//makeScenes(system.Scenes, device, sbp)
 	}
 
 	zones, ok := root["Zones"].([]interface{})

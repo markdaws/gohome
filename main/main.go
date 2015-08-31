@@ -105,6 +105,8 @@ func main() {
 	}
 	_ = r2
 
+	//TODO: Recipe - turn light off after certain amount of time e.g. turn off bathroom
+	//lights after 30 minutes
 	bt, ok := r2.Trigger.(*gohome.ButtonTrigger)
 	if ok {
 		fmt.Println("got button trigger")
@@ -119,7 +121,8 @@ func main() {
 			time.Sleep(time.Second * 60)
 			fmt.Println("stopping")
 			r.Stop()
-		}()*/
+		}()
+	*/
 
 	//<-doneChan
 	<-serverDone
