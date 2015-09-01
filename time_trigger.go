@@ -18,6 +18,19 @@ type TimeTrigger struct {
 	doneChan   chan bool
 }
 
+func (t *TimeTrigger) GetName() string {
+	return "Time Trigger"
+}
+
+func (t *TimeTrigger) GetDescription() string {
+	return "Triggers when the specified time or duration expires"
+}
+
+func (t *TimeTrigger) GetIngredients() []Ingredient {
+	//TODO:
+	return nil
+}
+
 func (t *TimeTrigger) Start() (<-chan bool, <-chan bool) {
 	fireChan := make(chan bool)
 	t.doneChan = make(chan bool)

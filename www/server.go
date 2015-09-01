@@ -17,12 +17,17 @@ type Server interface {
 }
 
 type wwwServer struct {
-	rootPath string
-	system   *gohome.System
+	rootPath  string
+	system    *gohome.System
+	cookBooks []*gohome.CookBook
 }
 
-func NewServer(rootPath string, system *gohome.System) Server {
-	return &wwwServer{rootPath: rootPath, system: system}
+func NewServer(rootPath string, system *gohome.System, cookBooks []*gohome.CookBook) Server {
+	return &wwwServer{
+		rootPath:  rootPath,
+		system:    system,
+		cookBooks: cookBooks,
+	}
 }
 
 func (s *wwwServer) ListenAndServe(port string) error {
@@ -38,6 +43,12 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
 
+	r.HandleFunc("/api/v1/cookbooks", apiCookBooksHandler(s.cookBooks)).Methods("GET")
+	r.HandleFunc("/api/v1/cookbooks/{id}", apiCookBookHandler(s.cookBooks)).Methods("GET")
+
+	// GET -> /api/v1/cookbooks -> returns all cookbooks { id: "123", Name: "", Description: "" }
+	// GET -> /api/v1/cookbooks/{id} -> returns an individual cookbook, list of actions and triggers
+	//
 	//TODO: GET vs. POST
 	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system))
 
@@ -52,12 +63,134 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	sub.Handle("/jsx/{filename}", http.StripPrefix("/assets/jsx/", jsxHandler))
 	sub.Handle("/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
 	r.HandleFunc("/", rootHandler(s.rootPath))
+	r.HandleFunc("/recipes", recipesHandler(s.rootPath))
 	return http.ListenAndServe(port, r)
 }
 
 func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, rootPath+"/assets/html/index.html")
+	}
+}
+
+func recipesHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, rootPath+"/assets/html/recipes.html")
+	}
+}
+
+func apiCookBooksHandler(cookBooks []*gohome.CookBook) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+
+		type jsonCookBook struct {
+			ID          string `json:"id"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+		}
+		//TODO: Return in a consistent order
+		jsonCookBooks := make([]jsonCookBook, len(cookBooks))
+		for i, cookBook := range cookBooks {
+			jsonCookBooks[i] = jsonCookBook{ID: cookBook.ID, Name: cookBook.Name, Description: cookBook.Description}
+		}
+		if err := json.NewEncoder(w).Encode(jsonCookBooks); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+
+func apiCookBookHandler(cookBooks []*gohome.CookBook) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+
+		//TODO: Move into structs
+		type jsonIngredient struct {
+			ID          string `json:"id"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			Type        string `json:"type"`
+		}
+		type jsonTrigger struct {
+			Name        string           `json:"name"`
+			Description string           `json:"description"`
+			Ingredients []jsonIngredient `json:"ingredients"`
+		}
+		type jsonAction struct {
+			Name        string           `json:"name"`
+			Description string           `json:"description"`
+			Ingredients []jsonIngredient `json:"ingredients"`
+		}
+		type jsonCookBook struct {
+			ID          string        `json:"id"`
+			Name        string        `json:"name"`
+			Description string        `json:"description"`
+			Triggers    []jsonTrigger `json:"triggers"`
+			Actions     []jsonAction  `json:"actions"`
+		}
+
+		vars := mux.Vars(r)
+		cbID := vars["id"]
+		var found = false
+		for _, c := range cookBooks {
+			if c.ID != cbID {
+				continue
+			}
+
+			jsonTriggers := make([]jsonTrigger, len(c.Triggers))
+			for i, t := range c.Triggers {
+				jsonTriggers[i] = jsonTrigger{
+					Name:        t.GetName(),
+					Description: t.GetDescription(),
+					Ingredients: make([]jsonIngredient, len(t.GetIngredients())),
+				}
+
+				for j, ing := range t.GetIngredients() {
+					jsonTriggers[i].Ingredients[j] = jsonIngredient{
+						ID:          ing.ID,
+						Name:        ing.Name,
+						Description: ing.Description,
+						Type:        ing.Type,
+					}
+				}
+			}
+
+			// for each trigger need to json all ingredients
+			jsonActions := make([]jsonAction, len(c.Actions))
+			for i, a := range c.Actions {
+				jsonActions[i] = jsonAction{
+					Name:        a.GetName(),
+					Description: a.GetDescription(),
+					Ingredients: make([]jsonIngredient, len(a.GetIngredients())),
+				}
+
+				for j, ing := range a.GetIngredients() {
+					jsonActions[i].Ingredients[j] = jsonIngredient{
+						ID:          ing.ID,
+						Name:        ing.Name,
+						Description: ing.Description,
+						Type:        ing.Type,
+					}
+				}
+			}
+
+			// for each action need to json all ingredients
+			jsonCookBook := jsonCookBook{
+				ID:          c.ID,
+				Name:        c.Name,
+				Description: c.Description,
+				Triggers:    jsonTriggers,
+				Actions:     jsonActions,
+			}
+			if err := json.NewEncoder(w).Encode(jsonCookBook); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+			found = true
+			break
+		}
+
+		if !found {
+			w.WriteHeader(http.StatusNotFound)
+		}
 	}
 }
 

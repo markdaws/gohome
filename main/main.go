@@ -42,10 +42,26 @@ func main() {
 	//TODO: Consumer that stores on AWS
 	//TODO: Users should be able to specify consumers in a config file
 
+	cookBooks := []*gohome.CookBook{
+		{
+			Identifiable: gohome.Identifiable{
+				ID:          "1",
+				Name:        "Lutron Smart Bridge Pro",
+				Description: "Cook up some goodness for the Lutron Smart Bridge Pro",
+			},
+			Triggers: []gohome.Trigger{
+				&gohome.ButtonTrigger{},
+			},
+			Actions: []gohome.Action{
+				&gohome.ZoneSetLevelAction{},
+			},
+		},
+	}
+
 	// Start www server
 	serverDone := make(chan bool)
 	go func() {
-		s := www.NewServer("./www", system)
+		s := www.NewServer("./www", system, cookBooks)
 		err := s.ListenAndServe(":8000")
 		if err != nil {
 			fmt.Println("error with server")

@@ -20,6 +20,40 @@ type ButtonTrigger struct {
 	doneChan   chan bool
 }
 
+func (t *ButtonTrigger) GetName() string {
+	return "Button Trigger"
+}
+
+func (t *ButtonTrigger) GetDescription() string {
+	return "Triggers when a button is pressed one or more times"
+}
+
+func (t *ButtonTrigger) GetIngredients() []Ingredient {
+	return []Ingredient{
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "PressCount",
+				Name:        "Press Count",
+				Description: "The number of times the button should be pressed to activate the trigger",
+			},
+			Type: "number",
+		},
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "MaxDuration",
+				Name:        "Max Duration (ms)",
+				Description: "The maximum time in milliseconds from the first press that all presses must happen",
+			},
+			Type: "number",
+		},
+		//TODO: Button -> how to enumerate the right button?
+		//Buttons live on devices
+		//Devices live in systems
+	}
+}
+
+//TODO: A recipe may or my not have the attributes set you can share those
+
 func (t *ButtonTrigger) Start() (<-chan bool, <-chan bool) {
 	t.Enabled = true
 	t.fireChan = make(chan bool)

@@ -20,9 +20,12 @@ type Device struct {
 
 func (d *Device) Connect() (Connection, error) {
 	if d.conn != nil {
+		//TODO: Fix real connection pool
+		//TODO: Detect closed connections
 		return d.conn, nil
 	}
 
+	//TODO: What is default timeout of net.Conn, change
 	//TODO: When we support more than telnet, will use ConnectionInfo to
 	//determine what type of connection we need to make
 	conn := &TelnetConnection{}
@@ -32,7 +35,6 @@ func (d *Device) Connect() (Connection, error) {
 		return nil, err
 	}
 
-	//TODO: Proper connection pooling
 	d.conn = conn
 	return conn, nil
 }
@@ -45,6 +47,7 @@ func (d *Device) StartProducingEvents() (<-chan Event, <-chan bool) {
 }
 
 //TODO: How to stop this?
+//TODO: Don't make public
 func Stream(d *Device, r io.Reader) {
 	scanner := bufio.NewScanner(r)
 	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {

@@ -8,6 +8,18 @@ type Recipe struct {
 	Action      Action
 }
 
+// Loads all recipes
+func LoadRecipesFromPath(path string) []*Recipe {
+	//TODO:
+	return nil
+}
+
+// Saves/updates a recipe
+func SaveRecipe(e *Recipe, path string) error {
+	//TODO:
+	return nil
+}
+
 func (r *Recipe) Start() <-chan bool {
 	fireChan, doneChan := r.Trigger.Start()
 	go func() {

@@ -17,7 +17,7 @@ type importer struct {
 }
 
 func (i importer) ImportFromFile(path, importerID string) (*System, error) {
-	//TODO: Support importing multiple types
+	//TODO: Support importing multiple devices
 	switch importerID {
 	case "L-BDGPRO2-WH":
 		//TODO: sbpID, how pass this in? Need a bucket of params
