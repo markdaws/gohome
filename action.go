@@ -40,6 +40,7 @@ func (a *FuncAction) Execute() {
 	a.Func()
 }
 
+//TODO: Move into own file
 type SetSceneAction struct {
 	Scene *Scene
 }
@@ -53,15 +54,23 @@ func (a *SetSceneAction) GetDescription() string {
 }
 
 func (a *SetSceneAction) GetIngredients() []Ingredient {
-	//TODO: how to enumerate scene
-	return nil
+	return []Ingredient{
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "Scene",
+				Name:        "Scene",
+				Description: "The Scene to set",
+			},
+			Type: "string", //TODO: Scene?
+		},
+	}
 }
 
 func (a *SetSceneAction) Execute() {
 	a.Scene.Execute()
 }
 
-//TODO: Allow multiple zone/level values?
+//TODO: Move in to own file
 type ZoneSetLevelAction struct {
 	Zone  *Zone
 	Level float32

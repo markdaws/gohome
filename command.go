@@ -108,7 +108,8 @@ type CommandBuilderParams struct {
 	Intensity    float64
 	Device       *Device
 	SourceDevice *Device
-	ComponentID  string
+	//TODO: Needed?
+	ComponentID string
 }
 
 //TODO: The command builder will depend on the device that it will be sent to

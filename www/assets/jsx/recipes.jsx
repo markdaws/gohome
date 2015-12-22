@@ -56,7 +56,7 @@
                 dataType: 'json',
                 cache: false,
                 success: function(data) {
-                    this.setState({triggers: data.triggers});
+                    this.setState({triggers: data.triggers, actions: data.actions});
                 }.bind(this),
                 error: function(xhr, status, err) {
                     console.error(err.toString());
@@ -71,6 +71,7 @@
                 <div>
                     {this.props.data.name} : {this.props.data.description}
                     <TriggerList triggers={this.state.triggers} />
+                    <ActionList actions={this.state.actions} />
                 </div>
             );
         }
@@ -106,8 +107,16 @@
 
     var ActionList = React.createClass({
         render: function() {
+            var self = this;
+            var actionNodes = this.props.actions.map(function(action) {
+                return (
+                    <Action data={action} />
+                );
+            });
             return (
-                <div></div>
+                <div>
+                    {actionNodes}
+                </div>
             );
         }
     });
@@ -115,7 +124,10 @@
     var Action = React.createClass({
         render: function() {
             return (
-                <div></div>
+                <div>
+                    <div>{this.props.data.name} : {this.props.data.description}</div>
+                    <IngredientList ingredients={this.props.data.ingredients} />
+                </div>
             );
         }
     });

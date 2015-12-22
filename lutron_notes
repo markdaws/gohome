@@ -1,0 +1,53 @@
+Lutron Integration Notes (Smart Bridge Pro)
+
+- Set(#DEVICE)
+- Get(?DEVICE)
+- Report(~DEVICE)
+- Dimmers/Shades
+  - #OUTPUT -> go to level
+  - ?OUTPUT -> get level
+
+
+Get level for dimmer/shade with ID 16
+?OUTPUT,16,1
+
+Set level to 50 for dimmer/shade with ID 16
+#OUTPUT,16,1,50
+
+~ Indicates a report of the system, e.g in response to a set or get
+?OUTPUT,16,1
+~OUTPUT,16,1,25.00
+or
+#OUTPUT,16,1,25
+~OUTPUT,16,1,25.00
+
+
+Smart Bridge Pro - supported commands
+#DEVICE
+#OUTPUT
+
+Unsupported
+#HELP
+#SYSTEM
+?GROUP
+#MONITORING
+
+Sivoia QS Shade
+Action: get/set, 1, 0-100
+Action: start raising, 2
+Action: start lowering, 3
+Action: stop raise/lower, 4
+
+For shades the system reports the target level, not the level as they are moving
+#DEVICE,24,28,3 -> device 24, zone 28, start lowering
+
+Errors
+~ERROR,<error_number>
+
+Error numbers
+1 - parameter count mismatch
+2 - object does not exist
+3 - invalid action number
+4 - parameter data out of range
+5 - parameter data malformed
+6 - unsupported command

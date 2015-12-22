@@ -19,24 +19,18 @@ func main() {
 		return
 	}
 
+	// In full system, here we would loop through all devices adding them as
+	// producers to the event broker
+
 	// TODO: Connection Pool, plus loop through connecting to devices? Only on demand?
 	sbpDevice := system.Devices[sbpID]
-	conn, err := sbpDevice.Connect()
-	if err != nil {
-		panic("Failed to connect to device")
-	} else {
-		fmt.Println("connected")
-	}
-
-	//TOO: Fix this, shouldn't be here
-	//TODO: Should be an option to persist connection
-	go func() {
-		gohome.Stream(sbpDevice, conn)
-		//TODO defer Close
-	}()
-
 	eventBroker := gohome.NewEventBroker()
+
+	//_ = sbpDevice
+	//TODO: Re-add
 	eventBroker.AddProducer(sbpDevice)
+
+	// Add log consumer
 
 	//TODO: Add fmt printer consumer
 	//TODO: Consumer that stores on AWS
@@ -54,6 +48,7 @@ func main() {
 			},
 			Actions: []gohome.Action{
 				&gohome.ZoneSetLevelAction{},
+				&gohome.SetSceneAction{},
 			},
 		},
 	}
@@ -69,6 +64,7 @@ func main() {
 		close(serverDone)
 	}()
 
+	//TODO: Get rid of these recipe, save to disk then load on init
 	//TODO: RecipeLoader - store/load recipes from a separate file
 	r := &gohome.Recipe{
 		ID:          "123",

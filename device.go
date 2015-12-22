@@ -43,12 +43,23 @@ func (d *Device) StartProducingEvents() (<-chan Event, <-chan bool) {
 	//TODO: When to init these
 	d.evpDone = make(chan bool)
 	d.evpFire = make(chan Event)
+
+	if conn, err := d.Connect(); err != nil {
+		fmt.Println("Failed to connect to device")
+	} else {
+		fmt.Println("Connected to device")
+		go func() {
+			stream(d, conn)
+		}()
+	}
+	//TODO: Should return error
+
 	return d.evpFire, d.evpDone
 }
 
 //TODO: How to stop this?
-//TODO: Don't make public
-func Stream(d *Device, r io.Reader) {
+//TODO: Should be for a specific device
+func stream(d *Device, r io.Reader) {
 	scanner := bufio.NewScanner(r)
 	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 

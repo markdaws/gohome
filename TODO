@@ -1,0 +1,257 @@
+DEMOS:
+1. Be able to log all raw events in memory, keep last X events
+2. Save events to a file
+3. Load saved events from file, log file
+4. Show all logs as a friendly string
+
+
+
+Object Model
+System
+Device
+Button
+Scene
+Zone
+Action
+Command
+ButtonTrigger
+CookBook
+Connection
+Event
+EventBroker
+Ingredient
+Recipe
+RecipeManager
+Trigger
+
+
+
+Logger
+- Listens for events, log to console, log to file
+- Reads from file on startup
+
+
+
+
+
+
+
+
+
+
+Logging
+ - when a scene was set
+ - when user pushed a button on a device
+ - when an action was triggered
+ - connections, rethink ...
+
+Larger Goals
+ - user management
+ - recipes page
+ - status page
+ - event page, see all the events that have happened in the system
+   - require watching tcp connection ...., reading and converting actions
+   - pretty print commands
+ - connect with other devices e.g. thermostat, shades, lights, activity sensors
+ - Have a floorplan view of your house, can click to control lights, get current light levels
+
+
+Stream events
+ - channel where you can listen to events
+ - events contain object that correspond to actual actions e.g. set scene action
+ - can save these actions then replay them at a later time
+
+
+Smart Bridge Pro
+ - limited telnet support
+ - trap http traffic on the network, see what messages are being sent to the device for:
+   - creating a scene
+
+
+Scenarios
+- Turn on outside light when it starts to get dark
+- Turn off outside light after 11pm
+- Choose a particular scene
+- Set individual lights
+- Vacation mode, replays the last week of interactions (specified date range)
+- Have a page showing all of the logs for the system
+- Be alerted when something changes in your house when you are not there
+
+
+Open questions
+ - how to know what a scene means?
+ - how to know when a scene is active?
+
+
+Saturday challenge
+ - Read in ip.json into some kind of structure
+ - Convert structure into known primitives System/Device/Scene/Zone/Command/TelnetConnection
+ - Write known primitives to disk as JSON OM (with version number) { version: 0.1, system: ... }
+ - Read serialized json from disk
+ - Start system from serialized json file
+
+Sunday Challenge
+ - Event Logging
+ - Commands in system, pretty print
+ - Log connect/disconnect
+ - Save events to disk
+ - Load events
+ - Replay events
+
+Event {
+  Time
+  ZoneSetCommand
+  SetScene
+  Button press
+  Button release
+}
+
+
+Events:
+ 1. Create basic event structure, time + string value
+ 2. Create basic event watcher, does nothing but formats strings to console
+ 3. Convert to commands
+ 4. Print human friendly strings
+ 5. Replay events
+ 6. Have a recipe, if shade button pushed, turn on lights
+
+
+
+EVENT DEMO:
+1. Start app, listening for events on SBP device
+2. Print out original command strings to the console
+ - ~OUTPUT,7,1,25.00 etc
+ - ~DEVICE,12,3,3 etc
+3. Print out friendly strings for commands:
+ - 2015/08/28-14:30:58 Zone "Kitchen Lights" set to 75%
+ - 2015/08/28-14:36:15 Button Press (23) on device "Main Shade Remote"
+ - 2015/08/28-14:40:10 Button Release (23) on device "Main Shade Remote"
+
+
+//TODO: Let the user give buttons names, need to distinguish between scenes
+//TODO: Recipe - triple tap off in bedroom turns all lights off
+//TODO: Recipe - triple tap on in bedroom turns all lights on
+
+//TODO: Only enabled at certain times of the day ?
+//e.g. after 11am, before 5am, single press should go to preset level - recipes active ?
+// - maybe at recipe level there is the option to say when this recipe should be active
+
+
+DEMO - Sunday
+ 1. Load buttons on a device
+ 2. Create triple tap recipe
+ 3. Clean up code to this point
+ 4. Teplatize as mentioned below
+
+Create new recipe
+Save Recipe
+Load Recipes from disk on start
+
+Realtime - still no realtime feedback on the state of the system
+ - Get the level of every zone in the system
+ - What are the active scenes
+ - Could make your own scenes
+
+Device - you can give the format string for press button, release button etc applied to all its buttons
+Templates that you load in have all this formatting strings that users can use ...
+Import and uses the templates to know how to finalize information
+Button
+ ID
+ Name
+ Description
+ PressCommand
+ ReleaseCommand
+
+CompositeCommand
+ - collection of one or more commands
+
+Setup page ... -> after import shows the current state of the system which you can then modify
+
+Connections
+ - pool
+ - handle disconnect/reconnect
+ - open a connection ...
+
+
+Getting to v1.0
+ - Expose buttons as own objects : X
+ - Import integration reports (give name, can use on startup based on name)
+ - Read in own json format on load
+ - Edit gohome integration format (webpage or just manual?)
+ - Logging of everything in the system -> to file
+ - Recipes
+ - Solid connection handling
+ - Users? Multiple user scenario
+ - Visual control + monitor software
+ - Ability to monitor the state of the system, not just changes but current state too
+   - how to distinguish between that fetch and control since they all look the same?
+ - Status page, shows the log output in the system
+
+
+
+Importing
+ - Choose integration report device
+ - e.g. SBP
+ - Has an import templates
+ - Each device has connectionInfo section that can be filled out
+ - Template for SBP
+   - Bool, buttons are scenes, that is on a device
+   - Button Press Command (format strings, with placeholders to known constants)
+   - Button Release Command (format strings)
+   - Set Scene Command (format strings)
+   - Set Zone Intensity command
+ - Each device needs master device, this is who we communicate to to send commands
+ - input for ID
+ - Name of system, this is what will be saved
+ - Bool - if this system should be used at startup
+
+Exporting
+ - Option to export system to a file
+ - Need to save references to objects, not actual objects e.g. button device should be an id, not reference so we get same object
+ - Need to be able to save to a known name, so can save multiple systems
+ - Version number
+ - Date Last Modified
+ - Date Created
+
+Recipes - need to be able to save recipes, create, update ...
+
+- Needs to be some UI to import/export integration reports
+- Needs to be some UI to let users configure their system
+
+
+Ingredient: String/Number/Boolean/Scene/Button/Device/Zone -> where to enumerate these from?
+
+
+
+CookBooks
+ID: "1", Name: "Lutron Smart Bridge Pro", Description: "Cook up some tasty recipes for the Smart Bridge"
+Triggers
+ - ButtonTrigger
+  Name: "Button Press"
+  Description: "Trigger when a button is pressed one or more times"
+  Ingredients: [
+      PressCount (ID/Name/Description/Type/Required)
+      MaxDuration
+      Button
+  ]
+Actions
+ - SetSceneAction
+  Name: "Set Scene"
+  Description: "Sets the specified scene"
+  Ingredients: [
+      Scene
+      Device
+  ]
+
+
+
+
+
+
+
+
+
+
+
+
+
