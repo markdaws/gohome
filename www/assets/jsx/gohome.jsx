@@ -47,7 +47,7 @@
             var zoneNodes = Object.keys(this.props.zones).map(function(id) {
                 var zone = self.props.zones[id];
                 return (
-                    <Zone id={zone.id} name={zone.name} />
+                    <Zone id={zone.id} name={zone.name} type={zone.type}/>
                 );
             })
             return (
@@ -88,7 +88,7 @@
             var value = this.state.value;
             return (
                 <div>
-                    <span>{this.props.id} : {this.props.name}</span>
+                    <span>{this.props.id} : {this.props.name} : {this.props.type}</span>
                     <input type="text" value={value} onChange={this.handleChange}></input>
                     <a onClick={this.clickHandler}> [Set]</a>
                 </div>

@@ -14,3 +14,15 @@ const (
 	//TODO: What are the most common smart devices, add support
 	//TODO: Document how to add support for a new device
 )
+
+//TODO: Gen this automatically
+func (zt ZoneType) ToString() string {
+	switch zt {
+	case ZTLight:
+		return "light"
+	case ZTShade:
+		return "shade"
+	default:
+		return "unknown"
+	}
+}

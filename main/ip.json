@@ -499,19 +499,23 @@
             },
             {
                 "ID" : 23,
-                "Name" : "Living Room Shade"
+                "Name" : "Living Room Shade",
+                "Type" : "shade"
             },
             {
                 "ID" : 25,
-                "Name" : "Bedroom Shade"
+                "Name" : "Bedroom Shade",
+                "Type" : "shade"
             },
             {
                 "ID" : 27,
-                "Name" : "French Door Shades"
+                "Name" : "French Door Shades",
+                "Type" : "shade"
             },
             {
                 "ID" : 28,
-                "Name" : "Kitchen Shade"
+                "Name" : "Kitchen Shade",
+                "Type" : "shade"
             }
         ]
     }

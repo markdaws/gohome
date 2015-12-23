@@ -230,12 +230,13 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 			ID          string `json:"id"`
 			Name        string `json:"name"`
 			Description string `json:"description"`
+			Type        string `json:"type"`
 		}
 		//TODO: Returns in a consistent order
 		zones := make([]jsonZone, len(system.Zones), len(system.Zones))
 		var i int32 = 0
 		for _, zone := range system.Zones {
-			zones[i] = jsonZone{ID: zone.ID, Name: zone.Name, Description: zone.Description}
+			zones[i] = jsonZone{ID: zone.ID, Name: zone.Name, Description: zone.Description, Type: zone.Type.ToString()}
 			i++
 		}
 
