@@ -1,3 +1,25 @@
 body {
-    color: red;
+}
+
+.content {
+    padding: 10px;
+}
+
+/* TODO: Move into own files */
+.btn.scene {
+    text-align: center;
+    padding: 8px;
+    display: block;
+    margin-bottom: 12px;
+}
+.btn.scene .glyphicon {
+    font-size: 30px;
+}
+
+.btn.scene .name {
+    display:block;
+    font-size: 18px;
+    padding: 8px 0px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

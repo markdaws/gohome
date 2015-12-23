@@ -34,8 +34,12 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	r := mux.NewRouter()
 
 	mime.AddExtensionType(".jsx", "text/jsx")
+	mime.AddExtensionType(".woff", "application/font-woff")
+	mime.AddExtensionType(".woff2", "application/font-woff2")
+	mime.AddExtensionType(".eot", "application/vnd.ms-fontobject")
 	cssHandler := http.FileServer(http.Dir(s.rootPath + "/assets/css/"))
 	jsHandler := http.FileServer(http.Dir(s.rootPath + "/assets/js/"))
+	fontHandler := http.FileServer(http.Dir(s.rootPath + "/assets/fonts/"))
 	jsxHandler := http.FileServer(http.Dir(s.rootPath + "/assets/jsx/"))
 	imageHandler := http.FileServer(http.Dir(s.rootPath + "/assets/images/"))
 
@@ -60,6 +64,7 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	//sub.Methods("GET")
 	sub.Handle("/css/{filename}", http.StripPrefix("/assets/css/", cssHandler))
 	sub.Handle("/js/{filename}", http.StripPrefix("/assets/js/", jsHandler))
+	sub.Handle("/fonts/{filename}", http.StripPrefix("/assets/fonts/", fontHandler))
 	sub.Handle("/jsx/{filename}", http.StripPrefix("/assets/jsx/", jsxHandler))
 	sub.Handle("/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
 	r.HandleFunc("/", rootHandler(s.rootPath))

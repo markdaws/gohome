@@ -97,6 +97,13 @@
     });
 
     var SceneList = React.createClass({
+        componentDidMount: function() {
+            return;
+            //TODO: Enable as part of a mode
+            var el = ReactDOM.findDOMNode(this).getElementsByClassName('sceneList')[0];
+            Sortable.create(el);
+        },
+
         render: function() {
             var self = this;
             var sceneNodes = Object.keys(this.props.scenes).map(function(id) {
@@ -106,9 +113,11 @@
                 );
             });
             return (
-                <div className="sceneList">
-                    <h1>Scenes</h1>
+                <div>
+                <h1>Scenes</h1>
+                <div className="sceneList row">
                     {sceneNodes}
+                </div>
                 </div>
             );
         }
@@ -133,9 +142,13 @@
 
         render: function() {
             return (
-                <div>
-                    <span>{this.props.id} : {this.props.name} : {this.props.description}</span>
-                    <a onClick={this.handleClick}> [Set]</a>
+                <div className="col-xs-6 col-sm-3 col-md-3 col-lg-3">
+                    <a className="btn btn-default scene" onClick={this.handleClick}>
+                        <div>
+                            <span className="glyphicon glyphicon-equalizer"></span>
+                        </div>
+                        <span className="name">{this.props.name}</span>
+                    </a>
                 </div>
             )
         }
@@ -143,5 +156,5 @@
 
     var apiUrl = '/api/v1/systems/123/scenes';
     var apiUrlZones = '/api/v1/systems/123/zones';
-    React.render(<App url={apiUrl} zoneUrl={apiUrlZones}/>, document.body);
+    React.render(<App url={apiUrl} zoneUrl={apiUrlZones}/>, document.getElementsByClassName('content')[0]);
 })();

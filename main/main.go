@@ -26,9 +26,9 @@ func main() {
 	sbpDevice := system.Devices[sbpID]
 	eventBroker := gohome.NewEventBroker()
 
-	//_ = sbpDevice
+	_ = sbpDevice
 	//TODO: Re-add
-	eventBroker.AddProducer(sbpDevice)
+	//eventBroker.AddProducer(sbpDevice)
 
 	// Add log consumer
 
