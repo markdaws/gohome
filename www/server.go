@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"sort"
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
@@ -203,18 +204,13 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-		type jsonScene struct {
-			ID          string `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-		}
-		//TODO: Return in a consistent order
-		scenes := make([]jsonScene, len(system.Scenes), len(system.Scenes))
+		scenes := make(scenes, len(system.Scenes), len(system.Scenes))
 		var i int32 = 0
 		for _, scene := range system.Scenes {
 			scenes[i] = jsonScene{ID: scene.ID, Name: scene.Name, Description: scene.Description}
 			i++
 		}
+		sort.Sort(scenes)
 		if err := json.NewEncoder(w).Encode(scenes); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -226,19 +222,13 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		type jsonZone struct {
-			ID          string `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-			Type        string `json:"type"`
-		}
-		//TODO: Returns in a consistent order
-		zones := make([]jsonZone, len(system.Zones), len(system.Zones))
+		zones := make(zones, len(system.Zones), len(system.Zones))
 		var i int32 = 0
 		for _, zone := range system.Zones {
 			zones[i] = jsonZone{ID: zone.ID, Name: zone.Name, Description: zone.Description, Type: zone.Type.ToString()}
 			i++
 		}
+		sort.Sort(zones)
 
 		if err := json.NewEncoder(w).Encode(zones); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
