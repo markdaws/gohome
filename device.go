@@ -65,6 +65,7 @@ func stream(d *Device, r io.Reader) {
 
 		//Match first instance of ~OUTPUT|~DEVICE.*\r\n
 		str := string(data[0:])
+		//fmt.Println(str)
 		indices := regexp.MustCompile("[~|#][OUTPUT|DEVICE].+\r\n").FindStringIndex(str)
 		//fmt.Printf("%s === %v\n", str, indices)
 

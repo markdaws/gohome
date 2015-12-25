@@ -5,21 +5,70 @@ body {
     padding: 10px;
 }
 
+.sceneListHeader,
+.zoneListHeader {
+    font-size: 40px;
+}
+
 /* TODO: Move into own files */
-.btn.scene {
+.btn.scene,
+.btn.zone {
     text-align: center;
     padding: 8px;
     display: block;
     margin-bottom: 12px;
 }
-.btn.scene .glyphicon {
+.btn.scene .fa,
+.btn.zone .fa {
     font-size: 30px;
 }
 
-.btn.scene .name {
+.btn.scene .name,
+.btn.zone .name{
     display:block;
     font-size: 18px;
     padding: 8px 0px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/*
+.modal {
+    overflow: initial;
+    position: static;
+}
+*/
+
+.modal .modal-content {
+    padding: 20px;
+    text-align: center;
+}
+
+.zoneModal .content{
+    text-align: center;
+    padding: 40px;
+    padding-top: 0px;
+}
+
+.zoneModal .well {
+    padding: 0px;
+}
+
+.zoneModal .content h3 {
+    margin-bottom: 20px;
+}
+
+.valueSlider {
+    height: 200px;
+}
+
+.slider.slider-vertical .slider-handle {
+    width: 40px;
+    height: 40px;
+    margin-top: -20px;
+    margin-left: -15px;
+}
+
+.slider.slider-vertical .slider-track-high {
+    background: yellow;
 }

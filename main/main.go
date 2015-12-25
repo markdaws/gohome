@@ -28,7 +28,7 @@ func main() {
 
 	_ = sbpDevice
 	//TODO: Re-add
-	//eventBroker.AddProducer(sbpDevice)
+	eventBroker.AddProducer(sbpDevice)
 
 	// Add log consumer
 
