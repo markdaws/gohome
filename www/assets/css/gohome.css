@@ -44,18 +44,38 @@ body {
     text-align: center;
 }
 
-.zoneModal .content{
+.zoneControl .content{
     text-align: center;
     padding: 40px;
     padding-top: 0px;
+    padding-right: 24px;
 }
 
-.zoneModal .well {
+.zoneControl .well {
     padding: 0px;
 }
 
-.zoneModal .content h3 {
+.zoneControl .content h4 {
     margin-bottom: 20px;
+    width: 50px;
+}
+
+.zoneControl .content .btn.on,
+.zoneControl .content .btn.off {
+    display: inline-block;
+    margin: 10px;
+}
+
+.zoneControl .content .left {
+    float: left;
+}
+
+.zoneControl .content .right {
+    float: right;
+}
+
+.zoneControl .content .footer {
+    clear: both;
 }
 
 .valueSlider {
@@ -70,5 +90,9 @@ body {
 }
 
 .slider.slider-vertical .slider-track-high {
-    background: yellow;
+    background: #ffff7f;
+}
+
+.slider.slider-vertical .slider-selection {
+    background: #fff;
 }

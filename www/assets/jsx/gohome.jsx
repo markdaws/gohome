@@ -82,50 +82,97 @@
             var value = this.state.value;
             return (
                 <div className="col-xs-12 col-sm-3 col-md-3 col-lg-3">
-                    <a data-toggle="collapse" href={".what" + this.props.id} className="btn btn-default zone" onClick={this.handleClick}>
+                    <a data-toggle="collapse" href={".zoneControl" + this.props.id} className="btn btn-default zone" onClick={this.handleClick}>
                         <div>
                             <i className="fa fa-lightbulb-o"></i>
                         </div>
                         <span className="name">{this.props.name} ({this.props.type})</span>
                         <input style={{display: 'none'}} type="text" value={value} onChange={this.handleChange}></input>
                     </a>
-                    <ZoneModal ref="zoneModal" name={this.props.name} id={this.props.id}/>
+                    <ZoneControl ref="zoneControl" name={this.props.name} id={this.props.id}/>
                 </div>
             )
         }
     });
 
-    var ZoneModal = React.createClass({
+    var ZoneControl = React.createClass({
         componentDidMount: function() {
-            var s = $(ReactDOM.findDOMNode(this)).find('.valueSlider');
-            s.slider({ reversed: true});
-            var i = 0;
+            var $el = $(ReactDOM.findDOMNode(this));
+            var $value = $el.find('.level');
+            var s = $el.find('.valueSlider');
+            var slider = s.slider({ reversed: true});
+            console.log(slider);
+            this.setState({ slider: slider });
             var self = this;
+            s.on('change', function(evt) {
+                $value.text(evt.value.newValue + '%');
+            });
             s.on('slideStop', function(evt) {
-                $.ajax({
-                    url: '/api/v1/systems/1/zones/' + self.props.id,
-                    type: 'POST',
-                    dataType: 'json',
-                    contentType: 'application/json; charset=utf-8',
-                    data: JSON.stringify({ value: parseFloat(evt.value) }),
-                    success: function(data) {
-                        console.log('set the zone');
-                    }.bind(self),
-                    error: function(xhr, status, err) {
-                        console.error(err.toString());
-                    }.bind(self)
+                self._setValue(evt.value, function(err) {
+                    if (err) {
+                        console.error(err);
+                    }
                 });
+            });
+        },
+
+        _setValue: function(value, callback) {
+            var $el = $(ReactDOM.findDOMNode(this));
+            this.state.slider.slider('setValue', value, false, true);
+            this._send({ value: parseFloat(value) }, callback);
+        },
+
+        _send: function(data, callback) {
+            $.ajax({
+                url: '/api/v1/systems/1/zones/' + this.props.id,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function(data) {
+                    callback();
+                }.bind(this),
+                error: function(xhr, status, err) {
+                    callback({ err: err });
+                }.bind(this)
+            });
+        },
+
+        handleOnClick: function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            this._setValue(100, function(err) {
+                if (err) {
+                    console.error(err);
+                }
+            });
+        },
+
+        handleOffClick: function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            this._setValue(0, function(err) {
+                if (err) {
+                    console.error(err);
+                }
             });
         },
 
         render: function() {
             return (
-                <div className={"collapse zoneModal " + " what" + this.props.id}>
+                <div className={"collapse zoneControl " + " zoneControl" + this.props.id}>
                     <div className="well">
                         <div className="content">
-                            <h3>{this.props.name}</h3>
-                            <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="vertical"></input>
-                        </div>
+                            <div className="left">
+                                <h4 className="level">N/A</h4>
+                                <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="vertical"></input>
+                            </div>
+                            <div className="right">
+                                <a href="#" className="btn btn-default on" onClick={this.handleOnClick}>On</a>
+                                <a href="#" className="btn btn-default off" onClick={this.handleOffClick}>Off</a>
+                            </div>
+                           <div className="footer"></div>
+                       </div>
                     </div>
                 </div>
             );
@@ -180,8 +227,8 @@
             return (
                 <div className="col-xs-6 col-sm-3 col-md-3 col-lg-3">
                     <a className="btn btn-default scene" onClick={this.handleClick}>
-                <div>
-                <i className="fa fa-sliders"></i>
+                        <div>
+                            <i className="fa fa-sliders"></i>
                         </div>
                         <span className="name">{this.props.name}</span>
                     </a>
