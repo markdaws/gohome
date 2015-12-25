@@ -80,16 +80,17 @@
 
         render: function() {
             var value = this.state.value;
+            var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
             return (
                 <div className="col-xs-12 col-sm-3 col-md-3 col-lg-3">
                     <a data-toggle="collapse" href={".zoneControl" + this.props.id} className="btn btn-default zone" onClick={this.handleClick}>
                         <div>
-                            <i className="fa fa-lightbulb-o"></i>
+                            <i className={icon}></i>
                         </div>
                         <span className="name">{this.props.name} ({this.props.type})</span>
                         <input style={{display: 'none'}} type="text" value={value} onChange={this.handleChange}></input>
                     </a>
-                    <ZoneControl ref="zoneControl" name={this.props.name} id={this.props.id}/>
+                    <ZoneControl ref="zoneControl" name={this.props.name} id={this.props.id} type={this.props.type}/>
                 </div>
             )
         }
@@ -159,6 +160,12 @@
         },
 
         render: function() {
+            var onText = 'On';
+            var offText = 'Off';
+            if (this.props.type !== 'light') {
+                onText = 'Open';
+                offText = 'Close';
+            }
             return (
                 <div className={"collapse zoneControl " + " zoneControl" + this.props.id}>
                     <div className="well">
@@ -168,8 +175,8 @@
                                 <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="vertical"></input>
                             </div>
                             <div className="right">
-                                <a href="#" className="btn btn-default on" onClick={this.handleOnClick}>On</a>
-                                <a href="#" className="btn btn-default off" onClick={this.handleOffClick}>Off</a>
+                                <a href="#" className="btn btn-default on" onClick={this.handleOnClick}>{onText}</a>
+                                <a href="#" className="btn btn-default off" onClick={this.handleOffClick}>{offText}</a>
                             </div>
                            <div className="footer"></div>
                        </div>
