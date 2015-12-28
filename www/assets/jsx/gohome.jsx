@@ -90,6 +90,7 @@
                         <span className="name">{this.props.name} ({this.props.type})</span>
                         <input style={{display: 'none'}} type="text" value={value} onChange={this.handleChange}></input>
                     </a>
+                    {/* TODO: position:absolute if desktop/tablet vs phone */}
                     <ZoneControl ref="zoneControl" name={this.props.name} id={this.props.id} type={this.props.type}/>
                 </div>
             )
@@ -102,7 +103,6 @@
             var $value = $el.find('.level');
             var s = $el.find('.valueSlider');
             var slider = s.slider({ reversed: true});
-            console.log(slider);
             this.setState({ slider: slider });
             var self = this;
             s.on('change', function(evt) {

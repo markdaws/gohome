@@ -5,6 +5,7 @@ import "fmt"
 type EventBroker interface {
 	AddProducer(EventProducer)
 	AddConsumer(EventConsumer)
+	RemoveConsumer(EventConsumer)
 }
 
 type EventProducer interface {
@@ -12,15 +13,18 @@ type EventProducer interface {
 }
 
 type EventConsumer interface {
+	EventConsumerID() string
 	StartConsumingEvents() chan<- Event
 }
 
 func NewEventBroker() EventBroker {
-	return &broker{}
+	return &broker{
+		consumers: make(map[string]chan<- Event),
+	}
 }
 
 type broker struct {
-	consumers []chan<- Event
+	consumers map[string]chan<- Event
 }
 
 func (b *broker) AddProducer(p EventProducer) {
@@ -29,14 +33,11 @@ func (b *broker) AddProducer(p EventProducer) {
 		for {
 			select {
 			case e := <-ec:
-				//Got a new event, process
-				//fmt.Println("got an event:", e.String())
-
-				//TODO: Async?
 				for _, c := range b.consumers {
 					c <- e
 				}
 			case <-dc:
+				//TODO:
 				fmt.Println("Producer has stopped")
 				return
 			}
@@ -49,5 +50,16 @@ func (b *broker) AddConsumer(c EventConsumer) {
 	if ec == nil {
 		return
 	}
-	b.consumers = append(b.consumers, ec)
+	b.consumers[c.EventConsumerID()] = ec
+}
+
+func (b *broker) RemoveConsumer(c EventConsumer) {
+	id := c.EventConsumerID()
+	eventChannel, ok := b.consumers[id]
+	_ = eventChannel
+	if !ok {
+		return
+	}
+
+	delete(b.consumers, id)
 }

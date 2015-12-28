@@ -1,6 +1,10 @@
 package gohome
 
-import "time"
+import (
+	"time"
+
+	"github.com/nu7hatch/gouuid"
+)
 
 // At a certain time e.g. 8pm
 // time no year, no month, no day, hour, minute, second
@@ -13,22 +17,85 @@ type TimeTrigger struct {
 	Forever    bool
 	At         time.Time
 	Interval   time.Duration
-	timer      *time.Timer
-	ticker     *time.Ticker
-	doneChan   chan bool
+
+	timer    *time.Timer
+	ticker   *time.Ticker
+	doneChan chan bool
+	id       string
+	enabled  bool
 }
 
-func (t *TimeTrigger) GetName() string {
+func (t *TimeTrigger) Type() string {
+	return "gohome.TimeTrigger"
+}
+
+func (t *TimeTrigger) Name() string {
 	return "Time Trigger"
 }
 
-func (t *TimeTrigger) GetDescription() string {
+func (t *TimeTrigger) Description() string {
 	return "Triggers when the specified time or duration expires"
 }
 
-func (t *TimeTrigger) GetIngredients() []Ingredient {
-	//TODO:
-	return nil
+func (t *TimeTrigger) Enabled() bool {
+	return t.enabled
+}
+
+func (t *TimeTrigger) SetEnabled(enabled bool) {
+	t.enabled = enabled
+}
+
+//TODO: Create via reflection
+func (t *TimeTrigger) New() Trigger {
+	return &TimeTrigger{}
+}
+
+func (t *TimeTrigger) Ingredients() []Ingredient {
+	return []Ingredient{
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "Iterations",
+				Name:        "Iterations",
+				Description: "The number of times the trigger will fire before stopping",
+			},
+			Type: "integer",
+		},
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "Forever",
+				Name:        "Forever",
+				Description: "If true, the trigger will run forever",
+			},
+			Type: "boolean",
+		},
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "At",
+				Name:        "At",
+				Description: "The date and time to fire the trigger",
+			},
+			Type: "datetime",
+		},
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "Interval",
+				Name:        "Interval",
+				Description: "The time (in ms) between each trigger event",
+			},
+			Type: "integer",
+		},
+	}
+}
+
+func (t *TimeTrigger) EventConsumerID() string {
+	if t.id == "" {
+		id, err := uuid.NewV4()
+		if err != nil {
+			//TODO: error
+		}
+		t.id = id.String()
+	}
+	return t.id
 }
 
 func (t *TimeTrigger) Start() (<-chan bool, <-chan bool) {

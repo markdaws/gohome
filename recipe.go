@@ -1,23 +1,36 @@
 package gohome
 
+import "github.com/nu7hatch/gouuid"
+
+//TODO: Rules for trigger/action writers, don't have pointers to objects, have ids, use the
+//system object to get the items ou want access to, otherwise won't work on save/reload
+
 type Recipe struct {
-	ID          string
-	Name        string
-	Description string
-	Trigger     Trigger
-	Action      Action
+	Identifiable Identifiable
+	Trigger      Trigger
+	Action       Action
+	Version      string
+	system       *System
 }
 
-// Loads all recipes
-func LoadRecipesFromPath(path string) []*Recipe {
-	//TODO:
-	return nil
-}
+func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *System) (*Recipe, error) {
+	id, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 
-// Saves/updates a recipe
-func SaveRecipe(e *Recipe, path string) error {
-	//TODO:
-	return nil
+	t.SetEnabled(enabled)
+	return &Recipe{
+		Identifiable: Identifiable{
+			ID:          id.String(),
+			Name:        name,
+			Description: description,
+		},
+		Trigger: t,
+		Action:  a,
+		Version: "1",
+		system:  s,
+	}, nil
 }
 
 func (r *Recipe) Start() <-chan bool {
@@ -26,7 +39,7 @@ func (r *Recipe) Start() <-chan bool {
 		for {
 			select {
 			case <-fireChan:
-				r.Action.Execute()
+				r.Action.Execute(r.system)
 
 			case <-doneChan:
 				doneChan = nil

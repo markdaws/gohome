@@ -3,9 +3,11 @@ package gohome
 type Trigger interface {
 	Start() (<-chan bool, <-chan bool)
 	Stop()
-	GetIngredients() []Ingredient
-	GetName() string
-	GetDescription() string
+	Type() string
+	Ingredients() []Ingredient
+	Name() string
+	Description() string
+	Enabled() bool
+	SetEnabled(bool)
+	New() Trigger
 }
-
-//TODO: TrueTrigger? Just executes

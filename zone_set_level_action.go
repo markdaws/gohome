@@ -1,0 +1,58 @@
+package gohome
+
+import (
+	"errors"
+	"fmt"
+)
+
+type ZoneSetLevelAction struct {
+	ZoneID string
+	Level  float32
+}
+
+func (a *ZoneSetLevelAction) Type() string {
+	return "gohome.ZoneSetLevelAction"
+}
+
+func (a *ZoneSetLevelAction) Name() string {
+	return "Set Zone Level"
+}
+
+func (a *ZoneSetLevelAction) Description() string {
+	return "Sets the zone level to the specified value"
+}
+
+func (a *ZoneSetLevelAction) Ingredients() []Ingredient {
+	return []Ingredient{
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "Level",
+				Name:        "Intensity Level",
+				Description: "The target intensity for the zone",
+			},
+			Type:     "float",
+			Required: true,
+		},
+		Ingredient{
+			Identifiable: Identifiable{
+				ID:          "ZoneID",
+				Name:        "Zone ID",
+				Description: "The ID of the target zone",
+			},
+			Type:     "string",
+			Required: true,
+		},
+	}
+}
+
+func (a *ZoneSetLevelAction) Execute(s *System) error {
+	zone, ok := s.Zones[a.ZoneID]
+	if !ok {
+		return errors.New(fmt.Sprintf("Unknown ZoneID %s", a.ZoneID))
+	}
+	return zone.Set(a.Level)
+}
+
+func (a *ZoneSetLevelAction) New() Action {
+	return &ZoneSetLevelAction{}
+}

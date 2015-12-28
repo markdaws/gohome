@@ -32,6 +32,10 @@ body {
     text-overflow: ellipsis;
 }
 
+.fa.fa-spinner {
+    font-size: 35px;
+}
+
 /*
 .modal {
     overflow: initial;
@@ -95,4 +99,49 @@ body {
 
 .slider.slider-vertical .slider-selection {
     background: #fff;
+}
+
+/* Component Styling */
+.cmp-RecipeApp h2 {
+    margin-top: 0;
+}
+.cmp-RecipeApp .header {
+    margin-bottom: 8px;
+}
+
+.cmp-CookBook {
+    float: left;
+    text-align: center;
+}
+.cmp-CookBook img {
+    width: 200px;
+    height: 200px;
+    display: block;
+}
+.cmp-CookBook button {
+    padding: 12px;
+}
+
+.cmp-Trigger button,
+.cmp-Action button {
+    text-align: left;
+    white-space: normal;
+    width: 250px;
+    min-height: 105px;
+    margin-bottom: 8px;
+}
+
+.cmp-NewRecipe .btn-primary {
+    margin-right: 8px;
+}
+.cmp-NewRecipe .footer {
+    margin-top: 8px;
+}
+
+.cmp-RecipeInfo h4 {
+    margin-top: 0;
+}
+.cmp-RecipeInfo input {
+    float: left;
+    height: 34px;
 }

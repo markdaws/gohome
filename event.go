@@ -5,9 +5,8 @@ import "time"
 type Event struct {
 	Time           time.Time
 	OriginalString string
-	//TODO: Clarify what device this is
-	Device        *Device
-	ReplayCommand Command
+	Device         *Device
+	ReplayCommand  Command
 }
 
 func NewEvent(d *Device, cmd Command, orig string) Event {

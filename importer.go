@@ -200,6 +200,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 		fmt.Printf("%d: %s\n", int(zone["ID"].(float64)), zone["Name"])
 
 		var zoneID string = strconv.FormatFloat(zone["ID"].(float64), 'f', 0, 64)
+		var uniqueID = sbp.ID + ":" + zoneID
 		var zoneName string = zone["Name"].(string)
 		var zoneTypeFinal ZoneType = ZTLight
 		if zoneType, ok := zone["Type"].(string); ok {
@@ -210,9 +211,9 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 				zoneTypeFinal = ZTShade
 			}
 		}
-		system.Zones[zoneID] = &Zone{
+		system.Zones[uniqueID] = &Zone{
 			Identifiable: Identifiable{
-				ID:          zoneID,
+				ID:          uniqueID,
 				Name:        zoneName,
 				Description: zoneName},
 			Type: zoneTypeFinal,
