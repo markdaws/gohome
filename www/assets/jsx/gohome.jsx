@@ -124,7 +124,7 @@
             var value = this.state.value;
             var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
             return (
-                <div className="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+                <div className="cmp-Zone col-xs-12 col-sm-3 col-md-3 col-lg-3">
                     <a role="button" aria-expanded="false" aria-controls={"zoneControl" + this.props.id} data-toggle="collapse" href={"#zoneControl" + this.cssSafeIdentifier(this.props.id)} className="btn btn-primary zone">
                         <div>
                             <i className={icon}></i>
@@ -212,14 +212,14 @@
 
             var uniqueId = this.cssSafeIdentifier('zoneControl' + this.props.id);
             return (
-                <div id={uniqueId} className={"collapse zoneControl " + uniqueId}>
+                <div id={uniqueId} className={"cmp-ZoneControl collapse " + uniqueId}>
                     <div className="well">
                         <div className="content">
-                            <div className="left">
+                            <div className="pull-left">
                                 <h4 className="level">N/A</h4>
                                 <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="vertical"></input>
                             </div>
-                            <div className="right">
+                            <div className="pull-right">
                                 <a href="#" className="btn btn-default on" onClick={this.handleOnClick}>{onText}</a>
                                 <a href="#" className="btn btn-default off" onClick={this.handleOffClick}>{offText}</a>
                             </div>
@@ -274,7 +274,7 @@
 
         render: function() {
             return (
-                <div className="col-xs-6 col-sm-3 col-md-3 col-lg-3">
+                <div className="cmp-Scene col-xs-6 col-sm-3 col-md-3 col-lg-3">
                     <a className="btn btn-primary scene" onClick={this.handleClick}>
                         <div>
                             <i className="fa fa-sliders"></i>
