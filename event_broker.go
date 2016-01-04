@@ -33,6 +33,7 @@ func (b *broker) AddProducer(p EventProducer) {
 		for {
 			select {
 			case e := <-ec:
+				//TODO: This is blocking, try trigger with 2 click and one with 3 second has to wait
 				for _, c := range b.consumers {
 					c <- e
 				}

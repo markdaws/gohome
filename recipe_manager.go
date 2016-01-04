@@ -1,3 +1,9 @@
+/*
+TODO:
+- validate input on client and server
+- specify ranges for ingredients
+- return useful error messages for invalid ingredients
+*/
 package gohome
 
 import (

@@ -9,9 +9,8 @@ body {
     padding: 12px;
 }
 
-.cmp-ControlApp .nav-tabs a {
-    font-size: 24px;
-    color: #000;
+.fa.fa-spinner {
+    font-size: 35px;
 }
 
 /* TODO: Move into compoent namespace */
@@ -36,10 +35,6 @@ body {
     text-overflow: ellipsis;
 }
 
-.fa.fa-spinner {
-    font-size: 35px;
-}
-
 /*
 .modal {
     overflow: initial;
@@ -47,6 +42,7 @@ body {
 }
 */
 
+/*TODO: Needed? */
 .modal .modal-content {
     padding: 20px;
     text-align: center;
@@ -54,9 +50,10 @@ body {
 
 .zoneControl .content{
     text-align: center;
-    padding: 40px;
-    padding-top: 0px;
-    padding-right: 8px;
+    padding: 16px;
+    padding-bottom: 40px;
+    padding-top: 0;
+    padding-right: 0;
 }
 
 .zoneControl .well {
@@ -82,10 +79,6 @@ body {
     float: right;
 }
 
-.zoneControl .content .footer {
-    clear: both;
-}
-
 .valueSlider {
     height: 200px;
 }
@@ -106,6 +99,11 @@ body {
 }
 
 /* Component Styling */
+.cmp-ControlApp .nav-tabs a {
+    font-size: 24px;
+    color: #000;
+}
+
 .cmp-RecipeApp h2 {
     margin-top: 0;
 }

@@ -12,6 +12,12 @@
     };
     UniqueIdMixin._current = 0;
 
+    var CssMixin = {
+        cssSafeIdentifier: function(value) {
+            return value.replace(/:/g, '_');
+        }
+    }
+
     var AssetsMixin = {
         getImageUrl: function(imageName) {
             return 'assets/images/' + imageName;
@@ -49,7 +55,7 @@
                 }.bind(this)
             });
         },
-        
+
         render: function() {
             return (
                 <div className="cmp-ControlApp">
@@ -98,6 +104,7 @@
     });
 
     var Zone = React.createClass({
+        mixins: [CssMixin],
         getInitialState: function() {
             return { value: 100 }
         },
@@ -118,11 +125,11 @@
             var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
             return (
                 <div className="col-xs-12 col-sm-3 col-md-3 col-lg-3">
-                    <a data-toggle="collapse" href={".zoneControl" + this.props.id} className="btn btn-primary zone" onClick={this.handleClick}>
+                    <a role="button" aria-expanded="false" aria-controls={"zoneControl" + this.props.id} data-toggle="collapse" href={"#zoneControl" + this.cssSafeIdentifier(this.props.id)} className="btn btn-primary zone">
                         <div>
                             <i className={icon}></i>
                         </div>
-                        <span className="name">{this.props.name} ({this.props.type})</span>
+                        <span className="name">{this.props.name}</span>
                         <input style={{display: 'none'}} type="text" value={value} onChange={this.handleChange}></input>
                     </a>
                     {/* TODO: position:absolute if desktop/tablet vs phone */}
@@ -133,6 +140,7 @@
     });
 
     var ZoneControl = React.createClass({
+        mixins: [CssMixin],
         componentDidMount: function() {
             var $el = $(ReactDOM.findDOMNode(this));
             var $value = $el.find('.level');
@@ -201,8 +209,10 @@
                 onText = 'Open';
                 offText = 'Close';
             }
+
+            var uniqueId = this.cssSafeIdentifier('zoneControl' + this.props.id);
             return (
-                <div className={"collapse zoneControl " + " zoneControl" + this.props.id}>
+                <div id={uniqueId} className={"collapse zoneControl " + uniqueId}>
                     <div className="well">
                         <div className="content">
                             <div className="left">
@@ -213,7 +223,7 @@
                                 <a href="#" className="btn btn-default on" onClick={this.handleOnClick}>{onText}</a>
                                 <a href="#" className="btn btn-default off" onClick={this.handleOffClick}>{offText}</a>
                             </div>
-                           <div className="footer"></div>
+                           <div className="footer clearfix"></div>
                        </div>
                     </div>
                 </div>
@@ -394,7 +404,7 @@
     var RecipeInfo = React.createClass({
         getInitialState: function() {
             return {
-                enabled: this.props.enabled,
+                enabled: this.props.recipe.enabled,
                 checkboxDisabled: false
             };
         },
