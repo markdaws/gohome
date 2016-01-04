@@ -26,7 +26,7 @@
 
     var ControlApp = React.createClass({
         getInitialState: function() {
-            return { scenes: [], zones: [] };
+            return { scenes: [], zones: [], devices: [] };
         },
 
         componentDidMount: function() {
@@ -66,6 +66,10 @@
                         <li role="presentation">
                             <a href="#zones" role="tab" aria-controls="zones" data-toggle="tab">Zones</a>
                         </li>
+                        {/*
+                        <li role="presentation">
+                            <a href="#devices" role="tab" aria-controls="devices" data-toggle="tab">Devices</a>
+                        </li>*/}
                         <li role="presentation">
                             <a href="#recipes" role="tab" aria-controls="recipes" data-toggle="tab">Recipes</a>
                         </li>
@@ -77,11 +81,22 @@
                         <div role="tabpanel" className="tab-pane fade" id="zones">
                             <ZoneList zones={this.state.zones} />
                         </div>
+                        <div role="tabpanel" className="tab-pane fade" id="devices">
+                            <DeviceList devices={this.state.devices} />
+                        </div>
                         <div role="tabpanel" className="tab-pane fade" id="recipes">
                             <RecipeApp />
                         </div>
                     </div>
                 </div>
+            );
+        }
+    });
+
+    var DeviceList = React.createClass({
+        render: function() {
+            return (
+                <div className="cmp-DeviceList">DEVICES!</div>
             );
         }
     });
@@ -654,7 +669,7 @@
             var self = this;
             var cookBookNodes = this.props.cookBooks.map(function(cookBook) {
                 return (
-                    <CookBook data={cookBook} selected={self.handleClick}/>
+                    <CookBook data={cookBook} selected={self.handleClick} key={cookBook.id}/>
                 );
             });
             return (
@@ -694,7 +709,7 @@
             var self = this;
             var triggerNodes = this.props.triggers.map(function(trigger) {
                 return (
-                    <Trigger data={trigger} selected={self.handleClick} />
+                    <Trigger data={trigger} selected={self.handleClick} key={trigger.name} />
                 );
             });
 
@@ -734,7 +749,7 @@
             var self = this;
             var actionNodes = this.props.actions.map(function(action) {
                 return (
-                    <Action data={action} selected={self.handleClick}/>
+                    <Action data={action} selected={self.handleClick} key={action.name}/>
                 );
             });
             return (
@@ -769,7 +784,7 @@
             var self = this;
             var ingredientNodes = this.props.ingredients.map(function(ingredient) {
                 return (
-                    <Ingredient data={ingredient} ref={ingredient.id} />
+                    <Ingredient data={ingredient} ref={ingredient.id} key={ingredient.id} />
                 );
             });
 

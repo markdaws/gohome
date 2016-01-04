@@ -36,7 +36,7 @@ body {
 
 /* Component Styling */
 .cmp-ControlApp .nav-tabs a {
-    font-size: 24px;
+    font-size: 18px;
     color: #000;
 }
 
@@ -87,9 +87,11 @@ body {
     text-align: center;
 }
 .cmp-CookBook img {
-    width: 200px;
-    height: 200px;
+    width: 100px;
+    height: 100px;
     display: block;
+    margin: 0 auto;
+    margin-bottom: 8px;
 }
 .cmp-CookBook button {
     padding: 12px;
