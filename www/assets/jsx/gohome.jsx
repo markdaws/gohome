@@ -92,7 +92,7 @@
             var zoneNodes = Object.keys(this.props.zones).map(function(id) {
                 var zone = self.props.zones[id];
                 return (
-                    <Zone id={zone.id} name={zone.name} type={zone.type}/>
+                    <Zone id={zone.id} name={zone.name} type={zone.type} key={id}/>
                 );
             })
             return (
@@ -244,7 +244,7 @@
             var sceneNodes = Object.keys(this.props.scenes).map(function(id) {
                 var scene = self.props.scenes[id];
                 return (
-                    <Scene id={scene.id} name={scene.name} description={scene.description} />
+                    <Scene scene={scene} key={id}/>
                 );
             });
             return (
@@ -262,7 +262,7 @@
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({ id: this.props.id }),
+                data: JSON.stringify({ id: this.props.scene.id }),
                 success: function(data) {
                     console.log('set the scene');
                 }.bind(this),
@@ -279,7 +279,7 @@
                         <div>
                             <i className="fa fa-sliders"></i>
                         </div>
-                        <span className="name">{this.props.name}</span>
+                        <span className="name">{this.props.scene.name}</span>
                     </a>
                 </div>
             )
@@ -387,7 +387,7 @@
             var self = this;
             var recipeNodes = this.state.recipes.map(function(recipe) {
                 return (
-                    <RecipeInfo recipe={recipe} onDestroy={self.recipeDestroyed}/>
+                    <RecipeInfo recipe={recipe} key={recipe.id} onDestroy={self.recipeDestroyed}/>
                 );
             });
 
