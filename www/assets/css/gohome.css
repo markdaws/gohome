@@ -11,6 +11,7 @@ body {
 
 .cmp-ControlApp .nav-tabs a {
     font-size: 24px;
+    color: #000;
 }
 
 /* TODO: Move into compoent namespace */
