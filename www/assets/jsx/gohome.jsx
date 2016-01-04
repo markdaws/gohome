@@ -1,6 +1,6 @@
 (function() {
 
-    var App = React.createClass({
+    var ControlApp = React.createClass({
         getInitialState: function() {
             return { scenes: [], zones: [] };
         },
@@ -34,9 +34,23 @@
         
         render: function() {
             return (
-                <div>
-                    <SceneList scenes={this.state.scenes} />
-                    <ZoneList zones={this.state.zones} />
+                <div className="cmp-ControlApp">
+                    <ul className="nav nav-tabs" role="tablist">
+                        <li role="presentation" className="active">
+                            <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">Scenes</a>
+                        </li>
+                        <li role="presentation">
+                            <a href="#zones" role="tab" aria-controls="zones" data-toggle="tab">Zones</a>
+                        </li>
+                    </ul>
+                    <div className="tab-content">
+                        <div role="tabpanel" className="tab-pane active" id="scenes">
+                            <SceneList scenes={this.state.scenes} />
+                        </div>
+                        <div role="tabpanel" className="tab-pane fade" id="zones">
+                            <ZoneList zones={this.state.zones} />
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -52,11 +66,8 @@
                 );
             })
             return (
-                <div>
-                    <a className="zoneListHeader" data-toggle="collapse" href=".zoneList">Zones</a>
-                    <div className="collapse zoneList row">
-                        {zoneNodes}
-                    </div>
+                <div className="cmp-ZoneList row">
+                    {zoneNodes}
                 </div>
             );
         }
@@ -203,11 +214,8 @@
                 );
             });
             return (
-                <div>
-                    <a className="sceneListHeader" data-toggle="collapse" href=".sceneList">Scenes</a>
-                    <div className="collapse sceneList row">
-                        {sceneNodes}
-                    </div>
+                <div className="cmp-SceneList row">
+                    {sceneNodes}
                 </div>
             );
         }
@@ -246,5 +254,5 @@
 
     var apiUrl = '/api/v1/systems/123/scenes';
     var apiUrlZones = '/api/v1/systems/123/zones';
-    React.render(<App url={apiUrl} zoneUrl={apiUrlZones}/>, document.getElementsByClassName('content')[0]);
+    ReactDOM.render(<ControlApp url={apiUrl} zoneUrl={apiUrlZones}/>, document.getElementsByClassName('content')[0]);
 })();

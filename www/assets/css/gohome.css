@@ -1,16 +1,19 @@
 body {
 }
 
-.content {
-    padding: 10px;
+.controlPageWrapper {
+    margin-top: 55px;
 }
 
-.sceneListHeader,
-.zoneListHeader {
-    font-size: 40px;
+.tab-content {
+    padding: 12px;
 }
 
-/* TODO: Move into own files */
+.cmp-ControlApp .nav-tabs a {
+    font-size: 24px;
+}
+
+/* TODO: Move into compoent namespace */
 .btn.scene,
 .btn.zone {
     text-align: center;
