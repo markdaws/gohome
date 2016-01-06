@@ -6,6 +6,7 @@ type EventBroker interface {
 	AddProducer(EventProducer)
 	AddConsumer(EventConsumer)
 	RemoveConsumer(EventConsumer)
+	Init()
 }
 
 type EventProducer interface {
@@ -24,7 +25,25 @@ func NewEventBroker() EventBroker {
 }
 
 type broker struct {
-	consumers map[string]chan<- Event
+	consumers  map[string]chan<- Event
+	eventQueue chan Event
+}
+
+func (b *broker) Init() {
+	b.eventQueue = make(chan Event, 10000)
+
+	// Want to process the events serially incase the order is important
+	// for triggers vs. processing many events in parallel
+	go func() {
+		for {
+			select {
+			case e := <-b.eventQueue:
+				for _, c := range b.consumers {
+					c <- e
+				}
+			}
+		}
+	}()
 }
 
 func (b *broker) AddProducer(p EventProducer) {
@@ -33,10 +52,7 @@ func (b *broker) AddProducer(p EventProducer) {
 		for {
 			select {
 			case e := <-ec:
-				//TODO: This is blocking, try trigger with 2 click and one with 3 second has to wait
-				for _, c := range b.consumers {
-					c <- e
-				}
+				b.eventQueue <- e
 			case <-dc:
 				//TODO:
 				fmt.Println("Producer has stopped")
@@ -51,6 +67,8 @@ func (b *broker) AddConsumer(c EventConsumer) {
 	if ec == nil {
 		return
 	}
+
+	fmt.Printf("Adding consumer: %s\n", c.EventConsumerID())
 	b.consumers[c.EventConsumerID()] = ec
 }
 

@@ -191,6 +191,7 @@ func apiRecipesHandlerGet(system *gohome.System, recipeManager *gohome.RecipeMan
 				Enabled:     recipe.Trigger.Enabled(),
 			}
 		}
+		sort.Sort(jsonRecipes)
 		if err := json.NewEncoder(w).Encode(jsonRecipes); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -352,7 +353,6 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 			i++
 		}
 		sort.Sort(zones)
-
 		if err := json.NewEncoder(w).Encode(zones); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -382,12 +382,20 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 			return
 		}
 
-		//TODO: Error - make async or sync?
-		zone.SetCommand.Execute(x.Value)
+		done := make(chan bool)
+		go func() {
+			defer close(done)
+			err := zone.SetCommand.Execute(x.Value)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(struct{}{})
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(struct{}{})
+		}()
+		<-done
 	}
 }
 
@@ -413,11 +421,19 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 			return
 		}
 
-		//TODO: Error
-		scene.Execute()
+		done := make(chan bool)
+		go func() {
+			defer close(done)
+			err := scene.Execute()
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(struct{}{})
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(struct{}{})
+		}()
+		<-done
 	}
 }

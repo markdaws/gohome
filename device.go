@@ -124,8 +124,6 @@ func ParseCommandString(d *Device, cmd string) Command {
 }
 
 func parseDeviceCommand(d *Device, cmd string) Command {
-	fmt.Println("parsing device string")
-
 	matches := regexp.MustCompile("[~|#]DEVICE,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
 	if matches == nil || len(matches) != 4 {
 		return nil
@@ -161,7 +159,6 @@ func parseDeviceCommand(d *Device, cmd string) Command {
 func parseZoneCommand(d *Device, cmd string) Command {
 	matches := regexp.MustCompile("[~|?]OUTPUT,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
 	if matches == nil || len(matches) != 4 {
-		fmt.Println("no matches")
 		return nil
 	}
 

@@ -30,27 +30,23 @@ func main() {
 
 	// TODO: Connection Pool, plus loop through connecting to all devices
 	sbpDevice := system.Devices[sbpID]
-	eventBroker := gohome.NewEventBroker()
-	eventBroker.AddProducer(sbpDevice)
+	eb := gohome.NewEventBroker()
+	eb.Init()
+	eb.AddProducer(sbpDevice)
 
 	// Load all of the recipes from disk, start listening
-	recipeManager := &gohome.RecipeManager{System: system}
-	recipeManager.Init(eventBroker, config.RecipeDirPath)
+	rm := &gohome.RecipeManager{System: system}
+	rm.Init(eb, config.RecipeDirPath)
 
 	// Start www server
-	serverDone := make(chan bool)
+	done := make(chan bool)
 	go func() {
-		s := www.NewServer("./www", system, recipeManager)
+		s := www.NewServer("./www", system, rm)
 		err := s.ListenAndServe(":8000")
 		if err != nil {
 			fmt.Println("error with server")
 		}
-		close(serverDone)
+		close(done)
 	}()
-	<-serverDone
-
-	//TODO: Automatically restat service if there is a crash for any reason
-	//TODO: Harden everything
+	<-done
 }
-
-//TODO: Why increasing number of prints for a single event - investigate

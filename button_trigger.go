@@ -112,7 +112,7 @@ func (t *ButtonTrigger) StartConsumingEvents() chan<- Event {
 				t.startTime = time.Now()
 				t.pressCount = 0
 			}
-			fmt.Println("ButtonTrigger: got event: ", e.String())
+			//fmt.Printf("ButtonTrigger: %s got event: %s\n", t.id, e.String())
 
 			if e.ReplayCommand == nil ||
 				e.ReplayCommand.GetType() != CTDevicePressButton {
@@ -121,9 +121,9 @@ func (t *ButtonTrigger) StartConsumingEvents() chan<- Event {
 
 			// If matches the button ID associated with this trigger
 			t.pressCount++
-			fmt.Printf("Current press count: %d\n", t.pressCount)
+			//fmt.Printf("Current press count: %d\n", t.pressCount)
 			if t.pressCount == t.PressCount {
-				fmt.Printf("Got %d presses\n", t.pressCount)
+				//fmt.Printf("Got %d presses\n", t.pressCount)
 				//TODO: What if nobody listening
 				t.fireChan <- true
 				t.pressCount = 0

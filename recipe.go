@@ -1,6 +1,10 @@
 package gohome
 
-import "github.com/nu7hatch/gouuid"
+import (
+	"fmt"
+
+	"github.com/nu7hatch/gouuid"
+)
 
 //TODO: Rules for trigger/action writers, don't have pointers to objects, have ids, use the
 //system object to get the items ou want access to, otherwise won't work on save/reload
@@ -39,7 +43,13 @@ func (r *Recipe) Start() <-chan bool {
 		for {
 			select {
 			case <-fireChan:
-				r.Action.Execute(r.system)
+				fmt.Printf("Recipe: %s - trigger fired\n", r.Identifiable.Name)
+				go func() {
+					err := r.Action.Execute(r.system)
+					if err != nil {
+						//TODO: Log error
+					}
+				}()
 
 			case <-doneChan:
 				doneChan = nil
