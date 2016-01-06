@@ -20,17 +20,23 @@ type wwwServer struct {
 	rootPath      string
 	system        *gohome.System
 	recipeManager *gohome.RecipeManager
+	eventLogger   *gohome.EventLogger
 }
 
-func NewServer(rootPath string, system *gohome.System, recipeManager *gohome.RecipeManager) Server {
+func NewServer(rootPath string, system *gohome.System, recipeManager *gohome.RecipeManager, eventLogger *gohome.EventLogger) Server {
 	return &wwwServer{
 		rootPath:      rootPath,
 		system:        system,
 		recipeManager: recipeManager,
+		eventLogger:   eventLogger,
 	}
 }
 
 func (s *wwwServer) ListenAndServe(port string) error {
+
+	//	var upgrader = websocket.Upgrader{} // use default options
+	//	_ = upgrader
+
 	r := mux.NewRouter()
 
 	mime.AddExtensionType(".jsx", "text/jsx")
@@ -42,6 +48,8 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	fontHandler := http.FileServer(http.Dir(s.rootPath + "/assets/fonts/"))
 	jsxHandler := http.FileServer(http.Dir(s.rootPath + "/assets/jsx/"))
 	imageHandler := http.FileServer(http.Dir(s.rootPath + "/assets/images/"))
+
+	r.HandleFunc("/api/v1/logging", s.eventLogger.HTTPHandler())
 
 	//TODO: Move api into separate http server
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
@@ -71,7 +79,6 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	sub.Handle("/jsx/{filename}", http.StripPrefix("/assets/jsx/", jsxHandler))
 	sub.Handle("/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
 	r.HandleFunc("/", rootHandler(s.rootPath))
-	r.HandleFunc("/recipes", recipesHandler(s.rootPath))
 	return http.ListenAndServe(port, r)
 }
 
@@ -81,11 +88,31 @@ func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func recipesHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
+/*
+func apiLoggingHandler(u websocket.Upgrader) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, rootPath+"/assets/html/recipes.html")
+		c, err := u.Upgrade(w, r, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer c.Close()
+		for {
+			mt, message, err := c.ReadMessage()
+			if err != nil {
+				fmt.Println("read:", err)
+				break
+			}
+			fmt.Printf("recv: %s", message)
+			err = c.WriteMessage(mt, message)
+			if err != nil {
+				fmt.Println("write:", err)
+				break
+			}
+		}
 	}
 }
+*/
 
 func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

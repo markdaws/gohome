@@ -60,7 +60,7 @@
             return (
                 <div className="cmp-ControlApp">
                     <ul className="nav nav-tabs" role="tablist">
-                        <li role="presentation" className="active">
+                        <li role="presentation">
                             <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">Scenes</a>
                         </li>
                         <li role="presentation">
@@ -69,13 +69,16 @@
                         {/*
                         <li role="presentation">
                             <a href="#devices" role="tab" aria-controls="devices" data-toggle="tab">Devices</a>
-                        </li>*/}
+                            </li>*/}
+                        <li role="presentation" className="active">
+                            <a href="#logging" role="tab" aria-controls="logging" data-toggle="tab">Logging</a>
+                        </li>
                         <li role="presentation">
                             <a href="#recipes" role="tab" aria-controls="recipes" data-toggle="tab">Recipes</a>
                         </li>
                     </ul>
                     <div className="tab-content">
-                        <div role="tabpanel" className="tab-pane active" id="scenes">
+                        <div role="tabpanel" className="tab-pane fade" id="scenes">
                             <SceneList scenes={this.state.scenes} />
                         </div>
                         <div role="tabpanel" className="tab-pane fade" id="zones">
@@ -84,11 +87,70 @@
                         <div role="tabpanel" className="tab-pane fade" id="devices">
                             <DeviceList devices={this.state.devices} />
                         </div>
+                        <div role="tabpanel" className="tab-pane active" id="logging">
+                            <Logging />
+                        </div>
                         <div role="tabpanel" className="tab-pane fade" id="recipes">
                             <RecipeApp />
                         </div>
                     </div>
                 </div>
+            );
+        }
+    });
+
+    var Logging = React.createClass({
+        getInitialState: function() {
+            return { items: [] };
+        },
+
+        componentDidMount: function() {
+            //TODO: Don't hardcode address
+            var conn = new WebSocket("ws://localhost:8000/api/v1/logging");
+            var self = this;
+            conn.onopen = function(evt) {
+                console.log('websocket has opened');
+            };
+            conn.onclose = function(evt) {
+                console.log('websocket has closed');
+                conn = null;
+                self.setState({ conn: null });
+            };
+            conn.onmessage = function(evt) {
+                self.setState({ items: self.state.items.concat(evt.data) });
+                console.log('got a new message: ' + evt.data);
+            };
+            this.setState({ conn: conn });
+        },
+
+        componentWillUnmount: function() {
+            //TODO: Kill the socket
+        },
+
+        clicked: function(evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            this.state.conn.send("this is a message");
+        },
+
+        render: function() {
+            var logLines = this.state.items.map(function(item) {
+                return <LogLine item={item} />;
+            });
+            return (
+                <div className="cmp-Logging">
+                    {logLines}
+                </div>
+            );
+        }
+    });
+
+    var LogLine = React.createClass({
+        render: function() {
+            return (
+                <li className="cmp-LogLine">
+                {this.props.item}
+                </li>
             );
         }
     });

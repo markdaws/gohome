@@ -38,10 +38,14 @@ func main() {
 	rm := &gohome.RecipeManager{System: system}
 	rm.Init(eb, config.RecipeDirPath)
 
+	// Event logger used to log event to UI clients via websockets
+	l := &gohome.EventLogger{}
+	eb.AddConsumer(l)
+
 	// Start www server
 	done := make(chan bool)
 	go func() {
-		s := www.NewServer("./www", system, rm)
+		s := www.NewServer("./www", system, rm, l)
 		err := s.ListenAndServe(":8000")
 		if err != nil {
 			fmt.Println("error with server")
