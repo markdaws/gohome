@@ -106,7 +106,7 @@
 
         componentDidMount: function() {
             //TODO: Don't hardcode address
-            var conn = new WebSocket("ws://localhost:8000/api/v1/logging");
+            var conn = new WebSocket("ws://" + window.location.host + "/api/v1/logging");
             var self = this;
             conn.onopen = function(evt) {
                 console.log('websocket has opened');

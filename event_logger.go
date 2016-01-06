@@ -55,7 +55,10 @@ func (l *EventLogger) StartConsumingEvents() chan<- Event {
 				//TODO: Log error
 				continue
 			}
-			l.conn.WriteMessage(websocket.TextMessage, b)
+			err = l.conn.WriteMessage(websocket.TextMessage, b)
+			if err != nil {
+				fmt.Print(err.Error())
+			}
 		}
 	}()
 	return c
@@ -63,8 +66,10 @@ func (l *EventLogger) StartConsumingEvents() chan<- Event {
 
 func (l *EventLogger) HTTPHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("got websocket request")
 		c, err := l.upgrader.Upgrade(w, r, nil)
 		if err != nil {
+			fmt.Println("error upgrading websocket")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
