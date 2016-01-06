@@ -117,7 +117,9 @@
                 self.setState({ conn: null });
             };
             conn.onmessage = function(evt) {
-                self.setState({ items: self.state.items.concat(evt.data) });
+                var item = JSON.parse(evt.data);
+                item.datetime = new Date(item.datetime);
+                self.setState({ items: self.state.items.concat(item)});
                 console.log('got a new message: ' + evt.data);
             };
             this.setState({ conn: conn });
@@ -135,11 +137,13 @@
 
         render: function() {
             var logLines = this.state.items.map(function(item) {
-                return <LogLine item={item} />;
+                return <LogLine item={item} key={item.id} />;
             });
             return (
                 <div className="cmp-Logging">
-                    {logLines}
+                    <ol className="list-unstyled">
+                        {logLines}
+                    </ol>
                 </div>
             );
         }
@@ -149,7 +153,9 @@
         render: function() {
             return (
                 <li className="cmp-LogLine">
-                {this.props.item}
+                    <span className="datetime">{this.props.item.datetime.toLocaleString()}</span>
+                    <span> : {this.props.item.friendlyMessage}</span>
+                    <span className="rawMessage"> [Raw: {this.props.item.rawMessage}]</span>
                 </li>
             );
         }

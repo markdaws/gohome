@@ -120,3 +120,17 @@ body {
     float: left;
     height: 34px;
 }
+
+.cmp-Logging li {
+    background: #fff;
+    padding: 5px;
+}
+.cmp-Logging li:nth-child(odd) {
+    background: #eee;
+}
+.cmp-LogLine span.datetime {
+    font-weight: bold;
+}
+.cmp-LogLine span.rawMessage {
+    font-style: italic;
+}

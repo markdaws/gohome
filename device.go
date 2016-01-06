@@ -170,7 +170,8 @@ func parseZoneCommand(d *Device, cmd string) Command {
 		return nil
 	}
 
-	z := d.System.Zones[zoneID]
+	//TODO: Get unique id based on device
+	z := d.System.Zones[d.ID+":"+zoneID]
 	if z == nil {
 		//TODO: Error log
 		return nil

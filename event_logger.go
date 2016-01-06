@@ -1,8 +1,11 @@
 package gohome
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/nu7hatch/gouuid"
@@ -26,6 +29,13 @@ func (l *EventLogger) EventConsumerID() string {
 	return l.id
 }
 
+type jsonEvent struct {
+	ID              string    `json:"id"`
+	Time            time.Time `json:"datetime"`
+	RawMessage      string    `json:"rawMessage"`
+	FriendlyMessage string    `json:"friendlyMessage"`
+}
+
 func (l *EventLogger) StartConsumingEvents() chan<- Event {
 	c := make(chan Event)
 	go func() {
@@ -34,7 +44,18 @@ func (l *EventLogger) StartConsumingEvents() chan<- Event {
 				continue
 			}
 
-			l.conn.WriteMessage(websocket.TextMessage, []byte(e.String()))
+			evt := jsonEvent{
+				ID:              strconv.Itoa(e.ID),
+				Time:            e.Time,
+				RawMessage:      e.OriginalString,
+				FriendlyMessage: e.String(),
+			}
+			b, err := json.Marshal(evt)
+			if err != nil {
+				//TODO: Log error
+				continue
+			}
+			l.conn.WriteMessage(websocket.TextMessage, b)
 		}
 	}()
 	return c
