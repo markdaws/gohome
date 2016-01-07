@@ -20,10 +20,10 @@ type wwwServer struct {
 	rootPath      string
 	system        *gohome.System
 	recipeManager *gohome.RecipeManager
-	eventLogger   *gohome.EventLogger
+	eventLogger   gohome.WSEventLogger
 }
 
-func NewServer(rootPath string, system *gohome.System, recipeManager *gohome.RecipeManager, eventLogger *gohome.EventLogger) Server {
+func NewServer(rootPath string, system *gohome.System, recipeManager *gohome.RecipeManager, eventLogger gohome.WSEventLogger) Server {
 	return &wwwServer{
 		rootPath:      rootPath,
 		system:        system,
@@ -49,7 +49,8 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	jsxHandler := http.FileServer(http.Dir(s.rootPath + "/assets/jsx/"))
 	imageHandler := http.FileServer(http.Dir(s.rootPath + "/assets/images/"))
 
-	r.HandleFunc("/api/v1/logging", s.eventLogger.HTTPHandler())
+	// Websocket handler
+	r.HandleFunc("/api/v1/events/ws", s.eventLogger.HTTPHandler())
 
 	//TODO: Move api into separate http server
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
@@ -87,32 +88,6 @@ func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
 		http.ServeFile(w, r, rootPath+"/assets/html/index.html")
 	}
 }
-
-/*
-func apiLoggingHandler(u websocket.Upgrader) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		c, err := u.Upgrade(w, r, nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer c.Close()
-		for {
-			mt, message, err := c.ReadMessage()
-			if err != nil {
-				fmt.Println("read:", err)
-				break
-			}
-			fmt.Printf("recv: %s", message)
-			err = c.WriteMessage(mt, message)
-			if err != nil {
-				fmt.Println("write:", err)
-				break
-			}
-		}
-	}
-}
-*/
 
 func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

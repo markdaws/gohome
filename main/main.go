@@ -39,7 +39,7 @@ func main() {
 	rm.Init(eb, config.RecipeDirPath)
 
 	// Event logger used to log event to UI clients via websockets
-	l := &gohome.EventLogger{}
+	l := gohome.NewWSEventLogger()
 	eb.AddConsumer(l)
 
 	// Start www server

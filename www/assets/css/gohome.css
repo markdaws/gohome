@@ -121,13 +121,25 @@ body {
     height: 34px;
 }
 
-.cmp-Logging li {
+.cmp-Logging li.cmp-LogLine {
     background: #fff;
     padding: 5px;
 }
-.cmp-Logging li:nth-child(odd) {
+.cmp-Logging li.cmp-LogLine:nth-child(odd) {
     background: #eee;
 }
+.cmp-Logging li.spinner {
+    text-align: center;
+    margin-top: 20px;
+}
+.cmp-Logging li.reconnect {
+    text-align: center;
+    margin-top: 20px;
+}
+.cmp-Logging h3 {
+    text-align: center;
+}
+
 .cmp-LogLine span.datetime {
     font-weight: bold;
 }

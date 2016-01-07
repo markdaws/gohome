@@ -101,48 +101,85 @@
 
     var Logging = React.createClass({
         getInitialState: function() {
-            return { items: [] };
+            return {
+                items: [],
+                connectionStatus: 'connecting'
+            };
         },
 
         componentDidMount: function() {
-            //TODO: Don't hardcode address
-            var conn = new WebSocket("ws://" + window.location.host + "/api/v1/logging");
+            this.reconnect();
+        },
+
+        componentWillUnmount: function() {
+            var conn = this.state.conn;
+            if (!conn) {
+                return;
+            }
+            conn.Close();
+        },
+
+        reconnect: function() {
+            var oldConn = this.state.conn;
+            if (oldConn) {
+                oldConn.close();
+            }
+
+            var conn = new WebSocket("ws://" + window.location.host + "/api/v1/events/ws");
             var self = this;
             conn.onopen = function(evt) {
                 console.log('websocket has opened');
+                self.setState({
+                    connectionStatus: 'connected'
+                });
             };
             conn.onclose = function(evt) {
                 console.log('websocket has closed');
                 conn = null;
-                self.setState({ conn: null });
+                self.setState({
+                    conn: null,
+                    connectionStatus: 'disconnected'
+                });
             };
             conn.onmessage = function(evt) {
+                console.log('websocket message: ' + evt.data);
                 var item = JSON.parse(evt.data);
                 item.datetime = new Date(item.datetime);
                 self.setState({ items: self.state.items.concat(item)});
-                console.log('got a new message: ' + evt.data);
             };
-            this.setState({ conn: conn });
-        },
+            this.setState({
+                conn: conn,
+                connectionStatus: 'connecting'
+            });
 
-        componentWillUnmount: function() {
-            //TODO: Kill the socket
-        },
-
-        clicked: function(evt) {
-            evt.preventDefault();
-            evt.stopPropagation();
-            this.state.conn.send("this is a message");
+            //TODO: Fetch X previous log items from server?
         },
 
         render: function() {
-            var logLines = this.state.items.map(function(item) {
-                return <LogLine item={item} key={item.id} />;
-            });
+            var body
+
+            switch(this.state.connectionStatus) {
+            case 'connected':
+                body = this.state.items.map(function(item) {
+                    return <LogLine item={item} key={item.id} />;
+                });
+                break;
+
+            case 'connecting':
+                body = <li className="spinner"><i className="fa fa-spinner fa-spin"></i></li>
+                break;
+
+            case 'disconnected':
+                body = <li className="reconnect"><button className="btn btn-primary" onClick={this.reconnect}>Reconnect</button></li>
+                break;
+            }
+
+            var waiting = this.state.items.length === 0 && this.state.connectionStatus === 'connected';
             return (
                 <div className="cmp-Logging">
+                    <h3 className={!waiting ? 'hidden' : ''}>Waiting for events...</h3>
                     <ol className="list-unstyled">
-                        {logLines}
+                        {body}
                     </ol>
                 </div>
             );
