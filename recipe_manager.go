@@ -60,7 +60,7 @@ func (rm *RecipeManager) UnregisterAndStop(r *Recipe) {
 
 func (rm *RecipeManager) RecipeByID(id string) *Recipe {
 	for _, recipe := range rm.Recipes {
-		if recipe.Identifiable.ID == id {
+		if recipe.ID == id {
 			return recipe
 		}
 	}
@@ -142,7 +142,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 
 	_, ok = rm.triggerFactory[triggerID]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("Invalid trigger ID: %s", triggerID))
+		return nil, fmt.Errorf("Invalid trigger ID: %s", triggerID)
 	}
 
 	_, ok = data["action"]
@@ -173,7 +173,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 
 	_, ok = rm.actionFactory[actionID]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("Invalid action ID: %s", actionID))
+		return nil, fmt.Errorf("Invalid action ID: %s", actionID)
 	}
 
 	trigger := rm.triggerFactory[triggerID]()
@@ -222,7 +222,7 @@ func (rm *RecipeManager) SaveRecipe(r *Recipe, appendTo bool) error {
 }
 
 func (rm *RecipeManager) recipePath(r *Recipe) string {
-	return filepath.Join(rm.dataPath, r.Identifiable.ID+".json")
+	return filepath.Join(rm.dataPath, r.ID+".json")
 }
 
 func (rm *RecipeManager) DeleteRecipe(r *Recipe) error {
@@ -235,7 +235,7 @@ func (rm *RecipeManager) DeleteRecipe(r *Recipe) error {
 	}
 
 	for i, recipe := range rm.Recipes {
-		if recipe.Identifiable.ID == r.Identifiable.ID {
+		if recipe.ID == r.ID {
 			rm.Recipes = append(rm.Recipes[:i], rm.Recipes[i+1:]...)
 			//			rm.Recipes[len(rm.Recipes)-1] = nil
 			break
@@ -252,11 +252,11 @@ func getIngredientValueMap(i Ingredientor, v reflect.Value) map[string]interface
 		// Want to store duration as ms, so need to massage
 		var value interface{}
 		if ingredient.Type == "duration" {
-			value = int64(time.Duration(v.FieldByName(ingredient.Identifiable.ID).Int()) / time.Millisecond)
+			value = int64(time.Duration(v.FieldByName(ingredient.ID).Int()) / time.Millisecond)
 		} else {
-			value = v.FieldByName(ingredient.Identifiable.ID).Interface()
+			value = v.FieldByName(ingredient.ID).Interface()
 		}
-		values[ingredient.Identifiable.ID] = value
+		values[ingredient.ID] = value
 	}
 	return values
 }
@@ -354,41 +354,41 @@ func setIngredients(i Ingredientor, ingredientValues map[string]interface{}, s r
 			case "string":
 				value, ok := ingredientValues[ingredient.ID].(string)
 				if !ok {
-					return errors.New(fmt.Sprintf("Invalid type, %s must be a string", ingredient.ID))
+					return fmt.Errorf("Invalid type, %s must be a string", ingredient.ID)
 				}
 				field.SetString(value)
 			case "boolean":
 				value, ok := ingredientValues[ingredient.ID].(bool)
 				if !ok {
-					return errors.New(fmt.Sprintf("Invalid type, %s must be a boolean", ingredient.ID))
+					return fmt.Errorf("Invalid type, %s must be a boolean", ingredient.ID)
 				}
 				field.SetBool(value)
 
 			case "integer":
 				value, ok := ingredientValues[ingredient.ID].(float64)
 				if !ok {
-					return errors.New(fmt.Sprintf("Invalid type, %s must be an integer", ingredient.ID))
+					return fmt.Errorf("Invalid type, %s must be an integer", ingredient.ID)
 				}
 				field.SetInt(int64(value))
 
 			case "float":
 				value, ok := ingredientValues[ingredient.ID].(float64)
 				if !ok {
-					return errors.New(fmt.Sprintf("Invalid type, %s must be a float", ingredient.ID))
+					return fmt.Errorf("Invalid type, %s must be a float", ingredient.ID)
 				}
 				field.SetFloat(value)
 
 			case "duration":
 				value, ok := ingredientValues[ingredient.ID].(float64)
 				if !ok {
-					return errors.New(fmt.Sprintf("Invalid type, %s must be an integer", ingredient.ID))
+					return fmt.Errorf("Invalid type, %s must be an integer", ingredient.ID)
 				}
 				field.Set(reflect.ValueOf(time.Duration(int64(value)) * time.Millisecond))
 			case "datetime":
 				//TODO: implement
 
 			default:
-				return errors.New(fmt.Sprintf("Unknown ingredient type: %s", ingredient.Type))
+				return fmt.Errorf("Unknown ingredient type: %s", ingredient.Type)
 			}
 		}
 	}

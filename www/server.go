@@ -187,9 +187,9 @@ func apiRecipesHandlerGet(system *gohome.System, recipeManager *gohome.RecipeMan
 		jsonRecipes := make(jsonRecipes, len(recipes))
 		for i, recipe := range recipes {
 			jsonRecipes[i] = jsonRecipe{
-				ID:          recipe.Identifiable.ID,
-				Name:        recipe.Identifiable.Name,
-				Description: recipe.Identifiable.Description,
+				ID:          recipe.ID,
+				Name:        recipe.Name,
+				Description: recipe.Description,
 				Enabled:     recipe.Trigger.Enabled(),
 			}
 		}

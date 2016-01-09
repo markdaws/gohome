@@ -10,11 +10,11 @@ import (
 //system object to get the items ou want access to, otherwise won't work on save/reload
 
 type Recipe struct {
-	Identifiable Identifiable
-	Trigger      Trigger
-	Action       Action
-	Version      string
-	system       *System
+	Identifiable
+	Trigger Trigger
+	Action  Action
+	Version string
+	system  *System
 }
 
 func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *System) (*Recipe, error) {
@@ -43,7 +43,7 @@ func (r *Recipe) Start() <-chan bool {
 		for {
 			select {
 			case <-fireChan:
-				fmt.Printf("Recipe: %s - trigger fired\n", r.Identifiable.Name)
+				fmt.Printf("Recipe: %s - trigger fired\n", r.Name)
 				go func() {
 					err := r.Action.Execute(r.system)
 					if err != nil {

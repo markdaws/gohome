@@ -34,6 +34,7 @@ func NewImporter() Importer {
 // Used for integration reports from Lutron Smart Bridge Pro
 func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System, error) {
 
+	//TODO: Handle non runtime panic
 	bytes, err := ioutil.ReadFile(integrationReportPath)
 	if err != nil {
 		return nil, err

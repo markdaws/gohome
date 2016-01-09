@@ -111,6 +111,16 @@
             this.reconnect();
         },
 
+        componentDidUpdate: function() {
+            var lastLi = this.refs.lastLi;
+            if (!lastLi) {
+                return;
+            }
+
+            //TODO: Shouldn't set the body element like this, use events
+            $('body')[0].scrollTop = ReactDOM.findDOMNode(lastLi).offsetTop;
+        },
+
         componentWillUnmount: function() {
             var conn = this.state.conn;
             if (!conn) {
@@ -138,6 +148,7 @@
                 conn = null;
                 self.setState({
                     conn: null,
+                    items: [],
                     connectionStatus: 'disconnected'
                 });
             };
@@ -156,12 +167,13 @@
         },
 
         render: function() {
-            var body
+            var body;
 
             switch(this.state.connectionStatus) {
             case 'connected':
-                body = this.state.items.map(function(item) {
-                    return <LogLine item={item} key={item.id} />;
+                var itemCount = this.state.items.length;
+                body = this.state.items.map(function(item, i) {
+                    return <LogLine item={item} key={item.id} ref={itemCount === i+1 ? 'lastLi' : undefined}/>;
                 });
                 break;
 
@@ -208,6 +220,7 @@
 
     var ZoneList = React.createClass({
         render: function() {
+            //TODO: Add loading
             var self = this;
             var zoneNodes = Object.keys(this.props.zones).map(function(id) {
                 var zone = self.props.zones[id];
@@ -360,6 +373,7 @@
         },
 
         render: function() {
+            //TODO: Add loading
             var self = this;
             var sceneNodes = Object.keys(this.props.scenes).map(function(id) {
                 var scene = self.props.scenes[id];
