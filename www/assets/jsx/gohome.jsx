@@ -166,6 +166,10 @@
             //TODO: Fetch X previous log items from server?
         },
 
+        clearClicked: function() {
+            this.setState({ items: [] });
+        },
+
         render: function() {
             var body;
 
@@ -186,13 +190,17 @@
                 break;
             }
 
-            var waiting = this.state.items.length === 0 && this.state.connectionStatus === 'connected';
+            var hasEvents = this.state.items.length > 0;
+            var waiting = !hasEvents && this.state.connectionStatus === 'connected';
             return (
                 <div className="cmp-Logging">
                     <h3 className={!waiting ? 'hidden' : ''}>Waiting for events...</h3>
                     <ol className="list-unstyled">
                         {body}
                     </ol>
+                    <div className="footer text-center">
+                        <button className={(hasEvents ? '' : 'hidden') + ' btn btn-default'} onClick={this.clearClicked}>Clear</button>
+                    </div>
                 </div>
             );
         }

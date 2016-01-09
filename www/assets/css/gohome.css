@@ -139,6 +139,9 @@ body {
 .cmp-Logging h3 {
     text-align: center;
 }
+.cmp-Logging .footer {
+    padding-top: 25px;
+}
 
 .cmp-LogLine span.datetime {
     font-weight: bold;
