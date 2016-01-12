@@ -1,9 +1,6 @@
 package gohome
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
 type ZoneSetLevelAction struct {
 	ZoneID string
@@ -48,7 +45,7 @@ func (a *ZoneSetLevelAction) Ingredients() []Ingredient {
 func (a *ZoneSetLevelAction) Execute(s *System) error {
 	zone, ok := s.Zones[a.ZoneID]
 	if !ok {
-		return errors.New(fmt.Sprintf("Unknown ZoneID %s", a.ZoneID))
+		return fmt.Errorf("Unknown ZoneID %s", a.ZoneID)
 	}
 	return zone.Set(a.Level)
 }

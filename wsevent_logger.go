@@ -156,10 +156,10 @@ func (c *connection) readLoop(l *wsEventLogger) {
 	}()
 	c.ws.SetReadLimit(1024)
 
-	to := 60 * time.Second
-	c.ws.SetReadDeadline(time.Now().Add(to))
+	maxWait := 60 * time.Second
+	c.ws.SetReadDeadline(time.Now().Add(maxWait))
 	c.ws.SetPongHandler(func(string) error {
-		c.ws.SetReadDeadline(time.Now().Add(to))
+		c.ws.SetReadDeadline(time.Now().Add(maxWait))
 		return nil
 	})
 	for {

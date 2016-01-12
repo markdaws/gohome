@@ -68,7 +68,7 @@ func (b *broker) AddConsumer(c EventConsumer) {
 		return
 	}
 
-	fmt.Printf("Adding consumer: %s\n", c.EventConsumerID())
+	//fmt.Printf("Adding consumer: %s\n", c.EventConsumerID())
 	b.consumers[c.EventConsumerID()] = ec
 }
 

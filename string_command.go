@@ -11,19 +11,20 @@ type StringCommand struct {
 
 func (c *StringCommand) Execute(args ...interface{}) error {
 	str := fmt.Sprintf(c.Value, args...)
-	fmt.Println("Setting command:", str)
+	fmt.Println("Sending command:", str)
 
 	conn, err := c.Device.Connect()
 	if err != nil {
-		return err
+		return fmt.Errorf("StringCommand - error connecting %s", err)
 	}
 
 	defer func() {
-		conn.Close()
+		c.Device.ReleaseConnection(conn)
 	}()
-
-	//TODO: If n < data, keep going
 	_, err = conn.Write([]byte(str))
+	if err != nil {
+		fmt.Printf("Failed to string string_command %s\n", err)
+	}
 	return err
 }
 
@@ -35,6 +36,6 @@ func (c *StringCommand) FriendlyString() string {
 	return c.Friendly
 }
 
-func (c *StringCommand) GetType() CommandType {
+func (c *StringCommand) CMDType() CommandType {
 	return c.Type
 }

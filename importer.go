@@ -71,14 +71,12 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 		var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
 		var deviceName string = deviceMap["Name"].(string)
 
-		device := &Device{
-			Identifiable: Identifiable{
+		device := NewDevice(
+			Identifiable{
 				ID:          deviceID,
 				Name:        deviceName,
 				Description: deviceName},
-			System:  sys,
-			Buttons: make(map[string]*Button),
-		}
+			sys)
 
 		for _, buttonMap := range deviceMap["Buttons"].([]interface{}) {
 			button := buttonMap.(map[string]interface{})
@@ -160,6 +158,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 				Address:  "192.168.0.10:23",
 				Login:    "lutron",
 				Password: "integration",
+				Stream:   true,
+				PoolSize: 2,
 			}
 			makeScenes(system.Scenes, device, sbp)
 			break

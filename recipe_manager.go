@@ -95,8 +95,7 @@ type actionWrapper struct {
 }
 
 func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recipe, error) {
-	_, ok := data["name"]
-	if !ok {
+	if _, ok := data["name"]; !ok {
 		return nil, errors.New("Missing name key")
 	}
 	name, ok := data["name"].(string)
@@ -104,8 +103,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 		return nil, errors.New("Invalid value for name, must be a string")
 	}
 
-	_, ok = data["description"]
-	if !ok {
+	if _, ok = data["description"]; !ok {
 		return nil, errors.New("Missing description key")
 	}
 	desc, ok := data["description"].(string)
@@ -113,8 +111,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 		return nil, errors.New("Invalid value for description, must be a string")
 	}
 
-	_, ok = data["trigger"]
-	if !ok {
+	if _, ok = data["trigger"]; ok {
 		return nil, errors.New("Missing trigger key")
 	}
 	triggerData, ok := data["trigger"].(map[string]interface{})
@@ -122,8 +119,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 		return nil, errors.New("Invalid value for trigger, must be an object")
 	}
 
-	_, ok = triggerData["id"]
-	if !ok {
+	if _, ok = triggerData["id"]; !ok {
 		return nil, errors.New("Missing id key in trigger object")
 	}
 	triggerID, ok := triggerData["id"].(string)
@@ -131,8 +127,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 		return nil, errors.New("Invalid value, trigger.id must be a string")
 	}
 
-	_, ok = triggerData["ingredients"]
-	if !ok {
+	if _, ok = triggerData["ingredients"]; !ok {
 		return nil, errors.New("Missing trigger.ingredients key")
 	}
 	triggerIngredients, ok := triggerData["ingredients"].(map[string]interface{})
@@ -140,21 +135,18 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 		return nil, errors.New("Invalid value for trigger.ingredients, must be an object")
 	}
 
-	_, ok = rm.triggerFactory[triggerID]
-	if !ok {
+	if _, ok = rm.triggerFactory[triggerID]; !ok {
 		return nil, fmt.Errorf("Invalid trigger ID: %s", triggerID)
 	}
 
-	_, ok = data["action"]
-	if !ok {
+	if _, ok = data["action"]; !ok {
 		return nil, errors.New("Missing action key")
 	}
 	actionData, ok := data["action"].(map[string]interface{})
 	if !ok {
 		return nil, errors.New("Invalid value for action, must be an object")
 	}
-	_, ok = actionData["id"]
-	if !ok {
+	if _, ok = actionData["id"]; !ok {
 		return nil, errors.New("Missing id key in action object")
 	}
 	actionID, ok := actionData["id"].(string)
@@ -162,8 +154,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 		return nil, errors.New("Invalid value, action.id must be a string")
 	}
 
-	_, ok = actionData["ingredients"]
-	if !ok {
+	if _, ok = actionData["ingredients"]; !ok {
 		return nil, errors.New("Missing action.ingredients key")
 	}
 	actionIngredients, ok := actionData["ingredients"].(map[string]interface{})
@@ -171,8 +162,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 		return nil, errors.New("Invalid value for action.ingredients, must be an object")
 	}
 
-	_, ok = rm.actionFactory[actionID]
-	if !ok {
+	if _, ok = rm.actionFactory[actionID]; !ok {
 		return nil, fmt.Errorf("Invalid action ID: %s", actionID)
 	}
 
@@ -201,7 +191,6 @@ func (rm *RecipeManager) SaveRecipe(r *Recipe, appendTo bool) error {
 	out.Identifiable = r.Identifiable
 	out.Enabled = r.Trigger.Enabled()
 
-	//err := setIngredients(trigger, triggerIngredients, reflect.ValueOf(trigger).Elem())
 	out.Trigger = triggerWrapper{Type: r.Trigger.Type(), Trigger: getIngredientValueMap(r.Trigger, reflect.ValueOf(r.Trigger).Elem())}
 	out.Action = actionWrapper{Type: r.Action.Type(), Action: getIngredientValueMap(r.Action, reflect.ValueOf(r.Action).Elem())}
 
@@ -277,7 +266,7 @@ func (rm *RecipeManager) loadRecipes(path string) ([]*Recipe, error) {
 			continue
 		}
 
-		fmt.Printf("appending %+v", recipe)
+		//fmt.Printf("appending %+v", recipe)
 		recipes = append(recipes, recipe)
 	}
 	return recipes, nil
@@ -417,6 +406,7 @@ func loadCookBooks(dataPath string) []*CookBook {
 				&ZoneSetLevelToggleAction{},
 				&SceneSetAction{},
 				&SceneSetToggleAction{},
+				&StringCommandAction{},
 			},
 		},
 	}

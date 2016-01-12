@@ -1,9 +1,6 @@
 package gohome
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
 type SceneSetAction struct {
 	SceneID string
@@ -38,7 +35,7 @@ func (a *SceneSetAction) Ingredients() []Ingredient {
 func (a *SceneSetAction) Execute(s *System) error {
 	scene, ok := s.Scenes[a.SceneID]
 	if !ok {
-		return errors.New(fmt.Sprintf("Unknown Scene ID %s", a.SceneID))
+		return fmt.Errorf("Unknown Scene ID %s", a.SceneID)
 	}
 	return scene.Execute()
 }

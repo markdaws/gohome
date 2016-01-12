@@ -7,6 +7,8 @@ import (
 	"github.com/nu7hatch/gouuid"
 )
 
+//TODO: Should rename button click
+//TODO: Have trigger that allows users to specify hold times for buttons as a trigger
 type ButtonTrigger struct {
 	ButtonID   string
 	PressCount int
@@ -115,7 +117,7 @@ func (t *ButtonTrigger) StartConsumingEvents() chan<- Event {
 			//fmt.Printf("ButtonTrigger: %s got event: %s\n", t.id, e.String())
 
 			if e.ReplayCommand == nil ||
-				e.ReplayCommand.GetType() != CTDevicePressButton {
+				e.ReplayCommand.CMDType() != CTDevicePressButton {
 				continue
 			}
 

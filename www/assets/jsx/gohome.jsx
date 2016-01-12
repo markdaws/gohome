@@ -118,6 +118,8 @@
             }
 
             //TODO: Shouldn't set the body element like this, use events
+            //TODO: If the user has scrolled away from the bottom, don't do this
+            //until they scroll back to the bottom again, annoying to jump away
             $('body')[0].scrollTop = ReactDOM.findDOMNode(lastLi).offsetTop;
         },
 
@@ -138,13 +140,11 @@
             var conn = new WebSocket("ws://" + window.location.host + "/api/v1/events/ws");
             var self = this;
             conn.onopen = function(evt) {
-                console.log('websocket has opened');
                 self.setState({
                     connectionStatus: 'connected'
                 });
             };
             conn.onclose = function(evt) {
-                console.log('websocket has closed');
                 conn = null;
                 self.setState({
                     conn: null,
@@ -153,7 +153,6 @@
                 });
             };
             conn.onmessage = function(evt) {
-                console.log('websocket message: ' + evt.data);
                 var item = JSON.parse(evt.data);
                 item.datetime = new Date(item.datetime);
                 self.setState({ items: self.state.items.concat(item)});

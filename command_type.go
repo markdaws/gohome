@@ -1,6 +1,5 @@
 package gohome
 
-//TODO: turn enum to string representation
 type CommandType uint32
 
 const (
@@ -8,5 +7,6 @@ const (
 	CTZoneSetLevel
 	CTDevicePressButton
 	CTDeviceReleaseButton
+	CTDeviceSendCommand
 	CTSystemSetScene
 )

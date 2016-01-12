@@ -5,4 +5,6 @@ type ConnectionInfo struct {
 	Address  string
 	Login    string
 	Password string
+	Stream   bool
+	PoolSize int
 }

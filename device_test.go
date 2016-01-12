@@ -1,5 +1,6 @@
 package gohome
 
+/*
 import (
 	"fmt"
 	"io"
@@ -98,3 +99,4 @@ func TestStream(t *testing.T) {
 
 	<-dc
 }
+*/

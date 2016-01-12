@@ -1,9 +1,6 @@
 package gohome
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
 type SceneSetToggleAction struct {
 	FirstSceneID  string
@@ -50,12 +47,12 @@ func (a *SceneSetToggleAction) Ingredients() []Ingredient {
 func (a *SceneSetToggleAction) Execute(s *System) error {
 	first, ok := s.Scenes[a.FirstSceneID]
 	if !ok {
-		return errors.New(fmt.Sprintf("Unknown First Scene ID %s", a.FirstSceneID))
+		return fmt.Errorf("Unknown First Scene ID %s", a.FirstSceneID)
 	}
 
 	second, ok := s.Scenes[a.SecondSceneID]
 	if !ok {
-		return errors.New(fmt.Sprintf("Unknown Second Scene ID %s", a.SecondSceneID))
+		return fmt.Errorf("Unknown Second Scene ID %s", a.SecondSceneID)
 	}
 
 	if a.second {

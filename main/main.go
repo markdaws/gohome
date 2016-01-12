@@ -32,7 +32,11 @@ func main() {
 	sbpDevice := system.Devices[sbpID]
 	eb := gohome.NewEventBroker()
 	eb.Init()
-	eb.AddProducer(sbpDevice)
+
+	go func() {
+		sbpDevice.InitConnections()
+		eb.AddProducer(sbpDevice)
+	}()
 
 	// Load all of the recipes from disk, start listening
 	rm := &gohome.RecipeManager{System: system}
