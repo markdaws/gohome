@@ -5,6 +5,7 @@ type jsonZone struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Type        string `json:"type"`
+	Output      string `json:"output"`
 }
 type zones []jsonZone
 

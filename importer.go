@@ -220,13 +220,23 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				zoneTypeFinal = ZTShade
 			}
 		}
+		var outputTypeFinal OutputType = OTContinuous
+		if outputType, ok := zone["Output"].(string); ok {
+			switch outputType {
+			case "binary":
+				outputTypeFinal = OTBinary
+			case "continuous":
+				outputTypeFinal = OTContinuous
+			}
+		}
 		system.Zones[uniqueID] = &Zone{
 			Identifiable: Identifiable{
 				ID:          uniqueID,
 				Name:        zoneName,
 				Description: zoneName,
 			},
-			Type: zoneTypeFinal,
+			Type:   zoneTypeFinal,
+			Output: outputTypeFinal,
 			setCommand: func(args ...interface{}) Command {
 				return &StringCommand{
 					Device:   sbp,

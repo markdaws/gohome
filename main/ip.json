@@ -495,7 +495,8 @@
       },
       {
         "ID": 21,
-        "Name": "Front Door"
+        "Name": "Front Door",
+        "Output": "binary"
       },
       {
         "ID": 23,

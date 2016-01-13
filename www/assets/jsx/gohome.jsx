@@ -232,7 +232,7 @@
             var zoneNodes = Object.keys(this.props.zones).map(function(id) {
                 var zone = self.props.zones[id];
                 return (
-                    <Zone id={zone.id} name={zone.name} type={zone.type} key={id}/>
+                    <Zone id={zone.id} name={zone.name} type={zone.type} output={zone.output} key={id}/>
                 );
             })
             return (
@@ -273,7 +273,7 @@
                         <input style={{display: 'none'}} type="text" value={value} onChange={this.handleChange}></input>
                     </a>
                     {/* TODO: position:absolute if desktop/tablet vs phone */}
-                    <ZoneControl ref="zoneControl" name={this.props.name} id={this.props.id} type={this.props.type}/>
+                    <ZoneControl ref="zoneControl" name={this.props.name} id={this.props.id} type={this.props.type} output={this.props.output}/>
                 </div>
             )
         }
@@ -350,15 +350,22 @@
                 offText = 'Close';
             }
 
+            var left;
+            if (this.props.output === 'continuous') {
+                left = (
+                    <div className="pull-left">
+                        <h4 className="level">N/A</h4>
+                        <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="vertical"></input>
+                    </div>
+                    );
+            }
+
             var uniqueId = this.cssSafeIdentifier('zoneControl' + this.props.id);
             return (
                 <div id={uniqueId} className={"cmp-ZoneControl collapse " + uniqueId}>
                     <div className="well">
                         <div className="content">
-                            <div className="pull-left">
-                                <h4 className="level">N/A</h4>
-                                <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="vertical"></input>
-                            </div>
+                            {left}
                             <div className="pull-right">
                                 <a href="#" className="btn btn-default on" onClick={this.handleOnClick}>{onText}</a>
                                 <a href="#" className="btn btn-default off" onClick={this.handleOffClick}>{offText}</a>

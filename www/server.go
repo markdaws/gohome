@@ -351,7 +351,13 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 		zones := make(zones, len(system.Zones), len(system.Zones))
 		var i int32 = 0
 		for _, zone := range system.Zones {
-			zones[i] = jsonZone{ID: zone.ID, Name: zone.Name, Description: zone.Description, Type: zone.Type.ToString()}
+			zones[i] = jsonZone{
+				ID:          zone.ID,
+				Name:        zone.Name,
+				Description: zone.Description,
+				Type:        zone.Type.ToString(),
+				Output:      zone.Output.ToString(),
+			}
 			i++
 		}
 		sort.Sort(zones)
