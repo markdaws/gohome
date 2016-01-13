@@ -71,6 +71,34 @@ func (d *Device) StartProducingEvents() (<-chan Event, <-chan bool) {
 	return d.evpFire, d.evpDone
 }
 
+func (d *Device) Authenticate(c comm.Connection) error {
+	r := bufio.NewReader(c)
+	_, err := r.ReadString(':')
+	if err != nil {
+		fmt.Println("Failed to read login", err)
+		return err
+	}
+
+	info := c.Info()
+	_, err = c.Write([]byte(info.Login + "\r\n"))
+	if err != nil {
+		fmt.Println("Failed to write password", err)
+		return err
+	}
+
+	_, err = r.ReadString(':')
+	if err != nil {
+		fmt.Println("error waiting for password", err)
+		return err
+	}
+	_, err = c.Write([]byte(info.Password + "\r\n"))
+	if err != nil {
+		fmt.Println("Error writing password")
+		return err
+	}
+	return nil
+}
+
 func startStreaming(d *Device) {
 	//TODO: Stop?
 	for {

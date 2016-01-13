@@ -156,12 +156,13 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 			sbp = makeDevice(device, system)
 			//TODO: Shouldn't set here, comes in from user
 			sbp.ConnectionInfo = comm.ConnectionInfo{
-				Network:  "tcp",
-				Address:  "192.168.0.10:23",
-				Login:    "lutron",
-				Password: "integration",
-				Stream:   true,
-				PoolSize: 2,
+				Network:       "tcp",
+				Address:       "192.168.0.10:23",
+				Login:         "lutron",
+				Password:      "integration",
+				Stream:        true,
+				PoolSize:      2,
+				Authenticator: sbp,
 			}
 			makeScenes(system.Scenes, device, sbp)
 			break

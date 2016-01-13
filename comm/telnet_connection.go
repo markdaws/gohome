@@ -1,7 +1,6 @@
 package comm
 
 import (
-	"bufio"
 	"fmt"
 	"net"
 	"time"
@@ -43,6 +42,10 @@ func (c *telnetConnection) PingCallback() PingCallback {
 	return c.pingCallback
 }
 
+func (c *telnetConnection) Info() ConnectionInfo {
+	return c.info
+}
+
 func (c *telnetConnection) Open() error {
 	c.status = CSConnecting
 
@@ -54,35 +57,14 @@ func (c *telnetConnection) Open() error {
 		return err
 	}
 
-	//TODO: Move this in to device specific function
-	//each device will have it's own way of authenticating
-	r := bufio.NewReader(conn)
-	_, err = r.ReadString(':')
-	if err != nil {
-		fmt.Println("Failed to read login", err)
-		c.status = CSClosed
-		return err
-	}
-
 	c.conn = conn
-	_, err = conn.Write([]byte(c.info.Login + "\r\n"))
-	if err != nil {
-		fmt.Println("Failed to write password", err)
-		c.status = CSClosed
-		return err
-	}
 
-	_, err = r.ReadString(':')
-	if err != nil {
-		fmt.Println("error waiting for password", err)
-		c.status = CSClosed
-		return err
-	}
-	_, err = conn.Write([]byte(c.info.Password + "\r\n"))
-	if err != nil {
-		fmt.Println("Error writing password")
-		c.status = CSClosed
-		return err
+	if c.info.Authenticator != nil {
+		if err = c.info.Authenticator.Authenticate(c); err != nil {
+			fmt.Println("Authentication failed")
+			c.Close()
+			return err
+		}
 	}
 
 	fmt.Println("telnetConnection - connected")
@@ -91,6 +73,7 @@ func (c *telnetConnection) Open() error {
 }
 
 func (c *telnetConnection) Close() {
+	c.status = CSClosed
 	c.conn.Close()
 }
 
