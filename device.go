@@ -8,18 +8,20 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/markdaws/gohome/comm"
 )
 
 //TODO: Change to interface, make this private
 type Device struct {
 	Identifiable
 	System         *System
-	ConnectionInfo ConnectionInfo
+	ConnectionInfo comm.ConnectionInfo
 	Buttons        map[string]*Button
 
 	evpDone chan bool
 	evpFire chan Event
-	pool    ConnectionPool
+	pool    comm.ConnectionPool
 }
 
 func NewDevice(i Identifiable, s *System) *Device {
@@ -31,8 +33,8 @@ func NewDevice(i Identifiable, s *System) *Device {
 }
 
 func (d *Device) InitConnections() {
-	createConnection := func() Connection {
-		conn := NewTelnetConnection(d.ConnectionInfo)
+	createConnection := func() comm.Connection {
+		conn := comm.NewTelnetConnection(d.ConnectionInfo)
 		conn.SetPingCallback(func() error {
 			if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
 				fmt.Printf("ping failed: %s", err.Error())
@@ -43,10 +45,10 @@ func (d *Device) InitConnections() {
 		return conn
 	}
 	ps := d.ConnectionInfo.PoolSize
-	d.pool = NewConnectionPool(ps, createConnection)
+	d.pool = comm.NewConnectionPool(ps, createConnection)
 }
 
-func (d *Device) Connect() (Connection, error) {
+func (d *Device) Connect() (comm.Connection, error) {
 	c := d.pool.Get()
 	if c == nil {
 		return nil, errors.New("No connection available")
@@ -54,7 +56,7 @@ func (d *Device) Connect() (Connection, error) {
 	return c, nil
 }
 
-func (d *Device) ReleaseConnection(c Connection) {
+func (d *Device) ReleaseConnection(c comm.Connection) {
 	d.pool.Release(c)
 }
 

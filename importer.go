@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+
+	"github.com/markdaws/gohome/comm"
 )
 
 type Importer interface {
@@ -153,7 +155,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 			//ModelNumber: L-BDGPRO2-WH
 			sbp = makeDevice(device, system)
 			//TODO: Shouldn't set here, comes in from user
-			sbp.ConnectionInfo = ConnectionInfo{
+			sbp.ConnectionInfo = comm.ConnectionInfo{
 				Network:  "tcp",
 				Address:  "192.168.0.10:23",
 				Login:    "lutron",

@@ -1,4 +1,4 @@
-package gohome
+package comm
 
 type ConnectionInfo struct {
 	Network  string
