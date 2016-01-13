@@ -3,7 +3,7 @@ package gohome
 import "fmt"
 
 type Command interface {
-	Execute(args ...interface{}) error
+	Execute() error
 	FriendlyString() string
 	CMDType() CommandType
 	fmt.Stringer

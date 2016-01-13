@@ -7,10 +7,11 @@ type StringCommand struct {
 	Friendly string
 	Device   *Device
 	Type     CommandType
+	Args     []interface{}
 }
 
-func (c *StringCommand) Execute(args ...interface{}) error {
-	str := fmt.Sprintf(c.Value, args...)
+func (c *StringCommand) Execute() error {
+	str := fmt.Sprintf(c.Value, c.Args...)
 	fmt.Println("Sending command:", str)
 
 	conn, err := c.Device.Connect()

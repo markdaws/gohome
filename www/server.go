@@ -384,20 +384,15 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 			return
 		}
 
-		done := make(chan bool)
-		go func() {
-			defer close(done)
-			err := zone.SetCommand.Execute(x.Value)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
+		err = zone.SetLevel(x.Value)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(struct{}{})
-		}()
-		<-done
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(struct{}{})
 	}
 }
 
@@ -423,19 +418,14 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 			return
 		}
 
-		done := make(chan bool)
-		go func() {
-			defer close(done)
-			err := scene.Execute()
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
+		err = scene.Execute()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(struct{}{})
-		}()
-		<-done
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(struct{}{})
 	}
 }

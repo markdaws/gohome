@@ -2,14 +2,13 @@ package gohome
 
 type Scene struct {
 	Identifiable
-	Commands []Command
+	Commands     []Command
+	cmdProcessor CommandProcessor
 }
 
 func (s *Scene) Execute() error {
 	for _, c := range s.Commands {
-		c.Execute()
+		s.cmdProcessor.Enqueue(c)
 	}
-
-	//TODO: error
 	return nil
 }

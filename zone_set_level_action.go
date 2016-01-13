@@ -47,7 +47,7 @@ func (a *ZoneSetLevelAction) Execute(s *System) error {
 	if !ok {
 		return fmt.Errorf("Unknown ZoneID %s", a.ZoneID)
 	}
-	return zone.Set(a.Level)
+	return zone.SetLevel(a.Level)
 }
 
 func (a *ZoneSetLevelAction) New() Action {

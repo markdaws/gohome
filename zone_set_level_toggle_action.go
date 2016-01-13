@@ -62,10 +62,10 @@ func (a *ZoneSetLevelToggleAction) Execute(s *System) error {
 
 	if a.second {
 		a.second = false
-		return zone.Set(a.SecondLevel)
+		return zone.SetLevel(a.SecondLevel)
 	} else {
 		a.second = true
-		return zone.Set(a.FirstLevel)
+		return zone.SetLevel(a.FirstLevel)
 	}
 }
 

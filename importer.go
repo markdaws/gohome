@@ -12,18 +12,18 @@ import (
 )
 
 type Importer interface {
-	ImportFromFile(path, importerID string) (*System, error)
+	ImportFromFile(path, importerID string, cmdProcessor CommandProcessor) (*System, error)
 }
 
 type importer struct {
 }
 
-func (i importer) ImportFromFile(path, importerID string) (*System, error) {
+func (i importer) ImportFromFile(path, importerID string, cp CommandProcessor) (*System, error) {
 	//TODO: Support importing multiple devices
 	switch importerID {
 	case "L-BDGPRO2-WH":
 		//TODO: sbpID, how pass this in? Need a bucket of params
-		return importL_BDGPRO2_WH(path, "1")
+		return importL_BDGPRO2_WH(path, "1", cp)
 	default:
 		return nil, errors.New("Unknown import type: " + importerID)
 	}
@@ -34,7 +34,7 @@ func NewImporter() Importer {
 }
 
 // Used for integration reports from Lutron Smart Bridge Pro
-func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System, error) {
+func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProcessor CommandProcessor) (*System, error) {
 
 	//TODO: Handle non runtime panic
 	bytes, err := ioutil.ReadFile(integrationReportPath)
@@ -77,8 +77,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 			Identifiable{
 				ID:          deviceID,
 				Name:        deviceName,
-				Description: deviceName},
-			sys)
+				Description: deviceName,
+			},
+			sys,
+			cmdProcessor)
 
 		for _, buttonMap := range deviceMap["Buttons"].([]interface{}) {
 			button := buttonMap.(map[string]interface{})
@@ -129,12 +131,15 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 						ID:          uniqueID,
 						Name:        buttonName,
 						Description: buttonName},
-					Commands: []Command{&StringCommand{
-						Device:   sbp,
-						Value:    pressCommand + releaseCommand,
-						Friendly: "//TODO: Friendly",
-						Type:     CTSystemSetScene,
-					}},
+					Commands: []Command{
+						&StringCommand{
+							Device:   sbp,
+							Value:    pressCommand + releaseCommand,
+							Friendly: "//TODO: Friendly",
+							Type:     CTSystemSetScene,
+						},
+					},
+					cmdProcessor: cmdProcessor,
 				}
 			}
 		}
@@ -219,14 +224,19 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string) (*System
 			Identifiable: Identifiable{
 				ID:          uniqueID,
 				Name:        zoneName,
-				Description: zoneName},
-			Type: zoneTypeFinal,
-			SetCommand: &StringCommand{
-				Device:   sbp,
-				Value:    "#OUTPUT," + zoneID + ",1,%.2f\r\n",
-				Friendly: "//TODO: Friendly",
-				Type:     CTZoneSetLevel,
+				Description: zoneName,
 			},
+			Type: zoneTypeFinal,
+			setCommand: func(args ...interface{}) Command {
+				return &StringCommand{
+					Device:   sbp,
+					Value:    "#OUTPUT," + zoneID + ",1,%.2f\r\n",
+					Friendly: "//TODO: Friendly",
+					Type:     CTZoneSetLevel,
+					Args:     args,
+				}
+			},
+			cmdProcessor: cmdProcessor,
 		}
 	}
 

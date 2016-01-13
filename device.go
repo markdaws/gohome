@@ -19,16 +19,18 @@ type Device struct {
 	ConnectionInfo comm.ConnectionInfo
 	Buttons        map[string]*Button
 
-	evpDone chan bool
-	evpFire chan Event
-	pool    comm.ConnectionPool
+	evpDone      chan bool
+	evpFire      chan Event
+	pool         comm.ConnectionPool
+	cmdProcessor CommandProcessor
 }
 
-func NewDevice(i Identifiable, s *System) *Device {
+func NewDevice(i Identifiable, s *System, cp CommandProcessor) *Device {
 	return &Device{
 		Identifiable: i,
 		System:       s,
 		Buttons:      make(map[string]*Button),
+		cmdProcessor: cp,
 	}
 }
 
@@ -61,7 +63,6 @@ func (d *Device) ReleaseConnection(c comm.Connection) {
 }
 
 func (d *Device) StartProducingEvents() (<-chan Event, <-chan bool) {
-	//TODO: When to init these
 	d.evpDone = make(chan bool)
 	d.evpFire = make(chan Event)
 
