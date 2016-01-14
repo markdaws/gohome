@@ -23,31 +23,25 @@ func (a *StringCommandAction) Description() string {
 func (a *StringCommandAction) Ingredients() []Ingredient {
 	return []Ingredient{
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "DeviceID",
-				Name:        "Device ID",
-				Description: "The ID of the device to send the command to",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "DeviceID",
+			Name:        "Device ID",
+			Description: "The ID of the device to send the command to",
+			Type:        "string",
+			Required:    true,
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "Command",
-				Name:        "Command String",
-				Description: "The string to send to the specified device",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "Command",
+			Name:        "Command String",
+			Description: "The string to send to the specified device",
+			Type:        "string",
+			Required:    true,
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "Friendly",
-				Name:        "Description",
-				Description: "A human friendly description of the command that will appear in the event log",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "Friendly",
+			Name:        "Description",
+			Description: "A human friendly description of the command that will appear in the event log",
+			Type:        "string",
+			Required:    true,
 		},
 	}
 }

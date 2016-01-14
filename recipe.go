@@ -10,11 +10,13 @@ import (
 //system object to get the items ou want access to, otherwise won't work on save/reload
 
 type Recipe struct {
-	Identifiable
-	Trigger Trigger
-	Action  Action
-	Version string
-	system  *System
+	ID          string
+	Name        string
+	Description string
+	Trigger     Trigger
+	Action      Action
+	Version     string
+	system      *System
 }
 
 func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *System) (*Recipe, error) {
@@ -25,15 +27,13 @@ func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *S
 
 	t.SetEnabled(enabled)
 	return &Recipe{
-		Identifiable: Identifiable{
-			ID:          id.String(),
-			Name:        name,
-			Description: description,
-		},
-		Trigger: t,
-		Action:  a,
-		Version: "1",
-		system:  s,
+		ID:          id.String(),
+		Name:        name,
+		Description: description,
+		Trigger:     t,
+		Action:      a,
+		Version:     "1",
+		system:      s,
 	}, nil
 }
 

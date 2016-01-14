@@ -22,22 +22,18 @@ func (a *ZoneSetLevelAction) Description() string {
 func (a *ZoneSetLevelAction) Ingredients() []Ingredient {
 	return []Ingredient{
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "Level",
-				Name:        "Intensity Level",
-				Description: "The target intensity for the zone",
-			},
-			Type:     "float",
-			Required: true,
+			ID:          "Level",
+			Name:        "Intensity Level",
+			Description: "The target intensity for the zone",
+			Type:        "float",
+			Required:    true,
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "ZoneID",
-				Name:        "Zone ID",
-				Description: "The ID of the target zone",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "ZoneID",
+			Name:        "Zone ID",
+			Description: "The ID of the target zone",
+			Type:        "string",
+			Required:    true,
 		},
 	}
 }

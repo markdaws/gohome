@@ -46,31 +46,25 @@ func (t *ButtonTrigger) SetEnabled(enabled bool) {
 func (t *ButtonTrigger) Ingredients() []Ingredient {
 	return []Ingredient{
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "ButtonID",
-				Name:        "Button ID",
-				Description: "The button ID associated with this trigger",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "ButtonID",
+			Name:        "Button ID",
+			Description: "The button ID associated with this trigger",
+			Type:        "string",
+			Required:    true,
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "PressCount",
-				Name:        "Press Count",
-				Description: "The number of times the button should be pressed to activate the trigger",
-			},
-			Type:     "integer",
-			Required: true,
+			ID:          "PressCount",
+			Name:        "Press Count",
+			Description: "The number of times the button should be pressed to activate the trigger",
+			Type:        "integer",
+			Required:    true,
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "MaxDuration",
-				Name:        "Max Duration (ms)",
-				Description: "The maximum time in milliseconds from the first press that all presses must happen",
-			},
-			Type:     "duration",
-			Required: true,
+			ID:          "MaxDuration",
+			Name:        "Max Duration (ms)",
+			Description: "The maximum time in milliseconds from the first press that all presses must happen",
+			Type:        "duration",
+			Required:    true,
 		},
 	}
 }

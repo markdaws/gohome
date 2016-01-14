@@ -25,31 +25,25 @@ func (a *ZoneSetLevelToggleAction) Description() string {
 func (a *ZoneSetLevelToggleAction) Ingredients() []Ingredient {
 	return []Ingredient{
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "FirstLevel",
-				Name:        "First Intensity Level",
-				Description: "The first target intensity for the zone",
-			},
-			Type:     "float",
-			Required: true,
+			ID:          "FirstLevel",
+			Name:        "First Intensity Level",
+			Description: "The first target intensity for the zone",
+			Type:        "float",
+			Required:    true,
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "SecondLevel",
-				Name:        "Second Intensity Level",
-				Description: "The second target intensity for the zone",
-			},
-			Type:     "float",
-			Required: true,
+			ID:          "SecondLevel",
+			Name:        "Second Intensity Level",
+			Description: "The second target intensity for the zone",
+			Type:        "float",
+			Required:    true,
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "ZoneID",
-				Name:        "Zone ID",
-				Description: "The ID of the target zone",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "ZoneID",
+			Name:        "Zone ID",
+			Description: "The ID of the target zone",
+			Type:        "string",
+			Required:    true,
 		},
 	}
 }

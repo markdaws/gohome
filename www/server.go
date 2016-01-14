@@ -120,7 +120,7 @@ func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeMa
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(struct {
 			Id string `json:"id"`
-		}{Id: recipe.Identifiable.ID})
+		}{Id: recipe.ID})
 	}
 }
 

@@ -1,7 +1,9 @@
 package gohome
 
 type Scene struct {
-	Identifiable
+	ID           string
+	Name         string
+	Description  string
 	Commands     []Command
 	cmdProcessor CommandProcessor
 }

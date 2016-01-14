@@ -24,22 +24,18 @@ func (a *SceneSetToggleAction) Description() string {
 func (a *SceneSetToggleAction) Ingredients() []Ingredient {
 	return []Ingredient{
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "FirstSceneID",
-				Name:        "First Scene ID",
-				Description: "The ID of the first Scene to set",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "FirstSceneID",
+			Name:        "First Scene ID",
+			Description: "The ID of the first Scene to set",
+			Type:        "string",
+			Required:    true,
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "SecondSceneID",
-				Name:        "Second Scene ID",
-				Description: "The ID of the second Scene to set",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "SecondSceneID",
+			Name:        "Second Scene ID",
+			Description: "The ID of the second Scene to set",
+			Type:        "string",
+			Required:    true,
 		},
 	}
 }

@@ -53,36 +53,28 @@ func (t *TimeTrigger) New() Trigger {
 func (t *TimeTrigger) Ingredients() []Ingredient {
 	return []Ingredient{
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "Iterations",
-				Name:        "Iterations",
-				Description: "The number of times the trigger will fire before stopping",
-			},
-			Type: "integer",
+			ID:          "Iterations",
+			Name:        "Iterations",
+			Description: "The number of times the trigger will fire before stopping",
+			Type:        "integer",
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "Forever",
-				Name:        "Forever",
-				Description: "If true, the trigger will run forever",
-			},
-			Type: "boolean",
+			ID:          "Forever",
+			Name:        "Forever",
+			Description: "If true, the trigger will run forever",
+			Type:        "boolean",
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "At",
-				Name:        "At",
-				Description: "The date and time to fire the trigger",
-			},
-			Type: "datetime",
+			ID:          "At",
+			Name:        "At",
+			Description: "The date and time to fire the trigger",
+			Type:        "datetime",
 		},
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "Interval",
-				Name:        "Interval",
-				Description: "The time (in ms) between each trigger event",
-			},
-			Type: "integer",
+			ID:          "Interval",
+			Name:        "Interval",
+			Description: "The time (in ms) between each trigger event",
+			Type:        "integer",
 		},
 	}
 }

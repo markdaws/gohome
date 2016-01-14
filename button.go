@@ -1,6 +1,8 @@
 package gohome
 
 type Button struct {
-	Identifiable
-	Device *Device
+	ID          string
+	Name        string
+	Description string
+	Device      *Device
 }

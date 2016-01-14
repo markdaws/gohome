@@ -1,9 +1,11 @@
 package gohome
 
 type Zone struct {
-	Identifiable
-	Type   ZoneType
-	Output OutputType
+	ID          string
+	Name        string
+	Description string
+	Type        ZoneType
+	Output      OutputType
 	//TODO: Describe discrete, continuous, max, min, step e.g. on/off vs dimmable
 	setCommand   func(args ...interface{}) Command
 	cmdProcessor CommandProcessor

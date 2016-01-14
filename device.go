@@ -14,7 +14,9 @@ import (
 
 //TODO: Change to interface, make this private
 type Device struct {
-	Identifiable
+	ID             string
+	Name           string
+	Description    string
 	System         *System
 	ConnectionInfo comm.ConnectionInfo
 	Buttons        map[string]*Button
@@ -25,9 +27,11 @@ type Device struct {
 	cmdProcessor CommandProcessor
 }
 
-func NewDevice(i Identifiable, s *System, cp CommandProcessor) *Device {
+func NewDevice(id, name, description string, s *System, cp CommandProcessor) *Device {
 	return &Device{
-		Identifiable: i,
+		ID:           id,
+		Name:         name,
+		Description:  description,
 		System:       s,
 		Buttons:      make(map[string]*Button),
 		cmdProcessor: cp,
@@ -47,6 +51,7 @@ func (d *Device) InitConnections() {
 		return conn
 	}
 	ps := d.ConnectionInfo.PoolSize
+
 	d.pool = comm.NewConnectionPool(ps, createConnection)
 }
 
@@ -94,6 +99,10 @@ func (d *Device) Authenticate(c comm.Connection) error {
 		return fmt.Errorf("authenticate password failed: %s", err)
 	}
 	return nil
+}
+
+func (d *Device) String() string {
+	return fmt.Sprintf("Device[%s]", d.Name)
 }
 
 func startStreaming(d *Device) {

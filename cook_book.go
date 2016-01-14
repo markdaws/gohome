@@ -1,8 +1,10 @@
 package gohome
 
 type CookBook struct {
-	Identifiable
-	LogoURL  string
-	Triggers []Trigger
-	Actions  []Action
+	ID          string
+	Name        string
+	Description string
+	LogoURL     string
+	Triggers    []Trigger
+	Actions     []Action
 }

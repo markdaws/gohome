@@ -21,13 +21,11 @@ func (a *SceneSetAction) Description() string {
 func (a *SceneSetAction) Ingredients() []Ingredient {
 	return []Ingredient{
 		Ingredient{
-			Identifiable: Identifiable{
-				ID:          "SceneID",
-				Name:        "Scene ID",
-				Description: "The ID of the Scene to set",
-			},
-			Type:     "string",
-			Required: true,
+			ID:          "SceneID",
+			Name:        "Scene ID",
+			Description: "The ID of the Scene to set",
+			Type:        "string",
+			Required:    true,
 		},
 	}
 }

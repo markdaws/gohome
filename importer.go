@@ -48,14 +48,12 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	}
 
 	system := &System{
-		Identifiable: Identifiable{
-			ID:          "1",
-			Name:        "Lutron Smart Bridge Pro",
-			Description: "Lutron Smart Bridge Pro - imported //TODO: Date",
-		},
-		Devices: make(map[string]*Device),
-		Scenes:  make(map[string]*Scene),
-		Zones:   make(map[string]*Zone),
+		ID:          "1",
+		Name:        "Lutron Smart Bridge Pro",
+		Description: "Lutron Smart Bridge Pro - imported //TODO: Date",
+		Devices:     make(map[string]*Device),
+		Scenes:      make(map[string]*Scene),
+		Zones:       make(map[string]*Zone),
 	}
 
 	root, ok := configJson["LIPIdList"].(map[string]interface{})
@@ -74,11 +72,9 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		var deviceName string = deviceMap["Name"].(string)
 
 		device := NewDevice(
-			Identifiable{
-				ID:          deviceID,
-				Name:        deviceName,
-				Description: deviceName,
-			},
+			deviceID,
+			deviceName,
+			deviceName,
 			sys,
 			cmdProcessor)
 
@@ -93,12 +89,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				btnName = "Button " + btnNumber
 			}
 			device.Buttons[btnNumber] = &Button{
-				Identifiable: Identifiable{
-					ID:          btnNumber,
-					Name:        btnName,
-					Description: btnName,
-				},
-				Device: device,
+				ID:          btnNumber,
+				Name:        btnName,
+				Description: btnName,
+				Device:      device,
 			}
 		}
 
@@ -127,10 +121,9 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				var releaseCommand string = "#DEVICE," + deviceID + "," + buttonID + ",4\r\n"
 
 				sceneContainer[uniqueID] = &Scene{
-					Identifiable: Identifiable{
-						ID:          uniqueID,
-						Name:        buttonName,
-						Description: buttonName},
+					ID:          uniqueID,
+					Name:        buttonName,
+					Description: buttonName,
 					Commands: []Command{
 						&StringCommand{
 							Device:   sbp,
@@ -230,13 +223,11 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			}
 		}
 		system.Zones[uniqueID] = &Zone{
-			Identifiable: Identifiable{
-				ID:          uniqueID,
-				Name:        zoneName,
-				Description: zoneName,
-			},
-			Type:   zoneTypeFinal,
-			Output: outputTypeFinal,
+			ID:          uniqueID,
+			Name:        zoneName,
+			Description: zoneName,
+			Type:        zoneTypeFinal,
+			Output:      outputTypeFinal,
 			setCommand: func(args ...interface{}) Command {
 				return &StringCommand{
 					Device:   sbp,

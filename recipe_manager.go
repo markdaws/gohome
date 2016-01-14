@@ -78,10 +78,12 @@ func (rm *RecipeManager) EnableRecipe(r *Recipe, enabled bool) error {
 }
 
 type recipeJSON struct {
-	Identifiable Identifiable
-	Enabled      bool `json:"enabled"`
-	Trigger      triggerWrapper
-	Action       actionWrapper
+	ID          string
+	Name        string
+	Description string
+	Enabled     bool `json:"enabled"`
+	Trigger     triggerWrapper
+	Action      actionWrapper
 }
 
 type triggerWrapper struct {
@@ -188,7 +190,9 @@ func (rm *RecipeManager) SaveRecipe(r *Recipe, appendTo bool) error {
 	// concrete type to the JSON file so we can unmarshal to the correct type later
 
 	out := recipeJSON{}
-	out.Identifiable = r.Identifiable
+	out.ID = r.ID
+	out.Name = r.Name
+	out.Description = r.Description
 	out.Enabled = r.Trigger.Enabled()
 
 	out.Trigger = triggerWrapper{Type: r.Trigger.Type(), Trigger: getIngredientValueMap(r.Trigger, reflect.ValueOf(r.Trigger).Elem())}
@@ -286,7 +290,9 @@ func (rm *RecipeManager) loadRecipe(path string) (*Recipe, error) {
 
 	recipe := &Recipe{}
 	recipe.system = rm.System
-	recipe.Identifiable = recipeWrapper.Identifiable
+	recipe.ID = recipeWrapper.ID
+	recipe.Name = recipeWrapper.Name
+	recipe.Description = recipeWrapper.Description
 
 	trigger, err := rm.makeTrigger(recipeWrapper.Trigger.Type, recipeWrapper.Trigger.Trigger)
 	if err != nil {
@@ -389,12 +395,10 @@ func loadCookBooks(dataPath string) []*CookBook {
 	// be defined in a config file or in a DB
 	cookBooks := []*CookBook{
 		{
-			Identifiable: Identifiable{
-				ID:          "1",
-				Name:        "Lutron Smart Bridge Pro",
-				Description: "Cook up some goodness for the Lutron Smart Bridge Pro",
-			},
-			LogoURL: "lutron_400x400.png",
+			ID:          "1",
+			Name:        "Lutron Smart Bridge Pro",
+			Description: "Cook up some goodness for the Lutron Smart Bridge Pro",
+			LogoURL:     "lutron_400x400.png",
 			Triggers: []Trigger{
 				// New triggers need to be added to this slice
 				&ButtonTrigger{},
