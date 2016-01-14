@@ -2,7 +2,6 @@ package gohome
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/log"
 )
 
 //TODO: Change to interface, make this private
@@ -51,14 +51,15 @@ func (d *Device) InitConnections() {
 		return conn
 	}
 	ps := d.ConnectionInfo.PoolSize
-
-	d.pool = comm.NewConnectionPool(ps, createConnection)
+	log.V("%s init connections, pool size %d", d, ps)
+	d.pool = comm.NewConnectionPool(d.Name, ps, createConnection)
+	log.V("%s connected", d)
 }
 
 func (d *Device) Connect() (comm.Connection, error) {
 	c := d.pool.Get()
 	if c == nil {
-		return nil, errors.New("No connection available")
+		return nil, fmt.Errorf("%s - connect failed, no connection available", d)
 	}
 	return c, nil
 }
@@ -108,23 +109,26 @@ func (d *Device) String() string {
 func startStreaming(d *Device) {
 	//TODO: Stop?
 	for {
-		stream(d)
+		err := stream(d)
+		if err != nil {
+			log.E("%s streaming failed: %s", d, err)
+		}
 		time.Sleep(10 * time.Second)
 	}
 }
 
 func stream(d *Device) error {
+	log.V("%s attemping to stream events", d)
 	conn, err := d.Connect()
 	if err != nil {
-		fmt.Println("Failed to connect to device - stream")
-		return err
+		return fmt.Errorf("%s unable to connect to stream events: %s", d, err)
 	}
-	fmt.Println("Streaming device - connected")
 
 	defer func() {
 		d.ReleaseConnection(conn)
 	}()
 
+	log.V("%s streaming events", d)
 	scanner := bufio.NewScanner(conn)
 	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 
@@ -159,10 +163,9 @@ func stream(d *Device) error {
 		}
 	}
 
-	//TODO: Log disconnect event?
+	log.V("%s stopped streaming events", d)
 	if err := scanner.Err(); err != nil {
-		//fmt.Printf("something happened", err)
-		return err
+		return fmt.Errorf("%s error streaming events, streaming stopped: %s", d, err)
 	}
 	return nil
 
@@ -262,7 +265,6 @@ func parseDeviceCommand(d *Device, cmd string) Command {
 	})
 }
 
-//TODO: Should be device specific
 func parseZoneCommand(d *Device, cmd string) Command {
 	matches := regexp.MustCompile("[~|?]OUTPUT,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
 	if matches == nil || len(matches) != 4 {

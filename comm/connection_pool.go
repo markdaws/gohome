@@ -1,15 +1,22 @@
 package comm
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/markdaws/gohome/log"
+)
 
 type ConnectionPool interface {
+	Name() string
 	Get() Connection
 	Release(Connection)
 	SetNewConnectionCallback(func())
 }
 
-func NewConnectionPool(count int, newConnectionCb func() Connection) ConnectionPool {
+func NewConnectionPool(name string, count int, newConnectionCb func() Connection) ConnectionPool {
 	p := &connectionPool{
+		name:          name,
 		pool:          make(map[Connection]bool, count),
 		newConnection: newConnectionCb,
 	}
@@ -22,9 +29,14 @@ func NewConnectionPool(count int, newConnectionCb func() Connection) ConnectionP
 }
 
 type connectionPool struct {
+	name            string
 	pool            map[Connection]bool
 	newConnection   func() Connection
 	newConnectionCb func()
+}
+
+func (p *connectionPool) Name() string {
+	return p.name
 }
 
 func (p *connectionPool) Get() Connection {
@@ -42,6 +54,8 @@ func (p *connectionPool) Get() Connection {
 
 func (p *connectionPool) Release(c Connection) {
 	if c.Status() == CSClosed {
+		log.V("%s closed connection release, adding new connection", p)
+		delete(p.pool, c)
 		retryNewConnection(p, false)
 		return
 	}
@@ -50,6 +64,10 @@ func (p *connectionPool) Release(c Connection) {
 
 func (p *connectionPool) SetNewConnectionCallback(cb func()) {
 	p.newConnectionCb = cb
+}
+
+func (p *connectionPool) String() string {
+	return fmt.Sprintf("connectionPool[%s]", p.name)
 }
 
 func retryNewConnection(p *connectionPool, sync bool) {
@@ -78,6 +96,7 @@ func appendAndOpenNewConnection(p *connectionPool) error {
 		return err
 	}
 
+	//TODO: sync issue, updating on different go routine
 	p.pool[c] = true
 	if p.newConnectionCb != nil {
 		p.newConnectionCb()
@@ -93,6 +112,8 @@ func appendAndOpenNewConnection(p *connectionPool) error {
 			if err := c.PingCallback()(); err != nil {
 				c.Close()
 				c.SetStatus(CSClosed)
+
+				log.V("%s ping failed for connection %s, releasing", p, c)
 
 				// If the connection is sitting in the pool, release
 				// it and open a new one

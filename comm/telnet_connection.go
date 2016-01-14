@@ -51,10 +51,10 @@ func (c *telnetConnection) Info() ConnectionInfo {
 func (c *telnetConnection) Open() error {
 	c.status = CSConnecting
 
-	log.V("%s - connecting", c)
+	log.V("%s connecting", c)
 	conn, err := net.Dial(c.info.Network, c.info.Address)
 	if err != nil {
-		log.V("%s - connection failed %s", c, err)
+		log.V("%s connection failed %s", c, err)
 		c.status = CSClosed
 		return err
 	}
@@ -63,19 +63,19 @@ func (c *telnetConnection) Open() error {
 
 	if c.info.Authenticator != nil {
 		if err = c.info.Authenticator.Authenticate(c); err != nil {
-			log.V("%s - authenticate failed %s", c, err)
+			log.V("%s authenticate failed %s", c, err)
 			c.Close()
 			return err
 		}
 	}
 
-	log.V("%s - connected successfully", c)
+	log.V("%s connected successfully", c)
 	c.status = CSConnected
 	return nil
 }
 
 func (c *telnetConnection) Close() {
-	log.V("%s - closed", c)
+	log.V("%s closed", c)
 	c.status = CSClosed
 	c.conn.Close()
 }
