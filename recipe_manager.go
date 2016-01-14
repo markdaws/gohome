@@ -113,7 +113,7 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 		return nil, errors.New("Invalid value for description, must be a string")
 	}
 
-	if _, ok = data["trigger"]; ok {
+	if _, ok = data["trigger"]; !ok {
 		return nil, errors.New("Missing trigger key")
 	}
 	triggerData, ok := data["trigger"].(map[string]interface{})
@@ -401,7 +401,7 @@ func loadCookBooks(dataPath string) []*CookBook {
 			LogoURL:     "lutron_400x400.png",
 			Triggers: []Trigger{
 				// New triggers need to be added to this slice
-				&ButtonTrigger{},
+				&ButtonClickTrigger{},
 				&TimeTrigger{},
 			},
 			Actions: []Action{

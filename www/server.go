@@ -2,6 +2,7 @@ package www
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -105,12 +106,14 @@ func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeMa
 
 		recipe, err := recipeManager.UnmarshalNewRecipe(data)
 		if err != nil {
+			fmt.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		err = recipeManager.SaveRecipe(recipe, true)
 		if err != nil {
+			fmt.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

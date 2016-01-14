@@ -3,6 +3,7 @@ package gohome
 import (
 	"fmt"
 
+	"github.com/markdaws/gohome/log"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -43,11 +44,11 @@ func (r *Recipe) Start() <-chan bool {
 		for {
 			select {
 			case <-fireChan:
-				fmt.Printf("Recipe: %s - trigger fired\n", r.Name)
+				log.V("%s trigger fired", r)
 				go func() {
 					err := r.Action.Execute(r.system)
 					if err != nil {
-						//TODO: Log error
+						log.E("%s action failed: %s", r, err)
 					}
 				}()
 
@@ -65,4 +66,8 @@ func (r *Recipe) Start() <-chan bool {
 
 func (r *Recipe) Stop() {
 	r.Trigger.Stop()
+}
+
+func (r *Recipe) String() string {
+	return fmt.Sprintf("Recipe[%s]", r.Name)
 }

@@ -1,6 +1,11 @@
 package gohome
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/markdaws/gohome/log"
+)
 
 type StringCommand struct {
 	Value    string
@@ -12,7 +17,7 @@ type StringCommand struct {
 
 func (c *StringCommand) Execute() error {
 	str := fmt.Sprintf(c.Value, c.Args...)
-	fmt.Println("Sending command:", str)
+	log.V("sending command \"%s\" to Device \"%s\"", strings.Replace(strings.Replace(str, "\r", "\\r", -1), "\n", "\\n", -1), c.Device.Name)
 
 	conn, err := c.Device.Connect()
 	if err != nil {

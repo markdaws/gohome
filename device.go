@@ -43,8 +43,7 @@ func (d *Device) InitConnections() {
 		conn := comm.NewTelnetConnection(d.ConnectionInfo)
 		conn.SetPingCallback(func() error {
 			if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
-				fmt.Printf("ping failed: %s", err.Error())
-				return err
+				return fmt.Errorf("%s ping failed: %s", d, err)
 			}
 			return nil
 		})
@@ -157,8 +156,8 @@ func stream(d *Device) error {
 		if d.evpFire != nil {
 			//TODO: How is ping getting through to here, if we are not scanning for it?
 			orig := scanner.Text()
-			if cmd := parseCommandString(d, orig); cmd != nil {
-				d.evpFire <- NewEvent(d, cmd, orig, ETUnknown)
+			if cmd, source := parseCommandString(d, orig); cmd != nil {
+				d.evpFire <- NewEvent(d, cmd, orig, ETUnknown, source)
 			}
 		}
 	}
@@ -177,7 +176,7 @@ func stream(d *Device) error {
 	*/
 }
 
-func parseCommandString(d *Device, cmd string) Command {
+func parseCommandString(d *Device, cmd string) (Command, interface{}) {
 	switch {
 	case strings.HasPrefix(cmd, "~OUTPUT"),
 		strings.HasPrefix(cmd, "#OUTPUT"):
@@ -188,7 +187,7 @@ func parseCommandString(d *Device, cmd string) Command {
 		return parseDeviceCommand(d, cmd)
 	default:
 		// Ignore commands we don't care about
-		return nil
+		return nil, nil
 	}
 }
 
@@ -206,7 +205,7 @@ func buildCommand(p commandBuilderParams) Command {
 	case CTZoneSetLevel:
 		return &StringCommand{
 			Device:   p.Device,
-			Friendly: fmt.Sprintf("Zone \"%s\" set to %.2f%%", p.Zone.Name, p.Intensity),
+			Friendly: fmt.Sprintf("Zone [%s] \"%s\" set to %.2f%%", p.Zone.ID, p.Zone.Name, p.Intensity),
 			Value:    fmt.Sprintf("#OUTPUT,%s,1,%.2f\r\n", p.Zone.ID, p.Intensity),
 			Type:     p.CommandType,
 		}
@@ -214,7 +213,7 @@ func buildCommand(p commandBuilderParams) Command {
 	case CTDevicePressButton:
 		return &StringCommand{
 			Device:   p.Device,
-			Friendly: fmt.Sprintf("Device \"%s\" press button %s", p.SourceDevice.Name, p.ComponentID),
+			Friendly: fmt.Sprintf("Device [%s] \"%s\" press button %s", p.SourceDevice.ID, p.SourceDevice.Name, p.ComponentID),
 			Value:    fmt.Sprintf("#DEVICE,%s,%s,3\r\n", p.SourceDevice.Name, p.ComponentID),
 			Type:     p.CommandType,
 		}
@@ -222,7 +221,7 @@ func buildCommand(p commandBuilderParams) Command {
 	case CTDeviceReleaseButton:
 		return &StringCommand{
 			Device:   p.Device,
-			Friendly: fmt.Sprintf("Device \"%s\" release button %s", p.SourceDevice.Name, p.ComponentID),
+			Friendly: fmt.Sprintf("Device [%s] \"%s\" release button %s", p.SourceDevice.ID, p.SourceDevice.Name, p.ComponentID),
 			Value:    fmt.Sprintf("#DEVICE,%s,%s,4\r\n", p.SourceDevice.Name, p.ComponentID),
 			Type:     p.CommandType,
 		}
@@ -232,10 +231,10 @@ func buildCommand(p commandBuilderParams) Command {
 	}
 }
 
-func parseDeviceCommand(d *Device, cmd string) Command {
+func parseDeviceCommand(d *Device, cmd string) (Command, interface{}) {
 	matches := regexp.MustCompile("[~|#]DEVICE,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
 	if matches == nil || len(matches) != 4 {
-		return nil
+		return nil, nil
 	}
 
 	deviceID := matches[1]
@@ -244,15 +243,18 @@ func parseDeviceCommand(d *Device, cmd string) Command {
 	sourceDevice := d.System.Devices[deviceID]
 	if sourceDevice == nil {
 		//TODO: Error? Warning?
-		return nil
+		return nil, nil
 	}
 
 	var ct CommandType
+	var source interface{}
 	switch cmdID {
 	case "3":
 		ct = CTDevicePressButton
+		source = sourceDevice.Buttons[componentID]
 	case "4":
 		ct = CTDeviceReleaseButton
+		source = sourceDevice.Buttons[componentID]
 	default:
 		ct = CTUnknown
 	}
@@ -262,13 +264,13 @@ func parseDeviceCommand(d *Device, cmd string) Command {
 		CommandType:  ct,
 		SourceDevice: sourceDevice,
 		ComponentID:  componentID,
-	})
+	}), source
 }
 
-func parseZoneCommand(d *Device, cmd string) Command {
+func parseZoneCommand(d *Device, cmd string) (Command, interface{}) {
 	matches := regexp.MustCompile("[~|?]OUTPUT,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
 	if matches == nil || len(matches) != 4 {
-		return nil
+		return nil, nil
 	}
 
 	zoneID := matches[1]
@@ -276,14 +278,14 @@ func parseZoneCommand(d *Device, cmd string) Command {
 	intensity, err := strconv.ParseFloat(matches[3], 64)
 	if err != nil {
 		//TODO: Error
-		return nil
+		return nil, nil
 	}
 
 	//TODO: Get unique id based on device
 	z := d.System.Zones[d.ID+":"+zoneID]
 	if z == nil {
 		//TODO: Error log
-		return nil
+		return nil, nil
 	}
 
 	var ct CommandType
@@ -299,5 +301,5 @@ func parseZoneCommand(d *Device, cmd string) Command {
 		CommandType: ct,
 		Intensity:   intensity,
 		Zone:        z,
-	})
+	}), z
 }
