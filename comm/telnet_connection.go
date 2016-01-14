@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/markdaws/gohome/log"
 )
 
 type telnetConnection struct {
@@ -49,10 +51,10 @@ func (c *telnetConnection) Info() ConnectionInfo {
 func (c *telnetConnection) Open() error {
 	c.status = CSConnecting
 
-	fmt.Println("telnetConnection - trying to connect")
+	log.V("%s - connecting", c)
 	conn, err := net.Dial(c.info.Network, c.info.Address)
 	if err != nil {
-		fmt.Printf("Dial failed\n")
+		log.V("%s - connection failed %s", c, err)
 		c.status = CSClosed
 		return err
 	}
@@ -61,18 +63,19 @@ func (c *telnetConnection) Open() error {
 
 	if c.info.Authenticator != nil {
 		if err = c.info.Authenticator.Authenticate(c); err != nil {
-			fmt.Println("Authentication failed")
+			log.V("%s - authenticate failed %s", c, err)
 			c.Close()
 			return err
 		}
 	}
 
-	fmt.Println("telnetConnection - connected")
+	log.V("%s - connected successfully", c)
 	c.status = CSConnected
 	return nil
 }
 
 func (c *telnetConnection) Close() {
+	log.V("%s - closed", c)
 	c.status = CSClosed
 	c.conn.Close()
 }
@@ -96,5 +99,5 @@ func (c *telnetConnection) Write(p []byte) (n int, err error) {
 }
 
 func (c *telnetConnection) String() string {
-	return fmt.Sprintf("telnetConnection[%d]", c.id)
+	return fmt.Sprintf("telnetConnection[%d %s %s]", c.id, c.info.Network, c.info.Address)
 }

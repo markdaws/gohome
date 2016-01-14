@@ -14,6 +14,7 @@ func NewConnectionPool(count int, newConnectionCb func() Connection) ConnectionP
 		newConnection: newConnectionCb,
 	}
 
+	//TODO: Change to connect in parallel even if sync
 	for i := 0; i < count; i++ {
 		retryNewConnection(p, true)
 	}

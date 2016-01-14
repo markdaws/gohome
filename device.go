@@ -76,26 +76,22 @@ func (d *Device) Authenticate(c comm.Connection) error {
 	r := bufio.NewReader(c)
 	_, err := r.ReadString(':')
 	if err != nil {
-		fmt.Println("Failed to read login", err)
-		return err
+		return fmt.Errorf("authenticate login failed: %s", err)
 	}
 
 	info := c.Info()
 	_, err = c.Write([]byte(info.Login + "\r\n"))
 	if err != nil {
-		fmt.Println("Failed to write password", err)
-		return err
+		return fmt.Errorf("authenticate write login failed: %s", err)
 	}
 
 	_, err = r.ReadString(':')
 	if err != nil {
-		fmt.Println("error waiting for password", err)
-		return err
+		return fmt.Errorf("authenticate password failed: %s", err)
 	}
 	_, err = c.Write([]byte(info.Password + "\r\n"))
 	if err != nil {
-		fmt.Println("Error writing password")
-		return err
+		return fmt.Errorf("authenticate password failed: %s", err)
 	}
 	return nil
 }
