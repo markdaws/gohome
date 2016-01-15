@@ -1,21 +1,16 @@
 package gohome
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/log"
+)
 
 type EventBroker interface {
 	AddProducer(EventProducer)
 	AddConsumer(EventConsumer)
 	RemoveConsumer(EventConsumer)
 	Init()
-}
-
-type EventProducer interface {
-	StartProducingEvents() (<-chan Event, <-chan bool)
-}
-
-type EventConsumer interface {
-	EventConsumerID() string
-	StartConsumingEvents() chan<- Event
 }
 
 func NewEventBroker() EventBroker {
@@ -47,6 +42,7 @@ func (b *broker) Init() {
 }
 
 func (b *broker) AddProducer(p EventProducer) {
+	//TODO: Tidy up
 	ec, dc := p.StartProducingEvents()
 	go func() {
 		for {
@@ -68,7 +64,7 @@ func (b *broker) AddConsumer(c EventConsumer) {
 		return
 	}
 
-	//fmt.Printf("Adding consumer: %s\n", c.EventConsumerID())
+	log.V("%s adding consumer %s", b, c)
 	b.consumers[c.EventConsumerID()] = ec
 }
 
@@ -80,5 +76,12 @@ func (b *broker) RemoveConsumer(c EventConsumer) {
 		return
 	}
 
+	//TODO: routine safe? need sync on map, verify
+	log.V("%s removing consumer %s", b, c)
+	close(eventChannel)
 	delete(b.consumers, id)
+}
+
+func (b *broker) String() string {
+	return "EventBroker"
 }

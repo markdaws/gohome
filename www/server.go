@@ -198,7 +198,7 @@ func apiRecipesHandlerGet(system *gohome.System, recipeManager *gohome.RecipeMan
 				ID:          recipe.ID,
 				Name:        recipe.Name,
 				Description: recipe.Description,
-				Enabled:     recipe.Trigger.Enabled(),
+				Enabled:     recipe.Enabled(),
 			}
 		}
 		sort.Sort(jsonRecipes)

@@ -17,7 +17,11 @@ type Recipe struct {
 	Trigger     Trigger
 	Action      Action
 	Version     string
-	system      *System
+
+	system                 *System
+	enabled                bool
+	initedTrigger          bool
+	triggerProcessesEvents bool
 }
 
 func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *System) (*Recipe, error) {
@@ -26,7 +30,6 @@ func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *S
 		return nil, err
 	}
 
-	t.SetEnabled(enabled)
 	return &Recipe{
 		ID:          id.String(),
 		Name:        name,
@@ -35,39 +38,81 @@ func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *S
 		Action:      a,
 		Version:     "1",
 		system:      s,
+		enabled:     true,
 	}, nil
-}
-
-func (r *Recipe) Start() <-chan bool {
-	fireChan, doneChan := r.Trigger.Start()
-	go func() {
-		for {
-			select {
-			case <-fireChan:
-				log.V("%s trigger fired", r)
-				go func() {
-					err := r.Action.Execute(r.system)
-					if err != nil {
-						log.E("%s action failed: %s", r, err)
-					}
-				}()
-
-			case <-doneChan:
-				doneChan = nil
-			}
-
-			if doneChan == nil {
-				break
-			}
-		}
-	}()
-	return doneChan
-}
-
-func (r *Recipe) Stop() {
-	r.Trigger.Stop()
 }
 
 func (r *Recipe) String() string {
 	return fmt.Sprintf("Recipe[%s]", r.Name)
+}
+
+func (r *Recipe) Enabled() bool {
+	return r.enabled
+}
+
+func (r *Recipe) SetEnabled(enabled bool) {
+	r.enabled = enabled
+}
+
+func (r *Recipe) EventConsumerID() string {
+	return r.Name + " - " + r.ID
+}
+
+func (r *Recipe) StartConsumingEvents() chan<- Event {
+	log.V("%s started consuming events", r)
+
+	c := make(chan Event)
+	done := make(chan bool)
+
+	var ignoreTrigger = false
+	if !r.initedTrigger {
+		fire, triggerProcessesEvents := r.Trigger.Init()
+		r.initedTrigger = true
+		r.triggerProcessesEvents = triggerProcessesEvents
+
+		// Trigger could be something like a timer, can fire a signal
+		// to indicate if has triggered, need to be able to handle it
+		if fire != nil {
+			go func() {
+				for {
+					select {
+					case <-done:
+						//TODO: Test
+						break
+					case f := <-fire:
+						if r.enabled && !ignoreTrigger {
+							if f {
+								executeAction(r)
+							}
+						}
+					}
+				}
+			}()
+		}
+	}
+
+	if r.triggerProcessesEvents {
+		go func() {
+			for e := range c {
+				if !r.enabled {
+					continue
+				}
+
+				if r.Trigger.ProcessEvent(e) {
+					executeAction(r)
+				}
+			}
+			close(done)
+			ignoreTrigger = true
+			log.V("%s stopped consuming events", r)
+		}()
+	}
+	return c
+}
+
+func executeAction(r *Recipe) {
+	err := r.Action.Execute(r.system)
+	if err != nil {
+		log.E("%s action failed: %s", r, err)
+	}
 }

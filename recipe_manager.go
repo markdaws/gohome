@@ -1,9 +1,3 @@
-/*
-TODO:
-- validate input on client and server
-- specify ranges for ingredients
-- return useful error messages for invalid ingredients
-*/
 package gohome
 
 import (
@@ -17,7 +11,6 @@ import (
 	"unicode/utf8"
 )
 
-//TODO: make internal
 type RecipeManager struct {
 	CookBooks []*CookBook
 	System    *System
@@ -49,13 +42,11 @@ func (rm *RecipeManager) Init(eb EventBroker, dataPath string) error {
 }
 
 func (rm *RecipeManager) RegisterAndStart(r *Recipe) {
-	rm.eventBroker.AddConsumer(r.Trigger.(EventConsumer))
-	r.Start()
+	rm.eventBroker.AddConsumer(r)
 }
 
 func (rm *RecipeManager) UnregisterAndStop(r *Recipe) {
-	rm.eventBroker.RemoveConsumer(r.Trigger.(EventConsumer))
-	r.Stop()
+	rm.eventBroker.RemoveConsumer(r)
 }
 
 func (rm *RecipeManager) RecipeByID(id string) *Recipe {
@@ -68,12 +59,12 @@ func (rm *RecipeManager) RecipeByID(id string) *Recipe {
 }
 
 func (rm *RecipeManager) EnableRecipe(r *Recipe, enabled bool) error {
-	oldEnabled := r.Trigger.Enabled()
+	oldEnabled := r.Enabled()
 	if oldEnabled == enabled {
 		return nil
 	}
 
-	r.Trigger.SetEnabled(enabled)
+	r.SetEnabled(enabled)
 	return rm.SaveRecipe(r, false)
 }
 
@@ -291,7 +282,7 @@ func (rm *RecipeManager) SaveRecipe(r *Recipe, appendTo bool) error {
 	out.ID = r.ID
 	out.Name = r.Name
 	out.Description = r.Description
-	out.Enabled = r.Trigger.Enabled()
+	out.Enabled = r.Enabled()
 
 	out.Trigger = triggerWrapper{Type: r.Trigger.Type(), Trigger: getIngredientValueMap(r.Trigger, reflect.ValueOf(r.Trigger).Elem())}
 	out.Action = actionWrapper{Type: r.Action.Type(), Action: getIngredientValueMap(r.Action, reflect.ValueOf(r.Action).Elem())}
@@ -392,7 +383,7 @@ func (rm *RecipeManager) loadRecipe(path string) (*Recipe, error) {
 	if err != nil {
 		return nil, err
 	}
-	trigger.SetEnabled(recipeWrapper.Enabled)
+	recipe.SetEnabled(recipeWrapper.Enabled)
 
 	action, err := rm.makeAction(recipeWrapper.Action.Type, recipeWrapper.Action.Action)
 	if err != nil {

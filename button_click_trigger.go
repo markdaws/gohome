@@ -1,22 +1,14 @@
 package gohome
 
-import (
-	"time"
-
-	"github.com/nu7hatch/gouuid"
-)
+import "time"
 
 type ButtonClickTrigger struct {
 	ButtonID    string
 	ClickCount  int
 	MaxDuration time.Duration
 
-	enabled    bool
-	id         string
 	startTime  time.Time
 	clickCount int
-	fireChan   chan bool
-	doneChan   chan bool
 }
 
 func (t *ButtonClickTrigger) Type() string {
@@ -29,14 +21,6 @@ func (t *ButtonClickTrigger) Name() string {
 
 func (t *ButtonClickTrigger) Description() string {
 	return "Triggers when a button is pressed one or more times"
-}
-
-func (t *ButtonClickTrigger) Enabled() bool {
-	return t.enabled
-}
-
-func (t *ButtonClickTrigger) SetEnabled(enabled bool) {
-	t.enabled = enabled
 }
 
 func (t *ButtonClickTrigger) Ingredients() []Ingredient {
@@ -70,66 +54,36 @@ func (t *ButtonClickTrigger) New() Trigger {
 	return &ButtonClickTrigger{}
 }
 
-func (t *ButtonClickTrigger) Start() (<-chan bool, <-chan bool) {
-	t.fireChan = make(chan bool)
-	t.doneChan = make(chan bool)
-	return t.fireChan, t.doneChan
+func (t *ButtonClickTrigger) Init() (<-chan bool, bool) {
+	return nil, true
 }
 
-func (t *ButtonClickTrigger) Stop() {
-	//TODO: Should stop exit the function too?
-	t.enabled = false
-}
-
-func (t *ButtonClickTrigger) EventConsumerID() string {
-	if t.id == "" {
-		id, err := uuid.NewV4()
-		if err != nil {
-			//TODO: error
-		}
-		t.id = id.String()
+func (t *ButtonClickTrigger) ProcessEvent(e Event) bool {
+	if time.Now().After(t.startTime.Add(t.MaxDuration)) {
+		t.startTime = time.Now()
+		t.clickCount = 0
 	}
-	return t.id
-}
 
-func (t *ButtonClickTrigger) StartConsumingEvents() chan<- Event {
-	c := make(chan Event)
-	go func() {
-		for e := range c {
-			if !t.enabled {
-				continue
-			}
+	cmd := e.ReplayCommand
+	if cmd == nil ||
+		cmd.CMDType() != CTDeviceReleaseButton {
+		return false
+	}
 
-			if time.Now().After(t.startTime.Add(t.MaxDuration)) {
-				t.startTime = time.Now()
-				t.clickCount = 0
-			}
+	btn, ok := e.Source.(*Button)
+	if !ok {
+		return false
+	}
 
-			cmd := e.ReplayCommand
-			if cmd == nil ||
-				cmd.CMDType() != CTDeviceReleaseButton {
-				continue
-			}
+	if btn.GlobalID != t.ButtonID {
+		return false
+	}
 
-			btn, ok := e.Source.(*Button)
-			if !ok {
-				continue
-			}
-
-			if btn.GlobalID != t.ButtonID {
-				continue
-			}
-
-			t.clickCount++
-			if t.clickCount == t.ClickCount {
-				t.fireChan <- true
-				t.clickCount = 0
-				t.startTime = time.Now()
-			}
-		}
-
-		//TODO:
-		//t.doneChan <- true
-	}()
-	return c
+	t.clickCount++
+	if t.clickCount == t.ClickCount {
+		t.clickCount = 0
+		t.startTime = time.Now()
+		return true
+	}
+	return false
 }

@@ -83,6 +83,10 @@ func (d *Device) StartProducingEvents() (<-chan Event, <-chan bool) {
 	return d.evpFire, d.evpDone
 }
 
+func (d *Device) StopConsumingEvents() {
+	//TODO: stop streaming
+}
+
 func (d *Device) Authenticate(c comm.Connection) error {
 	r := bufio.NewReader(c)
 	_, err := r.ReadString(':')
