@@ -1,7 +1,8 @@
 package gohome
 
 type Button struct {
-	ID          string
+	LocalID     string
+	GlobalID    string
 	Name        string
 	Description string
 	Device      *Device

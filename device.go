@@ -14,12 +14,15 @@ import (
 
 //TODO: Change to interface, make this private
 type Device struct {
-	ID             string
+	LocalID        string
+	GlobalID       string
 	Name           string
 	Description    string
 	System         *System
 	ConnectionInfo comm.ConnectionInfo
 	Buttons        map[string]*Button
+	Devices        map[string]*Device
+	Zones          map[string]*Zone
 
 	evpDone      chan bool
 	evpFire      chan Event
@@ -27,13 +30,16 @@ type Device struct {
 	cmdProcessor CommandProcessor
 }
 
-func NewDevice(id, name, description string, s *System, cp CommandProcessor) *Device {
+func NewDevice(localID, globalID, name, description string, s *System, cp CommandProcessor) *Device {
 	return &Device{
-		ID:           id,
+		LocalID:      localID,
+		GlobalID:     globalID,
 		Name:         name,
 		Description:  description,
 		System:       s,
 		Buttons:      make(map[string]*Button),
+		Devices:      make(map[string]*Device),
+		Zones:        make(map[string]*Zone),
 		cmdProcessor: cp,
 	}
 }
@@ -197,7 +203,7 @@ type commandBuilderParams struct {
 	Intensity    float64
 	Device       *Device
 	SourceDevice *Device
-	ComponentID  string
+	Button       *Button
 }
 
 func buildCommand(p commandBuilderParams) Command {
@@ -205,25 +211,27 @@ func buildCommand(p commandBuilderParams) Command {
 	case CTZoneSetLevel:
 		return &StringCommand{
 			Device:   p.Device,
-			Friendly: fmt.Sprintf("Zone [%s] \"%s\" set to %.2f%%", p.Zone.ID, p.Zone.Name, p.Intensity),
-			Value:    fmt.Sprintf("#OUTPUT,%s,1,%.2f\r\n", p.Zone.ID, p.Intensity),
+			Friendly: fmt.Sprintf("Zone [%s] \"%s\" set to %.2f%%", p.Zone.GlobalID, p.Zone.Name, p.Intensity),
+			Value:    fmt.Sprintf("#OUTPUT,%s,1,%.2f\r\n", p.Zone.LocalID, p.Intensity),
 			Type:     p.CommandType,
 		}
 
 	case CTDevicePressButton:
 		return &StringCommand{
-			Device:   p.Device,
-			Friendly: fmt.Sprintf("Device [%s] \"%s\" press button %s", p.SourceDevice.ID, p.SourceDevice.Name, p.ComponentID),
-			Value:    fmt.Sprintf("#DEVICE,%s,%s,3\r\n", p.SourceDevice.Name, p.ComponentID),
-			Type:     p.CommandType,
+			Device: p.Device,
+			Friendly: fmt.Sprintf("Device [%s] \"%s\" press button %s [%s]",
+				p.SourceDevice.GlobalID, p.SourceDevice.Name, p.Button.LocalID, p.Button.GlobalID),
+			Value: fmt.Sprintf("#DEVICE,%s,%s,3\r\n", p.SourceDevice.Name, p.Button.LocalID),
+			Type:  p.CommandType,
 		}
 
 	case CTDeviceReleaseButton:
 		return &StringCommand{
-			Device:   p.Device,
-			Friendly: fmt.Sprintf("Device [%s] \"%s\" release button %s", p.SourceDevice.ID, p.SourceDevice.Name, p.ComponentID),
-			Value:    fmt.Sprintf("#DEVICE,%s,%s,4\r\n", p.SourceDevice.Name, p.ComponentID),
-			Type:     p.CommandType,
+			Device: p.Device,
+			Friendly: fmt.Sprintf("Device [%s] \"%s\" release button %s [%s]",
+				p.SourceDevice.GlobalID, p.SourceDevice.Name, p.Button.LocalID, p.Button.GlobalID),
+			Value: fmt.Sprintf("#DEVICE,%s,%s,4\r\n", p.SourceDevice.Name, p.Button.LocalID),
+			Type:  p.CommandType,
 		}
 
 	default:
@@ -240,21 +248,21 @@ func parseDeviceCommand(d *Device, cmd string) (Command, interface{}) {
 	deviceID := matches[1]
 	componentID := matches[2]
 	cmdID := matches[3]
-	sourceDevice := d.System.Devices[deviceID]
+	sourceDevice := d.Devices[deviceID]
 	if sourceDevice == nil {
 		//TODO: Error? Warning?
 		return nil, nil
 	}
 
 	var ct CommandType
-	var source interface{}
+	var btn *Button
 	switch cmdID {
 	case "3":
 		ct = CTDevicePressButton
-		source = sourceDevice.Buttons[componentID]
+		btn = sourceDevice.Buttons[componentID]
 	case "4":
 		ct = CTDeviceReleaseButton
-		source = sourceDevice.Buttons[componentID]
+		btn = sourceDevice.Buttons[componentID]
 	default:
 		ct = CTUnknown
 	}
@@ -263,8 +271,8 @@ func parseDeviceCommand(d *Device, cmd string) (Command, interface{}) {
 		Device:       d,
 		CommandType:  ct,
 		SourceDevice: sourceDevice,
-		ComponentID:  componentID,
-	}), source
+		Button:       btn,
+	}), btn
 }
 
 func parseZoneCommand(d *Device, cmd string) (Command, interface{}) {
@@ -281,8 +289,7 @@ func parseZoneCommand(d *Device, cmd string) (Command, interface{}) {
 		return nil, nil
 	}
 
-	//TODO: Get unique id based on device
-	z := d.System.Zones[d.ID+":"+zoneID]
+	z := d.Zones[zoneID]
 	if z == nil {
 		//TODO: Error log
 		return nil, nil

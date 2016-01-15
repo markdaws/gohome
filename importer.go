@@ -47,14 +47,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return nil, err
 	}
 
-	system := &System{
-		ID:          "1",
-		Name:        "Lutron Smart Bridge Pro",
-		Description: "Lutron Smart Bridge Pro - imported //TODO: Date",
-		Devices:     make(map[string]*Device),
-		Scenes:      make(map[string]*Scene),
-		Zones:       make(map[string]*Zone),
-	}
+	system := NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro")
 
 	root, ok := configJson["LIPIdList"].(map[string]interface{})
 	if !ok {
@@ -73,6 +66,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 		device := NewDevice(
 			deviceID,
+			sys.NextGlobalID(),
 			deviceName,
 			deviceName,
 			sys,
@@ -88,12 +82,16 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			} else {
 				btnName = "Button " + btnNumber
 			}
-			device.Buttons[btnNumber] = &Button{
-				ID:          btnNumber,
+
+			b := &Button{
+				LocalID:     btnNumber,
+				GlobalID:    sys.NextGlobalID(),
 				Name:        btnName,
 				Description: btnName,
 				Device:      device,
 			}
+			device.Buttons[btnNumber] = b
+			system.AddButton(b)
 		}
 
 		return device
@@ -116,12 +114,13 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 				var buttonID string = strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
 				var buttonName = button["Name"].(string)
-				var uniqueID string = deviceID + ":" + buttonID
 				var pressCommand string = "#DEVICE," + deviceID + "," + buttonID + ",3\r\n"
 				var releaseCommand string = "#DEVICE," + deviceID + "," + buttonID + ",4\r\n"
 
-				sceneContainer[uniqueID] = &Scene{
-					ID:          uniqueID,
+				var globalID = system.NextGlobalID()
+				sceneContainer[globalID] = &Scene{
+					LocalID:     buttonID,
+					GlobalID:    globalID,
 					Name:        buttonName,
 					Description: buttonName,
 					Commands: []Command{
@@ -170,7 +169,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	if sbp == nil {
 		return nil, errors.New("Did not find Smart Bridge Pro with ID:" + smartBridgeProID)
 	}
-	system.Devices[smartBridgeProID] = sbp
+	system.AddDevice(sbp)
 
 	for _, deviceMap := range devices {
 		device, ok := deviceMap.(map[string]interface{})
@@ -186,9 +185,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			continue
 		}
 		gohomeDevice := makeDevice(device, system)
-		system.Devices[gohomeDevice.ID] = gohomeDevice
-		//Only SBP has scenes that map to buttons, other devices are really buttons
-		//makeScenes(system.Scenes, device, sbp)
+		system.AddDevice(gohomeDevice)
+		sbp.Devices[gohomeDevice.LocalID] = gohomeDevice
 	}
 
 	zones, ok := root["Zones"].([]interface{})
@@ -202,7 +200,6 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		fmt.Printf("%d: %s\n", int(zone["ID"].(float64)), zone["Name"])
 
 		var zoneID string = strconv.FormatFloat(zone["ID"].(float64), 'f', 0, 64)
-		var uniqueID = sbp.ID + ":" + zoneID
 		var zoneName string = zone["Name"].(string)
 		var zoneTypeFinal ZoneType = ZTLight
 		if zoneType, ok := zone["Type"].(string); ok {
@@ -222,8 +219,9 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				outputTypeFinal = OTContinuous
 			}
 		}
-		system.Zones[uniqueID] = &Zone{
-			ID:          uniqueID,
+		z := &Zone{
+			LocalID:     zoneID,
+			GlobalID:    system.NextGlobalID(),
 			Name:        zoneName,
 			Description: zoneName,
 			Type:        zoneTypeFinal,
@@ -239,6 +237,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			},
 			cmdProcessor: cmdProcessor,
 		}
+		system.AddZone(z)
+		sbp.Zones[z.LocalID] = z
 	}
 
 	return system, nil

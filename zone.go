@@ -1,7 +1,8 @@
 package gohome
 
 type Zone struct {
-	ID          string
+	LocalID     string
+	GlobalID    string
 	Name        string
 	Description string
 	Type        ZoneType

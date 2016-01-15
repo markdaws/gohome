@@ -150,6 +150,9 @@ body {
 .cmp-LogLine span.datetime {
     font-weight: bold;
 }
+.cmp-LogLine span.deviceName {
+    font-weight: bold;
+}
 .cmp-LogLine span.rawMessage {
     font-style: italic;
 }

@@ -26,7 +26,6 @@ func main() {
 	go cp.Process()
 
 	//TODO: Remove, load from gohome config file
-	var sbpID = "1"
 	system, err := gohome.NewImporter().ImportFromFile(config.StartupFile, "L-BDGPRO2-WH", cp)
 	if err != nil {
 		panic("Failed to import: " + err.Error())
@@ -42,11 +41,16 @@ func main() {
 	eb.AddConsumer(wsLogger)
 
 	//TODO: Loop through all devices
-	sbpDevice := system.Devices[sbpID]
-	go func() {
-		sbpDevice.InitConnections()
-		eb.AddProducer(sbpDevice)
-	}()
+	for _, d := range system.Devices {
+		if d.Name != "Smart Bridge" {
+			continue
+		}
+		go func() {
+			d.InitConnections()
+			eb.AddProducer(d)
+		}()
+		break
+	}
 
 	// Load all of the recipes from disk, start listening
 	rm := &gohome.RecipeManager{System: system}

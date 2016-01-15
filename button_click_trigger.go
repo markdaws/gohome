@@ -8,7 +8,6 @@ import (
 
 type ButtonClickTrigger struct {
 	ButtonID    string
-	DeviceID    string
 	ClickCount  int
 	MaxDuration time.Duration
 
@@ -42,14 +41,6 @@ func (t *ButtonClickTrigger) SetEnabled(enabled bool) {
 
 func (t *ButtonClickTrigger) Ingredients() []Ingredient {
 	return []Ingredient{
-		Ingredient{
-			ID:          "DeviceID",
-			Name:        "Device ID",
-			Description: "The device ID which the button belongs to",
-			Type:        "string",
-			Required:    true,
-		},
-		//TODO: local / global id everything should have a unique address in the system, makes it easy
 		Ingredient{
 			ID:          "ButtonID",
 			Name:        "Button ID",
@@ -124,8 +115,7 @@ func (t *ButtonClickTrigger) StartConsumingEvents() chan<- Event {
 				continue
 			}
 
-			if btn.Device.ID != t.DeviceID ||
-				btn.ID != t.ButtonID {
+			if btn.GlobalID != t.ButtonID {
 				continue
 			}
 

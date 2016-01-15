@@ -59,6 +59,7 @@ type jsonEvent struct {
 	Time            time.Time `json:"datetime"`
 	RawMessage      string    `json:"rawMessage"`
 	FriendlyMessage string    `json:"friendlyMessage"`
+	DeviceName      string    `json:"deviceName"`
 }
 
 func (l *wsEventLogger) StartConsumingEvents() chan<- Event {
@@ -76,6 +77,7 @@ func (l *wsEventLogger) StartConsumingEvents() chan<- Event {
 							ID:              strconv.Itoa(e.ID),
 							Time:            e.Time,
 							RawMessage:      e.OriginalString,
+							DeviceName:      e.Device.Name,
 							FriendlyMessage: e.String(),
 						}
 						b, err := json.Marshal(evt)

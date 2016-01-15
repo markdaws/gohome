@@ -1,7 +1,8 @@
 package gohome
 
 type Scene struct {
-	ID           string
+	LocalID      string
+	GlobalID     string
 	Name         string
 	Description  string
 	Commands     []Command

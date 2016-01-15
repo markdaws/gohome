@@ -34,9 +34,6 @@ func NewServer(rootPath string, system *gohome.System, recipeManager *gohome.Rec
 
 func (s *wwwServer) ListenAndServe(port string) error {
 
-	//	var upgrader = websocket.Upgrader{} // use default options
-	//	_ = upgrader
-
 	r := mux.NewRouter()
 
 	mime.AddExtensionType(".jsx", "text/jsx")
@@ -221,6 +218,7 @@ func apiCookBooksHandler(cookBooks []*gohome.CookBook) func(http.ResponseWriter,
 			Description string `json:"description"`
 			LogoURL     string `json:"logoUrl"`
 		}
+
 		//TODO: Return in a consistent order
 		jsonCookBooks := make([]jsonCookBook, len(cookBooks))
 		for i, cookBook := range cookBooks {
@@ -241,7 +239,6 @@ func apiCookBookHandler(cookBooks []*gohome.CookBook) func(http.ResponseWriter, 
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-		//TODO: Move into structs
 		type jsonIngredient struct {
 			ID          string `json:"id"`
 			Name        string `json:"name"`
@@ -346,7 +343,7 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 		scenes := make(scenes, len(system.Scenes), len(system.Scenes))
 		var i int32 = 0
 		for _, scene := range system.Scenes {
-			scenes[i] = jsonScene{ID: scene.ID, Name: scene.Name, Description: scene.Description}
+			scenes[i] = jsonScene{ID: scene.GlobalID, Name: scene.Name, Description: scene.Description}
 			i++
 		}
 		sort.Sort(scenes)
@@ -364,7 +361,7 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 		var i int32 = 0
 		for _, zone := range system.Zones {
 			zones[i] = jsonZone{
-				ID:          zone.ID,
+				ID:          zone.GlobalID,
 				Name:        zone.Name,
 				Description: zone.Description,
 				Type:        zone.Type.ToString(),
