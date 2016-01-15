@@ -26,6 +26,7 @@ func (a *SceneSetAction) Ingredients() []Ingredient {
 			Description: "The ID of the Scene to set",
 			Type:        "string",
 			Required:    true,
+			Reference:   "scene",
 		},
 	}
 }

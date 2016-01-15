@@ -29,6 +29,7 @@ func (a *SceneSetToggleAction) Ingredients() []Ingredient {
 			Description: "The ID of the first Scene to set",
 			Type:        "string",
 			Required:    true,
+			Reference:   "scene",
 		},
 		Ingredient{
 			ID:          "SecondSceneID",
@@ -36,6 +37,7 @@ func (a *SceneSetToggleAction) Ingredients() []Ingredient {
 			Description: "The ID of the second Scene to set",
 			Type:        "string",
 			Required:    true,
+			Reference:   "scene",
 		},
 	}
 }

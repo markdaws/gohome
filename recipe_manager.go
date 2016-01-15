@@ -267,12 +267,12 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 	trigger := rm.triggerFactory[triggerID]()
 	action := rm.actionFactory[actionID]()
 
-	err := setIngredients(trigger, triggerIngredients, reflect.ValueOf(trigger).Elem())
+	err := setIngredients(rm, trigger, triggerIngredients, reflect.ValueOf(trigger).Elem())
 	if err != nil {
 		err.ParamID = "trigger." + err.ParamID
 		return nil, err
 	}
-	err = setIngredients(action, actionIngredients, reflect.ValueOf(action).Elem())
+	err = setIngredients(rm, action, actionIngredients, reflect.ValueOf(action).Elem())
 	if err != nil {
 		err.ParamID = "action." + err.ParamID
 		return nil, err
@@ -407,7 +407,7 @@ func (rm *RecipeManager) loadRecipe(path string) (*Recipe, error) {
 func (rm *RecipeManager) makeTrigger(triggerID string, triggerIngredients map[string]interface{}) (Trigger, error) {
 	trigger := rm.triggerFactory[triggerID]()
 
-	err := setIngredients(trigger, triggerIngredients, reflect.ValueOf(trigger).Elem())
+	err := setIngredients(rm, trigger, triggerIngredients, reflect.ValueOf(trigger).Elem())
 	if err != nil {
 		return nil, err
 	}
@@ -417,14 +417,14 @@ func (rm *RecipeManager) makeTrigger(triggerID string, triggerIngredients map[st
 func (rm *RecipeManager) makeAction(actionID string, actionIngredients map[string]interface{}) (Action, error) {
 	action := rm.actionFactory[actionID]()
 
-	err := setIngredients(action, actionIngredients, reflect.ValueOf(action).Elem())
+	err := setIngredients(rm, action, actionIngredients, reflect.ValueOf(action).Elem())
 	if err != nil {
 		return nil, err
 	}
 	return action, nil
 }
 
-func setIngredients(i Ingredientor, ingredientValues map[string]interface{}, s reflect.Value) *ErrUnmarshalRecipe {
+func setIngredients(rm *RecipeManager, i Ingredientor, ingredientValues map[string]interface{}, s reflect.Value) *ErrUnmarshalRecipe {
 	for _, ingredient := range i.Ingredients() {
 		_, ok := ingredientValues[ingredient.ID]
 
@@ -449,18 +449,27 @@ func setIngredients(i Ingredientor, ingredientValues map[string]interface{}, s r
 					}
 				}
 
-				/*
-					//TODO: Have a reference field that we can use to validate
-					//ids are valid objects in the system
-					if ingredient.Reference != "" {
-						//TODO: needed?
-						parts := strings.Split(ingredient.Reference)
-						for i, v := range parts {
-							if i == len(parts) - 1 {
-								//The last part tells us the kind of
-							}
+				if ingredient.Reference != "" {
+					var ok bool = false
+					switch ingredient.Reference {
+					case "button":
+						_, ok = rm.System.Buttons[value]
+					case "device":
+						_, ok = rm.System.Devices[value]
+					case "scene":
+						_, ok = rm.System.Scenes[value]
+					case "zone":
+						_, ok = rm.System.Zones[value]
+					}
+					if !ok {
+						return &ErrUnmarshalRecipe{
+							ParamID:     ingredient.ID,
+							ErrorType:   "invalidData",
+							Description: "invalid ID",
 						}
-					}*/
+
+					}
+				}
 				field.SetString(value)
 
 			case "boolean":

@@ -44,6 +44,7 @@ func (a *ZoneSetLevelToggleAction) Ingredients() []Ingredient {
 			Description: "The ID of the target zone",
 			Type:        "string",
 			Required:    true,
+			Reference:   "zone",
 		},
 	}
 }

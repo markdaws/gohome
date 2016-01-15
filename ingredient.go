@@ -6,6 +6,7 @@ type Ingredient struct {
 	Description string
 	Type        string //string,integer,float,duration,datetime,boolean
 	Required    bool
+	Reference   string
 }
 
 type Ingredientor interface {

@@ -28,6 +28,7 @@ func (a *StringCommandAction) Ingredients() []Ingredient {
 			Description: "The ID of the device to send the command to",
 			Type:        "string",
 			Required:    true,
+			Reference:   "device",
 		},
 		Ingredient{
 			ID:          "Command",

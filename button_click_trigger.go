@@ -47,6 +47,7 @@ func (t *ButtonClickTrigger) Ingredients() []Ingredient {
 			Description: "The button ID associated with this trigger",
 			Type:        "string",
 			Required:    true,
+			Reference:   "button",
 		},
 		Ingredient{
 			ID:          "ClickCount",
