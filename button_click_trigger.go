@@ -49,6 +49,7 @@ func (t *ButtonClickTrigger) Ingredients() []Ingredient {
 			Type:        "string",
 			Required:    true,
 		},
+		//TODO: local / global id everything should have a unique address in the system, makes it easy
 		Ingredient{
 			ID:          "ButtonID",
 			Name:        "Button ID",

@@ -8,13 +8,13 @@ package gohome
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"time"
+	"unicode/utf8"
 )
 
 //TODO: make internal
@@ -96,76 +96,172 @@ type actionWrapper struct {
 	Action map[string]interface{} `json:"fields"`
 }
 
+type ErrUnmarshalRecipe struct {
+	ParamID     string
+	ErrorType   string
+	Description string
+}
+
+func (e ErrUnmarshalRecipe) Error() string {
+	return e.ParamID + " - " + e.Description
+}
+
 func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recipe, error) {
 	if _, ok := data["name"]; !ok {
-		return nil, errors.New("Missing name key")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "name",
+			ErrorType:   "missingParam",
+			Description: "required field",
+		}
 	}
 	name, ok := data["name"].(string)
 	if !ok {
-		return nil, errors.New("Invalid value for name, must be a string")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "name",
+			ErrorType:   "invalidData",
+			Description: "must be a string",
+		}
+	}
+	if utf8.RuneCountInString(name) == 0 {
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "name",
+			ErrorType:   "invalidData",
+			Description: "must have a value",
+		}
 	}
 
 	if _, ok = data["description"]; !ok {
-		return nil, errors.New("Missing description key")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "description",
+			ErrorType:   "missingParam",
+			Description: "required field",
+		}
 	}
 	desc, ok := data["description"].(string)
 	if !ok {
-		return nil, errors.New("Invalid value for description, must be a string")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "description",
+			ErrorType:   "invalidData",
+			Description: "must be a string",
+		}
+	}
+	if utf8.RuneCountInString(desc) == 0 {
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "description",
+			ErrorType:   "invalidData",
+			Description: "must have a value",
+		}
 	}
 
 	if _, ok = data["trigger"]; !ok {
-		return nil, errors.New("Missing trigger key")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "trigger",
+			ErrorType:   "missingParam",
+			Description: "required field",
+		}
 	}
 	triggerData, ok := data["trigger"].(map[string]interface{})
 	if !ok {
-		return nil, errors.New("Invalid value for trigger, must be an object")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "trigger",
+			ErrorType:   "invalidData",
+			Description: "must be an object",
+		}
 	}
 
 	if _, ok = triggerData["id"]; !ok {
-		return nil, errors.New("Missing id key in trigger object")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "trigger.id",
+			ErrorType:   "missingParam",
+			Description: "required field",
+		}
 	}
 	triggerID, ok := triggerData["id"].(string)
 	if !ok {
-		return nil, errors.New("Invalid value, trigger.id must be a string")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "trigger.id",
+			ErrorType:   "invalidData",
+			Description: "must be a string",
+		}
 	}
 
 	if _, ok = triggerData["ingredients"]; !ok {
-		return nil, errors.New("Missing trigger.ingredients key")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "trigger.ingredients",
+			ErrorType:   "missingParam",
+			Description: "required field",
+		}
 	}
 	triggerIngredients, ok := triggerData["ingredients"].(map[string]interface{})
 	if !ok {
-		return nil, errors.New("Invalid value for trigger.ingredients, must be an object")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "trigger.ingredients",
+			ErrorType:   "invalidData",
+			Description: "must be an object",
+		}
 	}
 
 	if _, ok = rm.triggerFactory[triggerID]; !ok {
-		return nil, fmt.Errorf("Invalid trigger ID: %s", triggerID)
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "trigger.id",
+			ErrorType:   "invalidData",
+			Description: fmt.Sprintf("unknown trigger ID: %s", triggerID),
+		}
 	}
 
 	if _, ok = data["action"]; !ok {
-		return nil, errors.New("Missing action key")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "action",
+			ErrorType:   "missingParam",
+			Description: "required field",
+		}
 	}
 	actionData, ok := data["action"].(map[string]interface{})
 	if !ok {
-		return nil, errors.New("Invalid value for action, must be an object")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "action",
+			ErrorType:   "invalidData",
+			Description: "must be an object",
+		}
 	}
 	if _, ok = actionData["id"]; !ok {
-		return nil, errors.New("Missing id key in action object")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "action.id",
+			ErrorType:   "missingParam",
+			Description: "required field",
+		}
 	}
 	actionID, ok := actionData["id"].(string)
 	if !ok {
-		return nil, errors.New("Invalid value, action.id must be a string")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "action.id",
+			ErrorType:   "invalidData",
+			Description: "must be a string",
+		}
 	}
 
 	if _, ok = actionData["ingredients"]; !ok {
-		return nil, errors.New("Missing action.ingredients key")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "action.ingredients",
+			ErrorType:   "missingParam",
+			Description: "required field",
+		}
 	}
 	actionIngredients, ok := actionData["ingredients"].(map[string]interface{})
 	if !ok {
-		return nil, errors.New("Invalid value for action.ingredients, must be an object")
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "action.ingredients",
+			ErrorType:   "invalidData",
+			Description: "must be an object",
+		}
 	}
 
 	if _, ok = rm.actionFactory[actionID]; !ok {
-		return nil, fmt.Errorf("Invalid action ID: %s", actionID)
+		return nil, &ErrUnmarshalRecipe{
+			ParamID:     "action.id",
+			ErrorType:   "invalidData",
+			Description: fmt.Sprintf("unknown trigger ID: %s", actionID),
+		}
 	}
 
 	trigger := rm.triggerFactory[triggerID]()
@@ -173,16 +269,18 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 
 	err := setIngredients(trigger, triggerIngredients, reflect.ValueOf(trigger).Elem())
 	if err != nil {
+		err.ParamID = "trigger." + err.ParamID
 		return nil, err
 	}
 	err = setIngredients(action, actionIngredients, reflect.ValueOf(action).Elem())
 	if err != nil {
+		err.ParamID = "action." + err.ParamID
 		return nil, err
 	}
 
 	enabled := true
-	recipe, err := NewRecipe(name, desc, enabled, trigger, action, rm.System)
-	return recipe, err
+	recipe, rErr := NewRecipe(name, desc, enabled, trigger, action, rm.System)
+	return recipe, rErr
 }
 
 func (rm *RecipeManager) SaveRecipe(r *Recipe, appendTo bool) error {
@@ -219,9 +317,6 @@ func (rm *RecipeManager) recipePath(r *Recipe) string {
 }
 
 func (rm *RecipeManager) DeleteRecipe(r *Recipe) error {
-
-	p := rm.recipePath(r)
-	fmt.Println(p)
 	err := os.Remove(rm.recipePath(r))
 	if err != nil {
 		return err
@@ -229,8 +324,7 @@ func (rm *RecipeManager) DeleteRecipe(r *Recipe) error {
 
 	for i, recipe := range rm.Recipes {
 		if recipe.ID == r.ID {
-			rm.Recipes = append(rm.Recipes[:i], rm.Recipes[i+1:]...)
-			//			rm.Recipes[len(rm.Recipes)-1] = nil
+			rm.Recipes, rm.Recipes[len(rm.Recipes)-1] = append(rm.Recipes[:i], rm.Recipes[i+1:]...), nil
 			break
 		}
 	}
@@ -330,60 +424,98 @@ func (rm *RecipeManager) makeAction(actionID string, actionIngredients map[strin
 	return action, nil
 }
 
-func setIngredients(i Ingredientor, ingredientValues map[string]interface{}, s reflect.Value) error {
+func setIngredients(i Ingredientor, ingredientValues map[string]interface{}, s reflect.Value) *ErrUnmarshalRecipe {
 	for _, ingredient := range i.Ingredients() {
 		_, ok := ingredientValues[ingredient.ID]
 
-		// This is a required ingredient but the caller did not pass it in
 		if !ok && ingredient.Required {
-			//TODO: Better error message
-			return errors.New("Missing ingredient")
+			return &ErrUnmarshalRecipe{
+				ParamID:     ingredient.ID,
+				ErrorType:   "invalidData",
+				Description: "must have a value",
+			}
 		}
 
-		//TODO: If !ok and !required, set to default value if there is one
-
-		// Value passed in by user matches an ingredient on the trigger, set it
 		if ok {
 			field := s.FieldByName(ingredient.ID)
 			switch ingredient.Type {
 			case "string":
 				value, ok := ingredientValues[ingredient.ID].(string)
 				if !ok {
-					return fmt.Errorf("Invalid type, %s must be a string", ingredient.ID)
+					return &ErrUnmarshalRecipe{
+						ParamID:     ingredient.ID,
+						ErrorType:   "invalidData",
+						Description: "must be a string",
+					}
 				}
+
+				/*
+					//TODO: Have a reference field that we can use to validate
+					//ids are valid objects in the system
+					if ingredient.Reference != "" {
+						//TODO: needed?
+						parts := strings.Split(ingredient.Reference)
+						for i, v := range parts {
+							if i == len(parts) - 1 {
+								//The last part tells us the kind of
+							}
+						}
+					}*/
 				field.SetString(value)
+
 			case "boolean":
 				value, ok := ingredientValues[ingredient.ID].(bool)
 				if !ok {
-					return fmt.Errorf("Invalid type, %s must be a boolean", ingredient.ID)
+					return &ErrUnmarshalRecipe{
+						ParamID:     ingredient.ID,
+						ErrorType:   "invalidData",
+						Description: "must be a boolean (true or false)",
+					}
 				}
 				field.SetBool(value)
 
 			case "integer":
 				value, ok := ingredientValues[ingredient.ID].(float64)
 				if !ok {
-					return fmt.Errorf("Invalid type, %s must be an integer", ingredient.ID)
+					return &ErrUnmarshalRecipe{
+						ParamID:     ingredient.ID,
+						ErrorType:   "invalidData",
+						Description: "must be an integer",
+					}
 				}
 				field.SetInt(int64(value))
 
 			case "float":
 				value, ok := ingredientValues[ingredient.ID].(float64)
 				if !ok {
-					return fmt.Errorf("Invalid type, %s must be a float", ingredient.ID)
+					return &ErrUnmarshalRecipe{
+						ParamID:     ingredient.ID,
+						ErrorType:   "invalidData",
+						Description: "must be a floating point number",
+					}
 				}
 				field.SetFloat(value)
 
 			case "duration":
 				value, ok := ingredientValues[ingredient.ID].(float64)
 				if !ok {
-					return fmt.Errorf("Invalid type, %s must be an integer", ingredient.ID)
+					return &ErrUnmarshalRecipe{
+						ParamID:     ingredient.ID,
+						ErrorType:   "invalidData",
+						Description: "must be an integer representing milliseconds",
+					}
 				}
 				field.Set(reflect.ValueOf(time.Duration(int64(value)) * time.Millisecond))
+
 			case "datetime":
 				//TODO: implement
 
 			default:
-				return fmt.Errorf("Unknown ingredient type: %s", ingredient.Type)
+				return &ErrUnmarshalRecipe{
+					ParamID:     ingredient.ID,
+					ErrorType:   "invalidData",
+					Description: "unknown ingredient ID",
+				}
 			}
 		}
 	}

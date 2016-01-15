@@ -71,6 +71,7 @@ func (p *connectionPool) String() string {
 }
 
 func retryNewConnection(p *connectionPool, sync bool) {
+	//TODO: This doesn't have to be async now we queue up commands???
 	c := make(chan bool)
 	go func() {
 		for {

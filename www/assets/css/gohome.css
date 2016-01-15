@@ -112,6 +112,10 @@ body {
 .cmp-NewRecipe .footer {
     margin-top: 8px;
 }
+.cmp-NewRecipe .has-error span {
+    font-size: 14px;
+    margin-bottom: 0px;
+}
 
 .cmp-RecipeInfo h4 {
     margin-top: 0;

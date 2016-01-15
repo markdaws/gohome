@@ -2,7 +2,6 @@ package www
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -106,14 +105,23 @@ func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeMa
 
 		recipe, err := recipeManager.UnmarshalNewRecipe(data)
 		if err != nil {
-			fmt.Println(err)
+			errBad := err.(*gohome.ErrUnmarshalRecipe)
 			w.WriteHeader(http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			json.NewEncoder(w).Encode(struct {
+				ParamID     string `json:"paramId"`
+				ErrorType   string `json:"errorType"`
+				Description string `json:"description"`
+			}{
+				ParamID:     errBad.ParamID,
+				ErrorType:   errBad.ErrorType,
+				Description: errBad.Description,
+			})
 			return
 		}
 
 		err = recipeManager.SaveRecipe(recipe, true)
 		if err != nil {
-			fmt.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -239,6 +247,7 @@ func apiCookBookHandler(cookBooks []*gohome.CookBook) func(http.ResponseWriter, 
 			Name        string `json:"name"`
 			Description string `json:"description"`
 			Type        string `json:"type"`
+			Reference   string `json:"reference"`
 		}
 		type jsonTrigger struct {
 			ID          string           `json:"id"`

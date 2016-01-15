@@ -630,7 +630,9 @@
                 trigger: null,
                 action: null,
                 name: '',
-                description: ''
+                description: '',
+                saveError: null,
+                saving: false
             };
         },
 
@@ -638,7 +640,7 @@
             this.setState({ triggerCookBookID: cookBookID });
 
             var self = this;
-            this._loadCookBook(cookBookID, function(err, data) {
+            this.loadCookBook(cookBookID, function(err, data) {
                 if (err) {
                     console.error(err.toString());
                     return;
@@ -652,7 +654,7 @@
             this.setState({ actionCookBookID: cookBookID });
 
             var self = this;
-            this._loadCookBook(cookBookID, function(err, data) {
+            this.loadCookBook(cookBookID, function(err, data) {
                 if (err) {
                     console.error(err.toString());
                     return;
@@ -662,17 +664,17 @@
             });
         },
 
-        _loadCookBook: function(cookBookID, callback) {
+        loadCookBook: function(cookBookID, callback) {
             $.ajax({
                 url: '/api/v1/cookbooks/' + cookBookID,
                 dataType: 'json',
                 cache: false,
                 success: function(data) {
                     callback(null, data);
-                }.bind(this),
+                },
                 error: function(xhr, status, err) {
                     callback({ err: err });
-                }.bind(this)
+                }
             });
         },
 
@@ -685,8 +687,7 @@
         },
 
         saveClicked: function(evt) {
-            evt.preventDefault();
-            evt.stopPropagation();
+            this.setState({ saveError: null, saving: true });
 
             var recipe = this.toJSON();
             var self = this;
@@ -697,13 +698,17 @@
                 data: JSON.stringify(recipe),
                 cache: false,
                 success: function(data) {
+                    self.setState({ saving: false });
                     self.props.onCreate(recipe);
-                    console.log('success');
-                }.bind(this),
+                },
                 error: function(xhr, status, err) {
-                    console.error(err);
-                    //TODO: callback?
-                }.bind(this)
+                    self.setState({ saving: false });
+                    if (xhr.status === 400) {
+                        self.setState({ saveError: JSON.parse(xhr.responseText) });
+                    } else {
+                        //Unknown error - todo
+                    }
+                }
             });
         },
 
@@ -719,29 +724,71 @@
             var json = {};
             json.name = this.state.name;
             json.description = this.state.description;
-            json.action = {
-                id: this.state.action.id,
-                ingredients: this.refs.actionIngredients.toJSON()
+
+            if (this.state.action) {
+                json.action = {
+                    id: this.state.action.id,
+                    ingredients: this.refs.actionIngredients.toJSON()
+                }
             }
-            json.trigger = {
-                id: this.state.trigger.id,
-                ingredients: this.refs.triggerIngredients.toJSON()
+
+            if (this.state.trigger) {
+                json.trigger = {
+                    id: this.state.trigger.id,
+                    ingredients: this.refs.triggerIngredients.toJSON()
+                }
             }
             return json;
         },
 
         cancelClicked: function(evt) {
-            evt.preventDefault();
-            evt.stopPropagation();
             this.props.onCancel();
         },
 
         render: function() {
+            var nameErr = false;
+            var descErr = false;
+            var triggerErr = false;
+            var actionErr = false;
+            var triggerIngredientErr;
+            var actionIngredientErr;
+            var err = this.state.saveError;
+            var errDesc = '';
+            console.log(err);
+            if (err) {
+                switch (err.paramId) {
+                case 'name':
+                    nameErr = true;
+                    errDesc = err.description;
+                    break;
+                case 'description':
+                    descErr = true;
+                    errDesc = err.description;
+                    break;
+                case 'trigger':
+                    triggerErr = true;
+                    errDesc = err.description;
+                    break;
+                case 'action':
+                    actionErr = true;
+                    errDesc = err.description;
+                    break;
+                default:
+                    if (err.paramId.startsWith('trigger.')) {
+                        triggerIngredientErr = err;
+                        triggerIngredientErr.paramId = triggerIngredientErr.paramId.replace('trigger.', '');
+                    } else if (err.paramId.startsWith('action.')) {
+                        actionIngredientErr = err;
+                        actionIngredientErr.paramId = actionIngredientErr.paramId.replace('action.', '');
+                    }
+                }
+            }
+
             var triggerChild, actionChild;
             var spinner = <div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>;
             if (this.state.trigger) {
                 // Render the selected trigger
-                triggerChild = <IngredientList ref="triggerIngredients" ingredients={this.state.trigger.ingredients} />
+                triggerChild = <IngredientList err={triggerIngredientErr} ref="triggerIngredients" ingredients={this.state.trigger.ingredients} />
             } else if (this.state.triggers) {
                 // Render the trigger list
                 triggerChild = <TriggerList triggers={this.state.triggers} selected={this.triggerSelected}/>
@@ -755,7 +802,7 @@
             }
 
             if (this.state.action) {
-                actionChild = <IngredientList ref="actionIngredients" ingredients={this.state.action.ingredients} />
+                actionChild = <IngredientList err={actionIngredientErr} ref="actionIngredients" ingredients={this.state.action.ingredients} />
             } else if (this.state.actions) {
                 actionChild = <ActionList actions={this.state.actions} selected={this.actionSelected}/>
             }
@@ -768,25 +815,29 @@
 
             return (
                 <div className="cmp-NewRecipe">
-                    <div className="form-group">
-                        <label htmlFor="name">Name</label>
+                    <div className={"form-group" + (nameErr ? " has-error" : "")}>
+                        <label className="control-label" htmlFor="name">Name</label>
                         <input value={this.state.name} onChange={this.handleNameChange} className="name form-control" type="text" id="name"/>
+                        <span className={"help-block" + (nameErr ? "" : " invisible")}>Error - {errDesc}</span>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="description">Description</label>
+                    <div className={"form-group" + (descErr ? " has-error" : "")}>
+                        <label className="control-label" htmlFor="description">Description</label>
                         <input value={this.state.description} onChange={this.handleDescriptionChange} className="description form-control" type="text" id="description"/>
+                        <span className={"help-block" + (descErr ? "" : " invisible")}>Error - {errDesc}</span>
                     </div>
-                    <div className="trigger">
+                    <div className={"trigger form-group" + (triggerErr ? " has-error" : "")}>
                         <h3>Trigger</h3>
                         {triggerChild}
+                        <span className={"help-block" + (triggerErr ? "" : " invisible")}>Error - {errDesc}</span>
                     </div>
-                    <div className="action">
+                    <div className={"action form-group" + (actionErr ? " has-error" : "")}>
                         <h3>Action</h3>
                         {actionChild}
+                        <span className={"help-block" + (actionErr ? "" : " invisible")}>Error - {errDesc}</span>
                     </div>
                     <div className="clearfix footer">
-                        <button className="btn btn-default pull-right" onClick={this.cancelClicked}>Cancel</button>
-                        <button className="btn btn-primary pull-right" onClick={this.saveClicked}>Save</button>
+                        <button className={"btn btn-default pull-right" + (this.state.saving ? " disabled" : "")} onClick={this.cancelClicked}>Cancel</button>
+                        <button className={"btn btn-primary pull-right" + (this.state.saving ? " disabled" : "")} onClick={this.saveClicked}>Save</button>
                     </div>
                 </div>
             );
@@ -916,8 +967,12 @@
         render: function() {
             var self = this;
             var ingredientNodes = this.props.ingredients.map(function(ingredient) {
+                var err;
+                if (self.props.err && self.props.err.paramId === ingredient.id) {
+                    err = self.props.err;
+                }
                 return (
-                    <Ingredient data={ingredient} ref={ingredient.id} key={ingredient.id} />
+                    <Ingredient err={err} data={ingredient} ref={ingredient.id} key={ingredient.id} />
                 );
             });
 
@@ -932,7 +987,11 @@
             var json = {};
             var self = this;
             Object.keys(this.refs).map(function(key) {
-                json[key] = self.refs[key].value();
+                var val = self.refs[key].value();
+                if (val != undefined) {
+                    console.log(val)
+                    json[key] = val;
+                }
             });
             return json;
         }
@@ -951,8 +1010,6 @@
         },
 
         render: function() {
-            //this.props.data.id
-
             var input;
             switch(this.props.data.type) {
             case 'string':
@@ -962,7 +1019,7 @@
                 input = <input className="ingredientInput form-control" type="text" onChange={this.changeHandler} id={this.getNextIdAndIncrement()}/>;
                 break;
             case 'boolean':
-                input = <input className="ingredientInput" type="checkbox" value="true" onChange={this.changeHandler} id={this.getNextIdAndIncrement()}/>;
+                input = <input className="ingredientInput form-control" type="checkbox" value="true" onChange={this.changeHandler} id={this.getNextIdAndIncrement()}/>;
                 break;
             case 'datetime':
                 //TODO: show calendar
@@ -971,19 +1028,25 @@
                 throw 'unknown ingredient type: ' + this.props.data.type;
             }
 
-            //TODO: htmlFor should be unique
+            var err = this.props.err;
+            var errDesc = err ? err.description : '';
             return (
                 <div>
-                    <div className="form-group">
-                        <label htmlFor={this.getCurrentId()}>{this.props.data.name}</label>
+                    <div className={"form-group" + (err ? " has-error" : "")}>
+                        <label className="control-label" htmlFor={this.getCurrentId()}>{this.props.data.name}</label>
                         <p>{this.props.data.description}</p>
                         {input}
+                        <span className={"help-block" + (err ? "" : " invisible")}>Error - {errDesc}</span>
                     </div>
                 </div>
             );
         },
 
         value: function() {
+            if (this.state.value == undefined) {
+                return undefined;
+            }
+            
             switch(this.props.data.type) {
             case 'string':
                 return this.state.value;
