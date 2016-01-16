@@ -6,6 +6,6 @@ type Trigger interface {
 	Name() string
 	Description() string
 	New() Trigger
-	Init() (<-chan bool, bool)
+	Init(<-chan bool) (<-chan bool, bool)
 	ProcessEvent(Event) bool
 }

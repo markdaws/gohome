@@ -2,17 +2,30 @@ package log
 
 import (
 	"fmt"
-	"time"
+	"log"
+	"os"
 )
 
+var (
+	verbose *log.Logger
+	warning *log.Logger
+	error   *log.Logger
+)
+
+func init() {
+	verbose = log.New(os.Stdout, "V: ", log.Ldate|log.Ltime)
+	warning = log.New(os.Stdout, "W: ", log.Ldate|log.Ltime)
+	error = log.New(os.Stderr, "E: ", log.Ldate|log.Ltime)
+}
+
 func V(m string, args ...interface{}) {
-	fmt.Printf("%s::%s::%s\n", "V", time.Now().UTC(), fmt.Sprintf(m, args...))
+	verbose.Printf("%s\n", fmt.Sprintf(m, args...))
 }
 
 func W(m string, args ...interface{}) {
-	fmt.Printf("%s::%s::%s\n", "W", time.Now().UTC(), fmt.Sprintf(m, args...))
+	warning.Printf("%s\n", fmt.Sprintf(m, args...))
 }
 
 func E(m string, args ...interface{}) {
-	fmt.Printf("%s::%s::%s\n", "E", time.Now().UTC(), fmt.Sprintf(m, args...))
+	error.Printf("%s\n", fmt.Sprintf(m, args...))
 }

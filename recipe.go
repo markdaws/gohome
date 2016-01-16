@@ -18,10 +18,8 @@ type Recipe struct {
 	Action      Action
 	Version     string
 
-	system                 *System
-	enabled                bool
-	initedTrigger          bool
-	triggerProcessesEvents bool
+	system  *System
+	enabled bool
 }
 
 func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *System) (*Recipe, error) {
@@ -38,7 +36,7 @@ func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *S
 		Action:      a,
 		Version:     "1",
 		system:      s,
-		enabled:     true,
+		enabled:     enabled,
 	}, nil
 }
 
@@ -61,52 +59,55 @@ func (r *Recipe) EventConsumerID() string {
 func (r *Recipe) StartConsumingEvents() chan<- Event {
 	log.V("%s started consuming events", r)
 
-	c := make(chan Event)
+	triggerDone := make(chan bool)
+	fire, triggerProcessesEvents := r.Trigger.Init(triggerDone)
+
 	done := make(chan bool)
 
-	var ignoreTrigger = false
-	if !r.initedTrigger {
-		fire, triggerProcessesEvents := r.Trigger.Init()
-		r.initedTrigger = true
-		r.triggerProcessesEvents = triggerProcessesEvents
-
-		// Trigger could be something like a timer, can fire a signal
-		// to indicate if has triggered, need to be able to handle it
-		if fire != nil {
-			go func() {
-				for {
-					select {
-					case <-done:
-						//TODO: Test
-						break
-					case f := <-fire:
-						if r.enabled && !ignoreTrigger {
-							if f {
-								executeAction(r)
-							}
+	// Trigger could be something like a timer, can fire a signal
+	// to indicate if has triggered, need to be able to handle it
+	if fire != nil {
+		go func() {
+			for {
+				select {
+				case _, ok := <-done:
+					if !ok {
+						done = nil
+					}
+				case f := <-fire:
+					if r.enabled {
+						if f {
+							log.V("%s trigger fired", r)
+							executeAction(r)
 						}
 					}
 				}
-			}()
-		}
-	}
-
-	if r.triggerProcessesEvents {
-		go func() {
-			for e := range c {
-				if !r.enabled {
-					continue
-				}
-
-				if r.Trigger.ProcessEvent(e) {
-					executeAction(r)
+				if done == nil {
+					break
 				}
 			}
-			close(done)
-			ignoreTrigger = true
-			log.V("%s stopped consuming events", r)
 		}()
 	}
+
+	c := make(chan Event)
+	go func() {
+		for e := range c {
+			if !r.enabled || !triggerProcessesEvents {
+				continue
+			}
+
+			if r.Trigger.ProcessEvent(e) {
+				log.V("%s trigger fired", r)
+				executeAction(r)
+			}
+		}
+
+		// No longer a consumer, signal to stop trigger and listening for any more events
+		close(done)
+		close(triggerDone)
+
+		log.V("%s stopped consuming events", r)
+	}()
 	return c
 }
 

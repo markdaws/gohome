@@ -54,7 +54,7 @@ func (t *ButtonClickTrigger) New() Trigger {
 	return &ButtonClickTrigger{}
 }
 
-func (t *ButtonClickTrigger) Init() (<-chan bool, bool) {
+func (t *ButtonClickTrigger) Init(done <-chan bool) (<-chan bool, bool) {
 	return nil, true
 }
 

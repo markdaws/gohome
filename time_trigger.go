@@ -65,8 +65,17 @@ func (t *TimeTrigger) Ingredients() []Ingredient {
 	}
 }
 
-func (t *TimeTrigger) Init() (<-chan bool, bool) {
+func (t *TimeTrigger) Init(done <-chan bool) (<-chan bool, bool) {
 	t.fire = make(chan bool)
+	go func() {
+		<-done
+		if t.timer != nil {
+			t.timer.Stop()
+		}
+		if t.ticker != nil {
+			t.ticker.Stop()
+		}
+	}()
 	return t.fire, false
 }
 
