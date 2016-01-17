@@ -85,6 +85,8 @@ body {
 .cmp-CookBook {
     float: left;
     text-align: center;
+    margin-right: 16px;
+    width: 180px;
 }
 .cmp-CookBook img {
     width: 100px;
@@ -95,6 +97,7 @@ body {
 }
 .cmp-CookBook button {
     padding: 12px;
+    width: 100%;
 }
 
 .cmp-Trigger button,

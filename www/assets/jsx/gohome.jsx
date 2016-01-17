@@ -799,6 +799,7 @@
                 triggerChild = spinner;
             }
             else {
+                //TODO: Only show cook books that have triggers
                 triggerChild = <CookBookList cookBooks={this.props.cookBooks} selected={this.triggerCookBookSelected}/>
             }
 

@@ -1,11 +1,21 @@
 package comm
 
-type ConnectionInfo struct {
-	Network       string
-	Address       string
+type ConnectionInfo interface {
+}
+
+type TelnetConnectionInfo struct {
+	PoolSize int
+
 	Login         string
 	Password      string
-	Stream        bool
-	PoolSize      int
 	Authenticator Authenticator
+
+	Network string
+	Address string
+}
+
+type HTTPConnectionInfo struct {
+	PoolSize int
+	HostName string
+	Port     string
 }

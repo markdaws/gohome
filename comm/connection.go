@@ -5,8 +5,11 @@ import "io"
 type Connection interface {
 	Open() error
 	Close()
+	//TODO: Why add these here?
 	io.Reader
 	io.Writer
+
+	//TODO: Needed?
 	SetPingCallback(PingCallback)
 	PingCallback() PingCallback
 	Status() ConnectionStatus

@@ -10,7 +10,7 @@ import (
 type StringCommand struct {
 	Value    string
 	Friendly string
-	Device   *Device
+	Device   Device
 	Type     CommandType
 	Args     []interface{}
 }

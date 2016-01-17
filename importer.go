@@ -60,17 +60,21 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 	fmt.Println("\nDEVICES")
 
-	var makeDevice = func(deviceMap map[string]interface{}, sys *System) *Device {
+	var makeDevice = func(modelNumber string, deviceMap map[string]interface{}, sys *System, producesEvents, stream bool, ci comm.ConnectionInfo) Device {
 		var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
 		var deviceName string = deviceMap["Name"].(string)
 
 		device := NewDevice(
+			modelNumber,
 			deviceID,
 			sys.NextGlobalID(),
 			deviceName,
 			deviceName,
+			producesEvents,
+			stream,
 			sys,
-			cmdProcessor)
+			cmdProcessor,
+			ci)
 
 		for _, buttonMap := range deviceMap["Buttons"].([]interface{}) {
 			button := buttonMap.(map[string]interface{})
@@ -90,14 +94,14 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				Description: btnName,
 				Device:      device,
 			}
-			device.Buttons[btnNumber] = b
+			device.Buttons()[btnNumber] = b
 			system.AddButton(b)
 		}
 
 		return device
 	}
 
-	var makeScenes = func(sceneContainer map[string]*Scene, deviceMap map[string]interface{}, sbp *Device) error {
+	var makeScenes = func(sceneContainer map[string]*Scene, deviceMap map[string]interface{}, sbp Device) error {
 		buttons, ok := deviceMap["Buttons"].([]interface{})
 		if !ok {
 			return errors.New("Missing Buttons key, or value not array")
@@ -140,7 +144,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	}
 
 	// First need to find the Smart Bridge Pro since it is needed to make scenes and zones
-	var sbp *Device
+	var sbp Device
 	for _, deviceMap := range devices {
 		device, ok := deviceMap.(map[string]interface{})
 		if !ok {
@@ -150,17 +154,15 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		var deviceID string = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
 			//ModelNumber: L-BDGPRO2-WH
-			sbp = makeDevice(device, system)
-			//TODO: Shouldn't set here, comes in from user
-			sbp.ConnectionInfo = comm.ConnectionInfo{
+			sbp = makeDevice("L-BDGPRO2-WH", device, system, true, true, &comm.TelnetConnectionInfo{
 				Network:       "tcp",
 				Address:       "192.168.0.10:23",
 				Login:         "lutron",
 				Password:      "integration",
-				Stream:        true,
 				PoolSize:      2,
 				Authenticator: sbp,
-			}
+			})
+			sbp.ConnectionInfo().(*comm.TelnetConnectionInfo).Authenticator = sbp
 			makeScenes(system.Scenes, device, sbp)
 			break
 		}
@@ -184,9 +186,9 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		if deviceID == smartBridgeProID {
 			continue
 		}
-		gohomeDevice := makeDevice(device, system)
+		gohomeDevice := makeDevice("", device, system, false, false, nil)
 		system.AddDevice(gohomeDevice)
-		sbp.Devices[gohomeDevice.LocalID] = gohomeDevice
+		sbp.Devices()[gohomeDevice.LocalID()] = gohomeDevice
 	}
 
 	zones, ok := root["Zones"].([]interface{})
@@ -224,22 +226,63 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			GlobalID:    system.NextGlobalID(),
 			Name:        zoneName,
 			Description: zoneName,
+			Device:      sbp,
 			Type:        zoneTypeFinal,
 			Output:      outputTypeFinal,
-			setCommand: func(args ...interface{}) Command {
-				return &StringCommand{
-					Device:   sbp,
-					Value:    "#OUTPUT," + zoneID + ",1,%.2f\r\n",
-					Friendly: "//TODO: Friendly",
-					Type:     CTZoneSetLevel,
-					Args:     args,
-				}
-			},
-			cmdProcessor: cmdProcessor,
 		}
 		system.AddZone(z)
-		sbp.Zones[z.LocalID] = z
+		sbp.Zones()[z.LocalID] = z
 	}
 
+	//TODO: Move
+	importConnectedByTCP(system, cmdProcessor)
 	return system, nil
+}
+
+//TODO: Temp function - import from UI
+func importConnectedByTCP(system *System, cmdProcessor CommandProcessor) {
+	/*
+		//1. Press sync button on hub
+		//2. Execute following url
+		//https://192.168.0.23/gwr/gop.php?cmd=GWRLogin&data=%3Cgip%3E%3Cversion%3E1%3C/version%3E%3Cemail%3Etest%3C/email%3E%3Cpassword%3Etest%3C/password%3E%3C/gip%3E
+		//3. Get response: <gip><version>1</version><rc>200</rc><token>ar6thtpqg6yinh219pn0c4t814dqkye1f0j3sfye</token></gip>
+		//4. Use token in commands
+
+		data := "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21</token><fields>name,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml"
+		_ = data
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client := &http.Client{Transport: tr}
+		slc := "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>DeviceSendCommand</gcmd><gdata><gip><version>1</version><token>79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21</token><did>216438039298518643</did><value>100</value><type>level</type></gip></gdata></gwrcmd></gwrcmds>&fmt=xml"
+		resp, err := client.Post("https://192.168.0.23/gwr/gpo.php", "text/xml; charset=\"utf-8\"", bytes.NewReader([]byte(slc)))
+		fmt.Println(resp)
+		fmt.Println(err)
+	*/
+	tcp := NewDevice(
+		"tcphub", //TODO: real model number
+		"tcphub",
+		system.NextGlobalID(),
+		"ConnectedByTcp Hub",
+		"Description",
+		false,
+		false,
+		system,
+		cmdProcessor,
+		nil)
+
+	zoneID := "216438039298518643"
+	z := &Zone{
+		LocalID:     zoneID,
+		GlobalID:    system.NextGlobalID(),
+		Name:        "bulb1",
+		Description: "tcp - bulb1",
+		Device:      tcp,
+		Type:        ZTLight,
+		Output:      OTContinuous,
+	}
+	fmt.Println("BULB ID: " + z.GlobalID)
+	tcp.Zones()[z.LocalID] = z
+	system.AddZone(z)
+	system.AddDevice(tcp)
 }

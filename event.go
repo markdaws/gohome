@@ -6,7 +6,7 @@ type Event struct {
 	ID             int
 	Time           time.Time
 	OriginalString string
-	Device         *Device
+	Device         Device
 	ReplayCommand  Command
 	Type           EventType
 	Source         interface{}
@@ -25,7 +25,7 @@ const (
 	ETPing
 )
 
-func NewEvent(d *Device, cmd Command, orig string, t EventType, s interface{}) Event {
+func NewEvent(d Device, cmd Command, orig string, t EventType, s interface{}) Event {
 	nextId++
 
 	return Event{

@@ -40,16 +40,14 @@ func main() {
 	wsLogger := gohome.NewWSEventLogger()
 	eb.AddConsumer(wsLogger)
 
-	//TODO: Loop through all devices
 	for _, d := range system.Devices {
-		if d.Name != "Smart Bridge" {
-			continue
+		if d.ConnectionInfo() != nil {
+			d := d
+			go func() {
+				d.InitConnections()
+				eb.AddProducer(d)
+			}()
 		}
-		go func() {
-			d.InitConnections()
-			eb.AddProducer(d)
-		}()
-		break
 	}
 
 	// Load all of the recipes from disk, start listening

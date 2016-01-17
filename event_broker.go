@@ -42,7 +42,10 @@ func (b *broker) Init() {
 }
 
 func (b *broker) AddProducer(p EventProducer) {
-	//TODO: Tidy up
+	if !p.ProducesEvents() {
+		return
+	}
+
 	ec, dc := p.StartProducingEvents()
 	go func() {
 		for {
@@ -64,7 +67,7 @@ func (b *broker) AddConsumer(c EventConsumer) {
 		return
 	}
 
-	log.V("%s adding consumer %s", b, c)
+	log.V("%s adding consumer %s", b, c.EventConsumerID())
 	b.consumers[c.EventConsumerID()] = ec
 }
 

@@ -10,7 +10,7 @@ import (
 
 type telnetConnection struct {
 	conn         net.Conn
-	info         ConnectionInfo
+	info         TelnetConnectionInfo
 	pingCallback PingCallback
 	status       ConnectionStatus
 	id           int
@@ -18,7 +18,7 @@ type telnetConnection struct {
 
 var id = 1
 
-func NewTelnetConnection(i ConnectionInfo) *telnetConnection {
+func NewTelnetConnection(i TelnetConnectionInfo) *telnetConnection {
 	c := telnetConnection{
 		status: CSNew,
 		info:   i,

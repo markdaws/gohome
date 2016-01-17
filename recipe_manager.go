@@ -545,6 +545,17 @@ func loadCookBooks(dataPath string) []*CookBook {
 				&StringCommandAction{},
 			},
 		},
+		{
+			ID:          "2",
+			Name:        "Connected",
+			Description: "Cook up some goodness for ConnectedByTcp lights",
+			LogoURL:     "connected_420x420.jpg",
+			Triggers:    []Trigger{},
+			Actions: []Action{
+				&ZoneSetLevelAction{},
+				&ZoneSetLevelToggleAction{},
+			},
+		},
 	}
 	return cookBooks
 }

@@ -5,5 +5,5 @@ type Button struct {
 	GlobalID    string
 	Name        string
 	Description string
-	Device      *Device
+	Device      Device
 }

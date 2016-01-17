@@ -77,7 +77,7 @@ func (l *wsEventLogger) StartConsumingEvents() chan<- Event {
 							ID:              strconv.Itoa(e.ID),
 							Time:            e.Time,
 							RawMessage:      e.OriginalString,
-							DeviceName:      e.Device.Name,
+							DeviceName:      e.Device.Name(),
 							FriendlyMessage: e.String(),
 						}
 						b, err := json.Marshal(evt)

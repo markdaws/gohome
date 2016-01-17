@@ -53,6 +53,10 @@ func (p *connectionPool) Get() Connection {
 }
 
 func (p *connectionPool) Release(c Connection) {
+	if _, ok := p.pool[c]; !ok {
+		return
+	}
+
 	if c.Status() == CSClosed {
 		log.V("%s closed connection release, adding new connection", p)
 		delete(p.pool, c)
@@ -103,28 +107,32 @@ func appendAndOpenNewConnection(p *connectionPool) error {
 		p.newConnectionCb()
 	}
 
-	go func() {
-		ticker := time.NewTicker(10 * time.Second)
-		defer func() {
-			ticker.Stop()
-		}()
+	// If the connection has a ping handler, the pool will call it to make
+	// sure that the connection stays alive
+	pingCB := c.PingCallback()
+	if pingCB != nil {
+		go func() {
+			ticker := time.NewTicker(10 * time.Second)
+			defer func() {
+				ticker.Stop()
+			}()
 
-		for _ = range ticker.C {
-			if err := c.PingCallback()(); err != nil {
-				c.Close()
-				c.SetStatus(CSClosed)
+			for _ = range ticker.C {
+				if err := pingCB(); err != nil {
+					c.Close()
+					c.SetStatus(CSClosed)
 
-				log.V("%s ping failed for connection %s, releasing", p, c)
+					log.V("%s ping failed for connection %s, releasing", p, c)
 
-				// If the connection is sitting in the pool, release
-				// it and open a new one
-				if p.pool[c] {
-					p.Release(c)
+					// If the connection is sitting in the pool, release
+					// it and open a new one
+					if p.pool[c] {
+						p.Release(c)
+					}
+					break
 				}
-				break
 			}
-		}
-	}()
-
+		}()
+	}
 	return nil
 }
