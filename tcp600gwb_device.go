@@ -13,6 +13,10 @@ type Tcp600gwbDevice struct {
 	device
 }
 
+func (d *Tcp600gwbDevice) ModelNumber() string {
+	return "TCP600GWB"
+}
+
 func (d *Tcp600gwbDevice) InitConnections() {
 }
 

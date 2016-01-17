@@ -11,6 +11,9 @@ type Device interface {
 	GlobalID() string
 	Name() string
 	Description() string
+	ModelNumber() string
+
+	//TODO: Needed?
 	System() *System
 	Buttons() map[string]*Button
 	Devices() map[string]Device
@@ -65,7 +68,7 @@ func NewDevice(modelNumber, localID, globalID, name, description string, produce
 	switch modelNumber {
 	case "":
 		return &genericDevice{device: device}
-	case "tcphub":
+	case "TCP600GWB":
 		return &Tcp600gwbDevice{device: device}
 	case "L-BDGPRO2-WH":
 		return &Lbdgpro2whDevice{device: device}

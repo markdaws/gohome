@@ -260,7 +260,7 @@ func importConnectedByTCP(system *System, cmdProcessor CommandProcessor) {
 		fmt.Println(err)
 	*/
 	tcp := NewDevice(
-		"tcphub", //TODO: real model number
+		"TCP600GWB",
 		"tcphub",
 		system.NextGlobalID(),
 		"ConnectedByTcp Hub",

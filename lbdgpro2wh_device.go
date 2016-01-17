@@ -16,6 +16,10 @@ type Lbdgpro2whDevice struct {
 	device
 }
 
+func (d *Lbdgpro2whDevice) ModelNumber() string {
+	return "L-BDGPRO2-WH"
+}
+
 func (d *Lbdgpro2whDevice) InitConnections() {
 	ci := *d.connectionInfo.(*comm.TelnetConnectionInfo)
 	fmt.Printf("%+v", ci)
