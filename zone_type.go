@@ -15,6 +15,19 @@ const (
 	//TODO: Document how to add support for a new device
 )
 
+func ZoneTypeFromString(zt string) ZoneType {
+	switch zt {
+	case "light":
+		return ZTLight
+	case "shade":
+		return ZTShade
+	case "unknown":
+		return ZTUnknown
+	default:
+		return ZTUnknown
+	}
+}
+
 //TODO: Gen this automatically
 func (zt ZoneType) ToString() string {
 	switch zt {

@@ -60,7 +60,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 	fmt.Println("\nDEVICES")
 
-	var makeDevice = func(modelNumber string, deviceMap map[string]interface{}, sys *System, producesEvents, stream bool, ci comm.ConnectionInfo) Device {
+	var makeDevice = func(modelNumber string, deviceMap map[string]interface{}, sys *System, stream bool, ci comm.ConnectionInfo) Device {
 		var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
 		var deviceName string = deviceMap["Name"].(string)
 
@@ -70,7 +70,6 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			sys.NextGlobalID(),
 			deviceName,
 			deviceName,
-			producesEvents,
 			stream,
 			sys,
 			cmdProcessor,
@@ -154,7 +153,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		var deviceID string = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
 			//ModelNumber: L-BDGPRO2-WH
-			sbp = makeDevice("L-BDGPRO2-WH", device, system, true, true, &comm.TelnetConnectionInfo{
+			sbp = makeDevice("L-BDGPRO2-WH", device, system, true, &comm.TelnetConnectionInfo{
 				Network:       "tcp",
 				Address:       "192.168.0.10:23",
 				Login:         "lutron",
@@ -186,7 +185,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		if deviceID == smartBridgeProID {
 			continue
 		}
-		gohomeDevice := makeDevice("", device, system, false, false, nil)
+		gohomeDevice := makeDevice("", device, system, false, nil)
 		system.AddDevice(gohomeDevice)
 		sbp.Devices()[gohomeDevice.LocalID()] = gohomeDevice
 	}
@@ -265,7 +264,6 @@ func importConnectedByTCP(system *System, cmdProcessor CommandProcessor) {
 		system.NextGlobalID(),
 		"ConnectedByTcp Hub",
 		"Description",
-		false,
 		false,
 		system,
 		cmdProcessor,

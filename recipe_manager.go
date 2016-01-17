@@ -1,80 +1,36 @@
 package gohome
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"reflect"
 	"time"
 	"unicode/utf8"
 )
 
 type RecipeManager struct {
-	CookBooks []*CookBook
-	System    *System
-	Recipes   []*Recipe
-
-	dataPath       string
+	CookBooks      []*CookBook
+	System         *System
 	eventBroker    EventBroker
 	triggerFactory map[string]func() Trigger
 	actionFactory  map[string]func() Action
 }
 
-func (rm *RecipeManager) Init(eb EventBroker, dataPath string) error {
+func NewRecipeManager(eb EventBroker) *RecipeManager {
+	rm := &RecipeManager{}
 	rm.eventBroker = eb
-	rm.dataPath = dataPath
-	rm.CookBooks = loadCookBooks(dataPath)
+	rm.CookBooks = loadCookBooks()
 	rm.triggerFactory = buildTriggerFactory(rm.CookBooks)
 	rm.actionFactory = buildActionFactory(rm.CookBooks)
-
-	recipes, err := rm.loadRecipes(dataPath)
-	if err != nil {
-		return err
-	}
-
-	rm.Recipes = recipes
-	for _, recipe := range recipes {
-		rm.RegisterAndStart(recipe)
-	}
-	return nil
-}
-
-func (rm *RecipeManager) RegisterAndStart(r *Recipe) {
-	rm.eventBroker.AddConsumer(r)
-}
-
-func (rm *RecipeManager) UnregisterAndStop(r *Recipe) {
-	rm.eventBroker.RemoveConsumer(r)
-}
-
-func (rm *RecipeManager) RecipeByID(id string) *Recipe {
-	for _, recipe := range rm.Recipes {
-		if recipe.ID == id {
-			return recipe
-		}
-	}
-	return nil
-}
-
-func (rm *RecipeManager) EnableRecipe(r *Recipe, enabled bool) error {
-	oldEnabled := r.Enabled()
-	if oldEnabled == enabled {
-		return nil
-	}
-
-	r.SetEnabled(enabled)
-	return rm.SaveRecipe(r, false)
+	return rm
 }
 
 type recipeJSON struct {
-	ID          string
-	Name        string
-	Description string
-	Enabled     bool `json:"enabled"`
-	Trigger     triggerWrapper
-	Action      actionWrapper
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Enabled     bool           `json:"enabled"`
+	Trigger     triggerWrapper `json:"trigger"`
+	Action      actionWrapper  `json:"action"`
 }
 
 type triggerWrapper struct {
@@ -95,6 +51,35 @@ type ErrUnmarshalRecipe struct {
 
 func (e ErrUnmarshalRecipe) Error() string {
 	return e.ParamID + " - " + e.Description
+}
+
+func (rm *RecipeManager) RegisterAndStart(r *Recipe) {
+	rm.System.Recipes[r.ID] = r
+	rm.eventBroker.AddConsumer(r)
+}
+
+func (rm *RecipeManager) UnregisterAndStop(r *Recipe) {
+	delete(rm.System.Recipes, r.ID)
+	rm.eventBroker.RemoveConsumer(r)
+}
+
+func (rm *RecipeManager) RecipeByID(id string) *Recipe {
+	for _, recipe := range rm.System.Recipes {
+		if recipe.ID == id {
+			return recipe
+		}
+	}
+	return nil
+}
+
+func (rm *RecipeManager) EnableRecipe(r *Recipe, enabled bool) error {
+	oldEnabled := r.Enabled()
+	if oldEnabled == enabled {
+		return nil
+	}
+
+	r.SetEnabled(enabled)
+	return nil
 }
 
 func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recipe, error) {
@@ -274,53 +259,46 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 	return recipe, rErr
 }
 
-func (rm *RecipeManager) SaveRecipe(r *Recipe, appendTo bool) error {
-	// Since Trigger and Action are interfaces, we need to also save the underlying
-	// concrete type to the JSON file so we can unmarshal to the correct type later
-
-	out := recipeJSON{}
-	out.ID = r.ID
-	out.Name = r.Name
-	out.Description = r.Description
-	out.Enabled = r.Enabled()
-
+func (rm *RecipeManager) ToJSON(r *Recipe) recipeJSON {
+	out := recipeJSON{
+		ID:          r.ID,
+		Name:        r.Name,
+		Description: r.Description,
+		Enabled:     r.Enabled(),
+	}
 	out.Trigger = triggerWrapper{Type: r.Trigger.Type(), Trigger: getIngredientValueMap(r.Trigger, reflect.ValueOf(r.Trigger).Elem())}
 	out.Action = actionWrapper{Type: r.Action.Type(), Action: getIngredientValueMap(r.Action, reflect.ValueOf(r.Action).Elem())}
-
-	b, err := json.Marshal(out)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(rm.recipePath(r), b, 0644)
-	if err != nil {
-		return err
-	}
-
-	if appendTo {
-		rm.Recipes = append(rm.Recipes, r)
-	}
-	return nil
+	return out
 }
 
-func (rm *RecipeManager) recipePath(r *Recipe) string {
-	return filepath.Join(rm.dataPath, r.ID+".json")
+func (rm *RecipeManager) FromJSON(rj recipeJSON) (*Recipe, error) {
+	recipe := &Recipe{
+		system:      rm.System,
+		ID:          rj.ID,
+		Name:        rj.Name,
+		Description: rj.Description,
+	}
+
+	trigger, err := rm.makeTrigger(rj.Trigger.Type, rj.Trigger.Trigger)
+	if err != nil {
+		return nil, err
+	}
+	recipe.SetEnabled(rj.Enabled)
+
+	action, err := rm.makeAction(rj.Action.Type, rj.Action.Action)
+	if err != nil {
+		return nil, err
+	}
+
+	recipe.Trigger = trigger
+	recipe.Action = action
+	return recipe, nil
 }
 
 func (rm *RecipeManager) DeleteRecipe(r *Recipe) error {
-	err := os.Remove(rm.recipePath(r))
-	if err != nil {
-		return err
-	}
-
-	for i, recipe := range rm.Recipes {
-		if recipe.ID == r.ID {
-			rm.Recipes, rm.Recipes[len(rm.Recipes)-1] = append(rm.Recipes[:i], rm.Recipes[i+1:]...), nil
-			break
-		}
-	}
-
+	//TODO: Verify stop stops the triggers
 	rm.UnregisterAndStop(r)
+	delete(rm.System.Recipes, r.ID)
 	return nil
 }
 
@@ -337,62 +315,6 @@ func getIngredientValueMap(i Ingredientor, v reflect.Value) map[string]interface
 		values[ingredient.ID] = value
 	}
 	return values
-}
-
-func (rm *RecipeManager) loadRecipes(path string) ([]*Recipe, error) {
-	files, err := ioutil.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-
-	recipes := make([]*Recipe, 0)
-	for _, fileInfo := range files {
-		filepath := filepath.Join(path, fileInfo.Name())
-		recipe, err := rm.loadRecipe(filepath)
-		if err != nil {
-			//TODO: log error
-			fmt.Println(err)
-			continue
-		}
-
-		//fmt.Printf("appending %+v", recipe)
-		recipes = append(recipes, recipe)
-	}
-	return recipes, nil
-}
-
-func (rm *RecipeManager) loadRecipe(path string) (*Recipe, error) {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	var recipeWrapper recipeJSON
-	err = json.Unmarshal(b, &recipeWrapper)
-	if err != nil {
-		return nil, err
-	}
-
-	recipe := &Recipe{}
-	recipe.system = rm.System
-	recipe.ID = recipeWrapper.ID
-	recipe.Name = recipeWrapper.Name
-	recipe.Description = recipeWrapper.Description
-
-	trigger, err := rm.makeTrigger(recipeWrapper.Trigger.Type, recipeWrapper.Trigger.Trigger)
-	if err != nil {
-		return nil, err
-	}
-	recipe.SetEnabled(recipeWrapper.Enabled)
-
-	action, err := rm.makeAction(recipeWrapper.Action.Type, recipeWrapper.Action.Action)
-	if err != nil {
-		return nil, err
-	}
-
-	recipe.Trigger = trigger
-	recipe.Action = action
-	return recipe, nil
 }
 
 func (rm *RecipeManager) makeTrigger(triggerID string, triggerIngredients map[string]interface{}) (Trigger, error) {
@@ -522,7 +444,7 @@ func setIngredients(rm *RecipeManager, i Ingredientor, ingredientValues map[stri
 	return nil
 }
 
-func loadCookBooks(dataPath string) []*CookBook {
+func loadCookBooks() []*CookBook {
 	// For every cook book we support, add to this list, at some point these can
 	// be defined in a config file or in a DB
 	cookBooks := []*CookBook{
@@ -579,3 +501,69 @@ func buildActionFactory(cookBooks []*CookBook) map[string]func() Action {
 	}
 	return factory
 }
+
+//TODO: delete
+/*
+func (rm *RecipeManager) SaveRecipe(r *Recipe, appendTo bool) error {
+	// Since Trigger and Action are interfaces, we need to also save the underlying
+	// concrete type to the JSON file so we can unmarshal to the correct type later
+
+	out := rm.ToJSON(r)
+	b, err := json.Marshal(out)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(rm.recipePath(r), b, 0644)
+	if err != nil {
+		return err
+	}
+
+	if appendTo {
+		rm.Recipes = append(rm.Recipes, r)
+	}
+	return nil
+}
+
+//TODO:delete
+func (rm *RecipeManager) loadRecipes(path string) ([]*Recipe, error) {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	recipes := make([]*Recipe, 0)
+	for _, fileInfo := range files {
+		filepath := filepath.Join(path, fileInfo.Name())
+		recipe, err := rm.loadRecipe(filepath)
+		if err != nil {
+			//TODO: log error
+			fmt.Println(err)
+			continue
+		}
+
+		//fmt.Printf("appending %+v", recipe)
+		recipes = append(recipes, recipe)
+	}
+	return recipes, nil
+}
+
+//TODO: delete
+func (rm *RecipeManager) loadRecipe(path string) (*Recipe, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var recipeWrapper recipeJSON
+	err = json.Unmarshal(b, &recipeWrapper)
+	if err != nil {
+		return nil, err
+	}
+	return rm.FromJSON(recipeWrapper)
+}
+
+func (rm *RecipeManager) recipePath(r *Recipe) string {
+	return filepath.Join(rm.dataPath, r.ID+".json")
+}
+
+*/

@@ -49,13 +49,12 @@ type device struct {
 	cmdProcessor   CommandProcessor
 }
 
-func NewDevice(modelNumber, localID, globalID, name, description string, producesEvents, stream bool, s *System, cp CommandProcessor, ci comm.ConnectionInfo) Device {
+func NewDevice(modelNumber, localID, globalID, name, description string, stream bool, s *System, cp CommandProcessor, ci comm.ConnectionInfo) Device {
 	device := device{
 		localID:        localID,
 		globalID:       globalID,
 		name:           name,
 		description:    description,
-		producesEvents: producesEvents,
 		stream:         stream,
 		system:         s,
 		buttons:        make(map[string]*Button),
@@ -67,10 +66,13 @@ func NewDevice(modelNumber, localID, globalID, name, description string, produce
 
 	switch modelNumber {
 	case "":
+		device.producesEvents = false
 		return &genericDevice{device: device}
 	case "TCP600GWB":
+		device.producesEvents = false
 		return &Tcp600gwbDevice{device: device}
 	case "L-BDGPRO2-WH":
+		device.producesEvents = true
 		return &Lbdgpro2whDevice{device: device}
 	default:
 		return nil

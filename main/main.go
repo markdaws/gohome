@@ -9,7 +9,6 @@ import (
 
 type config struct {
 	RecipeDirPath     string
-	StartupFile       string
 	StartupConfigPath string
 	WWWPort           string
 }
@@ -17,8 +16,6 @@ type config struct {
 func main() {
 
 	config := config{
-		RecipeDirPath:     "/Users/mark/code/gohome/recipes/",
-		StartupFile:       "main/ip.json",
 		StartupConfigPath: "/Users/mark/code/gohome/system.json",
 		WWWPort:           ":8000",
 	}
@@ -26,19 +23,6 @@ func main() {
 	// Processes all commands in the system in an async fashion
 	cp := gohome.NewCommandProcessor()
 	go cp.Process()
-
-	//TODO: Remove, load from gohome config file
-	system, err := gohome.NewImporter().ImportFromFile(config.StartupFile, "L-BDGPRO2-WH", cp)
-	if err != nil {
-		panic("Failed to import: " + err.Error())
-		return
-	}
-
-	//TODO: Remove, testing
-	err = system.Save(config.StartupConfigPath)
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	// Processes events
 	eb := gohome.NewEventBroker()
@@ -48,7 +32,17 @@ func main() {
 	wsLogger := gohome.NewWSEventLogger()
 	eb.AddConsumer(wsLogger)
 
-	for _, d := range system.Devices {
+	// Handles recipe management
+	rm := gohome.NewRecipeManager()
+
+	sys, err := gohome.LoadSystem(config.StartupConfigPath, rm, cp)
+	sys.SavePath = config.StartupConfigPath
+	if err != nil {
+		panic("Failed to load system: " + err.Error())
+		//TODO: New systems, should have a blank system, create if not found
+	}
+
+	for _, d := range sys.Devices {
 		if d.ConnectionInfo() != nil {
 			d := d
 			go func() {
@@ -58,14 +52,15 @@ func main() {
 		}
 	}
 
-	// Load all of the recipes from disk, start listening
-	rm := &gohome.RecipeManager{System: system}
-	rm.Init(eb, config.RecipeDirPath)
+	//Start all the recipes
+	for _, recipe := range sys.Recipes {
+		rm.RegisterAndStart(recipe)
+	}
 
 	// Start www server
 	done := make(chan bool)
 	go func() {
-		s := www.NewServer("./www", system, rm, wsLogger)
+		s := www.NewServer("./www", sys, rm, wsLogger)
 		err := s.ListenAndServe(config.WWWPort)
 		if err != nil {
 			fmt.Println("error with server")
@@ -75,5 +70,17 @@ func main() {
 	<-done
 }
 
-//TODO: Recipes should be stored in the system config information, not in
-//a separate file
+/**
+//TODO: Remove, load from gohome config file
+system, err := gohome.NewImporter().ImportFromFile(config.StartupFile, "L-BDGPRO2-WH", cp)
+if err != nil {
+	panic("Failed to import: " + err.Error())
+	return
+}*/
+
+/*
+	//TODO: Remove, testing
+	err = system.Save(config.StartupConfigPath, rm)
+	if err != nil {
+		fmt.Println(err)
+	}*/

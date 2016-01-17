@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/markdaws/gohome/log"
-	"github.com/nu7hatch/gouuid"
 )
 
 //TODO: Rules for trigger/action writers, don't have pointers to objects, have ids, use the
@@ -23,13 +22,8 @@ type Recipe struct {
 }
 
 func NewRecipe(name, description string, enabled bool, t Trigger, a Action, s *System) (*Recipe, error) {
-	id, err := uuid.NewV4()
-	if err != nil {
-		return nil, err
-	}
-
 	return &Recipe{
-		ID:          id.String(),
+		ID:          s.NextGlobalID(),
 		Name:        name,
 		Description: description,
 		Trigger:     t,

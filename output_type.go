@@ -5,7 +5,21 @@ type OutputType uint32
 const (
 	OTContinuous OutputType = iota
 	OTBinary
+	OTUnknown
 )
+
+func OutputTypeFromString(ot string) OutputType {
+	switch ot {
+	case "continuous":
+		return OTContinuous
+	case "binary":
+		return OTBinary
+	case "unknown":
+		return OTUnknown
+	default:
+		return OTUnknown
+	}
+}
 
 //TODO: Gen this automatically
 func (ot OutputType) ToString() string {
@@ -14,6 +28,8 @@ func (ot OutputType) ToString() string {
 		return "continuous"
 	case OTBinary:
 		return "binary"
+	case OTUnknown:
+		return "unknown"
 	default:
 		return "unknown"
 	}

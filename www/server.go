@@ -2,6 +2,7 @@ package www
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -117,13 +118,13 @@ func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeMa
 			return
 		}
 
-		err = recipeManager.SaveRecipe(recipe, true)
+		recipeManager.RegisterAndStart(recipe)
+		err = system.Save(recipeManager)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		recipeManager.RegisterAndStart(recipe)
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(struct {
@@ -161,6 +162,12 @@ func apiRecipeHandler(system *gohome.System, recipeManager *gohome.RecipeManager
 			return
 		}
 
+		system.Save(recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(struct{}{})
 	}
@@ -181,6 +188,12 @@ func apiRecipeHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeM
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 
+		system.Save(recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(struct{}{})
 	}
@@ -191,15 +204,18 @@ func apiRecipesHandlerGet(system *gohome.System, recipeManager *gohome.RecipeMan
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-		recipes := recipeManager.Recipes
+		recipes := system.Recipes
 		jsonRecipes := make(jsonRecipes, len(recipes))
-		for i, recipe := range recipes {
+
+		i := 0
+		for _, recipe := range recipes {
 			jsonRecipes[i] = jsonRecipe{
 				ID:          recipe.ID,
 				Name:        recipe.Name,
 				Description: recipe.Description,
 				Enabled:     recipe.Enabled(),
 			}
+			i++
 		}
 		sort.Sort(jsonRecipes)
 		if err := json.NewEncoder(w).Encode(jsonRecipes); err != nil {

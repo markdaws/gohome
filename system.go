@@ -2,19 +2,22 @@ package gohome
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/markdaws/gohome/comm"
 )
 
 type System struct {
-	ID          string
-	Name        string
-	Description string
-	Devices     map[string]Device
-	Scenes      map[string]*Scene
-	Zones       map[string]*Zone
-	Buttons     map[string]*Button
-
+	Name         string
+	Description  string
+	SavePath     string
+	Devices      map[string]Device
+	Scenes       map[string]*Scene
+	Zones        map[string]*Zone
+	Buttons      map[string]*Button
+	Recipes      map[string]*Recipe
 	nextGlobalID int
 }
 
@@ -26,8 +29,8 @@ func NewSystem(name, desc string) *System {
 		Scenes:      make(map[string]*Scene),
 		Zones:       make(map[string]*Zone),
 		Buttons:     make(map[string]*Button),
+		Recipes:     make(map[string]*Recipe),
 	}
-	s.ID = s.NextGlobalID()
 	return s
 }
 
@@ -49,6 +52,14 @@ func (s *System) AddZone(z *Zone) {
 	s.Zones[z.GlobalID] = z
 }
 
+func (s *System) AddScene(scn *Scene) {
+	s.Scenes[scn.GlobalID] = scn
+}
+
+func (s *System) AddRecipe(r *Recipe) {
+	s.Recipes[r.ID] = r
+}
+
 type systemJSON struct {
 	Version      string       `json:"version"`
 	Name         string       `json:"name"`
@@ -56,6 +67,7 @@ type systemJSON struct {
 	NextGlobalID int          `json:"nextGlobalId"`
 	Scenes       []sceneJSON  `json:"scenes"`
 	Devices      []deviceJSON `json:"devices"`
+	Recipes      []recipeJSON `json:"recipes"`
 }
 
 type buttonJSON struct {
@@ -84,24 +96,130 @@ type sceneJSON struct {
 }
 
 type deviceJSON struct {
-	LocalID     string       `json:"localId"`
-	GlobalID    string       `json:"globalId"`
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	ModelNumber string       `json:"modelNumber"`
-	Buttons     []buttonJSON `json:"buttons"`
-	Zones       []zoneJSON   `json:"zones"`
-	DeviceIDs   []string     `json:"deviceIds"`
-	//system
-	//devices
-	//connectioninfo?
-	Stream bool `json:"stream"`
+	LocalID        string                    `json:"localId"`
+	GlobalID       string                    `json:"globalId"`
+	Name           string                    `json:"name"`
+	Description    string                    `json:"description"`
+	ModelNumber    string                    `json:"modelNumber"`
+	Buttons        []buttonJSON              `json:"buttons"`
+	Zones          []zoneJSON                `json:"zones"`
+	DeviceIDs      []string                  `json:"deviceIds"`
+	ConnectionInfo *jsonTelnetConnectionInfo `json:"connectionInfo"`
+	Stream         bool                      `json:"stream"`
+}
+
+type jsonTelnetConnectionInfo struct {
+	PoolSize int    `json:"poolSize"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
+	Network  string `json:"network"`
+	Address  string `json:"address"`
 }
 
 type commandJSON struct {
 }
 
-func (s *System) Save(path string) error {
+func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor CommandProcessor) (*System, error) {
+	//TODO: Verify deviceIds exist etc
+
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var s systemJSON
+	err = json.Unmarshal(b, &s)
+	if err != nil {
+		return nil, err
+	}
+
+	sys := NewSystem(s.Name, s.Description)
+	sys.nextGlobalID = s.NextGlobalID
+
+	recipeManager.System = sys
+
+	// Load all devices into global device list
+	for _, d := range s.Devices {
+		var ci *comm.TelnetConnectionInfo
+		if d.ConnectionInfo != nil {
+			//TODO: Only support telnet connectioninfo
+			ci = &comm.TelnetConnectionInfo{
+				Network:  d.ConnectionInfo.Network,
+				Address:  d.ConnectionInfo.Address,
+				Login:    d.ConnectionInfo.Login,
+				Password: d.ConnectionInfo.Password,
+				PoolSize: d.ConnectionInfo.PoolSize,
+			}
+		}
+
+		dev := NewDevice(d.ModelNumber, d.LocalID, d.GlobalID, d.Name, d.Description, d.Stream, sys, commandProcessor, ci)
+		if ci != nil {
+			dev.ConnectionInfo().(*comm.TelnetConnectionInfo).Authenticator = dev
+		}
+		sys.AddDevice(dev)
+	}
+
+	// Have to go back through patching up devices to point to their child devices
+	// since we only store device ID pointers in the JSON
+	for _, d := range s.Devices {
+		dev := sys.Devices[d.GlobalID]
+		for _, dID := range d.DeviceIDs {
+			dev.Devices()[dID] = sys.Devices[dID]
+		}
+
+		for _, btn := range d.Buttons {
+			b := &Button{
+				LocalID:     btn.LocalID,
+				GlobalID:    btn.GlobalID,
+				Name:        btn.Name,
+				Description: btn.Description,
+				Device:      dev,
+			}
+			dev.Buttons()[b.LocalID] = b
+			sys.AddButton(b)
+		}
+
+		for _, zn := range d.Zones {
+			z := &Zone{
+				LocalID:     zn.LocalID,
+				GlobalID:    zn.GlobalID,
+				Name:        zn.Name,
+				Description: zn.Description,
+				Device:      dev,
+				Type:        ZoneTypeFromString(zn.Type),
+				Output:      OutputTypeFromString(zn.Output),
+			}
+			dev.Zones()[z.LocalID] = z
+			sys.AddZone(z)
+		}
+	}
+
+	for _, scn := range s.Scenes {
+		scene := &Scene{
+			LocalID:      scn.LocalID,
+			GlobalID:     scn.GlobalID,
+			Name:         scn.Name,
+			Description:  scn.Description,
+			cmdProcessor: commandProcessor,
+			//TODO: commands
+		}
+		sys.AddScene(scene)
+	}
+
+	for _, r := range s.Recipes {
+		rec, err := recipeManager.FromJSON(r)
+		if err != nil {
+			return nil, err
+		}
+		sys.AddRecipe(rec)
+	}
+
+	//TODO: Have to pass all the recipes into recipe manager after loading the system
+	fmt.Printf("Loaded system! %+v\n", sys)
+	return sys, nil
+}
+
+func (s *System) Save(recipeManager *RecipeManager) error {
 
 	out := systemJSON{
 		Version:      "1.0.0.0",
@@ -136,6 +254,16 @@ func (s *System) Save(path string) error {
 			Description: device.Description(),
 			ModelNumber: device.ModelNumber(),
 			Stream:      device.Stream(),
+		}
+
+		if ci, ok := device.ConnectionInfo().(*comm.TelnetConnectionInfo); ok && ci != nil {
+			d.ConnectionInfo = &jsonTelnetConnectionInfo{
+				PoolSize: ci.PoolSize,
+				Login:    ci.Login,
+				Password: ci.Password,
+				Network:  ci.Network,
+				Address:  ci.Address,
+			}
 		}
 
 		d.Buttons = make([]buttonJSON, len(device.Buttons()))
@@ -175,19 +303,25 @@ func (s *System) Save(path string) error {
 		i++
 	}
 
-	//Recipes
+	i = 0
+	fmt.Printf("Saving RECIPES: %d\n", len(s.Recipes))
+	out.Recipes = make([]recipeJSON, len(s.Recipes))
+	for _, r := range s.Recipes {
+		rec := recipeManager.ToJSON(r)
+		fmt.Printf("JSON recipe %d %+v\n", i, rec)
+		out.Recipes[i] = rec
+		i++
+	}
+	fmt.Printf("%+v\n", out.Recipes)
 
 	b, err := json.Marshal(out)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(path, b, 0644)
+	if s.SavePath == "" {
+		return fmt.Errorf("SavePath is not set")
+	}
+	err = ioutil.WriteFile(s.SavePath, b, 0644)
 	return err
-}
-
-func LoadSystem(path string) (*System, error) {
-	//TODO: Implement
-	//Need to make sure global lists in system are populated correctly
-	return nil, nil
 }
