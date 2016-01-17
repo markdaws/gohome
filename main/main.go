@@ -8,20 +8,22 @@ import (
 )
 
 type config struct {
-	RecipeDirPath string
-	StartupFile   string
-	WWWPort       string
+	RecipeDirPath     string
+	StartupFile       string
+	StartupConfigPath string
+	WWWPort           string
 }
 
 func main() {
 
 	config := config{
-		RecipeDirPath: "/Users/mark/code/gohome/recipes/",
-		StartupFile:   "main/ip.json",
-		WWWPort:       ":8000",
+		RecipeDirPath:     "/Users/mark/code/gohome/recipes/",
+		StartupFile:       "main/ip.json",
+		StartupConfigPath: "/Users/mark/code/gohome/system.json",
+		WWWPort:           ":8000",
 	}
 
-	// Processes all commands in the system
+	// Processes all commands in the system in an async fashion
 	cp := gohome.NewCommandProcessor()
 	go cp.Process()
 
@@ -30,6 +32,12 @@ func main() {
 	if err != nil {
 		panic("Failed to import: " + err.Error())
 		return
+	}
+
+	//TODO: Remove, testing
+	err = system.Save(config.StartupConfigPath)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	// Processes events
@@ -58,7 +66,6 @@ func main() {
 	done := make(chan bool)
 	go func() {
 		s := www.NewServer("./www", system, rm, wsLogger)
-		//TODO
 		err := s.ListenAndServe(config.WWWPort)
 		if err != nil {
 			fmt.Println("error with server")
@@ -67,3 +74,6 @@ func main() {
 	}()
 	<-done
 }
+
+//TODO: Recipes should be stored in the system config information, not in
+//a separate file
