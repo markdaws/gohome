@@ -1,6 +1,10 @@
 package gohome
 
-import "github.com/markdaws/gohome/log"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/log"
+)
 
 type CommandProcessor interface {
 	Process()
@@ -9,18 +13,18 @@ type CommandProcessor interface {
 
 func NewCommandProcessor() CommandProcessor {
 	return &commandProcessor{
-		commands: make(chan Command, 10000),
+		commands: make(chan *FCommand, 10000),
 	}
 }
 
 type commandProcessor struct {
-	commands chan Command
+	commands chan *FCommand
 }
 
 func (cp *commandProcessor) Process() {
 	//TODO: Have multiple workers?
 	for c := range cp.commands {
-		err := c.Execute()
+		err := c.Func()
 		if err != nil {
 			log.W("cmpProcesor:execute error:%s", err)
 		} else {
@@ -39,6 +43,7 @@ func (cp *commandProcessor) Enqueue(c Command) error {
 			return err
 		}
 		cp.commands <- zCmd
+
 	case *SceneSetCommand:
 		for _, sceneCmd := range cmd.Scene.Commands {
 			err := cp.Enqueue(sceneCmd)
@@ -46,20 +51,23 @@ func (cp *commandProcessor) Enqueue(c Command) error {
 				return err
 			}
 		}
+
 	case *ButtonPressCommand:
 		bCmd, err := cmd.Button.Device.BuildCommand(cmd)
 		if err != nil {
 			return err
 		}
 		cp.commands <- bCmd
+
 	case *ButtonReleaseCommand:
 		bCmd, err := cmd.Button.Device.BuildCommand(cmd)
 		if err != nil {
 			return err
 		}
 		cp.commands <- bCmd
+
 	default:
-		cp.commands <- c
+		return fmt.Errorf("unknown command, cannot process")
 	}
 	return nil
 }

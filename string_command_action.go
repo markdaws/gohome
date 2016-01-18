@@ -56,7 +56,6 @@ func (a *StringCommandAction) Execute(s *System) error {
 	c := StringCommand{
 		Value:    a.Command,
 		Device:   device,
-		Type:     CTDeviceSendCommand,
 		Friendly: a.Friendly,
 	}
 	return c.Execute()

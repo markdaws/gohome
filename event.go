@@ -9,7 +9,6 @@ type Event struct {
 	Device         Device
 	ReplayCommand  Command
 	Type           EventType
-	Source         interface{}
 }
 
 var nextId int = 0
@@ -25,7 +24,7 @@ const (
 	ETPing
 )
 
-func NewEvent(d Device, cmd Command, orig string, t EventType, s interface{}) Event {
+func NewEvent(d Device, cmd Command, orig string, t EventType) Event {
 	nextId++
 
 	return Event{
@@ -35,7 +34,6 @@ func NewEvent(d Device, cmd Command, orig string, t EventType, s interface{}) Ev
 		Device:         d,
 		ReplayCommand:  cmd,
 		Type:           t,
-		Source:         s,
 	}
 }
 

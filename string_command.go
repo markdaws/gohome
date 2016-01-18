@@ -11,7 +11,6 @@ type StringCommand struct {
 	Value    string
 	Friendly string
 	Device   Device
-	Type     CommandType
 	Args     []interface{}
 }
 
@@ -40,8 +39,4 @@ func (c *StringCommand) String() string {
 
 func (c *StringCommand) FriendlyString() string {
 	return c.Friendly
-}
-
-func (c *StringCommand) CMDType() CommandType {
-	return c.Type
 }

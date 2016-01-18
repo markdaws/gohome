@@ -18,18 +18,20 @@ type System struct {
 	Zones        map[string]*Zone
 	Buttons      map[string]*Button
 	Recipes      map[string]*Recipe
+	CmdProcessor CommandProcessor
 	nextGlobalID int
 }
 
-func NewSystem(name, desc string) *System {
+func NewSystem(name, desc string, cmdProcessor CommandProcessor) *System {
 	s := &System{
-		Name:        name,
-		Description: desc,
-		Devices:     make(map[string]Device),
-		Scenes:      make(map[string]*Scene),
-		Zones:       make(map[string]*Zone),
-		Buttons:     make(map[string]*Button),
-		Recipes:     make(map[string]*Recipe),
+		Name:         name,
+		Description:  desc,
+		Devices:      make(map[string]Device),
+		Scenes:       make(map[string]*Scene),
+		Zones:        make(map[string]*Zone),
+		Buttons:      make(map[string]*Button),
+		Recipes:      make(map[string]*Recipe),
+		CmdProcessor: cmdProcessor,
 	}
 	return s
 }
@@ -92,7 +94,7 @@ type sceneJSON struct {
 	GlobalID    string        `json:"globalId"`
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
-	Commands    []commandJSON `json:"commands"`
+	Commands    []jsonCommand `json:"commands"`
 }
 
 type deviceJSON struct {
@@ -116,56 +118,12 @@ type jsonTelnetConnectionInfo struct {
 	Address  string `json:"address"`
 }
 
-type jsonZoneSetLevelCommand struct {
-	CmdType string  `json:"cmdType"`
-	ZoneID  string  `json:"zoneId"`
-	Level   float32 `json:"level"`
-}
-
-func (c jsonZoneSetLevelCommand) CommandType() string {
-	return "zoneSetLevel"
-}
-
-type jsonSceneSetCommand struct {
-	CmdType string `json:"cmdType"`
-	SceneID string `json:"sceneId"`
-}
-
-func (c jsonSceneSetCommand) CommandType() string {
-	return "sceneSet"
-}
-
-type jsonButtonPressCommand struct {
-	CmdType  string `json:"cmdType"`
-	ButtonID string `json:"buttonId"`
-}
-
-/*
-func (c jsonButtonPressCommand) CommandType() string {
-	return "buttonPress"
-}*/
-
-type jsonButtonReleaseCommand struct {
-	CmdType  string `json:"cmdType"`
-	ButtonID string `json:"buttonId"`
-}
-
-/*
-func (c jsonButtonReleaseCommand) CommandType() string {
-	return "buttonRelease"
-}*/
-
-type commandJSON struct {
+type jsonCommand struct {
 	Type       string                 `json:"type"`
 	Attributes map[string]interface{} `json:"attributes"`
-	//CommandType() string
 }
 
-//TODO: Commands
-//TODO: connection info
-//TODO: http connection info
-
-func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor CommandProcessor) (*System, error) {
+func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandProcessor) (*System, error) {
 	//TODO: Verify deviceIds exist etc
 
 	b, err := ioutil.ReadFile(path)
@@ -179,7 +137,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor Comm
 		return nil, err
 	}
 
-	sys := NewSystem(s.Name, s.Description)
+	sys := NewSystem(s.Name, s.Description, cmdProcessor)
 	sys.nextGlobalID = s.NextGlobalID
 
 	recipeManager.System = sys
@@ -198,7 +156,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor Comm
 			}
 		}
 
-		dev := NewDevice(d.ModelNumber, d.LocalID, d.GlobalID, d.Name, d.Description, d.Stream, sys, commandProcessor, ci)
+		dev := NewDevice(d.ModelNumber, d.LocalID, d.GlobalID, d.Name, d.Description, d.Stream, sys, cmdProcessor, ci)
 		if ci != nil {
 			dev.ConnectionInfo().(*comm.TelnetConnectionInfo).Authenticator = dev
 		}
@@ -243,39 +201,35 @@ func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor Comm
 
 	for _, scn := range s.Scenes {
 		scene := &Scene{
-			LocalID:      scn.LocalID,
-			GlobalID:     scn.GlobalID,
-			Name:         scn.Name,
-			Description:  scn.Description,
-			cmdProcessor: commandProcessor,
+			LocalID:     scn.LocalID,
+			GlobalID:    scn.GlobalID,
+			Name:        scn.Name,
+			Description: scn.Description,
 		}
 
 		scene.Commands = make([]Command, len(scn.Commands))
 		for i, cmd := range scn.Commands {
-			var xCmd Command
+			var finalCmd Command
 			switch cmd.Type {
 			case "zoneSetLevel":
-				/*
-					jsonCmd := cmd.(jsonZoneSetLevelCommand)
-					xCmd = &ZoneSetLevelCommand{
-						Zone:  sys.Zones[jsonCmd.ZoneID],
-						Level: jsonCmd.Level,
-					}*/
+				finalCmd = &ZoneSetLevelCommand{
+					Zone:  sys.Zones[cmd.Attributes["ZoneID"].(string)],
+					Level: float32(cmd.Attributes["Level"].(float64)),
+				}
 			case "buttonPress":
-				jsonCmd := cmd
-				xCmd = &ButtonPressCommand{
-					Button: sys.Buttons[jsonCmd.Attributes["ButtonID"].(string)],
+				finalCmd = &ButtonPressCommand{
+					Button: sys.Buttons[cmd.Attributes["ButtonID"].(string)],
 				}
 			case "buttonRelease":
-				jsonCmd := cmd
-				xCmd = &ButtonReleaseCommand{
-					Button: sys.Buttons[jsonCmd.Attributes["ButtonID"].(string)],
+				finalCmd = &ButtonReleaseCommand{
+					Button: sys.Buttons[cmd.Attributes["ButtonID"].(string)],
 				}
 			case "sceneSet":
+				//TODO: Implement
 			default:
 				return nil, fmt.Errorf("unknown command type %s", cmd.Type)
 			}
-			scene.Commands[i] = xCmd
+			scene.Commands[i] = finalCmd
 		}
 		sys.AddScene(scene)
 	}
@@ -287,13 +241,13 @@ func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor Comm
 		}
 		sys.AddRecipe(rec)
 	}
-
-	//TODO: Have to pass all the recipes into recipe manager after loading the system
-	fmt.Printf("Loaded system! %+v\n", sys)
 	return sys, nil
 }
 
 func (s *System) Save(recipeManager *RecipeManager) error {
+	if s.SavePath == "" {
+		return fmt.Errorf("SavePath is not set")
+	}
 
 	out := systemJSON{
 		Version:      "1.0.0.0",
@@ -312,47 +266,38 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 			Description: scene.Description,
 		}
 
-		cmds := make([]commandJSON, len(scene.Commands))
+		cmds := make([]jsonCommand, len(scene.Commands))
 		for j, sCmd := range scene.Commands {
 			switch xCmd := sCmd.(type) {
 			case *ZoneSetLevelCommand:
-				/*
-					cmds[j] = jsonZoneSetLevelCommand{
-						CmdType: "zoneSetLevel",
-						ZoneID:  xCmd.Zone.GlobalID,
-						Level:   xCmd.Level,
-					}*/
+				cmds[j] = jsonCommand{
+					Type: "zoneSetLevel",
+					Attributes: map[string]interface{}{
+						"ZoneID": xCmd.Zone.GlobalID,
+						"Level":  xCmd.Level,
+					},
+				}
 			case *ButtonPressCommand:
-				cmds[j] = commandJSON{
+				cmds[j] = jsonCommand{
 					Type: "buttonPress",
 					Attributes: map[string]interface{}{
 						"ButtonID": xCmd.Button.GlobalID,
 					},
 				}
-				/*
-					cmds[j] = jsonButtonPressCommand{
-						CmdType:  "buttonPress",
-						ButtonID: xCmd.Button.GlobalID,
-					}*/
 			case *ButtonReleaseCommand:
-				cmds[j] = commandJSON{
+				cmds[j] = jsonCommand{
 					Type: "buttonRelease",
 					Attributes: map[string]interface{}{
 						"ButtonID": xCmd.Button.GlobalID,
 					},
 				}
-
-				/*
-					cmds[j] = jsonButtonPressCommand{
-						CmdType:  "buttonRelease",
-						ButtonID: xCmd.Button.GlobalID,
-					}*/
 			case *SceneSetCommand:
 				//TODO:
+			default:
+				return fmt.Errorf("unknown command type")
 			}
 		}
 
-		//TODO: Loop through each command encoding to json
 		out.Scenes[i].Commands = cmds
 		i++
 	}
@@ -417,24 +362,18 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 	}
 
 	i = 0
-	fmt.Printf("Saving RECIPES: %d\n", len(s.Recipes))
 	out.Recipes = make([]recipeJSON, len(s.Recipes))
 	for _, r := range s.Recipes {
 		rec := recipeManager.ToJSON(r)
-		fmt.Printf("JSON recipe %d %+v\n", i, rec)
 		out.Recipes[i] = rec
 		i++
 	}
-	fmt.Printf("%+v\n", out.Recipes)
 
 	b, err := json.Marshal(out)
 	if err != nil {
 		return err
 	}
 
-	if s.SavePath == "" {
-		return fmt.Errorf("SavePath is not set")
-	}
 	err = ioutil.WriteFile(s.SavePath, b, 0644)
 	return err
 }

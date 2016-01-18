@@ -36,7 +36,10 @@ func (a *SceneSetAction) Execute(s *System) error {
 	if !ok {
 		return fmt.Errorf("Unknown Scene ID %s", a.SceneID)
 	}
-	return scene.Execute()
+
+	return s.CmdProcessor.Enqueue(&SceneSetCommand{
+		Scene: scene,
+	})
 }
 
 func (a *SceneSetAction) New() Action {

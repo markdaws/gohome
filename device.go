@@ -12,8 +12,6 @@ type Device interface {
 	Name() string
 	Description() string
 	ModelNumber() string
-
-	//TODO: Needed?
 	System() *System
 	Buttons() map[string]*Button
 	Devices() map[string]Device
@@ -24,13 +22,6 @@ type Device interface {
 	ReleaseConnection(comm.Connection)
 	Authenticate(comm.Connection) error
 	Stream() bool
-
-	//TODO: remove
-	//ZoneSetLevel(z *Zone, level float32) error
-
-	//TODO: remove
-	Enqueue(Command) error
-
 	BuildCommand(Command) (*FCommand, error)
 
 	EventProducer
@@ -142,5 +133,5 @@ func (d *device) ProducesEvents() bool {
 }
 
 func (d *device) String() string {
-	return fmt.Sprintf("Device[%s]", d.Name)
+	return fmt.Sprintf("Device[%s]", d.Name())
 }

@@ -64,18 +64,12 @@ func (t *ButtonClickTrigger) ProcessEvent(e Event) bool {
 		t.clickCount = 0
 	}
 
-	cmd := e.ReplayCommand
-	if cmd == nil ||
-		cmd.CMDType() != CTDeviceReleaseButton {
-		return false
-	}
-
-	btn, ok := e.Source.(*Button)
+	cmd, ok := e.ReplayCommand.(*ButtonReleaseCommand)
 	if !ok {
 		return false
 	}
 
-	if btn.GlobalID != t.ButtonID {
+	if cmd.Button.GlobalID != t.ButtonID {
 		return false
 	}
 

@@ -44,10 +44,11 @@ func (a *ZoneSetLevelAction) Execute(s *System) error {
 	if !ok {
 		return fmt.Errorf("Unknown ZoneID %s", a.ZoneID)
 	}
-	_ = zone
-	//TODO:
-	return nil
-	//return zone.SetLevel(a.Level)
+
+	return s.CmdProcessor.Enqueue(&ZoneSetLevelCommand{
+		Zone:  zone,
+		Level: a.Level,
+	})
 }
 
 func (a *ZoneSetLevelAction) New() Action {

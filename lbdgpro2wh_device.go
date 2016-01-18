@@ -22,7 +22,6 @@ func (d *Lbdgpro2whDevice) ModelNumber() string {
 
 func (d *Lbdgpro2whDevice) InitConnections() {
 	ci := *d.connectionInfo.(*comm.TelnetConnectionInfo)
-	fmt.Printf("%+v", ci)
 	createConnection := func() comm.Connection {
 		conn := comm.NewTelnetConnection(ci)
 		conn.SetPingCallback(func() error {
@@ -39,16 +38,17 @@ func (d *Lbdgpro2whDevice) InitConnections() {
 	d.pool = comm.NewConnectionPool(d.name, ps, createConnection)
 	log.V("%s connected", d)
 }
+
 func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan Event, <-chan bool) {
 	d.evpDone = make(chan bool)
 	d.evpFire = make(chan Event)
 
-	fmt.Printf("STREAM %t", d.Stream())
 	if d.Stream() {
 		go startStreaming(d)
 	}
 	return d.evpFire, d.evpDone
 }
+
 func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
 	r := bufio.NewReader(c)
 	_, err := r.ReadString(':')
@@ -83,7 +83,6 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 					Device:   d,
 					Value:    "#OUTPUT," + cmd.Zone.LocalID + ",1,%.2f\r\n",
 					Friendly: "//TODO: Friendly",
-					Type:     CTZoneSetLevel,
 					Args:     []interface{}{cmd.Level},
 				}
 				return cmd.Execute()
@@ -96,7 +95,6 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 					Device:   d,
 					Value:    "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",3\r\n",
 					Friendly: "//TODO: Friendly",
-					Type:     CTSystemSetScene,
 				}
 				return cmd.Execute()
 			},
@@ -109,7 +107,6 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 					Device:   d,
 					Value:    "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",4\r\n",
 					Friendly: "//TODO: Friendly",
-					Type:     CTSystemSetScene,
 				}
 				return cmd.Execute()
 			},
@@ -117,26 +114,6 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 
 	default:
 		return nil, fmt.Errorf("unsupported command type")
-	}
-}
-
-func (d *Lbdgpro2whDevice) Enqueue(c Command) error {
-
-	switch cmd := c.(type) {
-	case *ZoneSetLevelCommand:
-		cmd.Func = func() error {
-			cmd := &StringCommand{
-				Device:   d,
-				Value:    "#OUTPUT," + cmd.Zone.LocalID + ",1,%.2f\r\n",
-				Friendly: "//TODO: Friendly",
-				Type:     CTZoneSetLevel,
-				Args:     []interface{}{cmd.Level},
-			}
-			return cmd.Execute()
-		}
-		return d.cmdProcessor.Enqueue(cmd)
-	default:
-		return fmt.Errorf("unsupported command type")
 	}
 }
 
@@ -187,10 +164,9 @@ func stream(d *Lbdgpro2whDevice) error {
 	scanner.Split(split)
 	for scanner.Scan() {
 		if d.evpFire != nil {
-			//TODO: How is ping getting through to here, if we are not scanning for it?
 			orig := scanner.Text()
-			if cmd, source := parseCommandString(d, orig); cmd != nil {
-				d.evpFire <- NewEvent(d, cmd, orig, ETUnknown, source)
+			if cmd := parseCommandString(d, orig); cmd != nil {
+				d.evpFire <- NewEvent(d, cmd, orig, ETUnknown)
 			}
 		}
 	}
@@ -209,7 +185,7 @@ func stream(d *Lbdgpro2whDevice) error {
 	*/
 }
 
-func parseCommandString(d *Lbdgpro2whDevice, cmd string) (Command, interface{}) {
+func parseCommandString(d *Lbdgpro2whDevice, cmd string) Command {
 	switch {
 	case strings.HasPrefix(cmd, "~OUTPUT"),
 		strings.HasPrefix(cmd, "#OUTPUT"):
@@ -220,12 +196,11 @@ func parseCommandString(d *Lbdgpro2whDevice, cmd string) (Command, interface{}) 
 		return parseDeviceCommand(d, cmd)
 	default:
 		// Ignore commands we don't care about
-		return nil, nil
+		return nil
 	}
 }
 
 type commandBuilderParams struct {
-	CommandType  CommandType
 	Zone         *Zone
 	Intensity    float64
 	Device       Device
@@ -233,43 +208,10 @@ type commandBuilderParams struct {
 	Button       *Button
 }
 
-func buildCommand(p commandBuilderParams) Command {
-	switch p.CommandType {
-	case CTZoneSetLevel:
-		return &StringCommand{
-			Device:   p.Device,
-			Friendly: fmt.Sprintf("Zone [%s] \"%s\" set to %.2f%%", p.Zone.GlobalID, p.Zone.Name, p.Intensity),
-			Value:    fmt.Sprintf("#OUTPUT,%s,1,%.2f\r\n", p.Zone.LocalID, p.Intensity),
-			Type:     p.CommandType,
-		}
-
-	case CTDevicePressButton:
-		return &StringCommand{
-			Device: p.Device,
-			Friendly: fmt.Sprintf("Device [%s] \"%s\" press button %s [%s]",
-				p.SourceDevice.GlobalID, p.SourceDevice.Name, p.Button.LocalID, p.Button.GlobalID),
-			Value: fmt.Sprintf("#DEVICE,%s,%s,3\r\n", p.SourceDevice.Name, p.Button.LocalID),
-			Type:  p.CommandType,
-		}
-
-	case CTDeviceReleaseButton:
-		return &StringCommand{
-			Device: p.Device,
-			Friendly: fmt.Sprintf("Device [%s] \"%s\" release button %s [%s]",
-				p.SourceDevice.GlobalID, p.SourceDevice.Name, p.Button.LocalID, p.Button.GlobalID),
-			Value: fmt.Sprintf("#DEVICE,%s,%s,4\r\n", p.SourceDevice.Name, p.Button.LocalID),
-			Type:  p.CommandType,
-		}
-
-	default:
-		return nil
-	}
-}
-
-func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) (Command, interface{}) {
+func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) Command {
 	matches := regexp.MustCompile("[~|#]DEVICE,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
 	if matches == nil || len(matches) != 4 {
-		return nil, nil
+		return nil
 	}
 
 	deviceID := matches[1]
@@ -279,62 +221,59 @@ func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) (Command, interface{}) 
 	if sourceDevice == nil {
 		fmt.Printf("no source device %s\n", deviceID)
 		//TODO: Error? Warning?
-		return nil, nil
+		return nil
 	}
 
-	var ct CommandType
-	var btn *Button
+	var finalCmd Command
 	switch cmdID {
 	case "3":
-		ct = CTDevicePressButton
-		btn = sourceDevice.Buttons()[componentID]
+		btn := sourceDevice.Buttons()[componentID]
+		finalCmd = &ButtonPressCommand{
+			Button: btn,
+		}
 	case "4":
-		ct = CTDeviceReleaseButton
-		btn = sourceDevice.Buttons()[componentID]
+		btn := sourceDevice.Buttons()[componentID]
+		finalCmd = &ButtonReleaseCommand{
+			Button: btn,
+		}
 	default:
-		ct = CTUnknown
+		return nil
 	}
 
-	return buildCommand(commandBuilderParams{
-		Device:       d,
-		CommandType:  ct,
-		SourceDevice: sourceDevice,
-		Button:       btn,
-	}), btn
+	return finalCmd
 }
 
-func parseZoneCommand(d *Lbdgpro2whDevice, cmd string) (Command, interface{}) {
+func parseZoneCommand(d *Lbdgpro2whDevice, cmd string) Command {
 	matches := regexp.MustCompile("[~|?]OUTPUT,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
 	if matches == nil || len(matches) != 4 {
-		return nil, nil
+		return nil
 	}
 
 	zoneID := matches[1]
 	cmdID := matches[2]
-	intensity, err := strconv.ParseFloat(matches[3], 64)
+	level, err := strconv.ParseFloat(matches[3], 64)
 	if err != nil {
 		//TODO: Error
-		return nil, nil
+		return nil
 	}
 
 	z := d.Zones()[zoneID]
 	if z == nil {
 		//TODO: Error log
-		return nil, nil
+		return nil
 	}
 
-	var ct CommandType
+	var finalCmd Command
 	switch cmdID {
 	case "1":
-		ct = CTZoneSetLevel
+		//set level
+		finalCmd = &ZoneSetLevelCommand{
+			Zone:  z,
+			Level: float32(level),
+		}
 	default:
-		ct = CTUnknown
+		return nil
 	}
 
-	return buildCommand(commandBuilderParams{
-		Device:      d,
-		CommandType: ct,
-		Intensity:   intensity,
-		Zone:        z,
-	}), z
+	return finalCmd
 }

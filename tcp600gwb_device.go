@@ -32,8 +32,16 @@ func (d *Tcp600gwbDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-//TODO:
-func (d *Tcp600gwbDevice) ZoneSetLevel(z *Zone, level float32) error {
+func (d *Tcp600gwbDevice) BuildCommand(c Command) (*FCommand, error) {
+	switch cmd := c.(type) {
+	case *ZoneSetLevelCommand:
+		return buildZoneSetLevelCommand(cmd.Zone, cmd.Level)
+	default:
+		return nil, fmt.Errorf("unsupported command tcp600gwbdevice")
+	}
+}
+
+func buildZoneSetLevelCommand(z *Zone, level float32) (*FCommand, error) {
 
 	sendLevel := func(level int32) error {
 		tr := &http.Transport{
@@ -61,35 +69,21 @@ func (d *Tcp600gwbDevice) ZoneSetLevel(z *Zone, level float32) error {
 		return err
 	}
 
-	exec := func() error {
-		if level != 0 {
-			// 0 -> off, 1 -> on, if the light was set to 0 then you have to set a 1 first
-			// before trying to set any other level
-			if err := sendLevel(1); err != nil {
-				return err
+	return &FCommand{
+		Func: func() error {
+			if level != 0 {
+				// 0 -> off, 1 -> on, if the light was set to 0 then you have to set a 1 first
+				// before trying to set any other level
+				if err := sendLevel(1); err != nil {
+					return err
+				}
+				if err := sendLevel(int32(level)); err != nil {
+					return err
+				}
+				return nil
+			} else {
+				return sendLevel(0)
 			}
-			if err := sendLevel(int32(level)); err != nil {
-				return err
-			}
-			return nil
-		} else {
-			return sendLevel(0)
-		}
-	}
-
-	d.cmdProcessor.Enqueue(&FuncCommand{
-		Func: exec,
-		//TODO:
-		Friendly:    "Some friendly string",
-		CommandType: CTZoneSetLevel,
-	})
-	return nil
-}
-
-func (d *Tcp600gwbDevice) Enqueue(c Command) error {
-	return fmt.Errorf("//TODO: unsupported tcp600gwbdevice")
-}
-
-func (d *Tcp600gwbDevice) BuildCommand(c Command) (*FCommand, error) {
-	return nil, fmt.Errorf("//TODO: unsupported tcp600gwbdevice")
+		},
+	}, nil
 }

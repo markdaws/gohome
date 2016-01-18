@@ -47,7 +47,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return nil, err
 	}
 
-	system := NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro")
+	system := NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cmdProcessor)
 
 	root, ok := configJson["LIPIdList"].(map[string]interface{})
 	if !ok {
@@ -117,33 +117,17 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 				var buttonID string = strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
 				var buttonName = button["Name"].(string)
-				//var pressCommand string = "#DEVICE," + deviceID + "," + buttonID + ",3\r\n"
-				//var releaseCommand string = "#DEVICE," + deviceID + "," + buttonID + ",4\r\n"
-
-				/*
-					Commands: []Command{
-						&StringCommand{
-							Device:   sbp,
-							Value:    pressCommand + releaseCommand,
-							Friendly: "//TODO: Friendly",
-							Type:     CTSystemSetScene,
-						},
-					},
-				*/
-
-				commands := []Command{
-					&ButtonPressCommand{Button: sbp.Buttons()[buttonID]},
-					&ButtonReleaseCommand{Button: sbp.Buttons()[buttonID]},
-				}
 
 				var globalID = system.NextGlobalID()
 				sceneContainer[globalID] = &Scene{
-					LocalID:      buttonID,
-					GlobalID:     globalID,
-					Name:         buttonName,
-					Description:  buttonName,
-					Commands:     commands,
-					cmdProcessor: cmdProcessor,
+					LocalID:     buttonID,
+					GlobalID:    globalID,
+					Name:        buttonName,
+					Description: buttonName,
+					Commands: []Command{
+						&ButtonPressCommand{Button: sbp.Buttons()[buttonID]},
+						&ButtonReleaseCommand{Button: sbp.Buttons()[buttonID]},
+					},
 				}
 			}
 		}
@@ -299,4 +283,16 @@ func importConnectedByTCP(system *System, cmdProcessor CommandProcessor) {
 	tcp.Zones()[z.LocalID] = z
 	system.AddZone(z)
 	system.AddDevice(tcp)
+
+	s := &Scene{
+		LocalID:     "xxx",
+		GlobalID:    system.NextGlobalID(),
+		Name:        "Synthetic Scene",
+		Description: "Scene to control lutron + tcp lights",
+		Commands: []Command{
+			&ZoneSetLevelCommand{Zone: system.Zones["142"], Level: 30},
+			&ZoneSetLevelCommand{Zone: system.Zones["153"], Level: 75},
+		},
+	}
+	system.AddScene(s)
 }

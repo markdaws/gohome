@@ -53,13 +53,18 @@ func (a *SceneSetToggleAction) Execute(s *System) error {
 		return fmt.Errorf("Unknown Second Scene ID %s", a.SecondSceneID)
 	}
 
+	var scene *Scene
 	if a.second {
 		a.second = false
-		return second.Execute()
+		scene = second
 	} else {
 		a.second = true
-		return first.Execute()
+		scene = first
 	}
+
+	return s.CmdProcessor.Enqueue(&SceneSetCommand{
+		Scene: scene,
+	})
 }
 
 func (a *SceneSetToggleAction) New() Action {
