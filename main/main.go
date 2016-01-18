@@ -33,7 +33,22 @@ func main() {
 	eb.AddConsumer(wsLogger)
 
 	// Handles recipe management
-	rm := gohome.NewRecipeManager()
+	rm := gohome.NewRecipeManager(eb)
+
+	reset := false
+	if reset {
+		system, err := gohome.NewImporter().ImportFromFile("main/ip.json", "L-BDGPRO2-WH", cp)
+		if err != nil {
+			panic("Failed to import: " + err.Error())
+			return
+		}
+
+		system.SavePath = config.StartupConfigPath
+		err = system.Save(rm)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 
 	sys, err := gohome.LoadSystem(config.StartupConfigPath, rm, cp)
 	sys.SavePath = config.StartupConfigPath
@@ -69,18 +84,3 @@ func main() {
 	}()
 	<-done
 }
-
-/**
-//TODO: Remove, load from gohome config file
-system, err := gohome.NewImporter().ImportFromFile(config.StartupFile, "L-BDGPRO2-WH", cp)
-if err != nil {
-	panic("Failed to import: " + err.Error())
-	return
-}*/
-
-/*
-	//TODO: Remove, testing
-	err = system.Save(config.StartupConfigPath, rm)
-	if err != nil {
-		fmt.Println(err)
-	}*/

@@ -164,7 +164,8 @@ func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor Comm
 	for _, d := range s.Devices {
 		dev := sys.Devices[d.GlobalID]
 		for _, dID := range d.DeviceIDs {
-			dev.Devices()[dID] = sys.Devices[dID]
+			childDev := sys.Devices[dID]
+			dev.Devices()[childDev.LocalID()] = childDev
 		}
 
 		for _, btn := range d.Buttons {

@@ -132,8 +132,6 @@ func stream(d *Lbdgpro2whDevice) error {
 
 	scanner.Split(split)
 	for scanner.Scan() {
-		//fmt.Printf("scanner: %s\n", scanner.Text())
-
 		if d.evpFire != nil {
 			//TODO: How is ping getting through to here, if we are not scanning for it?
 			orig := scanner.Text()
@@ -225,6 +223,7 @@ func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) (Command, interface{}) 
 	cmdID := matches[3]
 	sourceDevice := d.Devices()[deviceID]
 	if sourceDevice == nil {
+		fmt.Printf("no source device %s\n", deviceID)
 		//TODO: Error? Warning?
 		return nil, nil
 	}
