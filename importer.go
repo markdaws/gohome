@@ -106,7 +106,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			return errors.New("Missing Buttons key, or value not array")
 		}
 
-		var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
+		//var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
 		for _, buttonMap := range buttons {
 			button, ok := buttonMap.(map[string]interface{})
 			if !ok {
@@ -117,15 +117,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 				var buttonID string = strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
 				var buttonName = button["Name"].(string)
-				var pressCommand string = "#DEVICE," + deviceID + "," + buttonID + ",3\r\n"
-				var releaseCommand string = "#DEVICE," + deviceID + "," + buttonID + ",4\r\n"
+				//var pressCommand string = "#DEVICE," + deviceID + "," + buttonID + ",3\r\n"
+				//var releaseCommand string = "#DEVICE," + deviceID + "," + buttonID + ",4\r\n"
 
-				var globalID = system.NextGlobalID()
-				sceneContainer[globalID] = &Scene{
-					LocalID:     buttonID,
-					GlobalID:    globalID,
-					Name:        buttonName,
-					Description: buttonName,
+				/*
 					Commands: []Command{
 						&StringCommand{
 							Device:   sbp,
@@ -134,6 +129,20 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 							Type:     CTSystemSetScene,
 						},
 					},
+				*/
+
+				commands := []Command{
+					&ButtonPressCommand{Button: sbp.Buttons()[buttonID]},
+					&ButtonReleaseCommand{Button: sbp.Buttons()[buttonID]},
+				}
+
+				var globalID = system.NextGlobalID()
+				sceneContainer[globalID] = &Scene{
+					LocalID:      buttonID,
+					GlobalID:     globalID,
+					Name:         buttonName,
+					Description:  buttonName,
+					Commands:     commands,
 					cmdProcessor: cmdProcessor,
 				}
 			}
@@ -268,6 +277,13 @@ func importConnectedByTCP(system *System, cmdProcessor CommandProcessor) {
 		system,
 		cmdProcessor,
 		nil)
+
+	/*
+		//TODO: Fix
+		tcp2 := tcp.(*Tcp600gwbDevice)
+		tcp2.Token = "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21"
+		tcp2.Host = "https://192.168.0.23"
+	*/
 
 	zoneID := "216438039298518643"
 	z := &Zone{

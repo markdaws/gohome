@@ -1,11 +1,13 @@
 package gohome
 
 type Scene struct {
-	LocalID      string
-	GlobalID     string
-	Name         string
-	Description  string
-	Commands     []Command
+	LocalID     string
+	GlobalID    string
+	Name        string
+	Description string
+	Commands    []Command
+
+	//TODO: remove - move further up?
 	cmdProcessor CommandProcessor
 }
 

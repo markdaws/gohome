@@ -55,13 +55,17 @@ func (a *ZoneSetLevelToggleAction) Execute(s *System) error {
 		return fmt.Errorf("Unknown ZoneID %s", a.ZoneID)
 	}
 
-	if a.second {
-		a.second = false
-		return zone.SetLevel(a.SecondLevel)
-	} else {
-		a.second = true
-		return zone.SetLevel(a.FirstLevel)
-	}
+	_ = zone
+	//TODO
+	return nil
+	/*
+		if a.second {
+			a.second = false
+			return zone.SetLevel(a.SecondLevel)
+		} else {
+			a.second = true
+			return zone.SetLevel(a.FirstLevel)
+		}*/
 }
 
 func (a *ZoneSetLevelToggleAction) New() Action {

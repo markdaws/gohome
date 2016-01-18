@@ -31,6 +31,35 @@ func (cp *commandProcessor) Process() {
 
 func (cp *commandProcessor) Enqueue(c Command) error {
 	log.V("cmdProcessor:enqueue:%s", c)
-	cp.commands <- c
+
+	switch cmd := c.(type) {
+	case *ZoneSetLevelCommand:
+		zCmd, err := cmd.Zone.Device.BuildCommand(cmd)
+		if err != nil {
+			return err
+		}
+		cp.commands <- zCmd
+	case *SceneSetCommand:
+		for _, sceneCmd := range cmd.Scene.Commands {
+			err := cp.Enqueue(sceneCmd)
+			if err != nil {
+				return err
+			}
+		}
+	case *ButtonPressCommand:
+		bCmd, err := cmd.Button.Device.BuildCommand(cmd)
+		if err != nil {
+			return err
+		}
+		cp.commands <- bCmd
+	case *ButtonReleaseCommand:
+		bCmd, err := cmd.Button.Device.BuildCommand(cmd)
+		if err != nil {
+			return err
+		}
+		cp.commands <- bCmd
+	default:
+		cp.commands <- c
+	}
 	return nil
 }

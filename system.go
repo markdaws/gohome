@@ -116,8 +116,54 @@ type jsonTelnetConnectionInfo struct {
 	Address  string `json:"address"`
 }
 
-type commandJSON struct {
+type jsonZoneSetLevelCommand struct {
+	CmdType string  `json:"cmdType"`
+	ZoneID  string  `json:"zoneId"`
+	Level   float32 `json:"level"`
 }
+
+func (c jsonZoneSetLevelCommand) CommandType() string {
+	return "zoneSetLevel"
+}
+
+type jsonSceneSetCommand struct {
+	CmdType string `json:"cmdType"`
+	SceneID string `json:"sceneId"`
+}
+
+func (c jsonSceneSetCommand) CommandType() string {
+	return "sceneSet"
+}
+
+type jsonButtonPressCommand struct {
+	CmdType  string `json:"cmdType"`
+	ButtonID string `json:"buttonId"`
+}
+
+/*
+func (c jsonButtonPressCommand) CommandType() string {
+	return "buttonPress"
+}*/
+
+type jsonButtonReleaseCommand struct {
+	CmdType  string `json:"cmdType"`
+	ButtonID string `json:"buttonId"`
+}
+
+/*
+func (c jsonButtonReleaseCommand) CommandType() string {
+	return "buttonRelease"
+}*/
+
+type commandJSON struct {
+	Type       string                 `json:"type"`
+	Attributes map[string]interface{} `json:"attributes"`
+	//CommandType() string
+}
+
+//TODO: Commands
+//TODO: connection info
+//TODO: http connection info
 
 func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor CommandProcessor) (*System, error) {
 	//TODO: Verify deviceIds exist etc
@@ -202,7 +248,34 @@ func LoadSystem(path string, recipeManager *RecipeManager, commandProcessor Comm
 			Name:         scn.Name,
 			Description:  scn.Description,
 			cmdProcessor: commandProcessor,
-			//TODO: commands
+		}
+
+		scene.Commands = make([]Command, len(scn.Commands))
+		for i, cmd := range scn.Commands {
+			var xCmd Command
+			switch cmd.Type {
+			case "zoneSetLevel":
+				/*
+					jsonCmd := cmd.(jsonZoneSetLevelCommand)
+					xCmd = &ZoneSetLevelCommand{
+						Zone:  sys.Zones[jsonCmd.ZoneID],
+						Level: jsonCmd.Level,
+					}*/
+			case "buttonPress":
+				jsonCmd := cmd
+				xCmd = &ButtonPressCommand{
+					Button: sys.Buttons[jsonCmd.Attributes["ButtonID"].(string)],
+				}
+			case "buttonRelease":
+				jsonCmd := cmd
+				xCmd = &ButtonReleaseCommand{
+					Button: sys.Buttons[jsonCmd.Attributes["ButtonID"].(string)],
+				}
+			case "sceneSet":
+			default:
+				return nil, fmt.Errorf("unknown command type %s", cmd.Type)
+			}
+			scene.Commands[i] = xCmd
 		}
 		sys.AddScene(scene)
 	}
@@ -240,6 +313,45 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 		}
 
 		cmds := make([]commandJSON, len(scene.Commands))
+		for j, sCmd := range scene.Commands {
+			switch xCmd := sCmd.(type) {
+			case *ZoneSetLevelCommand:
+				/*
+					cmds[j] = jsonZoneSetLevelCommand{
+						CmdType: "zoneSetLevel",
+						ZoneID:  xCmd.Zone.GlobalID,
+						Level:   xCmd.Level,
+					}*/
+			case *ButtonPressCommand:
+				cmds[j] = commandJSON{
+					Type: "buttonPress",
+					Attributes: map[string]interface{}{
+						"ButtonID": xCmd.Button.GlobalID,
+					},
+				}
+				/*
+					cmds[j] = jsonButtonPressCommand{
+						CmdType:  "buttonPress",
+						ButtonID: xCmd.Button.GlobalID,
+					}*/
+			case *ButtonReleaseCommand:
+				cmds[j] = commandJSON{
+					Type: "buttonRelease",
+					Attributes: map[string]interface{}{
+						"ButtonID": xCmd.Button.GlobalID,
+					},
+				}
+
+				/*
+					cmds[j] = jsonButtonPressCommand{
+						CmdType:  "buttonRelease",
+						ButtonID: xCmd.Button.GlobalID,
+					}*/
+			case *SceneSetCommand:
+				//TODO:
+			}
+		}
+
 		//TODO: Loop through each command encoding to json
 		out.Scenes[i].Commands = cmds
 		i++

@@ -74,16 +74,70 @@ func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-func (d *Lbdgpro2whDevice) ZoneSetLevel(z *Zone, level float32) error {
-	cmd := &StringCommand{
-		Device:   d,
-		Value:    "#OUTPUT," + z.LocalID + ",1,%.2f\r\n",
-		Friendly: "//TODO: Friendly",
-		Type:     CTZoneSetLevel,
-		Args:     []interface{}{level},
+func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
+	switch cmd := c.(type) {
+	case *ZoneSetLevelCommand:
+		return &FCommand{
+			Func: func() error {
+				cmd := &StringCommand{
+					Device:   d,
+					Value:    "#OUTPUT," + cmd.Zone.LocalID + ",1,%.2f\r\n",
+					Friendly: "//TODO: Friendly",
+					Type:     CTZoneSetLevel,
+					Args:     []interface{}{cmd.Level},
+				}
+				return cmd.Execute()
+			},
+		}, nil
+	case *ButtonPressCommand:
+		return &FCommand{
+			Func: func() error {
+				cmd := &StringCommand{
+					Device:   d,
+					Value:    "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",3\r\n",
+					Friendly: "//TODO: Friendly",
+					Type:     CTSystemSetScene,
+				}
+				return cmd.Execute()
+			},
+		}, nil
+
+	case *ButtonReleaseCommand:
+		return &FCommand{
+			Func: func() error {
+				cmd := &StringCommand{
+					Device:   d,
+					Value:    "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",4\r\n",
+					Friendly: "//TODO: Friendly",
+					Type:     CTSystemSetScene,
+				}
+				return cmd.Execute()
+			},
+		}, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported command type")
 	}
-	d.cmdProcessor.Enqueue(cmd)
-	return nil
+}
+
+func (d *Lbdgpro2whDevice) Enqueue(c Command) error {
+
+	switch cmd := c.(type) {
+	case *ZoneSetLevelCommand:
+		cmd.Func = func() error {
+			cmd := &StringCommand{
+				Device:   d,
+				Value:    "#OUTPUT," + cmd.Zone.LocalID + ",1,%.2f\r\n",
+				Friendly: "//TODO: Friendly",
+				Type:     CTZoneSetLevel,
+				Args:     []interface{}{cmd.Level},
+			}
+			return cmd.Execute()
+		}
+		return d.cmdProcessor.Enqueue(cmd)
+	default:
+		return fmt.Errorf("unsupported command type")
+	}
 }
 
 func startStreaming(d *Lbdgpro2whDevice) {

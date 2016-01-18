@@ -10,7 +10,3 @@ type Zone struct {
 	Output      OutputType
 	//TODO: Describe discrete, continuous, max, min, step e.g. on/off vs dimmable
 }
-
-func (z *Zone) SetLevel(value float32) error {
-	return z.Device.ZoneSetLevel(z, value)
-}

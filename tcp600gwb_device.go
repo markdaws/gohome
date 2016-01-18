@@ -11,6 +11,10 @@ import (
 
 type Tcp600gwbDevice struct {
 	device
+
+	/* //TODO: Need to export to config file
+	Host  string
+	Token string*/
 }
 
 func (d *Tcp600gwbDevice) ModelNumber() string {
@@ -28,6 +32,7 @@ func (d *Tcp600gwbDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
+//TODO:
 func (d *Tcp600gwbDevice) ZoneSetLevel(z *Zone, level float32) error {
 
 	sendLevel := func(level int32) error {
@@ -35,9 +40,11 @@ func (d *Tcp600gwbDevice) ZoneSetLevel(z *Zone, level float32) error {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 
+		output := int32(level)
+
+		// TODO: Move into connection info, user configurable
 		token := "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21"
 		host := "https://192.168.0.23"
-		output := int32(level)
 
 		var data string
 		if output == 0 || output == 1 {
@@ -71,9 +78,18 @@ func (d *Tcp600gwbDevice) ZoneSetLevel(z *Zone, level float32) error {
 	}
 
 	d.cmdProcessor.Enqueue(&FuncCommand{
-		Func:        exec,
+		Func: exec,
+		//TODO:
 		Friendly:    "Some friendly string",
 		CommandType: CTZoneSetLevel,
 	})
 	return nil
+}
+
+func (d *Tcp600gwbDevice) Enqueue(c Command) error {
+	return fmt.Errorf("//TODO: unsupported tcp600gwbdevice")
+}
+
+func (d *Tcp600gwbDevice) BuildCommand(c Command) (*FCommand, error) {
+	return nil, fmt.Errorf("//TODO: unsupported tcp600gwbdevice")
 }

@@ -25,7 +25,13 @@ type Device interface {
 	Authenticate(comm.Connection) error
 	Stream() bool
 
-	ZoneSetLevel(z *Zone, level float32) error
+	//TODO: remove
+	//ZoneSetLevel(z *Zone, level float32) error
+
+	//TODO: remove
+	Enqueue(Command) error
+
+	BuildCommand(Command) (*FCommand, error)
 
 	EventProducer
 	fmt.Stringer

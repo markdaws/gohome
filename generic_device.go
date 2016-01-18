@@ -1,6 +1,10 @@
 package gohome
 
-import "github.com/markdaws/gohome/comm"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/comm"
+)
 
 type genericDevice struct {
 	device
@@ -21,6 +25,10 @@ func (d *genericDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-func (d *genericDevice) ZoneSetLevel(z *Zone, level float32) error {
-	return nil
+func (d *genericDevice) Enqueue(c Command) error {
+	return fmt.Errorf("genericDevice does not support executing commands")
+}
+
+func (d *genericDevice) BuildCommand(c Command) (*FCommand, error) {
+	return nil, fmt.Errorf("genericDevice does not support building commands")
 }

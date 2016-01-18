@@ -35,7 +35,8 @@ func main() {
 	// Handles recipe management
 	rm := gohome.NewRecipeManager(eb)
 
-	reset := false
+	//TODO: Remove
+	reset := true
 	if reset {
 		system, err := gohome.NewImporter().ImportFromFile("main/ip.json", "L-BDGPRO2-WH", cp)
 		if err != nil {
@@ -51,6 +52,7 @@ func main() {
 	}
 
 	sys, err := gohome.LoadSystem(config.StartupConfigPath, rm, cp)
+	fmt.Println(err)
 	sys.SavePath = config.StartupConfigPath
 	if err != nil {
 		panic("Failed to load system: " + err.Error())
@@ -75,7 +77,7 @@ func main() {
 	// Start www server
 	done := make(chan bool)
 	go func() {
-		s := www.NewServer("./www", sys, rm, wsLogger)
+		s := www.NewServer("./www", sys, rm, wsLogger, cp)
 		err := s.ListenAndServe(config.WWWPort)
 		if err != nil {
 			fmt.Println("error with server")
