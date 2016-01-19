@@ -25,6 +25,6 @@ func (d *genericDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-func (d *genericDevice) BuildCommand(c Command) (*FCommand, error) {
+func (d *genericDevice) BuildCommand(c Command) (*FuncCommand, error) {
 	return nil, fmt.Errorf("genericDevice does not support building commands")
 }

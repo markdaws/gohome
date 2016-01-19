@@ -19,13 +19,11 @@ type importer struct {
 }
 
 func (i importer) ImportFromFile(path, importerID string, cp CommandProcessor) (*System, error) {
-	//TODO: Support importing multiple devices
 	switch importerID {
 	case "L-BDGPRO2-WH":
-		//TODO: sbpID, how pass this in? Need a bucket of params
 		return importL_BDGPRO2_WH(path, "1", cp)
 	default:
-		return nil, errors.New("Unknown import type: " + importerID)
+		return nil, errors.New("unknown import type: " + importerID)
 	}
 }
 

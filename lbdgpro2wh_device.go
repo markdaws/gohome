@@ -73,10 +73,10 @@ func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
+func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FuncCommand, error) {
 	switch cmd := c.(type) {
 	case *ZoneSetLevelCommand:
-		return &FCommand{
+		return &FuncCommand{
 			Func: func() error {
 				cmd := &StringCommand{
 					Device: d,
@@ -87,7 +87,7 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 			},
 		}, nil
 	case *ButtonPressCommand:
-		return &FCommand{
+		return &FuncCommand{
 			Func: func() error {
 				cmd := &StringCommand{
 					Device: d,
@@ -98,7 +98,7 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 		}, nil
 
 	case *ButtonReleaseCommand:
-		return &FCommand{
+		return &FuncCommand{
 			Func: func() error {
 				cmd := &StringCommand{
 					Device: d,
@@ -196,14 +196,6 @@ func parseCommandString(d *Lbdgpro2whDevice, cmd string) Command {
 	}
 }
 
-type commandBuilderParams struct {
-	Zone         *Zone
-	Intensity    float64
-	Device       Device
-	SourceDevice Device
-	Button       *Button
-}
-
 func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) Command {
 	matches := regexp.MustCompile("[~|#]DEVICE,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
 	if matches == nil || len(matches) != 4 {
@@ -215,22 +207,22 @@ func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) Command {
 	cmdID := matches[3]
 	sourceDevice := d.Devices()[deviceID]
 	if sourceDevice == nil {
-		fmt.Printf("no source device %s\n", deviceID)
-		//TODO: Error? Warning?
 		return nil
 	}
 
 	var finalCmd Command
 	switch cmdID {
 	case "3":
-		btn := sourceDevice.Buttons()[componentID]
-		finalCmd = &ButtonPressCommand{
-			Button: btn,
+		if btn := sourceDevice.Buttons()[componentID]; btn != nil {
+			finalCmd = &ButtonPressCommand{
+				Button: btn,
+			}
 		}
 	case "4":
-		btn := sourceDevice.Buttons()[componentID]
-		finalCmd = &ButtonReleaseCommand{
-			Button: btn,
+		if btn := sourceDevice.Buttons()[componentID]; btn != nil {
+			finalCmd = &ButtonReleaseCommand{
+				Button: btn,
+			}
 		}
 	default:
 		return nil
@@ -249,20 +241,17 @@ func parseZoneCommand(d *Lbdgpro2whDevice, cmd string) Command {
 	cmdID := matches[2]
 	level, err := strconv.ParseFloat(matches[3], 64)
 	if err != nil {
-		//TODO: Error
 		return nil
 	}
 
 	z := d.Zones()[zoneID]
 	if z == nil {
-		//TODO: Error log
 		return nil
 	}
 
 	var finalCmd Command
 	switch cmdID {
 	case "1":
-		//set level
 		finalCmd = &ZoneSetLevelCommand{
 			Zone:  z,
 			Level: float32(level),

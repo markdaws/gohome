@@ -7,18 +7,18 @@ type Command interface {
 	fmt.Stringer
 }
 
-type FCommand struct {
+type FuncCommand struct {
 	Func     func() error
 	Friendly string
 }
 
-func (c *FCommand) Execute() error {
+func (c *FuncCommand) Execute() error {
 	return c.Func()
 }
-func (c *FCommand) FriendlyString() string {
+func (c *FuncCommand) FriendlyString() string {
 	return c.Friendly
 }
-func (c *FCommand) String() string {
+func (c *FuncCommand) String() string {
 	return "FCommand"
 }
 

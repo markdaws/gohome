@@ -32,7 +32,7 @@ func (d *Tcp600gwbDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-func (d *Tcp600gwbDevice) BuildCommand(c Command) (*FCommand, error) {
+func (d *Tcp600gwbDevice) BuildCommand(c Command) (*FuncCommand, error) {
 	switch cmd := c.(type) {
 	case *ZoneSetLevelCommand:
 		return buildZoneSetLevelCommand(cmd.Zone, cmd.Level)
@@ -41,7 +41,7 @@ func (d *Tcp600gwbDevice) BuildCommand(c Command) (*FCommand, error) {
 	}
 }
 
-func buildZoneSetLevelCommand(z *Zone, level float32) (*FCommand, error) {
+func buildZoneSetLevelCommand(z *Zone, level float32) (*FuncCommand, error) {
 
 	sendLevel := func(level int32) error {
 		tr := &http.Transport{
@@ -69,7 +69,7 @@ func buildZoneSetLevelCommand(z *Zone, level float32) (*FCommand, error) {
 		return err
 	}
 
-	return &FCommand{
+	return &FuncCommand{
 		Func: func() error {
 			if level != 0 {
 				// 0 -> off, 1 -> on, if the light was set to 0 then you have to set a 1 first

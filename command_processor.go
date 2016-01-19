@@ -13,12 +13,12 @@ type CommandProcessor interface {
 
 func NewCommandProcessor() CommandProcessor {
 	return &commandProcessor{
-		commands: make(chan *FCommand, 10000),
+		commands: make(chan *FuncCommand, 10000),
 	}
 }
 
 type commandProcessor struct {
-	commands chan *FCommand
+	commands chan *FuncCommand
 }
 
 func (cp *commandProcessor) Process() {

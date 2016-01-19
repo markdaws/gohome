@@ -22,7 +22,7 @@ type Device interface {
 	ReleaseConnection(comm.Connection)
 	Authenticate(comm.Connection) error
 	Stream() bool
-	BuildCommand(Command) (*FCommand, error)
+	BuildCommand(Command) (*FuncCommand, error)
 
 	EventProducer
 	fmt.Stringer
