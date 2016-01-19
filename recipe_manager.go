@@ -464,7 +464,6 @@ func loadCookBooks() []*CookBook {
 				&ZoneSetLevelToggleAction{},
 				&SceneSetAction{},
 				&SceneSetToggleAction{},
-				&StringCommandAction{},
 			},
 		},
 		{
@@ -501,69 +500,3 @@ func buildActionFactory(cookBooks []*CookBook) map[string]func() Action {
 	}
 	return factory
 }
-
-//TODO: delete
-/*
-func (rm *RecipeManager) SaveRecipe(r *Recipe, appendTo bool) error {
-	// Since Trigger and Action are interfaces, we need to also save the underlying
-	// concrete type to the JSON file so we can unmarshal to the correct type later
-
-	out := rm.ToJSON(r)
-	b, err := json.Marshal(out)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(rm.recipePath(r), b, 0644)
-	if err != nil {
-		return err
-	}
-
-	if appendTo {
-		rm.Recipes = append(rm.Recipes, r)
-	}
-	return nil
-}
-
-//TODO:delete
-func (rm *RecipeManager) loadRecipes(path string) ([]*Recipe, error) {
-	files, err := ioutil.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-
-	recipes := make([]*Recipe, 0)
-	for _, fileInfo := range files {
-		filepath := filepath.Join(path, fileInfo.Name())
-		recipe, err := rm.loadRecipe(filepath)
-		if err != nil {
-			//TODO: log error
-			fmt.Println(err)
-			continue
-		}
-
-		//fmt.Printf("appending %+v", recipe)
-		recipes = append(recipes, recipe)
-	}
-	return recipes, nil
-}
-
-//TODO: delete
-func (rm *RecipeManager) loadRecipe(path string) (*Recipe, error) {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var recipeWrapper recipeJSON
-	err = json.Unmarshal(b, &recipeWrapper)
-	if err != nil {
-		return nil, err
-	}
-	return rm.FromJSON(recipeWrapper)
-}
-
-func (rm *RecipeManager) recipePath(r *Recipe) string {
-	return filepath.Join(rm.dataPath, r.ID+".json")
-}
-
-*/

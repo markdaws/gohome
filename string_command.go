@@ -8,10 +8,9 @@ import (
 )
 
 type StringCommand struct {
-	Value    string
-	Friendly string
-	Device   Device
-	Args     []interface{}
+	Value  string
+	Device Device
+	Args   []interface{}
 }
 
 func (c *StringCommand) Execute() error {
@@ -31,12 +30,4 @@ func (c *StringCommand) Execute() error {
 		fmt.Printf("Failed to string string_command %s\n", err)
 	}
 	return err
-}
-
-func (c *StringCommand) String() string {
-	return c.Value
-}
-
-func (c *StringCommand) FriendlyString() string {
-	return c.Friendly
 }

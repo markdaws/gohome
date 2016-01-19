@@ -25,7 +25,6 @@ func (d *Lbdgpro2whDevice) InitConnections() {
 	createConnection := func() comm.Connection {
 		conn := comm.NewTelnetConnection(ci)
 		conn.SetPingCallback(func() error {
-			//TODO: Should return a command that then gets set on the command queue?
 			if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
 				return fmt.Errorf("%s ping failed: %s", d, err)
 			}
@@ -80,10 +79,9 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 		return &FCommand{
 			Func: func() error {
 				cmd := &StringCommand{
-					Device:   d,
-					Value:    "#OUTPUT," + cmd.Zone.LocalID + ",1,%.2f\r\n",
-					Friendly: "//TODO: Friendly",
-					Args:     []interface{}{cmd.Level},
+					Device: d,
+					Value:  "#OUTPUT," + cmd.Zone.LocalID + ",1,%.2f\r\n",
+					Args:   []interface{}{cmd.Level},
 				}
 				return cmd.Execute()
 			},
@@ -92,9 +90,8 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 		return &FCommand{
 			Func: func() error {
 				cmd := &StringCommand{
-					Device:   d,
-					Value:    "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",3\r\n",
-					Friendly: "//TODO: Friendly",
+					Device: d,
+					Value:  "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",3\r\n",
 				}
 				return cmd.Execute()
 			},
@@ -104,9 +101,8 @@ func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FCommand, error) {
 		return &FCommand{
 			Func: func() error {
 				cmd := &StringCommand{
-					Device:   d,
-					Value:    "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",4\r\n",
-					Friendly: "//TODO: Friendly",
+					Device: d,
+					Value:  "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",4\r\n",
 				}
 				return cmd.Execute()
 			},
