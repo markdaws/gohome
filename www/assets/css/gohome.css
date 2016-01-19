@@ -13,20 +13,17 @@ body {
     font-size: 35px;
 }
 
-.cmp-Scene .btn.scene,
-.cmp-Zone .btn.zone {
+.cmp-Scene .btn.scene {
     text-align: center;
     padding: 8px;
     display: block;
     margin-bottom: 12px;
 }
-.cmp-Scene .btn.scene .fa,
-.cmp-Zone .btn.zone .fa {
+.cmp-Scene .btn.scene .fa {
     font-size: 30px;
 }
 
-.cmp-Scene .btn.scene .name,
-.cmp-Zone .btn.zone .name{
+.cmp-Scene .btn.scene .name {
     display:block;
     font-size: 18px;
     padding: 8px 0px;
@@ -34,45 +31,44 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Component Styling */
+.cmp-Zone .btn.zone .name{
+    display:inline-block;
+    font-size: 16px;
+    margin-left: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cmp-Zone .btn.zone {
+    padding: 8px;
+    display: block;
+    margin-bottom: 12px;
+}
+.cmp-Zone button {
+    width: 100%;
+    text-align: left;
+    height: 90px;
+}
+.cmp-Zone .btn.zone .fa {
+    font-size: 30px;
+    text-align: center;
+    width: 30px;
+}
+.cmp-Zone .sliderWrapper {
+    margin: 12px 0px 8px 12px;
+}
+.cmp-Zone .slider.slider-horizontal {
+    width: 80%;
+}
+.cmp-Zone .clickInfo {
+    text-align: center;
+    margin: 12px 0px 8px 12px;
+    font-style: italic;
+    font-size: 14px;
+}
+    
 .cmp-ControlApp .nav-tabs a {
     font-size: 18px;
     color: #000;
-}
-
-.cmp-ZoneControl .content{
-    text-align: center;
-    padding: 16px;
-    padding-bottom: 40px;
-    padding-top: 0;
-    padding-right: 0;
-}
-.cmp-ZoneControl .well {
-    padding: 0px;
-}
-.cmp-ZoneControl .content h4 {
-    margin-bottom: 20px;
-    width: 50px;
-}
-.cmp-ZoneControl .content .btn.on,
-.cmp-ZoneControl .content .btn.off {
-    display: inline-block;
-    margin: 10px;
-}
-.cmp-ZoneControl .valueSlider {
-    height: 200px;
-}
-.cmp-ZoneControl .slider.slider-vertical .slider-handle {
-    width: 40px;
-    height: 40px;
-    margin-top: -20px;
-    margin-left: -15px;
-}
-.cmp-ZoneControl .slider.slider-vertical .slider-track-high {
-    background: #ffff7f;
-}
-.cmp-ZoneControl .slider.slider-vertical .slider-selection {
-    background: #fff;
 }
 
 .cmp-RecipeApp h2 {

@@ -18,25 +18,22 @@ type Server interface {
 }
 
 type wwwServer struct {
-	rootPath         string
-	system           *gohome.System
-	recipeManager    *gohome.RecipeManager
-	eventLogger      gohome.WSEventLogger
-	commandProcessor gohome.CommandProcessor
+	rootPath      string
+	system        *gohome.System
+	recipeManager *gohome.RecipeManager
+	eventLogger   gohome.WSEventLogger
 }
 
 func NewServer(
 	rootPath string,
 	system *gohome.System,
 	recipeManager *gohome.RecipeManager,
-	eventLogger gohome.WSEventLogger,
-	commandProcessor gohome.CommandProcessor) Server {
+	eventLogger gohome.WSEventLogger) Server {
 	return &wwwServer{
-		rootPath:         rootPath,
-		system:           system,
-		recipeManager:    recipeManager,
-		eventLogger:      eventLogger,
-		commandProcessor: commandProcessor,
+		rootPath:      rootPath,
+		system:        system,
+		recipeManager: recipeManager,
+		eventLogger:   eventLogger,
 	}
 }
 
@@ -71,11 +68,11 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	r.HandleFunc("/api/v1/recipes", apiRecipesHandlerGet(s.system, s.recipeManager)).Methods("GET")
 
 	//TODO: GET vs. POST
-	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system, s.commandProcessor))
+	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system))
 
 	//TODO: Make for POST only
 	//TODO: Have GET version to see the currently active scenes
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/active", apiActiveScenesHandler(s.system, s.commandProcessor)).Methods("POST")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/active", apiActiveScenesHandler(s.system)).Methods("POST")
 
 	sub := r.PathPrefix("/assets").Subrouter()
 	//sub.Methods("GET")
@@ -399,7 +396,7 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 	}
 }
 
-func apiZoneHandler(system *gohome.System, cp gohome.CommandProcessor) func(http.ResponseWriter, *http.Request) {
+func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
 		if err != nil {
@@ -422,7 +419,7 @@ func apiZoneHandler(system *gohome.System, cp gohome.CommandProcessor) func(http
 			return
 		}
 
-		err = cp.Enqueue(&gohome.ZoneSetLevelCommand{
+		err = system.CmdProcessor.Enqueue(&gohome.ZoneSetLevelCommand{
 			Zone:  zone,
 			Level: x.Value,
 		})
@@ -444,7 +441,7 @@ func apiZoneHandler(system *gohome.System, cp gohome.CommandProcessor) func(http
 	}
 }
 
-func apiActiveScenesHandler(system *gohome.System, cp gohome.CommandProcessor) func(http.ResponseWriter, *http.Request) {
+func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
 		if err != nil {
@@ -466,11 +463,9 @@ func apiActiveScenesHandler(system *gohome.System, cp gohome.CommandProcessor) f
 			return
 		}
 
-		err = cp.Enqueue(&gohome.SceneSetCommand{
+		err = system.CmdProcessor.Enqueue(&gohome.SceneSetCommand{
 			Scene: scene,
 		})
-
-		//err = scene.Execute()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

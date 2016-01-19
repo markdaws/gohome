@@ -247,18 +247,57 @@
     var Zone = React.createClass({
         mixins: [CssMixin],
         getInitialState: function() {
-            return { value: 100 }
+            return {
+                value: 0,
+                showSlider: false
+            }
         },
 
-        handleChange: function(event) {
-            this.setState({ value: event.target.value });
+        componentDidMount: function() {
+            var $el = $(ReactDOM.findDOMNode(this));
+            var $value = $el.find('.level');
+            var s = $el.find('.valueSlider');
+            var slider = s.slider({ reversed: false });
+            this.setState({ slider: slider });
+            var self = this;
+            s.on('change', function(evt) {
+                self.setState({ value: evt.value.newValue });
+            });
+            s.on('slideStop', function(evt) {
+                self.setValue(evt.value, function(err) {
+                    if (err) {
+                        console.error(err);
+                    }
+                });
+                return false;
+            });
         },
 
-        handleClick: function(event) {
-            //TODO: Modal on desktop?
-            return;
-            console.log(ReactDOM.findDOMNode(this.refs.zoneModal));
-            $(ReactDOM.findDOMNode(this.refs.zoneModal)).modal();
+        infoClicked: function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            this.setState({ showSlider: true });
+        },
+
+        setValue: function(value, callback) {
+            this.state.slider.slider('setValue', value, false, true);
+            this.send({ value: parseFloat(value) }, callback);
+        },
+
+        send: function(data, callback) {
+            $.ajax({
+                url: '/api/v1/systems/1/zones/' + this.props.id,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function(data) {
+                    callback();
+                }.bind(this),
+                error: function(xhr, status, err) {
+                    callback(err);
+                }.bind(this)
+            });
         },
 
         render: function() {
@@ -266,19 +305,22 @@
             var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
             return (
                 <div className="cmp-Zone col-xs-12 col-sm-3 col-md-3 col-lg-3">
-                    <a role="button" aria-expanded="false" aria-controls={"zoneControl" + this.props.id} data-toggle="collapse" href={"#zoneControl" + this.cssSafeIdentifier(this.props.id)} className="btn btn-primary zone">
-                        <div>
-                            <i className={icon}></i>
-                        </div>
+                    <button className="btn btn-primary zone" >
+                        <i className={icon}></i>
                         <span className="name">{this.props.name}</span>
-                        <input style={{display: 'none'}} type="text" value={value} onChange={this.handleChange}></input>
-                    </a>
-                    {/* TODO: position:absolute if desktop/tablet vs phone */}
-                    <ZoneControl ref="zoneControl" name={this.props.name} id={this.props.id} type={this.props.type} output={this.props.output}/>
+                        <div className={"sliderWrapper" + (this.state.showSlider ? "" : " hidden")} >
+                            <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="horizontal"></input>
+                            <span className="level pull-right">{this.state.value}%</span>
+                        </div>
+                        <div className={"clickInfo" + (this.state.showSlider ? " hidden" : "")}>
+                            <span onClick={this.infoClicked}>Click to control</span>
+                        </div>
+                    </button>
                 </div>
             )
         }
     });
+
 
     var ZoneControl = React.createClass({
         mixins: [CssMixin],
