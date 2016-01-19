@@ -71,6 +71,9 @@ func NewDevice(modelNumber, localID, globalID, name, description string, stream 
 	case "L-BDGPRO2-WH":
 		device.producesEvents = true
 		return &Lbdgpro2whDevice{device: device}
+	case "GoHomeHub":
+		device.producesEvents = true
+		return &GoHomeHubDevice{device: device}
 	default:
 		return nil
 	}

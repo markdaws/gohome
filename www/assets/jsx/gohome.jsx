@@ -60,17 +60,16 @@
             return (
                 <div className="cmp-ControlApp">
                     <ul className="nav nav-tabs" role="tablist">
+                        <li role="presentation" className="active">
+                            <a href="#system" role="tab" aria-controls="system" data-toggle="tab">System</a>
+                        </li>
                         <li role="presentation">
                             <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">Scenes</a>
                         </li>
                         <li role="presentation">
                             <a href="#zones" role="tab" aria-controls="zones" data-toggle="tab">Zones</a>
                         </li>
-                        {/*
                         <li role="presentation">
-                            <a href="#devices" role="tab" aria-controls="devices" data-toggle="tab">Devices</a>
-                            </li>*/}
-                        <li role="presentation" className="active">
                             <a href="#logging" role="tab" aria-controls="logging" data-toggle="tab">Logging</a>
                         </li>
                         <li role="presentation">
@@ -78,16 +77,16 @@
                         </li>
                     </ul>
                     <div className="tab-content">
+                        <div role="tabpanel" className="tab-pane active" id="system">
+                            <System />
+                        </div>
                         <div role="tabpanel" className="tab-pane fade" id="scenes">
                             <SceneList scenes={this.state.scenes} />
                         </div>
                         <div role="tabpanel" className="tab-pane fade" id="zones">
                             <ZoneList zones={this.state.zones} />
                         </div>
-                        <div role="tabpanel" className="tab-pane fade" id="devices">
-                            <DeviceList devices={this.state.devices} />
-                        </div>
-                        <div role="tabpanel" className="tab-pane active" id="logging">
+                        <div role="tabpanel" className="tab-pane fade" id="logging">
                             <Logging />
                         </div>
                         <div role="tabpanel" className="tab-pane fade" id="recipes">
@@ -99,6 +98,24 @@
         }
     });
 
+    var System = React.createClass({
+        render: function() {
+            return (
+                <div className="cmp-System">
+                    <SystemDeviceList />
+                </div>
+            );
+        }
+    });
+
+    var SystemDeviceList = React.createClass({
+        render: function() {
+            return (
+                <div>Devices</div>
+            );
+        }
+    });
+    
     var Logging = React.createClass({
         getInitialState: function() {
             return {
@@ -266,6 +283,7 @@
             s.on('slideStop', function(evt) {
                 self.setValue(evt.value, function(err) {
                     if (err) {
+                        //TODO:
                         console.error(err);
                     }
                 });
@@ -303,13 +321,25 @@
         render: function() {
             var value = this.state.value;
             var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
+
+            var stepSize
+            switch (this.props.output) {
+            case 'continuous':
+                stepSize = 1;
+                break;
+            case 'binary':
+                stepSize = 100;
+                break;
+            default:
+                stepSize = 1;
+            }
             return (
                 <div className="cmp-Zone col-xs-12 col-sm-3 col-md-3 col-lg-3">
                     <button className="btn btn-primary zone" >
                         <i className={icon}></i>
                         <span className="name">{this.props.name}</span>
                         <div className={"sliderWrapper" + (this.state.showSlider ? "" : " hidden")} >
-                            <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="horizontal"></input>
+                            <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
                             <span className="level pull-right">{this.state.value}%</span>
                         </div>
                         <div className={"clickInfo" + (this.state.showSlider ? " hidden" : "")}>

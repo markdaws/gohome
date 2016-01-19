@@ -65,7 +65,10 @@ body {
     font-style: italic;
     font-size: 14px;
 }
-    
+
+.cmp-System {
+}
+
 .cmp-ControlApp .nav-tabs a {
     font-size: 18px;
     color: #000;
