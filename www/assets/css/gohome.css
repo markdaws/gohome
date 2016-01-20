@@ -65,6 +65,11 @@ body {
     font-style: italic;
     font-size: 14px;
 }
+/*Temp*/
+.cmp-Zone .picker {
+    position:absolute;
+    z-index:1;
+}
 
 .cmp-System {
 }

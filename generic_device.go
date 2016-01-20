@@ -7,6 +7,7 @@ import (
 	"github.com/markdaws/gohome/comm"
 )
 
+//TODO: export
 type genericDevice struct {
 	device
 }
@@ -28,4 +29,11 @@ func (d *genericDevice) Authenticate(c comm.Connection) error {
 
 func (d *genericDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	return nil, fmt.Errorf("genericDevice does not support building commands")
+}
+
+func (d *genericDevice) Connect() (comm.Connection, error) {
+	return nil, fmt.Errorf("unsupported function connect")
+}
+
+func (d *genericDevice) ReleaseConnection(c comm.Connection) {
 }

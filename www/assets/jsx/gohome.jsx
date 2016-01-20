@@ -185,7 +185,7 @@
                 <div className="cmp-Device well clearfix">
                     <div className="form-group">
                         <label className="control-label" htmlFor="name">Name</label>
-                        <input value={this.state.name} onChange={this.nameChange} className="name form-control" type="text" id="name"/>
+                        <input value={this.state.name} onChange={this.nameChanged} className="name form-control" type="text" id="name"/>
                         <span className={"help-block invisible"}>Error - TODO:</span>
                     </div>
 
@@ -353,24 +353,43 @@
         },
 
         componentDidMount: function() {
-            var $el = $(ReactDOM.findDOMNode(this));
-            var $value = $el.find('.level');
-            var s = $el.find('.valueSlider');
-            var slider = s.slider({ reversed: false });
-            this.setState({ slider: slider });
             var self = this;
-            s.on('change', function(evt) {
-                self.setState({ value: evt.value.newValue });
-            });
-            s.on('slideStop', function(evt) {
-                self.setValue(evt.value, function(err) {
-                    if (err) {
-                        //TODO:
-                        console.error(err);
-                    }
+            
+            switch (this.props.output) {
+            case 'binary':
+            case 'continuous':
+                var $el = $(ReactDOM.findDOMNode(this));
+                var $value = $el.find('.level');
+                var s = $el.find('.valueSlider');
+                var slider = s.slider({ reversed: false });
+                this.setState({ slider: slider });
+
+                s.on('change', function(evt) {
+                    self.setState({ value: evt.value.newValue });
                 });
-                return false;
-            });
+                s.on('slideStop', function(evt) {
+                    self.setValue(evt.value, 0, 0, 0, function(err) {
+                        if (err) {
+                            //TODO:
+                            console.error(err);
+                        }
+                    });
+                    return false;
+                });
+                break;
+
+            case 'rgb':
+                var $el = $(ReactDOM.findDOMNode(this)).find('.picker')
+                ColorPicker($el[0], function(hex, hsv, rgb) {
+                    self.setValue(0, rgb.r, rgb.g, rgb.b, function(err) {
+                        if (err) {
+                            //TODO:
+                            console.error(err);
+                        }
+                    });
+                });
+                break;
+            }
         },
 
         infoClicked: function(evt) {
@@ -379,9 +398,17 @@
             this.setState({ showSlider: true });
         },
 
-        setValue: function(value, callback) {
-            this.state.slider.slider('setValue', value, false, true);
-            this.send({ value: parseFloat(value) }, callback);
+        setValue: function(value, r, g, b, callback) {
+            var slider = this.state.slider;
+            if (slider) {
+                this.state.slider.slider('setValue', value, false, true);
+            }
+            this.send({
+                value: parseFloat(value),
+                r: r,
+                g: g,
+                b: b
+            }, callback);
         },
 
         send: function(data, callback) {
@@ -405,13 +432,23 @@
             var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
 
             var stepSize
+            var controller
+            var sliderController = (
+                <div className={"sliderWrapper" + (this.state.showSlider ? "" : " hidden")} >
+                    <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
+                    <span className="level pull-right">{this.state.value}%</span>
+                </div>);
             switch (this.props.output) {
             case 'continuous':
                 stepSize = 1;
+                controller = sliderController;
                 break;
             case 'binary':
                 stepSize = 100;
+                controller = sliderController;
                 break;
+            case 'rgb':
+                controller = <div className={"picker cp-default" + (this.state.showSlider ? "" : " hidden")}></div>
             default:
                 stepSize = 1;
             }
@@ -420,10 +457,7 @@
                     <button className="btn btn-primary zone" >
                         <i className={icon}></i>
                         <span className="name">{this.props.name}</span>
-                        <div className={"sliderWrapper" + (this.state.showSlider ? "" : " hidden")} >
-                            <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
-                            <span className="level pull-right">{this.state.value}%</span>
-                        </div>
+                        {controller}
                         <div className={"clickInfo" + (this.state.showSlider ? " hidden" : "")}>
                             <span onClick={this.infoClicked}>Click to control</span>
                         </div>

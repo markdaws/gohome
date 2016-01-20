@@ -45,9 +45,9 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
-		z, ok := cp.system.Zones[command.ZoneGlobalID]
+		z, ok := cp.system.Zones[command.ZoneID]
 		if !ok {
-			return fmt.Errorf("unknown zone ID %s", command.ZoneGlobalID)
+			return fmt.Errorf("unknown zone ID %s", command.ZoneID)
 		}
 		zCmd, err := z.Device.BuildCommand(command)
 		if err != nil {

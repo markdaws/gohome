@@ -384,11 +384,13 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 		var i int32 = 0
 		for _, zone := range system.Zones {
 			zones[i] = jsonZone{
-				ID:          zone.GlobalID,
+				Address:     zone.Address,
+				ID:          zone.ID,
 				Name:        zone.Name,
 				Description: zone.Description,
 				Type:        zone.Type.ToString(),
 				Output:      zone.Output.ToString(),
+				Controller:  zone.Controller,
 			}
 			i++
 		}
@@ -432,6 +434,9 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 
 		var x struct {
 			Value float32 `json:"value"`
+			R     byte    `json:"r"`
+			G     byte    `json:"g"`
+			B     byte    `json:"b"`
 		}
 		if err = json.Unmarshal(body, &x); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -446,10 +451,15 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 		}
 
 		err = system.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
-			ZoneLocalID:  zone.LocalID,
-			ZoneGlobalID: zone.GlobalID,
-			ZoneName:     zone.Name,
-			Level:        cmd.Level{Value: x.Value},
+			ZoneAddress: zone.Address,
+			ZoneID:      zone.ID,
+			ZoneName:    zone.Name,
+			Level: cmd.Level{
+				Value: x.Value,
+				R:     x.R,
+				G:     x.G,
+				B:     x.B,
+			},
 		})
 		if err != nil {
 			log.W("enqueue zone set level failed: %s", err)

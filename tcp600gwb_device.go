@@ -33,6 +33,13 @@ func (d *Tcp600gwbDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
+func (d *Tcp600gwbDevice) Connect() (comm.Connection, error) {
+	return nil, fmt.Errorf("unsupported function connect")
+}
+
+func (d *Tcp600gwbDevice) ReleaseConnection(c comm.Connection) {
+}
+
 func (d *Tcp600gwbDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
@@ -61,7 +68,7 @@ func (d *Tcp600gwbDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 		} else {
 			data = "<gip><version>1</version><token>%s</token><did>%s</did><value>%d</value><type>level</type></gip>"
 		}
-		data = fmt.Sprintf(data, token, c.ZoneLocalID, output)
+		data = fmt.Sprintf(data, token, c.ZoneAddress, output)
 
 		client := &http.Client{Transport: tr}
 		slc := fmt.Sprintf("cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>DeviceSendCommand</gcmd><gdata>%s</gdata></gwrcmd></gwrcmds>&fmt=xml", data)

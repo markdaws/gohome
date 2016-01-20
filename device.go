@@ -120,18 +120,6 @@ func (d *device) Stream() bool {
 	return d.stream
 }
 
-func (d *device) Connect() (comm.Connection, error) {
-	c := d.pool.Get()
-	if c == nil {
-		return nil, fmt.Errorf("%s - connect failed, no connection available", d)
-	}
-	return c, nil
-}
-
-func (d *device) ReleaseConnection(c comm.Connection) {
-	d.pool.Release(c)
-}
-
 func (d *device) ProducesEvents() bool {
 	return d.producesEvents
 }

@@ -52,7 +52,8 @@ func (s *System) AddButton(b *Button) {
 }
 
 func (s *System) AddZone(z *Zone) {
-	s.Zones[z.GlobalID] = z
+	//TODO: These ids should be unique
+	s.Zones[z.ID] = z
 }
 
 func (s *System) AddScene(scn *Scene) {
@@ -81,8 +82,8 @@ type buttonJSON struct {
 }
 
 type zoneJSON struct {
-	LocalID     string `json:"localId"`
-	GlobalID    string `json:"globalId"`
+	Address     string `json:"address"`
+	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	DeviceID    string `json:"deviceId"`
@@ -96,7 +97,7 @@ type sceneJSON struct {
 	GlobalID    string        `json:"globalId"`
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
-	Commands    []jsonCommand `json:"commands"`
+	Commands    []commandJSON `json:"commands"`
 }
 
 type deviceJSON struct {
@@ -108,12 +109,11 @@ type deviceJSON struct {
 	Buttons        []buttonJSON              `json:"buttons"`
 	Zones          []zoneJSON                `json:"zones"`
 	DeviceIDs      []string                  `json:"deviceIds"`
-	ConnectionInfo *jsonTelnetConnectionInfo `json:"connectionInfo"`
+	ConnectionInfo *telnetConnectionInfoJSON `json:"connectionInfo"`
 	Stream         bool                      `json:"stream"`
 }
 
-//TODO: rename
-type jsonTelnetConnectionInfo struct {
+type telnetConnectionInfoJSON struct {
 	PoolSize int    `json:"poolSize"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
@@ -121,8 +121,7 @@ type jsonTelnetConnectionInfo struct {
 	Address  string `json:"address"`
 }
 
-//TODO: rename
-type jsonCommand struct {
+type commandJSON struct {
 	Type       string                 `json:"type"`
 	Attributes map[string]interface{} `json:"attributes"`
 }
@@ -190,8 +189,8 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 
 		for _, zn := range d.Zones {
 			z := &Zone{
-				LocalID:     zn.LocalID,
-				GlobalID:    zn.GlobalID,
+				Address:     zn.Address,
+				ID:          zn.ID,
 				Name:        zn.Name,
 				Description: zn.Description,
 				Device:      dev,
@@ -199,7 +198,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 				Output:      OutputTypeFromString(zn.Output),
 				Controller:  zn.Controller,
 			}
-			dev.Zones()[z.LocalID] = z
+			dev.Zones()[z.Address] = z
 			sys.AddZone(z)
 		}
 	}
@@ -219,10 +218,10 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			case "zoneSetLevel":
 				z := sys.Zones[command.Attributes["ZoneID"].(string)]
 				finalCmd = &cmd.ZoneSetLevel{
-					ZoneLocalID:  z.LocalID,
-					ZoneGlobalID: z.GlobalID,
-					ZoneName:     z.Name,
-					Level:        cmd.Level{Value: float32(command.Attributes["Level"].(float64))},
+					ZoneAddress: z.Address,
+					ZoneID:      z.ID,
+					ZoneName:    z.Name,
+					Level:       cmd.Level{Value: float32(command.Attributes["Level"].(float64))},
 				}
 			case "buttonPress":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
@@ -284,26 +283,26 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 			Description: scene.Description,
 		}
 
-		cmds := make([]jsonCommand, len(scene.Commands))
+		cmds := make([]commandJSON, len(scene.Commands))
 		for j, sCmd := range scene.Commands {
 			switch xCmd := sCmd.(type) {
 			case *cmd.ZoneSetLevel:
-				cmds[j] = jsonCommand{
+				cmds[j] = commandJSON{
 					Type: "zoneSetLevel",
 					Attributes: map[string]interface{}{
-						"ZoneID": xCmd.ZoneGlobalID,
+						"ZoneID": xCmd.ZoneID,
 						"Level":  xCmd.Level.Value,
 					},
 				}
 			case *cmd.ButtonPress:
-				cmds[j] = jsonCommand{
+				cmds[j] = commandJSON{
 					Type: "buttonPress",
 					Attributes: map[string]interface{}{
 						"ButtonID": xCmd.ButtonGlobalID,
 					},
 				}
 			case *cmd.ButtonRelease:
-				cmds[j] = jsonCommand{
+				cmds[j] = commandJSON{
 					Type: "buttonRelease",
 					Attributes: map[string]interface{}{
 						"ButtonID": xCmd.ButtonGlobalID,
@@ -334,7 +333,7 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 		}
 
 		if ci, ok := device.ConnectionInfo().(*comm.TelnetConnectionInfo); ok && ci != nil {
-			d.ConnectionInfo = &jsonTelnetConnectionInfo{
+			d.ConnectionInfo = &telnetConnectionInfoJSON{
 				PoolSize: ci.PoolSize,
 				Login:    ci.Login,
 				Password: ci.Password,
@@ -359,8 +358,8 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 		zi := 0
 		for _, z := range device.Zones() {
 			d.Zones[zi] = zoneJSON{
-				LocalID:     z.LocalID,
-				GlobalID:    z.GlobalID,
+				Address:     z.Address,
+				ID:          z.ID,
 				Name:        z.Name,
 				Description: z.Description,
 				DeviceID:    device.GlobalID(),

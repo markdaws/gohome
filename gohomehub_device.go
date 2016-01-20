@@ -10,6 +10,7 @@ import (
 
 type GoHomeHubDevice struct {
 	device
+	pools map[string]comm.ConnectionPool
 }
 
 func (d *GoHomeHubDevice) ModelNumber() string {
@@ -17,30 +18,43 @@ func (d *GoHomeHubDevice) ModelNumber() string {
 }
 
 func (d *GoHomeHubDevice) InitConnections() {
-	//ci := *d.connectionInfo.(*comm.TelnetConnectionInfo)
 
-	//TODO: Get connection info externally, one pool per controlled device?
-	ci := comm.TelnetConnectionInfo{
-		PoolSize: 2,
-		Network:  "tcp",
-		Address:  "192.168.0.24:5577",
-	}
-	createConnection := func() comm.Connection {
-		conn := comm.NewTelnetConnection(ci)
-		/*
-			conn.SetPingCallback(func() error {
-				if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
-					return fmt.Errorf("%s ping failed: %s", d, err)
-				}
-				return nil
-			})*/
-		return conn
-	}
-	ps := ci.PoolSize
-	log.V("%s init connections, pool size %d", d, ps)
-	d.pool = comm.NewConnectionPool(d.name, ps, createConnection)
-	log.V("%s connected", d)
+	d.pools = make(map[string]comm.ConnectionPool)
 
+	// May have multiple zones + devices we need to talk to
+	// set up pools for each one
+	for _, z := range d.Zones() {
+		switch z.Controller {
+		case ZCFluxWIFI:
+			ci := comm.TelnetConnectionInfo{
+				PoolSize: 2,
+				Network:  "tcp",
+				Address:  z.Address,
+			}
+			createConnection := func() comm.Connection {
+				conn := comm.NewTelnetConnection(ci)
+				/*
+					conn.SetPingCallback(func() error {
+						if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
+							return fmt.Errorf("%s ping failed: %s", d, err)
+						}
+						return nil
+					})*/
+				return conn
+			}
+			ps := ci.PoolSize
+			log.V("%s init connections, pool size %d", d, ps)
+			d.pools[z.Controller] = comm.NewConnectionPool(d.name, ps, createConnection)
+			log.V("%s connected", d)
+		}
+	}
+}
+
+func (d *GoHomeHubDevice) Connect() (comm.Connection, error) {
+	return nil, fmt.Errorf("unsupported function connect")
+}
+
+func (d *GoHomeHubDevice) ReleaseConnection(c comm.Connection) {
 }
 
 func (d *GoHomeHubDevice) StartProducingEvents() (<-chan Event, <-chan bool) {
@@ -72,9 +86,9 @@ func (d *GoHomeHubDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 //TODO: Level should be a type with value,r,g,b, not just one value
 func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Func, error) {
 
-	z, ok := d.System().Zones[c.ZoneGlobalID]
+	z, ok := d.System().Zones[c.ZoneID]
 	if !ok {
-		return nil, fmt.Errorf("unknown zone ID %s", c.ZoneGlobalID)
+		return nil, fmt.Errorf("unknown zone ID %s", c.ZoneID)
 	}
 
 	switch z.Controller {
@@ -108,15 +122,15 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 				cs := t & 0xff
 				b = append(b, byte(cs))
 
-				conn, err := d.Connect()
-				if err != nil {
-					return fmt.Errorf("StringCommand - error connecting %s", err)
+				conn := d.pools[z.Controller].Get()
+				if conn == nil {
+					return fmt.Errorf("gohomehub - error connecting, no available connections")
 				}
 
 				defer func() {
-					d.ReleaseConnection(conn)
+					d.pools[z.Controller].Release(conn)
 				}()
-				_, err = conn.Write(b)
+				_, err := conn.Write(b)
 				if err != nil {
 					fmt.Printf("ERROR SENDING %s\n", err)
 				} else {
@@ -129,47 +143,3 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 		return nil, fmt.Errorf("unsupported zone controller")
 	}
 }
-
-/*
-def __init__(self, ipaddr, port=5577):
-self.ipaddr = ipaddr
-self.port = port
-self.__is_on = False
-
-self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-self.socket.connect((self.ipaddr, self.port))
-
-def setRgb(self, r,g,b, persist=True):
-if persist:
-msg = bytearray([0x31])
-else:
-msg = bytearray([0x41])
-msg.append(r)
-msg.append(g)
-msg.append(b)
-msg.append(0x00)
-msg.append(0xf0)
-msg.append(0x0f)
-self.__write(msg)
-
-def __writeRaw(self, bytes):
-self.socket.send(bytes)
-
-def __write(self, bytes):
-# calculate checksum of byte array and add to end
-csum = sum(bytes) & 0xFF
-bytes.append(csum)
-#print "-------------",utils.dump_bytes(bytes)
-self.__writeRaw(bytes)
-#time.sleep(.4)
-*/
-
-/*
-//TODO: Add credit to github repo
-- For wifi bulbs can control directly
-- Capabilities supports zigbee etc
-- Need to add bulb information
-- Is a zone a bulb?
-
-zone is a controllable unit
-*/

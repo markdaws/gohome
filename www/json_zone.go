@@ -1,11 +1,13 @@
 package www
 
 type jsonZone struct {
+	Address     string `json:"address"`
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Type        string `json:"type"`
 	Output      string `json:"output"`
+	Controller  string `json:"controller"`
 }
 type zones []jsonZone
 

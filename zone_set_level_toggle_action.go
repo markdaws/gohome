@@ -69,10 +69,10 @@ func (a *ZoneSetLevelToggleAction) Execute(s *System) error {
 	}
 
 	return s.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
-		ZoneLocalID:  zone.LocalID,
-		ZoneGlobalID: zone.GlobalID,
-		ZoneName:     zone.Name,
-		Level:        cmd.Level{Value: level},
+		ZoneAddress: zone.Address,
+		ZoneID:      zone.ID,
+		ZoneName:    zone.Name,
+		Level:       cmd.Level{Value: level},
 	})
 }
 

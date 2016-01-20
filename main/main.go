@@ -62,13 +62,11 @@ func main() {
 	cp.SetSystem(sys)
 
 	for _, d := range sys.Devices {
-		if d.ConnectionInfo() != nil {
-			d := d
-			go func() {
-				d.InitConnections()
-				eb.AddProducer(d)
-			}()
-		}
+		d := d
+		go func() {
+			d.InitConnections()
+			eb.AddProducer(d)
+		}()
 	}
 
 	//Start all the recipes

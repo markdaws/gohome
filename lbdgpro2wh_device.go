@@ -74,6 +74,18 @@ func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
+func (d *device) Connect() (comm.Connection, error) {
+	c := d.pool.Get()
+	if c == nil {
+		return nil, fmt.Errorf("%s - connect failed, no connection available", d)
+	}
+	return c, nil
+}
+
+func (d *device) ReleaseConnection(c comm.Connection) {
+	d.pool.Release(c)
+}
+
 func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
@@ -81,7 +93,7 @@ func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				newCmd := &StringCommand{
 					Device: d,
-					Value:  "#OUTPUT," + command.ZoneLocalID + ",1,%.2f\r\n",
+					Value:  "#OUTPUT," + command.ZoneAddress + ",1,%.2f\r\n",
 					Args:   []interface{}{command.Level},
 				}
 				return newCmd.Execute()
@@ -262,10 +274,10 @@ func (d *Lbdgpro2whDevice) parseZoneCommand(command string) cmd.Command {
 	switch cmdID {
 	case "1":
 		finalCmd = &cmd.ZoneSetLevel{
-			ZoneLocalID:  z.LocalID,
-			ZoneGlobalID: z.GlobalID,
-			ZoneName:     z.Name,
-			Level:        cmd.Level{Value: float32(level)},
+			ZoneAddress: z.Address,
+			ZoneID:      z.ID,
+			ZoneName:    z.Name,
+			Level:       cmd.Level{Value: float32(level)},
 		}
 	default:
 		return nil
