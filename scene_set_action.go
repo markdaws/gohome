@@ -1,6 +1,10 @@
 package gohome
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/cmd"
+)
 
 type SceneSetAction struct {
 	SceneID string
@@ -37,8 +41,9 @@ func (a *SceneSetAction) Execute(s *System) error {
 		return fmt.Errorf("Unknown Scene ID %s", a.SceneID)
 	}
 
-	return s.CmdProcessor.Enqueue(&SceneSetCommand{
-		Scene: scene,
+	return s.CmdProcessor.Enqueue(&cmd.SceneSet{
+		SceneGlobalID: scene.GlobalID,
+		SceneName:     scene.Name,
 	})
 }
 

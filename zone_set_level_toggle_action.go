@@ -1,6 +1,10 @@
 package gohome
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/cmd"
+)
 
 type ZoneSetLevelToggleAction struct {
 	ZoneID      string
@@ -64,9 +68,11 @@ func (a *ZoneSetLevelToggleAction) Execute(s *System) error {
 		level = a.FirstLevel
 	}
 
-	return s.CmdProcessor.Enqueue(&ZoneSetLevelCommand{
-		Zone:  zone,
-		Level: level,
+	return s.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
+		ZoneLocalID:  zone.LocalID,
+		ZoneGlobalID: zone.GlobalID,
+		ZoneName:     zone.Name,
+		Level:        level,
 	})
 }
 

@@ -6,6 +6,8 @@ const (
 	OTContinuous OutputType = iota
 	OTBinary
 	OTUnknown
+
+	//TODO: RGB ?
 )
 
 func OutputTypeFromString(ot string) OutputType {

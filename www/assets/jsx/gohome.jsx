@@ -109,9 +109,91 @@
     });
 
     var SystemDeviceList = React.createClass({
+        getInitialState: function() {
+            return {
+                loading: true,
+                devices: [],
+                addingNew: false
+            };
+        },
+
+        componentDidMount: function() {
+            var self = this;
+            $.ajax({
+                url: '/api/v1/systems/123/devices',
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    self.setState({devices: data, loading: false});
+                },
+                error: function(xhr, status, err) {
+                    console.error(err.toString());
+                }
+            });
+        },
+
+        newClicked: function() {
+            //TODO: Show new device UI
+        },
+
         render: function() {
+            var deviceNodes = this.state.devices.map(function(device) {
+                return (
+                    <Device device={device} key={device.globalId}/>
+                );
+            })
+            
+            var body = this.state.loading
+                ? <div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>
+                : deviceNodes;
+
             return (
-                <div>Devices</div>
+                <div className="cmp-DeviceList">
+                    <div className="header clearfix">
+                        <button className="btn btn-primary pull-right" onClick={this.newClicked}>New Device</button>
+                    </div>
+                    {body}
+                </div>
+            );
+        }
+    });
+
+    var Device = React.createClass({
+        getInitialState: function() {
+            return {
+                editMode: false,
+                //TODO: anti-pattern?
+                name: this.props.device.name,
+                description: this.props.device.description,
+            };
+        },
+
+        deleteClicked: function() {
+        },
+
+        nameChanged: function(evt) {
+            
+        },
+
+        descriptionChanged: function(evt) {
+        },
+
+        render: function() {
+            //TODO:need unique name for id and htmlFor
+            var device = this.props.device;
+            return (
+                <div className="cmp-Device well clearfix">
+                    <div className="form-group">
+                        <label className="control-label" htmlFor="name">Name</label>
+                        <input value={this.state.name} onChange={this.nameChange} className="name form-control" type="text" id="name"/>
+                        <span className={"help-block invisible"}>Error - TODO:</span>
+                    </div>
+
+                {/*
+                <h4>{device.name}</h4>
+                    <p>{device.description}</p>
+                    <button className="btn btn-danger pull-right" onClick={this.deleteClicked} >Delete</button>*/}
+                </div>
             );
         }
     });
@@ -348,106 +430,6 @@
                     </button>
                 </div>
             )
-        }
-    });
-
-
-    var ZoneControl = React.createClass({
-        mixins: [CssMixin],
-        componentDidMount: function() {
-            var $el = $(ReactDOM.findDOMNode(this));
-            var $value = $el.find('.level');
-            var s = $el.find('.valueSlider');
-            var slider = s.slider({ reversed: true});
-            this.setState({ slider: slider });
-            var self = this;
-            s.on('change', function(evt) {
-                $value.text(evt.value.newValue + '%');
-            });
-            s.on('slideStop', function(evt) {
-                self._setValue(evt.value, function(err) {
-                    if (err) {
-                        console.error(err);
-                    }
-                });
-            });
-        },
-
-        _setValue: function(value, callback) {
-            var $el = $(ReactDOM.findDOMNode(this));
-            this.state.slider.slider('setValue', value, false, true);
-            this._send({ value: parseFloat(value) }, callback);
-        },
-
-        _send: function(data, callback) {
-            $.ajax({
-                url: '/api/v1/systems/1/zones/' + this.props.id,
-                type: 'POST',
-                dataType: 'json',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(data),
-                success: function(data) {
-                    callback();
-                }.bind(this),
-                error: function(xhr, status, err) {
-                    callback({ err: err });
-                }.bind(this)
-            });
-        },
-
-        handleOnClick: function(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-            this._setValue(100, function(err) {
-                if (err) {
-                    console.error(err);
-                }
-            });
-        },
-
-        handleOffClick: function(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-            this._setValue(0, function(err) {
-                if (err) {
-                    console.error(err);
-                }
-            });
-        },
-
-        render: function() {
-            var onText = 'On';
-            var offText = 'Off';
-            if (this.props.type !== 'light') {
-                onText = 'Open';
-                offText = 'Close';
-            }
-
-            var left;
-            if (this.props.output === 'continuous') {
-                left = (
-                    <div className="pull-left">
-                        <h4 className="level">N/A</h4>
-                        <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step="1" data-slider-orientation="vertical"></input>
-                    </div>
-                    );
-            }
-
-            var uniqueId = this.cssSafeIdentifier('zoneControl' + this.props.id);
-            return (
-                <div id={uniqueId} className={"cmp-ZoneControl collapse " + uniqueId}>
-                    <div className="well">
-                        <div className="content">
-                            {left}
-                            <div className="pull-right">
-                                <a href="#" className="btn btn-default on" onClick={this.handleOnClick}>{onText}</a>
-                                <a href="#" className="btn btn-default off" onClick={this.handleOffClick}>{offText}</a>
-                            </div>
-                           <div className="footer clearfix"></div>
-                       </div>
-                    </div>
-                </div>
-            );
         }
     });
 

@@ -11,6 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/log"
 )
 
 type Server interface {
@@ -57,6 +59,7 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	//TODO: Move api into separate http server
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
 
 	r.HandleFunc("/api/v1/cookbooks", apiCookBooksHandler(s.recipeManager.CookBooks)).Methods("GET")
 	r.HandleFunc("/api/v1/cookbooks/{id}", apiCookBookHandler(s.recipeManager.CookBooks)).Methods("GET")
@@ -396,6 +399,29 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 	}
 }
 
+func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		devices := make(devices, len(system.Devices), len(system.Devices))
+		var i int32 = 0
+		for _, device := range system.Devices {
+			devices[i] = jsonDevice{
+				LocalID:     device.LocalID(),
+				GlobalID:    device.GlobalID(),
+				Name:        device.Name(),
+				Description: device.Description(),
+				ModelNumber: device.ModelNumber(),
+			}
+			i++
+		}
+		sort.Sort(devices)
+		if err := json.NewEncoder(w).Encode(devices); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+
 func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
@@ -419,9 +445,11 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 			return
 		}
 
-		err = system.CmdProcessor.Enqueue(&gohome.ZoneSetLevelCommand{
-			Zone:  zone,
-			Level: x.Value,
+		err = system.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
+			ZoneLocalID:  zone.LocalID,
+			ZoneGlobalID: zone.GlobalID,
+			ZoneName:     zone.Name,
+			Level:        x.Value,
 		})
 		/*
 			err = zone.Device.Enqueue(&gohome.ZoneSetLevelCommand{
@@ -431,6 +459,7 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 		//TODO: Remove
 		//err = zone.SetLevel(x.Value)
 		if err != nil {
+			log.W("enqueue zone set level failed: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -463,8 +492,9 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 			return
 		}
 
-		err = system.CmdProcessor.Enqueue(&gohome.SceneSetCommand{
-			Scene: scene,
+		err = system.CmdProcessor.Enqueue(&cmd.SceneSet{
+			SceneGlobalID: scene.GlobalID,
+			SceneName:     scene.Name,
 		})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

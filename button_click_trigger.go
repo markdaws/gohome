@@ -1,6 +1,10 @@
 package gohome
 
-import "time"
+import (
+	"time"
+
+	"github.com/markdaws/gohome/cmd"
+)
 
 type ButtonClickTrigger struct {
 	ButtonID    string
@@ -64,12 +68,12 @@ func (t *ButtonClickTrigger) ProcessEvent(e Event) bool {
 		t.clickCount = 0
 	}
 
-	cmd, ok := e.ReplayCommand.(*ButtonReleaseCommand)
+	cmd, ok := e.ReplayCommand.(*cmd.ButtonRelease)
 	if !ok {
 		return false
 	}
 
-	if cmd.Button.GlobalID != t.ButtonID {
+	if cmd.ButtonGlobalID != t.ButtonID {
 		return false
 	}
 

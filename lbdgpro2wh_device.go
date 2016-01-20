@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/log"
 )
@@ -73,36 +74,36 @@ func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-func (d *Lbdgpro2whDevice) BuildCommand(c Command) (*FuncCommand, error) {
-	switch cmd := c.(type) {
-	case *ZoneSetLevelCommand:
-		return &FuncCommand{
+func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
+	switch command := c.(type) {
+	case *cmd.ZoneSetLevel:
+		return &cmd.Func{
 			Func: func() error {
-				cmd := &StringCommand{
+				newCmd := &StringCommand{
 					Device: d,
-					Value:  "#OUTPUT," + cmd.Zone.LocalID + ",1,%.2f\r\n",
-					Args:   []interface{}{cmd.Level},
+					Value:  "#OUTPUT," + command.ZoneLocalID + ",1,%.2f\r\n",
+					Args:   []interface{}{command.Level},
 				}
-				return cmd.Execute()
+				return newCmd.Execute()
 			},
 		}, nil
-	case *ButtonPressCommand:
-		return &FuncCommand{
+	case *cmd.ButtonPress:
+		return &cmd.Func{
 			Func: func() error {
-				cmd := &StringCommand{
+				newCmd := &StringCommand{
 					Device: d,
-					Value:  "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",3\r\n",
+					Value:  "#DEVICE," + command.DeviceLocalID + "," + command.ButtonLocalID + ",3\r\n",
 				}
-				return cmd.Execute()
+				return newCmd.Execute()
 			},
 		}, nil
 
-	case *ButtonReleaseCommand:
-		return &FuncCommand{
+	case *cmd.ButtonRelease:
+		return &cmd.Func{
 			Func: func() error {
 				cmd := &StringCommand{
 					Device: d,
-					Value:  "#DEVICE," + cmd.Button.Device.LocalID() + "," + cmd.Button.LocalID + ",4\r\n",
+					Value:  "#DEVICE," + command.DeviceLocalID + "," + command.ButtonLocalID + ",4\r\n",
 				}
 				return cmd.Execute()
 			},
@@ -181,7 +182,8 @@ func stream(d *Lbdgpro2whDevice) error {
 	*/
 }
 
-func parseCommandString(d *Lbdgpro2whDevice, cmd string) Command {
+//TODO: put on device
+func parseCommandString(d *Lbdgpro2whDevice, cmd string) cmd.Command {
 	switch {
 	case strings.HasPrefix(cmd, "~OUTPUT"),
 		strings.HasPrefix(cmd, "#OUTPUT"):
@@ -196,8 +198,9 @@ func parseCommandString(d *Lbdgpro2whDevice, cmd string) Command {
 	}
 }
 
-func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) Command {
-	matches := regexp.MustCompile("[~|#]DEVICE,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
+//TODO: Put on device
+func parseDeviceCommand(d *Lbdgpro2whDevice, command string) cmd.Command {
+	matches := regexp.MustCompile("[~|#]DEVICE,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(command)
 	if matches == nil || len(matches) != 4 {
 		return nil
 	}
@@ -210,18 +213,26 @@ func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) Command {
 		return nil
 	}
 
-	var finalCmd Command
+	var finalCmd cmd.Command
 	switch cmdID {
 	case "3":
 		if btn := sourceDevice.Buttons()[componentID]; btn != nil {
-			finalCmd = &ButtonPressCommand{
-				Button: btn,
+			finalCmd = &cmd.ButtonPress{
+				ButtonLocalID:  btn.LocalID,
+				ButtonGlobalID: btn.GlobalID,
+				DeviceName:     d.Name(),
+				DeviceLocalID:  d.LocalID(),
+				DeviceGlobalID: d.GlobalID(),
 			}
 		}
 	case "4":
 		if btn := sourceDevice.Buttons()[componentID]; btn != nil {
-			finalCmd = &ButtonReleaseCommand{
-				Button: btn,
+			finalCmd = &cmd.ButtonRelease{
+				ButtonLocalID:  btn.LocalID,
+				ButtonGlobalID: btn.GlobalID,
+				DeviceName:     d.Name(),
+				DeviceLocalID:  d.LocalID(),
+				DeviceGlobalID: d.GlobalID(),
 			}
 		}
 	default:
@@ -231,8 +242,9 @@ func parseDeviceCommand(d *Lbdgpro2whDevice, cmd string) Command {
 	return finalCmd
 }
 
-func parseZoneCommand(d *Lbdgpro2whDevice, cmd string) Command {
-	matches := regexp.MustCompile("[~|?]OUTPUT,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(cmd)
+//TODO: put on device
+func parseZoneCommand(d *Lbdgpro2whDevice, command string) cmd.Command {
+	matches := regexp.MustCompile("[~|?]OUTPUT,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(command)
 	if matches == nil || len(matches) != 4 {
 		return nil
 	}
@@ -249,12 +261,14 @@ func parseZoneCommand(d *Lbdgpro2whDevice, cmd string) Command {
 		return nil
 	}
 
-	var finalCmd Command
+	var finalCmd cmd.Command
 	switch cmdID {
 	case "1":
-		finalCmd = &ZoneSetLevelCommand{
-			Zone:  z,
-			Level: float32(level),
+		finalCmd = &cmd.ZoneSetLevel{
+			ZoneLocalID:  z.LocalID,
+			ZoneGlobalID: z.GlobalID,
+			ZoneName:     z.Name,
+			Level:        float32(level),
 		}
 	default:
 		return nil

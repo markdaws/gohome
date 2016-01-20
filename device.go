@@ -3,6 +3,7 @@ package gohome
 import (
 	"fmt"
 
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 )
 
@@ -22,7 +23,7 @@ type Device interface {
 	ReleaseConnection(comm.Connection)
 	Authenticate(comm.Connection) error
 	Stream() bool
-	BuildCommand(Command) (*FuncCommand, error)
+	BuildCommand(cmd.Command) (*cmd.Func, error)
 
 	EventProducer
 	fmt.Stringer

@@ -3,22 +3,29 @@ package gohome
 import (
 	"fmt"
 
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/log"
 )
 
 type CommandProcessor interface {
 	Process()
-	Enqueue(Command) error
+	Enqueue(cmd.Command) error
+	SetSystem(s *System)
 }
 
 func NewCommandProcessor() CommandProcessor {
 	return &commandProcessor{
-		commands: make(chan *FuncCommand, 10000),
+		commands: make(chan *cmd.Func, 10000),
 	}
 }
 
 type commandProcessor struct {
-	commands chan *FuncCommand
+	commands chan *cmd.Func
+	system   *System
+}
+
+func (cp *commandProcessor) SetSystem(s *System) {
+	cp.system = s
 }
 
 func (cp *commandProcessor) Process() {
@@ -33,34 +40,50 @@ func (cp *commandProcessor) Process() {
 	}
 }
 
-func (cp *commandProcessor) Enqueue(c Command) error {
+func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 	log.V("cmdProcessor:enqueue:%s", c)
 
-	switch cmd := c.(type) {
-	case *ZoneSetLevelCommand:
-		zCmd, err := cmd.Zone.Device.BuildCommand(cmd)
+	switch command := c.(type) {
+	case *cmd.ZoneSetLevel:
+		z, ok := cp.system.Zones[command.ZoneGlobalID]
+		if !ok {
+			return fmt.Errorf("unknown zone ID %s", command.ZoneGlobalID)
+		}
+		zCmd, err := z.Device.BuildCommand(command)
 		if err != nil {
 			return err
 		}
 		cp.commands <- zCmd
 
-	case *SceneSetCommand:
-		for _, sceneCmd := range cmd.Scene.Commands {
+	case *cmd.SceneSet:
+		s, ok := cp.system.Scenes[command.SceneGlobalID]
+		if !ok {
+			return fmt.Errorf("unknown scene ID %s", command.SceneGlobalID)
+		}
+		for _, sceneCmd := range s.Commands {
 			err := cp.Enqueue(sceneCmd)
 			if err != nil {
 				return err
 			}
 		}
 
-	case *ButtonPressCommand:
-		bCmd, err := cmd.Button.Device.BuildCommand(cmd)
+	case *cmd.ButtonPress:
+		b, ok := cp.system.Buttons[command.ButtonGlobalID]
+		if !ok {
+			return fmt.Errorf("unknown button ID %s", command.ButtonGlobalID)
+		}
+		bCmd, err := b.Device.BuildCommand(command)
 		if err != nil {
 			return err
 		}
 		cp.commands <- bCmd
 
-	case *ButtonReleaseCommand:
-		bCmd, err := cmd.Button.Device.BuildCommand(cmd)
+	case *cmd.ButtonRelease:
+		b, ok := cp.system.Buttons[command.ButtonGlobalID]
+		if !ok {
+			return fmt.Errorf("unknown button ID %s", command.ButtonGlobalID)
+		}
+		bCmd, err := b.Device.BuildCommand(command)
 		if err != nil {
 			return err
 		}

@@ -69,6 +69,10 @@ body {
 .cmp-System {
 }
 
+.cmp-DeviceList .header {
+    margin-bottom: 12px;
+}
+
 .cmp-ControlApp .nav-tabs a {
     font-size: 18px;
     color: #000;

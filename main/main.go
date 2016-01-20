@@ -59,6 +59,8 @@ func main() {
 		//TODO: New systems, should have a blank system, create if not found
 	}
 
+	cp.SetSystem(sys)
+
 	for _, d := range sys.Devices {
 		if d.ConnectionInfo() != nil {
 			d := d

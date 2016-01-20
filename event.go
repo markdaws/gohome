@@ -1,13 +1,17 @@
 package gohome
 
-import "time"
+import (
+	"time"
+
+	"github.com/markdaws/gohome/cmd"
+)
 
 type Event struct {
 	ID             int
 	Time           time.Time
 	OriginalString string
 	Device         Device
-	ReplayCommand  Command
+	ReplayCommand  cmd.Command
 	Type           EventType
 }
 
@@ -24,7 +28,7 @@ const (
 	ETPing
 )
 
-func NewEvent(d Device, cmd Command, orig string, t EventType) Event {
+func NewEvent(d Device, cmd cmd.Command, orig string, t EventType) Event {
 	nextId++
 
 	return Event{

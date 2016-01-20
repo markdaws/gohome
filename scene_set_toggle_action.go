@@ -1,6 +1,10 @@
 package gohome
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/cmd"
+)
 
 type SceneSetToggleAction struct {
 	FirstSceneID  string
@@ -62,8 +66,9 @@ func (a *SceneSetToggleAction) Execute(s *System) error {
 		scene = first
 	}
 
-	return s.CmdProcessor.Enqueue(&SceneSetCommand{
-		Scene: scene,
+	return s.CmdProcessor.Enqueue(&cmd.SceneSet{
+		SceneGlobalID: scene.GlobalID,
+		SceneName:     scene.Name,
 	})
 }
 

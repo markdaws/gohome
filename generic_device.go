@@ -3,6 +3,7 @@ package gohome
 import (
 	"fmt"
 
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 )
 
@@ -25,6 +26,6 @@ func (d *genericDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-func (d *genericDevice) BuildCommand(c Command) (*FuncCommand, error) {
+func (d *genericDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	return nil, fmt.Errorf("genericDevice does not support building commands")
 }

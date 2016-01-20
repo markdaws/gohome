@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 )
 
@@ -117,14 +118,27 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				var buttonName = button["Name"].(string)
 
 				var globalID = system.NextGlobalID()
+				var btn = sbp.Buttons()[buttonID]
 				sceneContainer[globalID] = &Scene{
 					LocalID:     buttonID,
 					GlobalID:    globalID,
 					Name:        buttonName,
 					Description: buttonName,
-					Commands: []Command{
-						&ButtonPressCommand{Button: sbp.Buttons()[buttonID]},
-						&ButtonReleaseCommand{Button: sbp.Buttons()[buttonID]},
+					Commands: []cmd.Command{
+						&cmd.ButtonPress{
+							ButtonLocalID:  btn.LocalID,
+							ButtonGlobalID: btn.GlobalID,
+							DeviceName:     sbp.Name(),
+							DeviceLocalID:  sbp.LocalID(),
+							DeviceGlobalID: sbp.GlobalID(),
+						},
+						&cmd.ButtonRelease{
+							ButtonLocalID:  btn.LocalID,
+							ButtonGlobalID: btn.GlobalID,
+							DeviceName:     sbp.Name(),
+							DeviceLocalID:  sbp.LocalID(),
+							DeviceGlobalID: sbp.GlobalID(),
+						},
 					},
 				}
 			}
@@ -225,12 +239,13 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	}
 
 	//TODO: Move
-	importConnectedByTCP(system, cmdProcessor)
+	importConnectedByTCP(system)
+	importGoHomeHub(system)
 	return system, nil
 }
 
 //TODO: Temp function - import from UI
-func importConnectedByTCP(system *System, cmdProcessor CommandProcessor) {
+func importConnectedByTCP(system *System) {
 	/*
 		//1. Press sync button on hub
 		//2. Execute following url
@@ -257,7 +272,8 @@ func importConnectedByTCP(system *System, cmdProcessor CommandProcessor) {
 		"Description",
 		false,
 		system,
-		cmdProcessor,
+		//TODO: Remove from NewDevice
+		system.CmdProcessor,
 		nil)
 
 	/*
@@ -282,15 +298,124 @@ func importConnectedByTCP(system *System, cmdProcessor CommandProcessor) {
 	system.AddZone(z)
 	system.AddDevice(tcp)
 
+	z1 := system.Zones["142"]
+	z2 := system.Zones["153"]
 	s := &Scene{
 		LocalID:     "xxx",
 		GlobalID:    system.NextGlobalID(),
 		Name:        "Synthetic Scene",
 		Description: "Scene to control lutron + tcp lights",
-		Commands: []Command{
-			&ZoneSetLevelCommand{Zone: system.Zones["142"], Level: 30},
-			&ZoneSetLevelCommand{Zone: system.Zones["153"], Level: 75},
+		Commands: []cmd.Command{
+			&cmd.ZoneSetLevel{
+				ZoneLocalID:  z1.LocalID,
+				ZoneGlobalID: z1.GlobalID,
+				ZoneName:     z1.Name,
+				Level:        30,
+			},
+			&cmd.ZoneSetLevel{
+				ZoneLocalID:  z2.LocalID,
+				ZoneGlobalID: z2.GlobalID,
+				ZoneName:     z2.Name,
+				Level:        30,
+			},
 		},
 	}
 	system.AddScene(s)
+}
+
+func importGoHomeHub(system *System) {
+	ghh := NewDevice(
+		"GoHomeHub",
+		"gohomehub",
+		system.NextGlobalID(),
+		"GoHome Hub",
+		"GoHome Hub Description",
+		false,
+		system,
+		//TODO: Remove from NewDevice
+		system.CmdProcessor,
+		nil)
+
+	/*
+		//TODO: Fix
+		tcp2 := tcp.(*Tcp600gwbDevice)
+		tcp2.Token = "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21"
+		tcp2.Host = "https://192.168.0.23"
+	*/
+
+	// 192.168.0.24 / fluxbulb
+	/*
+		zoneID := "216438039298518643"
+		z := &Zone{
+			LocalID:     zoneID,
+			GlobalID:    system.NextGlobalID(),
+			Name:        "bulb1",
+			Description: "tcp - bulb1",
+			Device:      tcp,
+			Type:        ZTLight,
+			Output:      OTContinuous,
+		}
+		fmt.Println("BULB ID: " + z.GlobalID)
+		tcp.Zones()[z.LocalID] = z
+		system.AddZone(z)
+
+		s := &Scene{
+			LocalID:     "xxx",
+			GlobalID:    system.NextGlobalID(),
+			Name:        "Synthetic Scene",
+			Description: "Scene to control lutron + tcp lights",
+			Commands: []Command{
+				&ZoneSetLevelCommand{Zone: system.Zones["142"], Level: 30},
+				&ZoneSetLevelCommand{Zone: system.Zones["153"], Level: 75},
+			},
+		}
+		system.AddScene(s)*/
+
+	//TODO:
+	//1. Discover bulbs
+	//2. Configure bulb
+	//3. Control bulb
+
+	//Aim: Be able to configure and control bulb completely from gohome app
+
+	z := &Zone{
+		LocalID:     "192.168.0.24",
+		GlobalID:    system.NextGlobalID(),
+		Name:        "FluxBulb",
+		Description: "Flux wifi bulb",
+		Device:      ghh,
+		Type:        ZTLight,
+		Output:      OTContinuous, //TODO: OTRGB
+		Controller:  ZCFluxWIFI,
+	}
+	ghh.Zones()[z.LocalID] = z
+	system.AddDevice(ghh)
+
+	//TODO: Remove
+	c := comm.NewTelnetConnection(comm.TelnetConnectionInfo{
+		PoolSize: 2,
+		Network:  "tcp",
+		Address:  "192.168.0.24:5577",
+	})
+	err := c.Open()
+	if err != nil {
+		fmt.Printf("ERROR CONNECTING: %s", err)
+	} else {
+		b := []byte{0x31, 0x00, 0x00, 0xff, 0x00, 0xf0, 0x0f}
+		var t int = 0
+		for _, v := range b {
+			t += int(v)
+		}
+		cs := t & 0xff
+		b = append(b, byte(cs))
+		n, err := c.Write(b)
+		if err != nil {
+			fmt.Printf("ERROR SENDING %s\n", err)
+		} else {
+			fmt.Printf("Send data: %d\n", n)
+		}
+
+		_ = n
+		//		c.Close()
+	}
 }

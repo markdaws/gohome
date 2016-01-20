@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 )
 
@@ -207,27 +208,40 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			Description: scn.Description,
 		}
 
-		scene.Commands = make([]Command, len(scn.Commands))
-		for i, cmd := range scn.Commands {
-			var finalCmd Command
-			switch cmd.Type {
+		scene.Commands = make([]cmd.Command, len(scn.Commands))
+		for i, command := range scn.Commands {
+			var finalCmd cmd.Command
+			switch command.Type {
 			case "zoneSetLevel":
-				finalCmd = &ZoneSetLevelCommand{
-					Zone:  sys.Zones[cmd.Attributes["ZoneID"].(string)],
-					Level: float32(cmd.Attributes["Level"].(float64)),
+				z := sys.Zones[command.Attributes["ZoneID"].(string)]
+				finalCmd = &cmd.ZoneSetLevel{
+					ZoneLocalID:  z.LocalID,
+					ZoneGlobalID: z.GlobalID,
+					ZoneName:     z.Name,
+					Level:        float32(command.Attributes["Level"].(float64)),
 				}
 			case "buttonPress":
-				finalCmd = &ButtonPressCommand{
-					Button: sys.Buttons[cmd.Attributes["ButtonID"].(string)],
+				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
+				finalCmd = &cmd.ButtonPress{
+					ButtonLocalID:  btn.LocalID,
+					ButtonGlobalID: btn.GlobalID,
+					DeviceName:     btn.Device.Name(),
+					DeviceLocalID:  btn.Device.LocalID(),
+					DeviceGlobalID: btn.Device.GlobalID(),
 				}
 			case "buttonRelease":
-				finalCmd = &ButtonReleaseCommand{
-					Button: sys.Buttons[cmd.Attributes["ButtonID"].(string)],
+				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
+				finalCmd = &cmd.ButtonRelease{
+					ButtonLocalID:  btn.LocalID,
+					ButtonGlobalID: btn.GlobalID,
+					DeviceName:     btn.Device.Name(),
+					DeviceLocalID:  btn.Device.LocalID(),
+					DeviceGlobalID: btn.Device.GlobalID(),
 				}
 			case "sceneSet":
 				//TODO: Implement
 			default:
-				return nil, fmt.Errorf("unknown command type %s", cmd.Type)
+				return nil, fmt.Errorf("unknown command type %s", command.Type)
 			}
 			scene.Commands[i] = finalCmd
 		}
@@ -269,30 +283,31 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 		cmds := make([]jsonCommand, len(scene.Commands))
 		for j, sCmd := range scene.Commands {
 			switch xCmd := sCmd.(type) {
-			case *ZoneSetLevelCommand:
+			case *cmd.ZoneSetLevel:
 				cmds[j] = jsonCommand{
 					Type: "zoneSetLevel",
 					Attributes: map[string]interface{}{
-						"ZoneID": xCmd.Zone.GlobalID,
+						"ZoneID": xCmd.ZoneGlobalID,
 						"Level":  xCmd.Level,
 					},
 				}
-			case *ButtonPressCommand:
+			case *cmd.ButtonPress:
 				cmds[j] = jsonCommand{
 					Type: "buttonPress",
 					Attributes: map[string]interface{}{
-						"ButtonID": xCmd.Button.GlobalID,
+						"ButtonID": xCmd.ButtonGlobalID,
 					},
 				}
-			case *ButtonReleaseCommand:
+			case *cmd.ButtonRelease:
 				cmds[j] = jsonCommand{
 					Type: "buttonRelease",
 					Attributes: map[string]interface{}{
-						"ButtonID": xCmd.Button.GlobalID,
+						"ButtonID": xCmd.ButtonGlobalID,
 					},
 				}
-			case *SceneSetCommand:
+			case *cmd.SceneSet:
 				//TODO:
+				return fmt.Errorf("unknown command type SceneSet")
 			default:
 				return fmt.Errorf("unknown command type")
 			}
