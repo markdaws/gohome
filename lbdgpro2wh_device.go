@@ -268,7 +268,7 @@ func parseZoneCommand(d *Lbdgpro2whDevice, command string) cmd.Command {
 			ZoneLocalID:  z.LocalID,
 			ZoneGlobalID: z.GlobalID,
 			ZoneName:     z.Name,
-			Level:        float32(level),
+			Level:        cmd.Level{Value: float32(level)},
 		}
 	default:
 		return nil

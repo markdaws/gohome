@@ -449,15 +449,8 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 			ZoneLocalID:  zone.LocalID,
 			ZoneGlobalID: zone.GlobalID,
 			ZoneName:     zone.Name,
-			Level:        x.Value,
+			Level:        cmd.Level{Value: x.Value},
 		})
-		/*
-			err = zone.Device.Enqueue(&gohome.ZoneSetLevelCommand{
-				Zone:  zone,
-				Level: x.Value,
-			})*/
-		//TODO: Remove
-		//err = zone.SetLevel(x.Value)
 		if err != nil {
 			log.W("enqueue zone set level failed: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)

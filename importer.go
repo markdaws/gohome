@@ -310,13 +310,13 @@ func importConnectedByTCP(system *System) {
 				ZoneLocalID:  z1.LocalID,
 				ZoneGlobalID: z1.GlobalID,
 				ZoneName:     z1.Name,
-				Level:        30,
+				Level:        cmd.Level{Value: 30},
 			},
 			&cmd.ZoneSetLevel{
 				ZoneLocalID:  z2.LocalID,
 				ZoneGlobalID: z2.GlobalID,
 				ZoneName:     z2.Name,
-				Level:        30,
+				Level:        cmd.Level{Value: 30},
 			},
 		},
 	}
@@ -324,6 +324,7 @@ func importConnectedByTCP(system *System) {
 }
 
 func importGoHomeHub(system *System) {
+	ti := &comm.TelnetConnectionInfo{}
 	ghh := NewDevice(
 		"GoHomeHub",
 		"gohomehub",
@@ -334,7 +335,7 @@ func importGoHomeHub(system *System) {
 		system,
 		//TODO: Remove from NewDevice
 		system.CmdProcessor,
-		nil)
+		ti)
 
 	/*
 		//TODO: Fix
@@ -401,21 +402,30 @@ func importGoHomeHub(system *System) {
 	if err != nil {
 		fmt.Printf("ERROR CONNECTING: %s", err)
 	} else {
-		b := []byte{0x31, 0x00, 0x00, 0xff, 0x00, 0xf0, 0x0f}
-		var t int = 0
-		for _, v := range b {
-			t += int(v)
-		}
-		cs := t & 0xff
-		b = append(b, byte(cs))
-		n, err := c.Write(b)
-		if err != nil {
-			fmt.Printf("ERROR SENDING %s\n", err)
-		} else {
-			fmt.Printf("Send data: %d\n", n)
-		}
+		/*
+			system.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
+				ZoneLocalID:  z.LocalID,
+				ZoneGlobalID: z.GlobalID,
+				ZoneName:     z.Name,
+				Level:        cmd.Level{R: 255, G: 0, B: 0},
+			})
 
-		_ = n
-		//		c.Close()
+			b := []byte{0x31, 0x00, 0x00, 0xff, 0x00, 0xf0, 0x0f}
+			var t int = 0
+			for _, v := range b {
+				t += int(v)
+			}
+			cs := t & 0xff
+			b = append(b, byte(cs))
+			n, err := c.Write(b)
+			if err != nil {
+				fmt.Printf("ERROR SENDING %s\n", err)
+			} else {
+				fmt.Printf("Send data: %d\n", n)
+			}
+
+			_ = n
+			//		c.Close()
+		*/
 	}
 }

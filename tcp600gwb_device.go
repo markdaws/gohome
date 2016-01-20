@@ -49,7 +49,7 @@ func buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Func, error) {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 
-		output := int32(c.Level)
+		output := int32(c.Level.Value)
 
 		// TODO: Move into connection info, user configurable
 		token := "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21"
@@ -72,7 +72,7 @@ func buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Func, error) {
 
 	return &cmd.Func{
 		Func: func() error {
-			level := c.Level
+			level := c.Level.Value
 			if level != 0 {
 				// 0 -> off, 1 -> on, if the light was set to 0 then you have to set a 1 first
 				// before trying to set any other level

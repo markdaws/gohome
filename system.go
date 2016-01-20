@@ -88,6 +88,7 @@ type zoneJSON struct {
 	DeviceID    string `json:"deviceId"`
 	Type        string `json:"type"`
 	Output      string `json:"output"`
+	Controller  string `json:"controller"`
 }
 
 type sceneJSON struct {
@@ -111,6 +112,7 @@ type deviceJSON struct {
 	Stream         bool                      `json:"stream"`
 }
 
+//TODO: rename
 type jsonTelnetConnectionInfo struct {
 	PoolSize int    `json:"poolSize"`
 	Login    string `json:"login"`
@@ -119,6 +121,7 @@ type jsonTelnetConnectionInfo struct {
 	Address  string `json:"address"`
 }
 
+//TODO: rename
 type jsonCommand struct {
 	Type       string                 `json:"type"`
 	Attributes map[string]interface{} `json:"attributes"`
@@ -194,6 +197,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 				Device:      dev,
 				Type:        ZoneTypeFromString(zn.Type),
 				Output:      OutputTypeFromString(zn.Output),
+				Controller:  zn.Controller,
 			}
 			dev.Zones()[z.LocalID] = z
 			sys.AddZone(z)
@@ -218,7 +222,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 					ZoneLocalID:  z.LocalID,
 					ZoneGlobalID: z.GlobalID,
 					ZoneName:     z.Name,
-					Level:        float32(command.Attributes["Level"].(float64)),
+					Level:        cmd.Level{Value: float32(command.Attributes["Level"].(float64))},
 				}
 			case "buttonPress":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
@@ -288,7 +292,7 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 					Type: "zoneSetLevel",
 					Attributes: map[string]interface{}{
 						"ZoneID": xCmd.ZoneGlobalID,
-						"Level":  xCmd.Level,
+						"Level":  xCmd.Level.Value,
 					},
 				}
 			case *cmd.ButtonPress:
@@ -362,6 +366,7 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 				DeviceID:    device.GlobalID(),
 				Type:        z.Type.ToString(),
 				Output:      z.Output.ToString(),
+				Controller:  z.Controller,
 			}
 			zi++
 		}

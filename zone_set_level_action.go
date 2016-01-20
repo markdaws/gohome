@@ -53,7 +53,7 @@ func (a *ZoneSetLevelAction) Execute(s *System) error {
 		ZoneLocalID:  zone.LocalID,
 		ZoneGlobalID: zone.GlobalID,
 		ZoneName:     zone.Name,
-		Level:        a.Level,
+		Level:        cmd.Level{Value: a.Level},
 	})
 }
 

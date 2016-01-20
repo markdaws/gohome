@@ -22,6 +22,7 @@ func V(m string, args ...interface{}) {
 	verbose.Printf("%s\n", fmt.Sprintf(m, args...))
 }
 
+//TODO: Remove
 func W(m string, args ...interface{}) {
 	warning.Printf("%s\n", fmt.Sprintf(m, args...))
 }

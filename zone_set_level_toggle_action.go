@@ -72,7 +72,7 @@ func (a *ZoneSetLevelToggleAction) Execute(s *System) error {
 		ZoneLocalID:  zone.LocalID,
 		ZoneGlobalID: zone.GlobalID,
 		ZoneName:     zone.Name,
-		Level:        level,
+		Level:        cmd.Level{Value: level},
 	})
 }
 
