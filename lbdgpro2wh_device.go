@@ -44,7 +44,7 @@ func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan Event, <-chan bool) {
 	d.evpFire = make(chan Event)
 
 	if d.Stream() {
-		go startStreaming(d)
+		go d.startStreaming()
 	}
 	return d.evpFire, d.evpDone
 }
@@ -114,10 +114,10 @@ func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	}
 }
 
-func startStreaming(d *Lbdgpro2whDevice) {
+func (d *Lbdgpro2whDevice) startStreaming() {
 	//TODO: Stop?
 	for {
-		err := stream(d)
+		err := d.stream()
 		if err != nil {
 			log.E("%s streaming failed: %s", d, err)
 		}
@@ -125,7 +125,7 @@ func startStreaming(d *Lbdgpro2whDevice) {
 	}
 }
 
-func stream(d *Lbdgpro2whDevice) error {
+func (d *Lbdgpro2whDevice) stream() error {
 	log.V("%s attemping to stream events", d)
 	conn, err := d.Connect()
 	if err != nil {
@@ -162,7 +162,7 @@ func stream(d *Lbdgpro2whDevice) error {
 	for scanner.Scan() {
 		if d.evpFire != nil {
 			orig := scanner.Text()
-			if cmd := parseCommandString(d, orig); cmd != nil {
+			if cmd := d.parseCommandString(orig); cmd != nil {
 				d.evpFire <- NewEvent(d, cmd, orig, ETUnknown)
 			}
 		}
@@ -182,24 +182,22 @@ func stream(d *Lbdgpro2whDevice) error {
 	*/
 }
 
-//TODO: put on device
-func parseCommandString(d *Lbdgpro2whDevice, cmd string) cmd.Command {
+func (d *Lbdgpro2whDevice) parseCommandString(cmd string) cmd.Command {
 	switch {
 	case strings.HasPrefix(cmd, "~OUTPUT"),
 		strings.HasPrefix(cmd, "#OUTPUT"):
-		return parseZoneCommand(d, cmd)
+		return d.parseZoneCommand(cmd)
 
 	case strings.HasPrefix(cmd, "~DEVICE"),
 		strings.HasPrefix(cmd, "#DEVICE"):
-		return parseDeviceCommand(d, cmd)
+		return d.parseDeviceCommand(cmd)
 	default:
 		// Ignore commands we don't care about
 		return nil
 	}
 }
 
-//TODO: Put on device
-func parseDeviceCommand(d *Lbdgpro2whDevice, command string) cmd.Command {
+func (d *Lbdgpro2whDevice) parseDeviceCommand(command string) cmd.Command {
 	matches := regexp.MustCompile("[~|#]DEVICE,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(command)
 	if matches == nil || len(matches) != 4 {
 		return nil
@@ -242,8 +240,7 @@ func parseDeviceCommand(d *Lbdgpro2whDevice, command string) cmd.Command {
 	return finalCmd
 }
 
-//TODO: put on device
-func parseZoneCommand(d *Lbdgpro2whDevice, command string) cmd.Command {
+func (d *Lbdgpro2whDevice) parseZoneCommand(command string) cmd.Command {
 	matches := regexp.MustCompile("[~|?]OUTPUT,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(command)
 	if matches == nil || len(matches) != 4 {
 		return nil

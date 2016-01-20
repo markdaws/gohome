@@ -5,9 +5,8 @@ type OutputType uint32
 const (
 	OTContinuous OutputType = iota
 	OTBinary
+	OTRGB
 	OTUnknown
-
-	//TODO: RGB ?
 )
 
 func OutputTypeFromString(ot string) OutputType {
@@ -16,6 +15,8 @@ func OutputTypeFromString(ot string) OutputType {
 		return OTContinuous
 	case "binary":
 		return OTBinary
+	case "rgb":
+		return OTRGB
 	case "unknown":
 		return OTUnknown
 	default:
@@ -30,6 +31,8 @@ func (ot OutputType) ToString() string {
 		return "continuous"
 	case OTBinary:
 		return "binary"
+	case OTRGB:
+		return "rgb"
 	case OTUnknown:
 		return "unknown"
 	default:

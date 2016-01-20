@@ -36,13 +36,13 @@ func (d *Tcp600gwbDevice) Authenticate(c comm.Connection) error {
 func (d *Tcp600gwbDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
-		return buildZoneSetLevelCommand(command)
+		return d.buildZoneSetLevelCommand(command)
 	default:
 		return nil, fmt.Errorf("unsupported command tcp600gwbdevice")
 	}
 }
 
-func buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Func, error) {
+func (d *Tcp600gwbDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Func, error) {
 
 	sendLevel := func(level int32) error {
 		tr := &http.Transport{
