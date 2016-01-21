@@ -1,6 +1,6 @@
-package gohome
+package event
 
-type EventConsumer interface {
+type Consumer interface {
 	EventConsumerID() string
 	StartConsumingEvents() chan<- Event
 }

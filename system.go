@@ -398,3 +398,7 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 	err = ioutil.WriteFile(s.SavePath, b, 0644)
 	return err
 }
+
+func (s *System) FromID(ID string) Device {
+	return s.Devices[ID]
+}

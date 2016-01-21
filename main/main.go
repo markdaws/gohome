@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/www"
 )
 
@@ -25,12 +26,8 @@ func main() {
 	go cp.Process()
 
 	// Processes events
-	eb := gohome.NewEventBroker()
+	eb := event.NewBroker()
 	eb.Init()
-
-	// Event logger used to log event to UI clients via websockets
-	wsLogger := gohome.NewWSEventLogger()
-	eb.AddConsumer(wsLogger)
 
 	// Handles recipe management
 	rm := gohome.NewRecipeManager(eb)
@@ -73,6 +70,10 @@ func main() {
 	for _, recipe := range sys.Recipes {
 		rm.RegisterAndStart(recipe)
 	}
+
+	// Event logger used to log event to UI clients via websockets
+	wsLogger := gohome.NewWSEventLogger(sys)
+	eb.AddConsumer(wsLogger)
 
 	// Start www server
 	done := make(chan bool)

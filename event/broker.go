@@ -1,4 +1,4 @@
-package gohome
+package event
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
-type EventBroker interface {
-	AddProducer(EventProducer)
-	AddConsumer(EventConsumer)
-	RemoveConsumer(EventConsumer)
+type Broker interface {
+	AddProducer(Producer)
+	AddConsumer(Consumer)
+	RemoveConsumer(Consumer)
 	Init()
 }
 
-func NewEventBroker() EventBroker {
+func NewBroker() Broker {
 	return &broker{
 		consumers: make(map[string]chan<- Event),
 	}
@@ -41,7 +41,7 @@ func (b *broker) Init() {
 	}()
 }
 
-func (b *broker) AddProducer(p EventProducer) {
+func (b *broker) AddProducer(p Producer) {
 	if !p.ProducesEvents() {
 		return
 	}
@@ -61,7 +61,7 @@ func (b *broker) AddProducer(p EventProducer) {
 	}()
 }
 
-func (b *broker) AddConsumer(c EventConsumer) {
+func (b *broker) AddConsumer(c Consumer) {
 	ec := c.StartConsumingEvents()
 	if ec == nil {
 		return
@@ -71,7 +71,7 @@ func (b *broker) AddConsumer(c EventConsumer) {
 	b.consumers[c.EventConsumerID()] = ec
 }
 
-func (b *broker) RemoveConsumer(c EventConsumer) {
+func (b *broker) RemoveConsumer(c Consumer) {
 	id := c.EventConsumerID()
 	eventChannel, ok := b.consumers[id]
 	_ = eventChannel

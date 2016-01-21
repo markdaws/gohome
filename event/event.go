@@ -1,4 +1,4 @@
-package gohome
+package event
 
 import (
 	"time"
@@ -10,7 +10,7 @@ type Event struct {
 	ID             int
 	Time           time.Time
 	OriginalString string
-	Device         Device
+	DeviceID       string
 	ReplayCommand  cmd.Command
 	Type           EventType
 }
@@ -28,14 +28,14 @@ const (
 	ETPing
 )
 
-func NewEvent(d Device, cmd cmd.Command, orig string, t EventType) Event {
+func New(deviceID string, cmd cmd.Command, orig string, t EventType) Event {
 	nextId++
 
 	return Event{
 		ID:             nextId,
 		Time:           time.Now(),
 		OriginalString: orig,
-		Device:         d,
+		DeviceID:       deviceID,
 		ReplayCommand:  cmd,
 		Type:           t,
 	}

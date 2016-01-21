@@ -5,17 +5,19 @@ import (
 	"reflect"
 	"time"
 	"unicode/utf8"
+
+	"github.com/markdaws/gohome/event"
 )
 
 type RecipeManager struct {
 	CookBooks      []*CookBook
 	System         *System
-	eventBroker    EventBroker
+	eventBroker    event.Broker
 	triggerFactory map[string]func() Trigger
 	actionFactory  map[string]func() Action
 }
 
-func NewRecipeManager(eb EventBroker) *RecipeManager {
+func NewRecipeManager(eb event.Broker) *RecipeManager {
 	rm := &RecipeManager{}
 	rm.eventBroker = eb
 	rm.CookBooks = loadCookBooks()

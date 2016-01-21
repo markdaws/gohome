@@ -3,6 +3,7 @@ package gohome
 import (
 	"fmt"
 
+	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -50,7 +51,7 @@ func (r *Recipe) EventConsumerID() string {
 	return r.Name + " - " + r.ID
 }
 
-func (r *Recipe) StartConsumingEvents() chan<- Event {
+func (r *Recipe) StartConsumingEvents() chan<- event.Event {
 	log.V("%s started consuming events", r)
 
 	triggerDone := make(chan bool)
@@ -83,7 +84,7 @@ func (r *Recipe) StartConsumingEvents() chan<- Event {
 		}()
 	}
 
-	c := make(chan Event)
+	c := make(chan event.Event)
 	go func() {
 		for e := range c {
 			if !r.enabled || !triggerProcessesEvents {

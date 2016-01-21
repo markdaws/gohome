@@ -5,6 +5,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -25,7 +26,7 @@ type Device interface {
 	Stream() bool
 	BuildCommand(cmd.Command) (*cmd.Func, error)
 
-	EventProducer
+	event.Producer
 	fmt.Stringer
 }
 
@@ -42,7 +43,7 @@ type device struct {
 	zones          map[string]*zone.Zone
 	stream         bool
 	evpDone        chan bool
-	evpFire        chan Event
+	evpFire        chan event.Event
 }
 
 func NewDevice(modelNumber, address, ID, name, description string, stream bool, ci comm.ConnectionInfo) Device {

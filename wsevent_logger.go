@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/markdaws/gohome/event"
 	"github.com/nu7hatch/gouuid"
 )
 
 type WSEventLogger interface {
 	HTTPHandler() func(http.ResponseWriter, *http.Request)
-	EventConsumer
+	event.Consumer
 }
 
 var upgrader websocket.Upgrader
@@ -22,10 +23,12 @@ type wsEventLogger struct {
 	id          string
 	connections map[*connection]bool
 	conn        *websocket.Conn
+	devicer     Devicer
 }
 
-func NewWSEventLogger() WSEventLogger {
+func NewWSEventLogger(devicer Devicer) WSEventLogger {
 	c := wsEventLogger{
+		devicer:     devicer,
 		connections: make(map[*connection]bool),
 	}
 	return &c
@@ -62,8 +65,8 @@ type jsonEvent struct {
 	DeviceName      string    `json:"deviceName"`
 }
 
-func (l *wsEventLogger) StartConsumingEvents() chan<- Event {
-	c := make(chan Event)
+func (l *wsEventLogger) StartConsumingEvents() chan<- event.Event {
+	c := make(chan event.Event)
 
 	go func() {
 		for {
@@ -73,11 +76,16 @@ func (l *wsEventLogger) StartConsumingEvents() chan<- Event {
 				go func() {
 					//TODO: parellelize?
 					for conn, _ := range l.connections {
+						dev := l.devicer.FromID(e.DeviceID)
+						var devName string = "unknown"
+						if dev != nil {
+							devName = dev.Name()
+						}
 						evt := jsonEvent{
 							ID:              strconv.Itoa(e.ID),
 							Time:            e.Time,
 							RawMessage:      e.OriginalString,
-							DeviceName:      e.Device.Name(),
+							DeviceName:      devName,
 							FriendlyMessage: e.String(),
 						}
 						b, err := json.Marshal(evt)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/event"
 )
 
 //TODO: export
@@ -19,7 +20,7 @@ func (d *genericDevice) ModelNumber() string {
 func (d *genericDevice) InitConnections() {
 }
 
-func (d *genericDevice) StartProducingEvents() (<-chan Event, <-chan bool) {
+func (d *genericDevice) StartProducingEvents() (<-chan event.Event, <-chan bool) {
 	return nil, nil
 }
 

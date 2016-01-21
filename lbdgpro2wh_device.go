@@ -10,6 +10,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -40,9 +41,9 @@ func (d *Lbdgpro2whDevice) InitConnections() {
 	log.V("%s connected", d)
 }
 
-func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan Event, <-chan bool) {
+func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan event.Event, <-chan bool) {
 	d.evpDone = make(chan bool)
-	d.evpFire = make(chan Event)
+	d.evpFire = make(chan event.Event)
 
 	if d.Stream() {
 		go d.startStreaming()
@@ -176,7 +177,7 @@ func (d *Lbdgpro2whDevice) stream() error {
 		if d.evpFire != nil {
 			orig := scanner.Text()
 			if cmd := d.parseCommandString(orig); cmd != nil {
-				d.evpFire <- NewEvent(d, cmd, orig, ETUnknown)
+				d.evpFire <- event.New(d.ID(), cmd, orig, event.ETUnknown)
 			}
 		}
 	}

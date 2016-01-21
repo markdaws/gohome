@@ -8,6 +8,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/event"
 )
 
 type Tcp600gwbDevice struct {
@@ -25,7 +26,7 @@ func (d *Tcp600gwbDevice) ModelNumber() string {
 func (d *Tcp600gwbDevice) InitConnections() {
 }
 
-func (d *Tcp600gwbDevice) StartProducingEvents() (<-chan Event, <-chan bool) {
+func (d *Tcp600gwbDevice) StartProducingEvents() (<-chan event.Event, <-chan bool) {
 	return nil, nil
 }
 

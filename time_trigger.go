@@ -1,6 +1,10 @@
 package gohome
 
-import "time"
+import (
+	"time"
+
+	"github.com/markdaws/gohome/event"
+)
 
 // At a certain time e.g. 8pm
 // time no year, no month, no day, hour, minute, second
@@ -79,7 +83,7 @@ func (t *TimeTrigger) Init(done <-chan bool) (<-chan bool, bool) {
 	return t.fire, false
 }
 
-func (t *TimeTrigger) ProcessEvent(e Event) bool {
+func (t *TimeTrigger) ProcessEvent(e event.Event) bool {
 	if !t.At.IsZero() {
 		var count uint64 = 0
 		finalAt := t.At

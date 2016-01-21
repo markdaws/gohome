@@ -1,5 +1,7 @@
 package gohome
 
+import "github.com/markdaws/gohome/event"
+
 type Trigger interface {
 	Type() string
 	Ingredients() []Ingredient
@@ -7,5 +9,5 @@ type Trigger interface {
 	Description() string
 	New() Trigger
 	Init(<-chan bool) (<-chan bool, bool)
-	ProcessEvent(Event) bool
+	ProcessEvent(event.Event) bool
 }

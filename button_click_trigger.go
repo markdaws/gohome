@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/event"
 )
 
 type ButtonClickTrigger struct {
@@ -62,7 +63,7 @@ func (t *ButtonClickTrigger) Init(done <-chan bool) (<-chan bool, bool) {
 	return nil, true
 }
 
-func (t *ButtonClickTrigger) ProcessEvent(e Event) bool {
+func (t *ButtonClickTrigger) ProcessEvent(e event.Event) bool {
 	if time.Now().After(t.startTime.Add(t.MaxDuration)) {
 		t.startTime = time.Now()
 		t.clickCount = 0

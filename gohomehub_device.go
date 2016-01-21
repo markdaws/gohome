@@ -5,6 +5,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/zone"
 )
@@ -58,7 +59,7 @@ func (d *GoHomeHubDevice) Connect() (comm.Connection, error) {
 func (d *GoHomeHubDevice) ReleaseConnection(c comm.Connection) {
 }
 
-func (d *GoHomeHubDevice) StartProducingEvents() (<-chan Event, <-chan bool) {
+func (d *GoHomeHubDevice) StartProducingEvents() (<-chan event.Event, <-chan bool) {
 	return nil, nil
 }
 
