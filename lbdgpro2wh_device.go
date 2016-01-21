@@ -104,7 +104,7 @@ func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				newCmd := &StringCommand{
 					Device: d,
-					Value:  "#DEVICE," + command.DeviceLocalID + "," + command.ButtonLocalID + ",3\r\n",
+					Value:  "#DEVICE," + command.DeviceLocalID + "," + command.ButtonAddress + ",3\r\n",
 				}
 				return newCmd.Execute()
 			},
@@ -115,7 +115,7 @@ func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				cmd := &StringCommand{
 					Device: d,
-					Value:  "#DEVICE," + command.DeviceLocalID + "," + command.ButtonLocalID + ",4\r\n",
+					Value:  "#DEVICE," + command.DeviceLocalID + "," + command.ButtonAddress + ",4\r\n",
 				}
 				return cmd.Execute()
 			},
@@ -228,8 +228,8 @@ func (d *Lbdgpro2whDevice) parseDeviceCommand(command string) cmd.Command {
 	case "3":
 		if btn := sourceDevice.Buttons()[componentID]; btn != nil {
 			finalCmd = &cmd.ButtonPress{
-				ButtonLocalID:  btn.LocalID,
-				ButtonGlobalID: btn.GlobalID,
+				ButtonAddress:  btn.Address,
+				ButtonID:       btn.ID,
 				DeviceName:     d.Name(),
 				DeviceLocalID:  d.LocalID(),
 				DeviceGlobalID: d.GlobalID(),
@@ -238,8 +238,8 @@ func (d *Lbdgpro2whDevice) parseDeviceCommand(command string) cmd.Command {
 	case "4":
 		if btn := sourceDevice.Buttons()[componentID]; btn != nil {
 			finalCmd = &cmd.ButtonRelease{
-				ButtonLocalID:  btn.LocalID,
-				ButtonGlobalID: btn.GlobalID,
+				ButtonAddress:  btn.Address,
+				ButtonID:       btn.ID,
 				DeviceName:     d.Name(),
 				DeviceLocalID:  d.LocalID(),
 				DeviceGlobalID: d.GlobalID(),

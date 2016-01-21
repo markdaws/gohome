@@ -68,9 +68,9 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 		}
 
 	case *cmd.ButtonPress:
-		b, ok := cp.system.Buttons[command.ButtonGlobalID]
+		b, ok := cp.system.Buttons[command.ButtonID]
 		if !ok {
-			return fmt.Errorf("unknown button ID %s", command.ButtonGlobalID)
+			return fmt.Errorf("unknown button ID %s", command.ButtonID)
 		}
 		bCmd, err := b.Device.BuildCommand(command)
 		if err != nil {
@@ -79,9 +79,9 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 		cp.commands <- bCmd
 
 	case *cmd.ButtonRelease:
-		b, ok := cp.system.Buttons[command.ButtonGlobalID]
+		b, ok := cp.system.Buttons[command.ButtonID]
 		if !ok {
-			return fmt.Errorf("unknown button ID %s", command.ButtonGlobalID)
+			return fmt.Errorf("unknown button ID %s", command.ButtonID)
 		}
 		bCmd, err := b.Device.BuildCommand(command)
 		if err != nil {

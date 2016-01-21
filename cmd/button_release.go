@@ -3,8 +3,8 @@ package cmd
 import "fmt"
 
 type ButtonRelease struct {
-	ButtonLocalID  string
-	ButtonGlobalID string
+	ButtonAddress  string
+	ButtonID       string
 	DeviceName     string
 	DeviceLocalID  string
 	DeviceGlobalID string
@@ -12,7 +12,7 @@ type ButtonRelease struct {
 
 func (c *ButtonRelease) FriendlyString() string {
 	return fmt.Sprintf("Device [%s] \"%s\" release %s [%s]",
-		c.DeviceGlobalID, c.DeviceName, c.ButtonLocalID, c.ButtonGlobalID)
+		c.DeviceGlobalID, c.DeviceName, c.ButtonAddress, c.ButtonID)
 }
 func (c *ButtonRelease) String() string {
 	return "cmd.ButtonRelease"

@@ -48,7 +48,7 @@ func (s *System) AddDevice(d Device) {
 }
 
 func (s *System) AddButton(b *Button) {
-	s.Buttons[b.GlobalID] = b
+	s.Buttons[b.ID] = b
 }
 
 func (s *System) AddZone(z *Zone) {
@@ -75,8 +75,8 @@ type systemJSON struct {
 }
 
 type buttonJSON struct {
-	LocalID     string `json:"localId"`
-	GlobalID    string `json:"globalId"`
+	Address     string `json:"address"`
+	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
@@ -177,13 +177,14 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 
 		for _, btn := range d.Buttons {
 			b := &Button{
-				LocalID:     btn.LocalID,
-				GlobalID:    btn.GlobalID,
+				Address:     btn.Address,
+				ID:          btn.ID,
 				Name:        btn.Name,
 				Description: btn.Description,
 				Device:      dev,
 			}
-			dev.Buttons()[b.LocalID] = b
+			//TODO: Add button
+			dev.Buttons()[b.Address] = b
 			sys.AddButton(b)
 		}
 
@@ -226,8 +227,8 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			case "buttonPress":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
 				finalCmd = &cmd.ButtonPress{
-					ButtonLocalID:  btn.LocalID,
-					ButtonGlobalID: btn.GlobalID,
+					ButtonAddress:  btn.Address,
+					ButtonID:       btn.ID,
 					DeviceName:     btn.Device.Name(),
 					DeviceLocalID:  btn.Device.LocalID(),
 					DeviceGlobalID: btn.Device.GlobalID(),
@@ -235,8 +236,8 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			case "buttonRelease":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
 				finalCmd = &cmd.ButtonRelease{
-					ButtonLocalID:  btn.LocalID,
-					ButtonGlobalID: btn.GlobalID,
+					ButtonAddress:  btn.Address,
+					ButtonID:       btn.ID,
 					DeviceName:     btn.Device.Name(),
 					DeviceLocalID:  btn.Device.LocalID(),
 					DeviceGlobalID: btn.Device.GlobalID(),
@@ -298,14 +299,14 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 				cmds[j] = commandJSON{
 					Type: "buttonPress",
 					Attributes: map[string]interface{}{
-						"ButtonID": xCmd.ButtonGlobalID,
+						"ButtonID": xCmd.ButtonID,
 					},
 				}
 			case *cmd.ButtonRelease:
 				cmds[j] = commandJSON{
 					Type: "buttonRelease",
 					Attributes: map[string]interface{}{
-						"ButtonID": xCmd.ButtonGlobalID,
+						"ButtonID": xCmd.ButtonID,
 					},
 				}
 			case *cmd.SceneSet:
@@ -346,8 +347,8 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 		bi := 0
 		for _, btn := range device.Buttons() {
 			d.Buttons[bi] = buttonJSON{
-				LocalID:     btn.LocalID,
-				GlobalID:    btn.GlobalID,
+				Address:     btn.Address,
+				ID:          btn.ID,
 				Name:        btn.Name,
 				Description: btn.Description,
 			}

@@ -86,8 +86,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			}
 
 			b := &Button{
-				LocalID:     btnNumber,
-				GlobalID:    sys.NextGlobalID(),
+				Address:     btnNumber,
+				ID:          sys.NextGlobalID(),
 				Name:        btnName,
 				Description: btnName,
 				Device:      device,
@@ -126,15 +126,15 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 					Description: buttonName,
 					Commands: []cmd.Command{
 						&cmd.ButtonPress{
-							ButtonLocalID:  btn.LocalID,
-							ButtonGlobalID: btn.GlobalID,
+							ButtonAddress:  btn.Address,
+							ButtonID:       btn.ID,
 							DeviceName:     sbp.Name(),
 							DeviceLocalID:  sbp.LocalID(),
 							DeviceGlobalID: sbp.GlobalID(),
 						},
 						&cmd.ButtonRelease{
-							ButtonLocalID:  btn.LocalID,
-							ButtonGlobalID: btn.GlobalID,
+							ButtonAddress:  btn.Address,
+							ButtonID:       btn.ID,
 							DeviceName:     sbp.Name(),
 							DeviceLocalID:  sbp.LocalID(),
 							DeviceGlobalID: sbp.GlobalID(),

@@ -73,7 +73,7 @@ func (t *ButtonClickTrigger) ProcessEvent(e Event) bool {
 		return false
 	}
 
-	if cmd.ButtonGlobalID != t.ButtonID {
+	if cmd.ButtonID != t.ButtonID {
 		return false
 	}
 
