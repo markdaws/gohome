@@ -358,12 +358,8 @@
             switch (this.props.output) {
             case 'binary':
             case 'continuous':
-                var $el = $(ReactDOM.findDOMNode(this));
-                var $value = $el.find('.level');
-                var s = $el.find('.valueSlider');
-                var slider = s.slider({ reversed: false });
-                this.setState({ slider: slider });
-
+                var s = $(ReactDOM.findDOMNode(this)).find('.valueSlider');
+                s.slider({ reversed: false });
                 s.on('change', function(evt) {
                     self.setState({ value: evt.value.newValue });
                 });
@@ -379,14 +375,30 @@
                 break;
 
             case 'rgb':
-                var $el = $(ReactDOM.findDOMNode(this)).find('.picker')
-                ColorPicker($el[0], function(hex, hsv, rgb) {
-                    self.setValue(0, rgb.r, rgb.g, rgb.b, function(err) {
-                        if (err) {
-                            //TODO:
-                            console.error(err);
+                var $el = $(ReactDOM.findDOMNode(this)).find('.zone-rgb .clickInfo span')
+                $el.colorPicker({
+                    doRender:false,
+                    opacity: false,
+                    margin: '0px 0px 0px -30px',
+                    renderCallback: function($e, toggled) {
+                        if (toggled !== undefined) {
+                            // only send a value when the user actually interacts with the
+                            // control not when it is first shown/hidden
+                            return;
                         }
-                    });
+                        var rgb = this.color.colors.rgb;
+                        self.setValue(
+                            0,
+                            parseInt(rgb.r * 255),
+                            parseInt(rgb.g * 255),
+                            parseInt(rgb.b * 255),
+                            function(err) {
+                                if (err) {
+                                    console.log(err);
+                                }
+                            }
+                        );
+                    }
                 });
                 break;
             }
@@ -395,14 +407,21 @@
         infoClicked: function(evt) {
             evt.stopPropagation();
             evt.preventDefault();
-            this.setState({ showSlider: true });
+
+            if (!this.isRgb()) {
+                this.setState({ showSlider: true });
+            }
         },
 
+        isRgb: function() {
+            return this.props.output === 'rgb';
+        },
+        
         setValue: function(value, r, g, b, callback) {
-            var slider = this.state.slider;
-            if (slider) {
+            if (!this.isRgb()) {
                 this.state.slider.slider('setValue', value, false, true);
             }
+            
             this.send({
                 value: parseFloat(value),
                 r: r,
@@ -420,10 +439,10 @@
                 data: JSON.stringify(data),
                 success: function(data) {
                     callback();
-                }.bind(this),
+                },
                 error: function(xhr, status, err) {
                     callback(err);
-                }.bind(this)
+                }
             });
         },
 
@@ -432,32 +451,28 @@
             var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
 
             var stepSize
-            var controller
-            var sliderController = (
-                <div className={"sliderWrapper" + (this.state.showSlider ? "" : " hidden")} >
-                    <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
-                    <span className="level pull-right">{this.state.value}%</span>
-                </div>);
             switch (this.props.output) {
             case 'continuous':
                 stepSize = 1;
-                controller = sliderController;
                 break;
             case 'binary':
                 stepSize = 100;
-                controller = sliderController;
                 break;
             case 'rgb':
-                controller = <div className={"picker cp-default" + (this.state.showSlider ? "" : " hidden")}></div>
+                break;
             default:
                 stepSize = 1;
             }
+            
             return (
-                <div className="cmp-Zone col-xs-12 col-sm-3 col-md-3 col-lg-3">
-                    <button className="btn btn-primary zone" >
+                <div className="cmp-Zone col-xs-12 col-sm-3 col-md-3 col-lg-4">
+                    <button className={"btn btn-primary zone" + (this.isRgb() ? " zone-rgb" : "")}>
                         <i className={icon}></i>
                         <span className="name">{this.props.name}</span>
-                        {controller}
+                        <div className={"sliderWrapper" + (this.state.showSlider ? "" : " hidden")} >
+                            <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
+                            <span className="level pull-right">{this.state.value}%</span>
+                        </div>                
                         <div className={"clickInfo" + (this.state.showSlider ? " hidden" : "")}>
                             <span onClick={this.infoClicked}>Click to control</span>
                         </div>

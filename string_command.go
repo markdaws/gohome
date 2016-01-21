@@ -15,7 +15,7 @@ type StringCommand struct {
 
 func (c *StringCommand) Execute() error {
 	str := fmt.Sprintf(c.Value, c.Args...)
-	log.V("sending command \"%s\" to Device \"%s\"", strings.Replace(strings.Replace(str, "\r", "\\r", -1), "\n", "\\n", -1), c.Device.Name)
+	log.V("sending command \"%s\" to Device \"%s\"", strings.Replace(strings.Replace(str, "\r", "\\r", -1), "\n", "\\n", -1), c.Device.Name())
 
 	conn, err := c.Device.Connect()
 	if err != nil {

@@ -393,6 +393,18 @@ func importGoHomeHub(system *System) {
 		Controller:  ZCFluxWIFI,
 	}
 	ghh.Zones()[z.Address] = z
+	z2 := &Zone{
+		Address:     "192.168.0.24:55777",
+		ID:          system.NextGlobalID(),
+		Name:        "FluxBulb2",
+		Description: "Flux wifi bulb",
+		Device:      ghh,
+		Type:        ZTLight,
+		Output:      OTRGB,
+		Controller:  ZCFluxWIFI,
+	}
+	ghh.Zones()[z2.Address] = z2
+
 	system.AddDevice(ghh)
 
 	//TODO: Remove

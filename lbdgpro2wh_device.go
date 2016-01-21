@@ -94,7 +94,7 @@ func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 				newCmd := &StringCommand{
 					Device: d,
 					Value:  "#OUTPUT," + command.ZoneAddress + ",1,%.2f\r\n",
-					Args:   []interface{}{command.Level},
+					Args:   []interface{}{command.Level.Value},
 				}
 				return newCmd.Execute()
 			},
