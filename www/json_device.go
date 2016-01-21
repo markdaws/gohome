@@ -1,8 +1,8 @@
 package www
 
 type jsonDevice struct {
-	LocalID     string `json:"localId"`
-	GlobalID    string `json:"globalId"`
+	Address     string `json:"address"`
+	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	ModelNumber string `json:"modelNumber"`

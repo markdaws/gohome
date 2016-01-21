@@ -8,8 +8,8 @@ import (
 )
 
 type Device interface {
-	LocalID() string
-	GlobalID() string
+	Address() string
+	ID() string
 	Name() string
 	Description() string
 	ModelNumber() string
@@ -30,8 +30,8 @@ type Device interface {
 }
 
 type device struct {
-	localID        string
-	globalID       string
+	address        string
+	id             string
 	name           string
 	description    string
 	system         *System
@@ -47,10 +47,10 @@ type device struct {
 	cmdProcessor   CommandProcessor
 }
 
-func NewDevice(modelNumber, localID, globalID, name, description string, stream bool, s *System, cp CommandProcessor, ci comm.ConnectionInfo) Device {
+func NewDevice(modelNumber, address, ID, name, description string, stream bool, s *System, cp CommandProcessor, ci comm.ConnectionInfo) Device {
 	device := device{
-		localID:        localID,
-		globalID:       globalID,
+		address:        address,
+		id:             ID,
 		name:           name,
 		description:    description,
 		stream:         stream,
@@ -80,12 +80,12 @@ func NewDevice(modelNumber, localID, globalID, name, description string, stream 
 	}
 }
 
-func (d *device) LocalID() string {
-	return d.localID
+func (d *device) Address() string {
+	return d.address
 }
 
-func (d *device) GlobalID() string {
-	return d.globalID
+func (d *device) ID() string {
+	return d.id
 }
 
 func (d *device) Name() string {

@@ -126,18 +126,18 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 					Description: buttonName,
 					Commands: []cmd.Command{
 						&cmd.ButtonPress{
-							ButtonAddress:  btn.Address,
-							ButtonID:       btn.ID,
-							DeviceName:     sbp.Name(),
-							DeviceLocalID:  sbp.LocalID(),
-							DeviceGlobalID: sbp.GlobalID(),
+							ButtonAddress: btn.Address,
+							ButtonID:      btn.ID,
+							DeviceName:    sbp.Name(),
+							DeviceAddress: sbp.Address(),
+							DeviceID:      sbp.ID(),
 						},
 						&cmd.ButtonRelease{
-							ButtonAddress:  btn.Address,
-							ButtonID:       btn.ID,
-							DeviceName:     sbp.Name(),
-							DeviceLocalID:  sbp.LocalID(),
-							DeviceGlobalID: sbp.GlobalID(),
+							ButtonAddress: btn.Address,
+							ButtonID:      btn.ID,
+							DeviceName:    sbp.Name(),
+							DeviceAddress: sbp.Address(),
+							DeviceID:      sbp.ID(),
 						},
 					},
 				}
@@ -192,7 +192,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		}
 		gohomeDevice := makeDevice("", device, system, false, nil)
 		system.AddDevice(gohomeDevice)
-		sbp.Devices()[gohomeDevice.LocalID()] = gohomeDevice
+		sbp.Devices()[gohomeDevice.Address()] = gohomeDevice
 	}
 
 	zones, ok := root["Zones"].([]interface{})

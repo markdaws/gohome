@@ -44,7 +44,7 @@ func (s *System) NextGlobalID() string {
 }
 
 func (s *System) AddDevice(d Device) {
-	s.Devices[d.GlobalID()] = d
+	s.Devices[d.ID()] = d
 }
 
 func (s *System) AddButton(b *Button) {
@@ -52,7 +52,6 @@ func (s *System) AddButton(b *Button) {
 }
 
 func (s *System) AddZone(z *Zone) {
-	//TODO: These ids should be unique
 	s.Zones[z.ID] = z
 }
 
@@ -101,8 +100,8 @@ type sceneJSON struct {
 }
 
 type deviceJSON struct {
-	LocalID        string                    `json:"localId"`
-	GlobalID       string                    `json:"globalId"`
+	Address        string                    `json:"address"`
+	ID             string                    `json:"id"`
 	Name           string                    `json:"name"`
 	Description    string                    `json:"description"`
 	ModelNumber    string                    `json:"modelNumber"`
@@ -159,7 +158,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			}
 		}
 
-		dev := NewDevice(d.ModelNumber, d.LocalID, d.GlobalID, d.Name, d.Description, d.Stream, sys, cmdProcessor, ci)
+		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, sys, cmdProcessor, ci)
 		if ci != nil {
 			dev.ConnectionInfo().(*comm.TelnetConnectionInfo).Authenticator = dev
 		}
@@ -169,10 +168,10 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 	// Have to go back through patching up devices to point to their child devices
 	// since we only store device ID pointers in the JSON
 	for _, d := range s.Devices {
-		dev := sys.Devices[d.GlobalID]
+		dev := sys.Devices[d.ID]
 		for _, dID := range d.DeviceIDs {
 			childDev := sys.Devices[dID]
-			dev.Devices()[childDev.LocalID()] = childDev
+			dev.Devices()[childDev.Address()] = childDev
 		}
 
 		for _, btn := range d.Buttons {
@@ -227,20 +226,20 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			case "buttonPress":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
 				finalCmd = &cmd.ButtonPress{
-					ButtonAddress:  btn.Address,
-					ButtonID:       btn.ID,
-					DeviceName:     btn.Device.Name(),
-					DeviceLocalID:  btn.Device.LocalID(),
-					DeviceGlobalID: btn.Device.GlobalID(),
+					ButtonAddress: btn.Address,
+					ButtonID:      btn.ID,
+					DeviceName:    btn.Device.Name(),
+					DeviceAddress: btn.Device.Address(),
+					DeviceID:      btn.Device.ID(),
 				}
 			case "buttonRelease":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
 				finalCmd = &cmd.ButtonRelease{
-					ButtonAddress:  btn.Address,
-					ButtonID:       btn.ID,
-					DeviceName:     btn.Device.Name(),
-					DeviceLocalID:  btn.Device.LocalID(),
-					DeviceGlobalID: btn.Device.GlobalID(),
+					ButtonAddress: btn.Address,
+					ButtonID:      btn.ID,
+					DeviceName:    btn.Device.Name(),
+					DeviceAddress: btn.Device.Address(),
+					DeviceID:      btn.Device.ID(),
 				}
 			case "sceneSet":
 				//TODO: Implement
@@ -325,8 +324,8 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 	out.Devices = make([]deviceJSON, len(s.Devices))
 	for _, device := range s.Devices {
 		d := deviceJSON{
-			LocalID:     device.LocalID(),
-			GlobalID:    device.GlobalID(),
+			Address:     device.Address(),
+			ID:          device.ID(),
 			Name:        device.Name(),
 			Description: device.Description(),
 			ModelNumber: device.ModelNumber(),
@@ -363,7 +362,7 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 				ID:          z.ID,
 				Name:        z.Name,
 				Description: z.Description,
-				DeviceID:    device.GlobalID(),
+				DeviceID:    device.ID(),
 				Type:        z.Type.ToString(),
 				Output:      z.Output.ToString(),
 				Controller:  z.Controller,
@@ -374,7 +373,7 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 		d.DeviceIDs = make([]string, len(device.Devices()))
 		di := 0
 		for _, dev := range device.Devices() {
-			d.DeviceIDs[di] = dev.GlobalID()
+			d.DeviceIDs[di] = dev.ID()
 			di++
 		}
 		out.Devices[i] = d

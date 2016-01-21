@@ -409,8 +409,8 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		var i int32 = 0
 		for _, device := range system.Devices {
 			devices[i] = jsonDevice{
-				LocalID:     device.LocalID(),
-				GlobalID:    device.GlobalID(),
+				Address:     device.Address(),
+				ID:          device.ID(),
 				Name:        device.Name(),
 				Description: device.Description(),
 				ModelNumber: device.ModelNumber(),
