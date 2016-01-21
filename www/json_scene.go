@@ -1,6 +1,7 @@
 package www
 
 type jsonScene struct {
+	Address     string `json:"address"`
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`

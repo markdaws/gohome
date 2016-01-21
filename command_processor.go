@@ -47,6 +47,7 @@ func (cp *commandProcessor) Process() {
 func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 	log.V("cmdProcessor:enqueue:%s", c)
 
+	//TODO: use devicer (defined in this namespace), remove reference to system, move into cmd package
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
 
@@ -61,9 +62,9 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 		cp.commands <- zCmd
 
 	case *cmd.SceneSet:
-		s, ok := cp.system.Scenes[command.SceneGlobalID]
+		s, ok := cp.system.Scenes[command.SceneID]
 		if !ok {
-			return fmt.Errorf("unknown scene ID %s", command.SceneGlobalID)
+			return fmt.Errorf("unknown scene ID %s", command.SceneID)
 		}
 		for _, sceneCmd := range s.Commands {
 			err := cp.Enqueue(sceneCmd)

@@ -366,7 +366,12 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 		scenes := make(scenes, len(system.Scenes), len(system.Scenes))
 		var i int32 = 0
 		for _, scene := range system.Scenes {
-			scenes[i] = jsonScene{ID: scene.GlobalID, Name: scene.Name, Description: scene.Description}
+			scenes[i] = jsonScene{
+				Address:     scene.Address,
+				ID:          scene.ID,
+				Name:        scene.Name,
+				Description: scene.Description,
+			}
 			i++
 		}
 		sort.Sort(scenes)
@@ -496,8 +501,8 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 		}
 
 		err = system.CmdProcessor.Enqueue(&cmd.SceneSet{
-			SceneGlobalID: scene.GlobalID,
-			SceneName:     scene.Name,
+			SceneID:   scene.ID,
+			SceneName: scene.Name,
 		})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

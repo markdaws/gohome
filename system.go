@@ -58,7 +58,7 @@ func (s *System) AddZone(z *zone.Zone) {
 }
 
 func (s *System) AddScene(scn *Scene) {
-	s.Scenes[scn.GlobalID] = scn
+	s.Scenes[scn.ID] = scn
 }
 
 func (s *System) AddRecipe(r *Recipe) {
@@ -94,8 +94,8 @@ type zoneJSON struct {
 }
 
 type sceneJSON struct {
-	LocalID     string        `json:"localId"`
-	GlobalID    string        `json:"globalId"`
+	Address     string        `json:"address"`
+	ID          string        `json:"id"`
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
 	Commands    []commandJSON `json:"commands"`
@@ -207,8 +207,8 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 
 	for _, scn := range s.Scenes {
 		scene := &Scene{
-			LocalID:     scn.LocalID,
-			GlobalID:    scn.GlobalID,
+			Address:     scn.Address,
+			ID:          scn.ID,
 			Name:        scn.Name,
 			Description: scn.Description,
 		}
@@ -279,8 +279,8 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 	var i = 0
 	for _, scene := range s.Scenes {
 		out.Scenes[i] = sceneJSON{
-			LocalID:     scene.LocalID,
-			GlobalID:    scene.GlobalID,
+			Address:     scene.Address,
+			ID:          scene.ID,
 			Name:        scene.Name,
 			Description: scene.Description,
 		}

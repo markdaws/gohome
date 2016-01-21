@@ -42,8 +42,8 @@ func (a *SceneSetAction) Execute(s *System) error {
 	}
 
 	return s.CmdProcessor.Enqueue(&cmd.SceneSet{
-		SceneGlobalID: scene.GlobalID,
-		SceneName:     scene.Name,
+		SceneID:   scene.ID,
+		SceneName: scene.Name,
 	})
 }
 

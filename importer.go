@@ -119,8 +119,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				var globalID = system.NextGlobalID()
 				var btn = sbp.Buttons()[buttonID]
 				sceneContainer[globalID] = &Scene{
-					LocalID:     buttonID,
-					GlobalID:    globalID,
+					Address:     buttonID,
+					ID:          globalID,
 					Name:        buttonName,
 					Description: buttonName,
 					Commands: []cmd.Command{
@@ -301,8 +301,8 @@ func importConnectedByTCP(system *System) {
 	z1 := system.Zones["142"]
 	z2 := system.Zones["153"]
 	s := &Scene{
-		LocalID:     "xxx",
-		GlobalID:    system.NextGlobalID(),
+		Address:     "xxx",
+		ID:          system.NextGlobalID(),
 		Name:        "Synthetic Scene",
 		Description: "Scene to control lutron + tcp lights",
 		Commands: []cmd.Command{
