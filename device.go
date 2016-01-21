@@ -13,7 +13,6 @@ type Device interface {
 	Name() string
 	Description() string
 	ModelNumber() string
-	System() *System
 	Buttons() map[string]*Button
 	Devices() map[string]Device
 	Zones() map[string]*Zone
@@ -45,14 +44,13 @@ type device struct {
 	evpFire        chan Event
 }
 
-func NewDevice(modelNumber, address, ID, name, description string, stream bool, s *System, ci comm.ConnectionInfo) Device {
+func NewDevice(modelNumber, address, ID, name, description string, stream bool, ci comm.ConnectionInfo) Device {
 	device := device{
 		address:        address,
 		id:             ID,
 		name:           name,
 		description:    description,
 		stream:         stream,
-		system:         s,
 		buttons:        make(map[string]*Button),
 		devices:        make(map[string]Device),
 		zones:          make(map[string]*Zone),
@@ -95,10 +93,6 @@ func (d *device) Description() string {
 
 func (d *device) ConnectionInfo() comm.ConnectionInfo {
 	return d.connectionInfo
-}
-
-func (d *device) System() *System {
-	return d.system
 }
 
 func (d *device) Buttons() map[string]*Button {

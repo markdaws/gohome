@@ -159,7 +159,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			}
 		}
 
-		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, sys, ci)
+		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, ci)
 		if ci != nil {
 			dev.ConnectionInfo().(*comm.TelnetConnectionInfo).Authenticator = dev
 		}

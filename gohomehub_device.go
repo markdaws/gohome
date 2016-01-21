@@ -86,7 +86,7 @@ func (d *GoHomeHubDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 //TODO: Level should be a type with value,r,g,b, not just one value
 func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Func, error) {
 
-	z, ok := d.System().Zones[c.ZoneID]
+	z, ok := d.Zones()[c.ZoneAddress]
 	if !ok {
 		return nil, fmt.Errorf("unknown zone ID %s", c.ZoneID)
 	}
