@@ -54,7 +54,7 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 		if !ok {
 			return fmt.Errorf("unknown zone ID %s", command.ZoneID)
 		}
-		zCmd, err := z.Device.BuildCommand(command)
+		zCmd, err := cp.system.Devices[z.DeviceID].BuildCommand(command)
 		if err != nil {
 			return err
 		}

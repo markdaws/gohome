@@ -10,6 +10,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/zone"
 )
 
 type Importer interface {
@@ -200,40 +201,40 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 	fmt.Println("\nZONES")
 	for _, zoneMap := range zones {
-		zone := zoneMap.(map[string]interface{})
-		fmt.Printf("%d: %s\n", int(zone["ID"].(float64)), zone["Name"])
+		z := zoneMap.(map[string]interface{})
+		fmt.Printf("%d: %s\n", int(z["ID"].(float64)), z["Name"])
 
-		var zoneID string = strconv.FormatFloat(zone["ID"].(float64), 'f', 0, 64)
-		var zoneName string = zone["Name"].(string)
-		var zoneTypeFinal ZoneType = ZTLight
-		if zoneType, ok := zone["Type"].(string); ok {
+		var zoneID string = strconv.FormatFloat(z["ID"].(float64), 'f', 0, 64)
+		var zoneName string = z["Name"].(string)
+		var zoneTypeFinal zone.Type = zone.ZTLight
+		if zoneType, ok := z["Type"].(string); ok {
 			switch zoneType {
 			case "light":
-				zoneTypeFinal = ZTLight
+				zoneTypeFinal = zone.ZTLight
 			case "shade":
-				zoneTypeFinal = ZTShade
+				zoneTypeFinal = zone.ZTShade
 			}
 		}
-		var outputTypeFinal OutputType = OTContinuous
-		if outputType, ok := zone["Output"].(string); ok {
+		var outputTypeFinal zone.Output = zone.OTContinuous
+		if outputType, ok := z["Output"].(string); ok {
 			switch outputType {
 			case "binary":
-				outputTypeFinal = OTBinary
+				outputTypeFinal = zone.OTBinary
 			case "continuous":
-				outputTypeFinal = OTContinuous
+				outputTypeFinal = zone.OTContinuous
 			}
 		}
-		z := &Zone{
+		newZone := &zone.Zone{
 			Address:     zoneID,
 			ID:          system.NextGlobalID(),
 			Name:        zoneName,
 			Description: zoneName,
-			Device:      sbp,
+			DeviceID:    sbp.ID(),
 			Type:        zoneTypeFinal,
 			Output:      outputTypeFinal,
 		}
-		system.AddZone(z)
-		sbp.Zones()[z.Address] = z
+		system.AddZone(newZone)
+		sbp.Zones()[newZone.Address] = newZone
 	}
 
 	//TODO: Move
@@ -282,14 +283,14 @@ func importConnectedByTCP(system *System) {
 	*/
 
 	zoneID := "216438039298518643"
-	z := &Zone{
+	z := &zone.Zone{
 		Address:     zoneID,
 		ID:          system.NextGlobalID(),
 		Name:        "bulb1",
 		Description: "tcp - bulb1",
-		Device:      tcp,
-		Type:        ZTLight,
-		Output:      OTContinuous,
+		DeviceID:    tcp.ID(),
+		Type:        zone.ZTLight,
+		Output:      zone.OTContinuous,
 		Controller:  "TCP - LED A19 11W",
 	}
 	fmt.Println("BULB ID: " + z.ID)
@@ -376,26 +377,26 @@ func importGoHomeHub(system *System) {
 
 	//Aim: Be able to configure and control bulb completely from gohome app
 
-	z := &Zone{
+	z := &zone.Zone{
 		Address:     "192.168.0.24:5577",
 		ID:          system.NextGlobalID(),
 		Name:        "FluxBulb",
 		Description: "Flux wifi bulb",
-		Device:      ghh,
-		Type:        ZTLight,
-		Output:      OTRGB,
-		Controller:  ZCFluxWIFI,
+		DeviceID:    ghh.ID(),
+		Type:        zone.ZTLight,
+		Output:      zone.OTRGB,
+		Controller:  zone.ZCFluxWIFI,
 	}
 	ghh.Zones()[z.Address] = z
-	z2 := &Zone{
+	z2 := &zone.Zone{
 		Address:     "192.168.0.24:55777",
 		ID:          system.NextGlobalID(),
 		Name:        "FluxBulb2",
 		Description: "Flux wifi bulb",
-		Device:      ghh,
-		Type:        ZTLight,
-		Output:      OTRGB,
-		Controller:  ZCFluxWIFI,
+		DeviceID:    ghh.ID(),
+		Type:        zone.ZTLight,
+		Output:      zone.OTRGB,
+		Controller:  zone.ZCFluxWIFI,
 	}
 	ghh.Zones()[z2.Address] = z2
 

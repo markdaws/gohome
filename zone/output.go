@@ -1,15 +1,15 @@
-package gohome
+package zone
 
-type OutputType uint32
+type Output uint32
 
 const (
-	OTContinuous OutputType = iota
+	OTContinuous Output = iota
 	OTBinary
 	OTRGB
 	OTUnknown
 )
 
-func OutputTypeFromString(ot string) OutputType {
+func OutputFromString(ot string) Output {
 	switch ot {
 	case "continuous":
 		return OTContinuous
@@ -25,7 +25,7 @@ func OutputTypeFromString(ot string) OutputType {
 }
 
 //TODO: Gen this automatically
-func (ot OutputType) ToString() string {
+func (ot Output) ToString() string {
 	switch ot {
 	case OTContinuous:
 		return "continuous"

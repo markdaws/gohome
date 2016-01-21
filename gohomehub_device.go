@@ -6,6 +6,7 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/log"
+	"github.com/markdaws/gohome/zone"
 )
 
 type GoHomeHubDevice struct {
@@ -25,7 +26,7 @@ func (d *GoHomeHubDevice) InitConnections() {
 	// set up pools for each one
 	for _, z := range d.Zones() {
 		switch z.Controller {
-		case ZCFluxWIFI:
+		case zone.ZCFluxWIFI:
 			ci := comm.TelnetConnectionInfo{
 				PoolSize: 2,
 				Network:  "tcp",
@@ -92,7 +93,7 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 	}
 
 	switch z.Controller {
-	case ZCFluxWIFI:
+	case zone.ZCFluxWIFI:
 		return &cmd.Func{
 			Func: func() error {
 

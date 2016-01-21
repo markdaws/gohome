@@ -5,6 +5,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/zone"
 )
 
 type Device interface {
@@ -15,7 +16,7 @@ type Device interface {
 	ModelNumber() string
 	Buttons() map[string]*Button
 	Devices() map[string]Device
-	Zones() map[string]*Zone
+	Zones() map[string]*zone.Zone
 	ConnectionInfo() comm.ConnectionInfo
 	InitConnections()
 	Connect() (comm.Connection, error)
@@ -38,7 +39,7 @@ type device struct {
 	connectionInfo comm.ConnectionInfo
 	buttons        map[string]*Button
 	devices        map[string]Device
-	zones          map[string]*Zone
+	zones          map[string]*zone.Zone
 	stream         bool
 	evpDone        chan bool
 	evpFire        chan Event
@@ -53,7 +54,7 @@ func NewDevice(modelNumber, address, ID, name, description string, stream bool, 
 		stream:         stream,
 		buttons:        make(map[string]*Button),
 		devices:        make(map[string]Device),
-		zones:          make(map[string]*Zone),
+		zones:          make(map[string]*zone.Zone),
 		connectionInfo: ci,
 	}
 
@@ -103,7 +104,7 @@ func (d *device) Devices() map[string]Device {
 	return d.devices
 }
 
-func (d *device) Zones() map[string]*Zone {
+func (d *device) Zones() map[string]*zone.Zone {
 	return d.zones
 }
 

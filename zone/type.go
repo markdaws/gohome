@@ -1,9 +1,9 @@
-package gohome
+package zone
 
-type ZoneType uint32
+type Type uint32
 
 const (
-	ZTUnknown ZoneType = iota
+	ZTUnknown Type = iota
 	ZTLight
 	ZTShade
 
@@ -15,7 +15,7 @@ const (
 	//TODO: Document how to add support for a new device
 )
 
-func ZoneTypeFromString(zt string) ZoneType {
+func TypeFromString(zt string) Type {
 	switch zt {
 	case "light":
 		return ZTLight
@@ -29,7 +29,7 @@ func ZoneTypeFromString(zt string) ZoneType {
 }
 
 //TODO: Gen this automatically
-func (zt ZoneType) ToString() string {
+func (zt Type) ToString() string {
 	switch zt {
 	case ZTLight:
 		return "light"

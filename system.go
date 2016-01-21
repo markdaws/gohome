@@ -8,6 +8,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/zone"
 )
 
 type System struct {
@@ -16,7 +17,7 @@ type System struct {
 	SavePath     string
 	Devices      map[string]Device
 	Scenes       map[string]*Scene
-	Zones        map[string]*Zone
+	Zones        map[string]*zone.Zone
 	Buttons      map[string]*Button
 	Recipes      map[string]*Recipe
 	CmdProcessor CommandProcessor
@@ -30,7 +31,7 @@ func NewSystem(name, desc string, cmdProcessor CommandProcessor) *System {
 		Description:  desc,
 		Devices:      make(map[string]Device),
 		Scenes:       make(map[string]*Scene),
-		Zones:        make(map[string]*Zone),
+		Zones:        make(map[string]*zone.Zone),
 		Buttons:      make(map[string]*Button),
 		Recipes:      make(map[string]*Recipe),
 		CmdProcessor: cmdProcessor,
@@ -52,7 +53,7 @@ func (s *System) AddButton(b *Button) {
 	s.Buttons[b.ID] = b
 }
 
-func (s *System) AddZone(z *Zone) {
+func (s *System) AddZone(z *zone.Zone) {
 	s.Zones[z.ID] = z
 }
 
@@ -189,14 +190,14 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 		}
 
 		for _, zn := range d.Zones {
-			z := &Zone{
+			z := &zone.Zone{
 				Address:     zn.Address,
 				ID:          zn.ID,
 				Name:        zn.Name,
 				Description: zn.Description,
-				Device:      dev,
-				Type:        ZoneTypeFromString(zn.Type),
-				Output:      OutputTypeFromString(zn.Output),
+				DeviceID:    dev.ID(),
+				Type:        zone.TypeFromString(zn.Type),
+				Output:      zone.OutputFromString(zn.Output),
 				Controller:  zn.Controller,
 			}
 			dev.Zones()[z.Address] = z
