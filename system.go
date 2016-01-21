@@ -21,6 +21,7 @@ type System struct {
 	Recipes      map[string]*Recipe
 	CmdProcessor CommandProcessor
 	nextGlobalID int
+	//TODO: Last modified
 }
 
 func NewSystem(name, desc string, cmdProcessor CommandProcessor) *System {
@@ -158,7 +159,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			}
 		}
 
-		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, sys, cmdProcessor, ci)
+		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, sys, ci)
 		if ci != nil {
 			dev.ConnectionInfo().(*comm.TelnetConnectionInfo).Authenticator = dev
 		}

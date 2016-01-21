@@ -13,6 +13,10 @@ type CommandProcessor interface {
 	SetSystem(s *System)
 }
 
+type CommandBuilder interface {
+	Build(cmd.Command) (*cmd.Func, error)
+}
+
 func NewCommandProcessor() CommandProcessor {
 	return &commandProcessor{
 		commands: make(chan *cmd.Func, 10000),
@@ -45,6 +49,7 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
+
 		z, ok := cp.system.Zones[command.ZoneID]
 		if !ok {
 			return fmt.Errorf("unknown zone ID %s", command.ZoneID)

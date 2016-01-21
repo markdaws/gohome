@@ -43,11 +43,9 @@ type device struct {
 	stream         bool
 	evpDone        chan bool
 	evpFire        chan Event
-	pool           comm.ConnectionPool
-	cmdProcessor   CommandProcessor
 }
 
-func NewDevice(modelNumber, address, ID, name, description string, stream bool, s *System, cp CommandProcessor, ci comm.ConnectionInfo) Device {
+func NewDevice(modelNumber, address, ID, name, description string, stream bool, s *System, ci comm.ConnectionInfo) Device {
 	device := device{
 		address:        address,
 		id:             ID,
@@ -58,7 +56,6 @@ func NewDevice(modelNumber, address, ID, name, description string, stream bool, 
 		buttons:        make(map[string]*Button),
 		devices:        make(map[string]Device),
 		zones:          make(map[string]*Zone),
-		cmdProcessor:   cp,
 		connectionInfo: ci,
 	}
 

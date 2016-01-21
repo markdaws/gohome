@@ -71,7 +71,6 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			deviceName,
 			stream,
 			sys,
-			cmdProcessor,
 			ci)
 
 		for _, buttonMap := range deviceMap["Buttons"].([]interface{}) {
@@ -275,7 +274,6 @@ func importConnectedByTCP(system *System) {
 		false,
 		system,
 		//TODO: Remove from NewDevice
-		system.CmdProcessor,
 		nil)
 
 	/*
@@ -337,7 +335,6 @@ func importGoHomeHub(system *System) {
 		false,
 		system,
 		//TODO: Remove from NewDevice
-		system.CmdProcessor,
 		ti)
 
 	/*

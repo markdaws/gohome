@@ -151,3 +151,29 @@ Exporting
  - Version number
  - Date Last Modified
  - Date Created
+
+
+System
+ - Devices Collection
+ - Scenes Collection
+ - Zones Collection
+ - Buttons Collection
+ - Recipes Collection
+
+type CollectionUtil interface {
+     ItemWithID(collection, id)
+     ForEach(collection, id, func(item interface{}))
+     Len(collection)
+}
+
+package collections
+- Collection
+- SystemCollections
+  Device -> Collection
+  Scenes
+  Zones
+  Buttons
+  Recipes
+
+
+

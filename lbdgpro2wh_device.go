@@ -15,6 +15,7 @@ import (
 
 type Lbdgpro2whDevice struct {
 	device
+	pool comm.ConnectionPool
 }
 
 func (d *Lbdgpro2whDevice) ModelNumber() string {
@@ -74,7 +75,7 @@ func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
 	return nil
 }
 
-func (d *device) Connect() (comm.Connection, error) {
+func (d *Lbdgpro2whDevice) Connect() (comm.Connection, error) {
 	c := d.pool.Get()
 	if c == nil {
 		return nil, fmt.Errorf("%s - connect failed, no connection available", d)
@@ -82,7 +83,7 @@ func (d *device) Connect() (comm.Connection, error) {
 	return c, nil
 }
 
-func (d *device) ReleaseConnection(c comm.Connection) {
+func (d *Lbdgpro2whDevice) ReleaseConnection(c comm.Connection) {
 	d.pool.Release(c)
 }
 
