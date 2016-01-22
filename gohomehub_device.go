@@ -124,7 +124,12 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 				cs := t & 0xff
 				b = append(b, byte(cs))
 
-				conn := d.pools[z.Controller].Get()
+				pool, ok := d.pools[z.Controller]
+				if !ok || pool == nil {
+					return fmt.Errorf("gohomehub - connection pool not ready")
+				}
+
+				conn := pool.Get()
 				if conn == nil {
 					return fmt.Errorf("gohomehub - error connecting, no available connections")
 				}

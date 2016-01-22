@@ -31,11 +31,12 @@ type Device interface {
 }
 
 type device struct {
-	address        string
-	id             string
-	name           string
-	description    string
-	system         *System
+	address     string
+	id          string
+	name        string
+	description string
+	system      *System
+	//TODO: delete
 	producesEvents bool
 	connectionInfo comm.ConnectionInfo
 	buttons        map[string]*Button

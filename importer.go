@@ -8,8 +8,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fromkeith/gossdp"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/connectedbytcp"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -243,8 +245,33 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	return system, nil
 }
 
+type tcpListener struct {
+}
+
+func (tcpListener) Response(m gossdp.ResponseMessage) {
+	fmt.Printf("%+v\n", m)
+}
+
 //TODO: Temp function - import from UI
 func importConnectedByTCP(system *System) {
+
+	/*
+		b := tcpListener{}
+		c, err := gossdp.NewSsdpClient(b)
+		if err != nil {
+			log.Println("Failed to start client: ", err)
+			return
+		}
+		defer c.Stop()
+		go c.Start()
+
+		err = c.ListenFor("urn:greenwavereality-com:service:gop:1")
+		time.Sleep(30 * time.Second)
+	*/
+	/*
+		{MaxAge:7200 SearchType:urn:greenwavereality-com:service:gop:1 DeviceId:71403833960916 Usn:uuid:71403833960916::urn:greenwavereality-com:service:gop:1 Location:https://192.168.0.23 Server:linux UPnP/1.1 Apollo3/3.0.74 RawResponse:0xc2080305a0 Urn:urn:greenwavereality-com:service:gop:1}
+	*/
+
 	/*
 			//1. Press sync button on hub
 			//2. Execute following url
@@ -265,6 +292,15 @@ func importConnectedByTCP(system *System) {
 		fmt.Println(string(xx))
 		fmt.Println(err)
 	*/
+
+	data, err := connectedbytcp.RoomGetCarousel("https://192.168.0.23", "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21")
+	fmt.Printf("%+v\n", data)
+	fmt.Println(err)
+
+	token, err := connectedbytcp.GetToken("https://192.168.0.23")
+	fmt.Printf("TOKEN: %s", token)
+	fmt.Println(err)
+
 	tcp := NewDevice(
 		"TCP600GWB",
 		"tcphub",

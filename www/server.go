@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/discovery"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -60,6 +61,9 @@ func (s *wwwServer) ListenAndServe(port string) error {
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
+
+	r.HandleFunc("/api/v1/discovery/{modelNumber}", apiDiscoveryHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}/token", apiDiscoveryTokenHandler(s.system)).Methods("GET")
 
 	r.HandleFunc("/api/v1/cookbooks", apiCookBooksHandler(s.recipeManager.CookBooks)).Methods("GET")
 	r.HandleFunc("/api/v1/cookbooks/{id}", apiCookBookHandler(s.recipeManager.CookBooks)).Methods("GET")
@@ -512,5 +516,55 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(struct{}{})
+	}
+}
+
+func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+
+		//This is blocking
+		data, err := discovery.Discover(vars["modelNumber"])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(struct {
+			Location string `json:"location"`
+		}{Location: data["location"]})
+	}
+}
+
+func apiDiscoveryTokenHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+
+		//This is blocking
+		token, err := discovery.DiscoverToken(vars["modelNumber"], r.URL.Query().Get("address"))
+		if err != nil {
+			if err == discovery.ErrUnauthorized {
+				// Let the caller know this was a specific kind of error
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(struct {
+					Unauthorized bool `json:"unauthorized"`
+				}{Unauthorized: true})
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(struct {
+			Token string `json:"token"`
+		}{Token: token})
 	}
 }

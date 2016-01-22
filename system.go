@@ -23,6 +23,7 @@ type System struct {
 	CmdProcessor CommandProcessor
 	nextGlobalID int
 	//TODO: Last modified
+	//TODO: Add area concept
 }
 
 func NewSystem(name, desc string, cmdProcessor CommandProcessor) *System {

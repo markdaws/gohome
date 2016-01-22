@@ -65,13 +65,20 @@ body {
     font-style: italic;
     font-size: 14px;
 }
-/*Temp*/
-.cmp-Zone .picker {
-/*   position:relative;
-    z-index:1;*/
-}
 
 .cmp-System {
+}
+
+.cmp-Import .content {
+    margin-top: 12px;
+}
+
+.cmp-ImportTCP600GWB .btn {
+    width: 145px;
+}
+.cmp-ImportTCP600GWB .fa.fa-spinner {
+    margin-left: 12px;
+    font-size: 22px;
 }
 
 .cmp-DeviceList .header {

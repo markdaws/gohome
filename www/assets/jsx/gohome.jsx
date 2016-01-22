@@ -99,15 +99,255 @@
     });
 
     var System = React.createClass({
+        getInitialState: function() {
+            return {
+                importing: false,
+            };
+        },
+
+        importProduct: function() {
+            this.setState({ importing: true });
+        },
+
+        cancelImport: function() {
+            this.setState({ importing: false });
+        },
+        
         render: function() {
+            var body, importBtn
+            if (this.state.importing) {
+                body = <Import/>
+                importBtn = <button className="btn btn-danger" onClick={this.cancelImport}>Cancel</button>
+            } else {
+                body = <SystemDeviceList/>
+                importBtn = <button className="btn btn-primary" onClick={this.importProduct}>Import</button>
+            }
             return (
                 <div className="cmp-System">
-                    <SystemDeviceList />
+                    {importBtn}
+                    {body}
                 </div>
             );
         }
     });
 
+    var Import = React.createClass({
+        getInitialState: function() {
+            return { selectedProduct: null };
+        },
+
+        productSelected: function(evt) {
+            this.setState({ selectedProduct: evt.target.value });
+        },
+
+        render: function() {
+
+            var body
+            switch(this.state.selectedProduct) {
+            case 'TCP600GWB':
+                body = <ImportTCP600GWB />
+                break;
+            default:
+                body = null;
+            }
+            return (
+                <div className="cmp-Import">
+                    <h4>Select a product to import</h4>
+                    <select className="form-control" onChange={this.productSelected} value={this.state.selectedProduct}>
+                        <option value="">Choose ...</option>
+                        <option value="LLL">Lutron</option>
+                        <option value="TCP600GWB">Connected By TCP Hub</option>
+                        <option value="FluxWIFI">Flux Wifi</option>
+                    </select>
+                    <div className="content">
+                        {body}
+                    </div>
+                </div>
+            )
+        }
+    });
+
+    var ImportTCP600GWB = React.createClass({
+        getInitialState: function() {
+            return {
+                location: "",
+                locationFailed: false,
+                discoveryInProgress: false,
+                tokenInProgress: false,
+                token: '',
+                tokenError: false,
+                tokenMissingAddress: false
+            };
+        },
+        
+        autoDiscover: function() {
+            var self = this;
+            this.setState({ discoveryInProgress: true });
+            
+            $.ajax({
+                url: '/api/v1/discovery/TCP600GWB',
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    self.setState({
+                        location: data.location,
+                        discoveryInProgress: false
+                    });
+                },
+                error: function(xhr, status, err) {
+                    self.setState({
+                        locationFailed: true,
+                        discoveryInProgress: false
+                    });
+                }
+            });
+        },
+
+        getToken: function() {
+            var device = this.refs.devInfo.getValues();
+            this.setState({
+                tokenMissingAddress: false,
+                tokenInProgress: true
+            });
+            
+            if (device.address === '') {
+                this.setState({
+                    tokenMissingAddress: true,
+                    tokenInProgress: false
+                });
+                return;
+            }
+            
+            var self = this;
+            $.ajax({
+                url: '/api/v1/discovery/TCP600GWB/token?address=' + device.address,
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    self.setState({
+                        tokenInProgress: false,
+                        token: data.token,
+                        tokenError: data.unauthorized
+                    });
+                },
+                error: function(xhr, status, err) {
+                    self.setState({
+                        tokenError: true,
+                        tokenInProgress: false
+                    });
+                }
+            });
+        },
+        
+        render: function() {
+            return (
+                <div className="cmp-ImportTCP600GWB">
+                    <p>Click to automatically retrieve the network address for this device</p>
+                    <div className="form-group has-error">
+                        <button className={"btn btn-primary" + (this.state.discoveryInProgress ? " disabled" : "")} onClick={this.autoDiscover}>Discover Address</button>
+                        <i className={"fa fa-spinner fa-spin" + (this.state.discoveryInProgress ? "" : " hidden")}></i>
+                        <span className={"help-block" + (this.state.locationFailed ? "" : " hidden")}>Error - Auto discovery failed, verify your TCP device is connected to the same network. If this continues to fail, use the official TCP app to get the device address</span>
+                </div>
+                <p>Click to retrive the security token. Only click this after pressing the "sync" button on your physical ConnectedByTCP hub</p>
+                <div className="form-group has-error">
+                    <button className={"btn btn-primary" + (this.state.tokenInProgress ? " disabled" : "")} onClick={this.getToken}>Get Token</button>
+                    <i className={"fa fa-spinner fa-spin" + (this.state.tokenInProgress ? "" : " hidden")}></i>
+                    <span className={"help-block" + (this.state.tokenError ? "" : " hidden")}>Error - unable to get the token, make sure you press the physical "sync" button on the TCP hub device before clicking the "Get Token" button otherwise this will fail</span>
+                    <span className={"help-block" + (this.state.tokenMissingAddress ? "" : " hidden")}>Error - you must put a valid network address in the "Address" field first before clicking this button</span>
+                </div>
+                <DeviceInfo token={this.state.token} tokenError={this.state.tokenError} address={this.state.location} ref="devInfo"/>
+                </div>
+            )
+        }
+    });
+
+    var DeviceInfo = React.createClass({
+        getInitialState: function() {
+            return {
+                device: {
+                    name: '',
+                    description: '',
+                    address: this.props.address,
+                    id: '',
+                    modelNumber: '',
+                    securityToken: this.props.token
+                }
+            }
+        },
+
+        getValues: function() {
+            return this.state.device;
+        },
+
+        componentWillReceiveProps: function(nextProps) {
+            var device = this.state.device;
+            if (nextProps.address != "") {
+                device.address = nextProps.address;
+            }
+
+            if (nextProps.token != "") {
+                device.securityToken = nextProps.token;
+            }
+            this.setState({ device: device });
+        },
+
+        nameChanged: function(evt) {
+            var device = this.state.device;
+            device.name = evt.target.value;
+            this.setState({ device: device });
+        },
+
+        descriptionChanged: function(evt) {
+            var device = this.state.device;
+            device.description = evt.target.value;
+            this.setState({ device: device });
+        },
+
+        addressChanged: function(evt) {
+            var device = this.state.device;
+            device.address = evt.target.value;
+            this.setState({ device: device });
+        },
+
+        tokenChanged: function(evt) {
+            var device = this.state.device;
+            device.securityToken = evt.target.value;
+            this.setState({ device: device });
+        },
+        
+        render: function() {
+            //TODO:need unique name for id and htmlFor
+            var device = this.state.device;
+            return (
+                <div className="cmp-DeviceInfo well">
+                    <div className="form-group">
+                        <label className="control-label" htmlFor="name">Name</label>
+                        <input value={device.name} onChange={this.nameChanged} className="name form-control" type="text" id="name"/>
+                        <span className={"help-block hidden"}>Error - TODO:</span>
+                    </div>
+                    <div className="form-group">
+                        <label className="control-label" htmlFor="description">Description</label>
+                        <input value={device.description} onChange={this.descriptionChanged} className="description form-control" type="text" id="description"/>
+                        <span className={"help-block hidden"}>Error - TODO:</span>
+                    </div>
+                    <div className="form-group">
+                        <label className="control-label" htmlFor="address">Address</label>
+                        <input value={device.address} onChange={this.addressChanged} className="address form-control" type="text" id="address"/>
+                        <span className={"help-block hidden"}>Error - TODO:</span>
+                </div>
+                <div className={"form-group" + (this.props.tokenError ? " has-error" : "")}>
+                        <label className="control-label" htmlFor="securitytoken">Security Token</label>
+                        <input value={device.securityToken} onChange={this.tokenChanged} className="securitytoken form-control" type="text" id="securitytoken"/>
+                        <span className={"help-block" + (this.props.tokenError ? "" : " hidden")}>Error - failed to fetch token, make sure you pressed the sync button on the tcp hub device before requesting the token</span>
+                    </div>
+
+                <button className="btn btn-primary">Test Connection</button>
+                
+                </div>
+            );
+        }
+    });
+    
     var SystemDeviceList = React.createClass({
         getInitialState: function() {
             return {
@@ -348,7 +588,8 @@
         getInitialState: function() {
             return {
                 value: 0,
-                showSlider: false
+                showSlider: false,
+                slider: null
             }
         },
 
@@ -360,6 +601,7 @@
             case 'continuous':
                 var s = $(ReactDOM.findDOMNode(this)).find('.valueSlider');
                 s.slider({ reversed: false });
+                self.setState({ slider: s });
                 s.on('change', function(evt) {
                     self.setState({ value: evt.value.newValue });
                 });
@@ -394,7 +636,7 @@
                             parseInt(rgb.b * 255),
                             function(err) {
                                 if (err) {
-                                    console.log(err);
+                                    console.error(err);
                                 }
                             }
                         );
@@ -465,7 +707,7 @@
             }
             
             return (
-                <div className="cmp-Zone col-xs-12 col-sm-3 col-md-3 col-lg-4">
+                <div className="cmp-Zone col-xs-12 col-sm-4 col-md-4 col-lg-4">
                     <button className={"btn btn-primary zone" + (this.isRgb() ? " zone-rgb" : "")}>
                         <i className={icon}></i>
                         <span className="name">{this.props.name}</span>
@@ -516,7 +758,7 @@
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({ id: this.props.scene.id }),
                 success: function(data) {
-                    console.log('set the scene');
+                    //TODO: Common way in UI to display success/error
                 }.bind(this),
                 error: function(xhr, status, err) {
                     console.error(err.toString());
@@ -858,7 +1100,6 @@
             var actionIngredientErr;
             var err = this.state.saveError;
             var errDesc = '';
-            console.log(err);
             if (err) {
                 switch (err.paramId) {
                 case 'name':
@@ -1094,7 +1335,6 @@
             Object.keys(this.refs).map(function(key) {
                 var val = self.refs[key].value();
                 if (val != undefined) {
-                    console.log(val)
                     json[key] = val;
                 }
             });

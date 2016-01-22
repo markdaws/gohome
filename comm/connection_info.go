@@ -3,6 +3,7 @@ package comm
 type ConnectionInfo interface {
 }
 
+//TODO: Delete?
 type TelnetConnectionInfo struct {
 	PoolSize int
 
@@ -13,10 +14,4 @@ type TelnetConnectionInfo struct {
 
 	Network string
 	Address string
-}
-
-type HTTPConnectionInfo struct {
-	PoolSize int
-	HostName string
-	Port     string
 }

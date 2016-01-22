@@ -14,6 +14,7 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
+//TODO: make lutron package
 type Lbdgpro2whDevice struct {
 	device
 	pool comm.ConnectionPool
