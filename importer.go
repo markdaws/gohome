@@ -71,7 +71,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			deviceID,
 			sys.NextGlobalID(),
 			deviceName,
-			deviceName,
+			"",
 			stream,
 			ci)
 

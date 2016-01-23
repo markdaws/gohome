@@ -382,7 +382,7 @@
                     <span className={"help-block" + (this.state.tokenError ? "" : " hidden")}>Error - unable to get the token, make sure you press the physical "sync" button on the TCP hub device before clicking the "Get Token" button otherwise this will fail</span>
                     <span className={"help-block" + (this.state.tokenMissingAddress ? "" : " hidden")}>Error - you must put a valid network address in the "Address" field first before clicking this button</span>
                 </div>
-                <DeviceInfo token={this.state.token} tokenError={this.state.tokenError} address={this.state.location} ref="devInfo"/>
+                <DeviceInfo showToken="true" token={this.state.token} tokenError={this.state.tokenError} address={this.state.location} ref="devInfo"/>
                 </div>
             )
         }
@@ -392,12 +392,13 @@
         getInitialState: function() {
             return {
                 device: {
-                    name: '',
-                    description: '',
+                    name: this.props.name || '',
+                    description: this.props.description || '',
                     address: this.props.address,
                     id: '',
                     modelNumber: '',
-                    securityToken: this.props.token
+                    securityToken: this.props.token,
+                    showToken: false
                 }
             }
         },
@@ -408,10 +409,15 @@
 
         componentWillReceiveProps: function(nextProps) {
             var device = this.state.device;
+            if (nextProps.name != "") {
+                device.name = nextProps.name;
+            }
+            if (nextProps.description != "") {
+                device.description = nextProps.description;
+            }
             if (nextProps.address != "") {
                 device.address = nextProps.address;
             }
-
             if (nextProps.token != "") {
                 device.securityToken = nextProps.token;
             }
@@ -449,6 +455,18 @@
         render: function() {
             //TODO:need unique name for id and htmlFor
             var device = this.state.device;
+
+            var token
+            if (this.props.showToken) {
+                token = (
+                    <div className={"form-group" + (this.props.tokenError ? " has-error" : "")}>
+                        <label className="control-label" htmlFor="securitytoken">Security Token</label>
+                        <input value={device.securityToken} onChange={this.tokenChanged} className="securitytoken form-control" type="text" id="securitytoken"/>
+                        <span className={"help-block" + (this.props.tokenError ? "" : " hidden")}>Error - failed to fetch token, make sure you pressed the sync button on the tcp hub device before requesting the token</span>
+                    </div>
+                );
+            }
+            
             return (
                 <div className="cmp-DeviceInfo well">
                     <div className="form-group">
@@ -466,12 +484,7 @@
                         <input value={device.address} onChange={this.addressChanged} className="address form-control" type="text" id="address"/>
                         <span className={"help-block hidden"}>Error - TODO:</span>
                 </div>
-                <div className={"form-group" + (this.props.tokenError ? " has-error" : "")}>
-                        <label className="control-label" htmlFor="securitytoken">Security Token</label>
-                        <input value={device.securityToken} onChange={this.tokenChanged} className="securitytoken form-control" type="text" id="securitytoken"/>
-                        <span className={"help-block" + (this.props.tokenError ? "" : " hidden")}>Error - failed to fetch token, make sure you pressed the sync button on the tcp hub device before requesting the token</span>
-                    </div>
-
+                {token}
                 <button className="btn btn-primary" onClick={this.testConnection}>Test Connection</button>
                 
                 </div>
@@ -510,7 +523,12 @@
         render: function() {
             var deviceNodes = this.state.devices.map(function(device) {
                 return (
-                    <Device device={device} key={device.globalId}/>
+                    <DeviceInfo
+                    name={device.name}
+                    description={device.description}
+                    address={device.address}
+                    key={device.id}
+                    />
                 );
             })
             
@@ -523,47 +541,8 @@
                     <div className="header clearfix">
                         <button className="btn btn-primary pull-right" onClick={this.newClicked}>New Device</button>
                     </div>
+                    <h3 className={this.state.devices.length > 0 ? "" : " hidden"}>Devices</h3>
                     {body}
-                </div>
-            );
-        }
-    });
-
-    var Device = React.createClass({
-        getInitialState: function() {
-            return {
-                editMode: false,
-                //TODO: anti-pattern?
-                name: this.props.device.name,
-                description: this.props.device.description,
-            };
-        },
-
-        deleteClicked: function() {
-        },
-
-        nameChanged: function(evt) {
-            
-        },
-
-        descriptionChanged: function(evt) {
-        },
-
-        render: function() {
-            //TODO:need unique name for id and htmlFor
-            var device = this.props.device;
-            return (
-                <div className="cmp-Device well clearfix">
-                    <div className="form-group">
-                        <label className="control-label" htmlFor="name">Name</label>
-                        <input value={this.state.name} onChange={this.nameChanged} className="name form-control" type="text" id="name"/>
-                        <span className={"help-block invisible"}>Error - TODO:</span>
-                    </div>
-
-                {/*
-                <h4>{device.name}</h4>
-                    <p>{device.description}</p>
-                    <button className="btn btn-danger pull-right" onClick={this.deleteClicked} >Delete</button>*/}
                 </div>
             );
         }

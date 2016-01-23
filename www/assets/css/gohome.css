@@ -93,6 +93,11 @@ body {
     margin-bottom: 12px;
 }
 
+.cmp-DeviceInfo label {
+    font-size: 12px;
+    font-weight: normal;
+}
+
 .cmp-ControlApp .nav-tabs a {
     font-size: 18px;
     color: #000;
