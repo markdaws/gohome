@@ -58,15 +58,16 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 				Controller:  zone.ZCFluxWIFI,
 			}
 
-			zones[i*2+1] = zone.Zone{
-				Address:     info.IP + "xx",
-				Name:        info.ID + " what",
-				Description: "Flux WIFI - " + info.Model,
-				Type:        zone.ZTShade,
-				Output:      zone.OTContinuous,
-				Controller:  zone.ZCFluxWIFI,
-			}
-
+			//TODO: remove
+			/*
+				zones[i*2+1] = zone.Zone{
+					Address:     info.IP + "xx",
+					Name:        info.ID + " what",
+					Description: "Flux WIFI - " + info.Model,
+					Type:        zone.ZTShade,
+					Output:      zone.OTContinuous,
+					Controller:  zone.ZCFluxWIFI,
+				}*/
 		}
 		return zones, nil
 	}

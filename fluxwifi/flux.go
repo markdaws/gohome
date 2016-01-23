@@ -3,6 +3,7 @@ package fluxwifi
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"strings"
 	"time"
@@ -15,7 +16,7 @@ import (
 //TODO: Get current level
 
 // SetLevel changes the RGB values of the bulb. //TODO: conn parameter
-func SetLevel(r, b, g byte, conn net.Conn) error {
+func SetLevel(r, g, b byte, w io.Writer) error {
 	bytes := []byte{0x31, r, g, b, 0x00, 0xf0, 0x0f}
 	var t int = 0
 	for _, v := range bytes {
@@ -23,7 +24,7 @@ func SetLevel(r, b, g byte, conn net.Conn) error {
 	}
 	cs := t & 0xff
 	bytes = append(bytes, byte(cs))
-	_, err := conn.Write(bytes)
+	_, err := w.Write(bytes)
 	return err
 }
 

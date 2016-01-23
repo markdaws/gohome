@@ -36,6 +36,7 @@ func (d *GoHomeHubDevice) InitConnections() {
 			}
 			createConnection := func() comm.Connection {
 				conn := comm.NewTelnetConnection(ci)
+				//TODO: Need to get some ping mechanism
 				/*
 					conn.SetPingCallback(func() error {
 						if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
@@ -127,9 +128,10 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 				}
 
 				defer func() {
+					fmt.Printf("ghh - release: %s\n", conn.Status())
 					d.pools[z.Controller].Release(conn)
 				}()
-				return fluxwifi.SetLevel(rV, gV, bV, conn.(*comm.TelnetConnection).Conn)
+				return fluxwifi.SetLevel(rV, gV, bV, conn)
 			},
 		}, nil
 	default:

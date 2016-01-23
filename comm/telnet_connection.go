@@ -9,7 +9,7 @@ import (
 )
 
 type TelnetConnection struct {
-	Conn         net.Conn
+	conn         net.Conn
 	info         TelnetConnectionInfo
 	pingCallback PingCallback
 	status       ConnectionStatus
