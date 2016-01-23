@@ -67,7 +67,7 @@ func TestNewConnectionPool(t *testing.T) {
 		t.Errorf("Unexpected value, expected (!nil, !nil, !nil, nil) got: %v, %v, %v, %v", c1, c2, c3, c4)
 	}
 
-	if !c1.OpenCalled || !c2.OpenCalled || !c2.OpenCalled {
+	if !c1.OpenCalled || !c2.OpenCalled || !c3.OpenCalled {
 		t.Errorf("Open not called on all new connections\n")
 	}
 

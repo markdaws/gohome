@@ -73,6 +73,10 @@ func (d *GoHomeHubDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
 		return d.buildZoneSetLevelCommand(command)
+	case *cmd.ZoneTurnOn:
+		return d.buildZoneTurnOnCommand(command)
+	case *cmd.ZoneTurnOff:
+		return d.buildZoneTurnOffCommand(command)
 	case *cmd.ButtonPress:
 		//TODO: Phantom buttons?
 		return nil, fmt.Errorf("goHomeHubDevice ButtonPressCommand not supported")
@@ -87,7 +91,68 @@ func (d *GoHomeHubDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	return nil, fmt.Errorf("goHomeHubDevice unsupported command")
 }
 
-//TODO: Level should be a type with value,r,g,b, not just one value
+func (d *GoHomeHubDevice) buildZoneTurnOnCommand(c *cmd.ZoneTurnOn) (*cmd.Func, error) {
+	z, ok := d.Zones()[c.ZoneAddress]
+	if !ok {
+		return nil, fmt.Errorf("unknown zone ID %s", c.ZoneID)
+	}
+
+	switch z.Controller {
+	case zone.ZCFluxWIFI:
+		return &cmd.Func{
+			Func: func() error {
+				pool, ok := d.pools[z.Controller]
+				if !ok || pool == nil {
+					return fmt.Errorf("gohomehub - connection pool not ready")
+				}
+
+				conn := pool.Get()
+				if conn == nil {
+					return fmt.Errorf("gohomehub - error connecting, no available connections")
+				}
+
+				defer func() {
+					d.pools[z.Controller].Release(conn)
+				}()
+				return fluxwifi.TurnOn(conn)
+			},
+		}, nil
+	default:
+		return nil, fmt.Errorf("unsupported zone controller")
+	}
+}
+
+func (d *GoHomeHubDevice) buildZoneTurnOffCommand(c *cmd.ZoneTurnOff) (*cmd.Func, error) {
+	z, ok := d.Zones()[c.ZoneAddress]
+	if !ok {
+		return nil, fmt.Errorf("unknown zone ID %s", c.ZoneID)
+	}
+
+	switch z.Controller {
+	case zone.ZCFluxWIFI:
+		return &cmd.Func{
+			Func: func() error {
+				pool, ok := d.pools[z.Controller]
+				if !ok || pool == nil {
+					return fmt.Errorf("gohomehub - connection pool not ready")
+				}
+
+				conn := pool.Get()
+				if conn == nil {
+					return fmt.Errorf("gohomehub - error connecting, no available connections")
+				}
+
+				defer func() {
+					d.pools[z.Controller].Release(conn)
+				}()
+				return fluxwifi.TurnOff(conn)
+			},
+		}, nil
+	default:
+		return nil, fmt.Errorf("unsupported zone controller")
+	}
+}
+
 func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Func, error) {
 
 	z, ok := d.Zones()[c.ZoneAddress]
@@ -134,7 +199,6 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 			},
 		}, nil
 	default:
-		fmt.Println(z.Controller)
 		return nil, fmt.Errorf("unsupported zone controller")
 	}
 }

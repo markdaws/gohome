@@ -50,7 +50,28 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 	//TODO: use devicer (defined in this namespace), remove reference to system, move into cmd package
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
+		z, ok := cp.system.Zones[command.ZoneID]
+		if !ok {
+			return fmt.Errorf("unknown zone ID %s", command.ZoneID)
+		}
+		zCmd, err := cp.system.Devices[z.DeviceID].BuildCommand(command)
+		if err != nil {
+			return err
+		}
+		cp.commands <- zCmd
 
+	case *cmd.ZoneTurnOn:
+		z, ok := cp.system.Zones[command.ZoneID]
+		if !ok {
+			return fmt.Errorf("unknown zone ID %s", command.ZoneID)
+		}
+		zCmd, err := cp.system.Devices[z.DeviceID].BuildCommand(command)
+		if err != nil {
+			return err
+		}
+		cp.commands <- zCmd
+
+	case *cmd.ZoneTurnOff:
 		z, ok := cp.system.Zones[command.ZoneID]
 		if !ok {
 			return fmt.Errorf("unknown zone ID %s", command.ZoneID)

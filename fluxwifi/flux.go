@@ -17,14 +17,27 @@ import (
 
 // SetLevel changes the RGB values of the bulb. //TODO: conn parameter
 func SetLevel(r, g, b byte, w io.Writer) error {
-	bytes := []byte{0x31, r, g, b, 0x00, 0xf0, 0x0f}
+	return write(w, []byte{0x31, r, g, b, 0x00, 0xf0, 0x0f})
+}
+
+// TurnOn turns the bulb on
+func TurnOn(w io.Writer) error {
+	return write(w, []byte{0x71, 0x23, 0x0f})
+}
+
+// TurnOff turns the bulb off
+func TurnOff(w io.Writer) error {
+	return write(w, []byte{0x71, 0x24, 0x0f})
+}
+
+func write(w io.Writer, b []byte) error {
 	var t int
-	for _, v := range bytes {
+	for _, v := range b {
 		t += int(v)
 	}
 	cs := t & 0xff
-	bytes = append(bytes, byte(cs))
-	_, err := w.Write(bytes)
+	b = append(b, byte(cs))
+	_, err := w.Write(b)
 	return err
 }
 

@@ -81,6 +81,10 @@ body {
     width: 145px;
 }
 
+.cmp-ZoneInfo label {
+    font-size: 12px;
+    font-weight: normal;
+}
 .cmp-ZoneInfo .btnOff {
     margin-left: 12px;
 }

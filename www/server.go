@@ -443,6 +443,7 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 		}
 
 		var x struct {
+			CMD   string  `json:"cmd"`
 			Value float32 `json:"value"`
 			R     byte    `json:"r"`
 			G     byte    `json:"g"`
@@ -460,17 +461,36 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 			return
 		}
 
-		err = system.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
-			ZoneAddress: zone.Address,
-			ZoneID:      zone.ID,
-			ZoneName:    zone.Name,
-			Level: cmd.Level{
-				Value: x.Value,
-				R:     x.R,
-				G:     x.G,
-				B:     x.B,
-			},
-		})
+		switch x.CMD {
+		case "setLevel":
+			err = system.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
+				ZoneAddress: zone.Address,
+				ZoneID:      zone.ID,
+				ZoneName:    zone.Name,
+				Level: cmd.Level{
+					Value: x.Value,
+					R:     x.R,
+					G:     x.G,
+					B:     x.B,
+				},
+			})
+		case "turnOn":
+			err = system.CmdProcessor.Enqueue(&cmd.ZoneTurnOn{
+				ZoneAddress: zone.Address,
+				ZoneID:      zone.ID,
+				ZoneName:    zone.Name,
+			})
+		case "turnOff":
+			err = system.CmdProcessor.Enqueue(&cmd.ZoneTurnOff{
+				ZoneAddress: zone.Address,
+				ZoneID:      zone.ID,
+				ZoneName:    zone.Name,
+			})
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

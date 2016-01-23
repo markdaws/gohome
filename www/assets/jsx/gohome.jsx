@@ -248,6 +248,23 @@
             this.setState({ zone : zone });
         },
 
+        /*
+        send: function(data, callback) {
+        $.ajax({
+                url: '/api/v1/systems/1/zones/' + this.props.id,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function(data) {
+                    callback();
+                },
+                error: function(xhr, status, err) {
+                    callback(err);
+                }
+            });
+        }*/
+
         
         render: function() {
             //TODO unique names for ids
@@ -779,11 +796,36 @@
             }
             
             this.send({
+                cmd: 'setLevel',
                 value: parseFloat(value),
                 r: r,
                 g: g,
                 b: b
             }, callback);
+        },
+
+        turnOn: function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            this.send({
+                cmd: 'turnOn'
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                }
+            });
+        },
+
+        turnOff: function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            this.send({
+                cmd: 'turnOff'
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                }
+            });
         },
 
         send: function(data, callback) {
@@ -827,11 +869,14 @@
                         <span className="name">{this.props.name}</span>
                         <div className={"sliderWrapper" + (this.state.showSlider ? "" : " hidden")} >
                             <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
-                            <span className="level pull-right">{this.state.value}%</span>
+                <span className="level pull-right">{this.state.value}%</span>
                         </div>                
                         <div className={"clickInfo" + (this.state.showSlider ? " hidden" : "")}>
                             <span onClick={this.infoClicked}>Click to control</span>
-                        </div>
+                </div>
+                                <a className="btn btn-default" onClick={this.turnOn}>On</a>
+                <a className="btn btn-default" onClick={this.turnOff}>Of</a>
+
                     </button>
                 </div>
             )

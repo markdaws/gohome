@@ -38,7 +38,6 @@ func main() {
 		system, err := gohome.NewImporter().ImportFromFile("main/ip.json", "L-BDGPRO2-WH", cp)
 		if err != nil {
 			panic("Failed to import: " + err.Error())
-			return
 		}
 
 		system.SavePath = config.StartupConfigPath
