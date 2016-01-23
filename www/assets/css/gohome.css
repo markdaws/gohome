@@ -72,13 +72,17 @@ body {
 .cmp-Import .content {
     margin-top: 12px;
 }
+.cmp-Import .fa.fa-spinner {
+    margin-left: 12px;
+    font-size: 22px;
+}
 
 .cmp-ImportTCP600GWB .btn {
     width: 145px;
 }
-.cmp-ImportTCP600GWB .fa.fa-spinner {
+
+.cmp-ZoneInfo .btnOff {
     margin-left: 12px;
-    font-size: 22px;
 }
 
 .cmp-DeviceList .header {

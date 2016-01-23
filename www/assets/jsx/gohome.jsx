@@ -147,6 +147,9 @@
             case 'TCP600GWB':
                 body = <ImportTCP600GWB />
                 break;
+            case 'FluxWIFI':
+                body = <ImportFluxWIFI />
+                break;
             default:
                 body = null;
             }
@@ -164,6 +167,113 @@
                     </div>
                 </div>
             )
+        }
+    });
+
+    var ImportFluxWIFI = React.createClass({
+        getInitialState: function() {
+            return {
+                discovering: false,
+                zones: []
+            };
+        },
+        
+        discover: function() {
+            this.setState({ discovering: true });
+
+            var self = this;
+            $.ajax({
+                url: '/api/v1/discovery/FluxWIFI/zones',
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    self.setState({
+                        discovering: false,
+                        zones: data
+                    });
+                },
+                error: function(xhr, status, err) {
+                    self.setState({
+                        discovering: false
+                    });
+                    console.error(err);
+                }
+            });
+        },
+
+        render: function() {
+
+            var zones
+            if (this.state.zones.length > 0) {
+                zones = this.state.zones.map(function(zone) {
+                    return <ZoneInfo zone={zone} key={zone.address} />
+                })
+            }
+            return (
+                <div className="cmp-ImportFluxWIFI">
+                <p>In order to import Flux WIFI bulbs, you must have a GoHomeHub device in your system, if not you need to create one first //TODO: Better show device picker first</p>
+                <button className={"btn btn-primary" + (this.state.discovering ? " disabled" : "")} onClick={this.discover}>Discover Zones</button>
+                <i className={"fa fa-spinner fa-spin" + (this.state.discovering ? "" : " hidden")}></i>
+
+                <h3 className={this.state.zones.length > 0 ? "" : " hidden"}>Zones</h3>
+                {zones}
+                </div>
+            );
+        }
+    });
+
+    var ZoneInfo = React.createClass({
+        mixins: [UniqueIdMixin],
+        getInitialState: function() {
+            return {
+                zone: this.props.zone
+            }
+        },
+
+        nameChanged: function(evt) {
+            var zone = this.state.zone;
+            zone.name = evt.target.value;
+            this.setState({ zone : zone });
+        },
+
+        descriptionChanged: function(evt) {
+            var zone = this.state.zone;
+            zone.description = evt.target.value;
+            this.setState({ zone : zone });
+        },
+
+        addressChanged: function(evt) {
+            var zone = this.state.zone;
+            zone.address = evt.target.value;
+            this.setState({ zone : zone });
+        },
+
+        
+        render: function() {
+            //TODO unique names for ids
+
+            var zone = this.state.zone
+            return (
+                <div className="cmp-ZoneInfo well">
+                    <div className="form-group">
+                        <label className="control-label" htmlFor={"name" + this.getNextIdAndIncrement()}>Name</label>
+                        <input value={zone.name} onChange={this.nameChanged} className="name form-control" type="text" id={"name" + this.getCurrentId()}/>
+                    </div>
+                    <div className="form-group">
+                        <label className="control-label" htmlFor={"description" + this.getNextIdAndIncrement()}>Description</label>
+                        <input value={zone.description} onChange={this.descriptionChanged} className="description form-control" type="text" id={"description" + this.getCurrentId()}/>
+                    </div>
+                    <div className="form-group">
+                        <label className="control-label" htmlFor={"address" + this.getNextIdAndIncrement()}>Address</label>
+                        <input value={zone.address} onChange={this.addressChanged} className="address form-control" type="text" id={"address" + this.getCurrentId()}/>
+                    </div>
+
+                    <div className="clearfix">
+                        <button className="btn btn-primary pull-left" onClick={this.turnOn}>Turn On</button>
+                        <button className="btn btn-primary btnOff pull-left" onClick={this.turnOff}>Turn Off</button>
+                    </div>
+                </div>
+            );
         }
     });
 
@@ -314,6 +424,10 @@
             device.securityToken = evt.target.value;
             this.setState({ device: device });
         },
+
+        testConnection: function() {
+            //TODO: How to know what to call
+        },
         
         render: function() {
             //TODO:need unique name for id and htmlFor
@@ -341,7 +455,7 @@
                         <span className={"help-block" + (this.props.tokenError ? "" : " hidden")}>Error - failed to fetch token, make sure you pressed the sync button on the tcp hub device before requesting the token</span>
                     </div>
 
-                <button className="btn btn-primary">Test Connection</button>
+                <button className="btn btn-primary" onClick={this.testConnection}>Test Connection</button>
                 
                 </div>
             );

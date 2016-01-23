@@ -8,8 +8,8 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
-type telnetConnection struct {
-	conn         net.Conn
+type TelnetConnection struct {
+	Conn         net.Conn
 	info         TelnetConnectionInfo
 	pingCallback PingCallback
 	status       ConnectionStatus
@@ -18,8 +18,8 @@ type telnetConnection struct {
 
 var id = 1
 
-func NewTelnetConnection(i TelnetConnectionInfo) *telnetConnection {
-	c := telnetConnection{
+func NewTelnetConnection(i TelnetConnectionInfo) *TelnetConnection {
+	c := TelnetConnection{
 		status: CSNew,
 		info:   i,
 		id:     id,
@@ -28,29 +28,30 @@ func NewTelnetConnection(i TelnetConnectionInfo) *telnetConnection {
 	return &c
 }
 
-func (c *telnetConnection) Status() ConnectionStatus {
+func (c *TelnetConnection) Status() ConnectionStatus {
 	return c.status
 }
 
-func (c *telnetConnection) SetStatus(s ConnectionStatus) {
+func (c *TelnetConnection) SetStatus(s ConnectionStatus) {
 	c.status = s
 }
 
-func (c *telnetConnection) SetPingCallback(cb PingCallback) {
+func (c *TelnetConnection) SetPingCallback(cb PingCallback) {
 	c.pingCallback = cb
 }
 
-func (c *telnetConnection) PingCallback() PingCallback {
+func (c *TelnetConnection) PingCallback() PingCallback {
 	return c.pingCallback
 }
 
-func (c *telnetConnection) Info() ConnectionInfo {
+func (c *TelnetConnection) Info() ConnectionInfo {
 	return c.info
 }
 
-func (c *telnetConnection) Open() error {
+func (c *TelnetConnection) Open() error {
 	c.status = CSConnecting
 
+	//TODO: Is this re-using the same network connection under the hood?
 	log.V("%s connecting", c)
 	conn, err := net.Dial(c.info.Network, c.info.Address)
 	if err != nil {
@@ -59,7 +60,7 @@ func (c *telnetConnection) Open() error {
 		return err
 	}
 
-	c.conn = conn
+	c.Conn = conn
 
 	if c.info.Authenticator != nil {
 		if err = c.info.Authenticator.Authenticate(c); err != nil {
@@ -74,30 +75,30 @@ func (c *telnetConnection) Open() error {
 	return nil
 }
 
-func (c *telnetConnection) Close() {
+func (c *TelnetConnection) Close() {
 	log.V("%s closed", c)
 	c.status = CSClosed
-	c.conn.Close()
+	c.Conn.Close()
 }
 
-func (c *telnetConnection) Read(p []byte) (n int, err error) {
-	c.conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	n, err = c.conn.Read(p)
+func (c *TelnetConnection) Read(p []byte) (n int, err error) {
+	c.Conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	n, err = c.Conn.Read(p)
 	if err != nil {
 		c.status = CSClosed
 	}
 	return
 }
 
-func (c *telnetConnection) Write(p []byte) (n int, err error) {
-	c.conn.SetWriteDeadline(time.Now().Add(15 * time.Second))
-	n, err = c.conn.Write(p)
+func (c *TelnetConnection) Write(p []byte) (n int, err error) {
+	c.Conn.SetWriteDeadline(time.Now().Add(15 * time.Second))
+	n, err = c.Conn.Write(p)
 	if err != nil {
 		c.status = CSClosed
 	}
 	return
 }
 
-func (c *telnetConnection) String() string {
-	return fmt.Sprintf("telnetConnection[%d %s %s]", c.id, c.info.Network, c.info.Address)
+func (c *TelnetConnection) String() string {
+	return fmt.Sprintf("TelnetConnection[%d %s %s]", c.id, c.info.Network, c.info.Address)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
+	"github.com/markdaws/gohome/fluxwifi"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/zone"
 )
@@ -97,7 +98,6 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 	case zone.ZCFluxWIFI:
 		return &cmd.Func{
 			Func: func() error {
-
 				var rV, gV, bV byte
 				lvl := c.Level.Value
 				if lvl == 0 {
@@ -116,14 +116,6 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 					bV = rV
 				}
 
-				b := []byte{0x31, rV, gV, bV, 0x00, 0xf0, 0x0f}
-				var t int = 0
-				for _, v := range b {
-					t += int(v)
-				}
-				cs := t & 0xff
-				b = append(b, byte(cs))
-
 				pool, ok := d.pools[z.Controller]
 				if !ok || pool == nil {
 					return fmt.Errorf("gohomehub - connection pool not ready")
@@ -137,12 +129,7 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 				defer func() {
 					d.pools[z.Controller].Release(conn)
 				}()
-				_, err := conn.Write(b)
-				if err != nil {
-					fmt.Printf("ERROR SENDING %s\n", err)
-				} else {
-				}
-				return err
+				return fluxwifi.SetLevel(rV, gV, bV, conn.(*comm.TelnetConnection).Conn)
 			},
 		}, nil
 	default:

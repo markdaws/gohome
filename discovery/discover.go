@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/markdaws/gohome/connectedbytcp"
+	"github.com/markdaws/gohome/fluxwifi"
+	"github.com/markdaws/gohome/zone"
 )
 
 var ErrUnauthorized = errors.New("unauthorized")
@@ -35,4 +37,50 @@ func DiscoverToken(modelNumber, address string) (string, error) {
 		return token, err
 	}
 	return "", ErrUnsupported
+}
+
+func Zones(modelNumber string) ([]zone.Zone, error) {
+	switch modelNumber {
+	case "FluxWIFI":
+		infos, err := fluxwifi.Scan(5)
+		if err != nil {
+			return nil, err
+		}
+
+		zones := make([]zone.Zone, len(infos)*2)
+		for i, info := range infos {
+			zones[i*2] = zone.Zone{
+				Address:     info.IP,
+				Name:        info.ID,
+				Description: "Flux WIFI - " + info.Model,
+				Type:        zone.ZTLight,
+				Output:      zone.OTContinuous,
+				Controller:  zone.ZCFluxWIFI,
+			}
+
+			zones[i*2+1] = zone.Zone{
+				Address:     info.IP + "xx",
+				Name:        info.ID + " what",
+				Description: "Flux WIFI - " + info.Model,
+				Type:        zone.ZTShade,
+				Output:      zone.OTContinuous,
+				Controller:  zone.ZCFluxWIFI,
+			}
+
+		}
+		return zones, nil
+	}
+	return nil, ErrUnsupported
+}
+
+func VerifyConnection(modelNumber, address, token string) error {
+	switch modelNumber {
+	case "TCP600GWB":
+		err := connectedbytcp.VerifyConnection(address, token)
+		if err != nil {
+			return fmt.Errorf("access check failed: %s", err)
+		}
+		return nil
+	}
+	return ErrUnsupported
 }

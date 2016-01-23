@@ -14,6 +14,9 @@ import (
 	"github.com/nu7hatch/gouuid"
 )
 
+// CREDIT: information on how to communicate with this device came from:
+// https://github.com/stockmopar/connectedbytcp
+
 // ErrUnauthorized represents an error when the user tried to call an
 // API but were not authorized to do so. This can occur if you try to
 // call GetToken without pressing the "sync" button on your physical hub
@@ -184,6 +187,17 @@ func RoomGetCarousel(address, token string) (*GIP, error) {
 	}
 	return &g, nil
 }
+
+// VerifyConnection connects to the hub and tries to perform an API call to verify that the
+// supplied parameters are correct. If no error is returned then the call was successful and
+// the address and token are valid values
+func VerifyConnection(address, token string) error {
+	//See if we can get some status successfully
+	_, err := RoomGetCarousel(address, token)
+	return err
+}
+
+//TODO: Set level / turn on & off
 
 func postData(address, command, data string) (*http.Response, error) {
 	tr := &http.Transport{

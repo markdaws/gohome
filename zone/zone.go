@@ -11,4 +11,5 @@ type Zone struct {
 	Controller  string
 
 	//TODO: Describe max, min, step e.g. on/off vs dimmable
+	//TODO: Value presets?
 }

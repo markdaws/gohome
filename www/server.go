@@ -64,6 +64,8 @@ func (s *wwwServer) ListenAndServe(port string) error {
 
 	r.HandleFunc("/api/v1/discovery/{modelNumber}", apiDiscoveryHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/discovery/{modelNumber}/token", apiDiscoveryTokenHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}/access", apiDiscoveryAccessHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}/zones", apiDiscoveryZoneHandler(s.system)).Methods("GET")
 
 	r.HandleFunc("/api/v1/cookbooks", apiCookBooksHandler(s.recipeManager.CookBooks)).Methods("GET")
 	r.HandleFunc("/api/v1/cookbooks/{id}", apiCookBookHandler(s.recipeManager.CookBooks)).Methods("GET")
@@ -566,5 +568,57 @@ func apiDiscoveryTokenHandler(system *gohome.System) func(http.ResponseWriter, *
 		json.NewEncoder(w).Encode(struct {
 			Token string `json:"token"`
 		}{Token: token})
+	}
+}
+
+func apiDiscoveryAccessHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+
+		//This is blocking
+		err := discovery.VerifyConnection(
+			vars["modelNumber"],
+			r.URL.Query().Get("address"),
+			r.URL.Query().Get("token"),
+		)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(struct{}{})
+	}
+}
+
+func apiDiscoveryZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+
+		//This is blocking, waits 5 seconds
+		zs, err := discovery.Zones(vars["modelNumber"])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		jsonZones := make(zones, len(zs))
+		for i, zone := range zs {
+			jsonZones[i] = jsonZone{
+				Address:     zone.Address,
+				Name:        zone.Name,
+				Description: zone.Description,
+				Type:        zone.Type.ToString(),
+				Output:      zone.Output.ToString(),
+				Controller:  zone.Controller,
+			}
+			i++
+		}
+		sort.Sort(jsonZones)
+		if err := json.NewEncoder(w).Encode(jsonZones); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 }
