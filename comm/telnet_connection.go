@@ -60,7 +60,7 @@ func (c *TelnetConnection) Open() error {
 		return err
 	}
 
-	c.Conn = conn
+	c.conn = conn
 
 	if c.info.Authenticator != nil {
 		if err = c.info.Authenticator.Authenticate(c); err != nil {
@@ -78,12 +78,12 @@ func (c *TelnetConnection) Open() error {
 func (c *TelnetConnection) Close() {
 	log.V("%s closed", c)
 	c.status = CSClosed
-	c.Conn.Close()
+	c.conn.Close()
 }
 
 func (c *TelnetConnection) Read(p []byte) (n int, err error) {
-	c.Conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	n, err = c.Conn.Read(p)
+	c.conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	n, err = c.conn.Read(p)
 	if err != nil {
 		c.status = CSClosed
 	}
@@ -91,8 +91,8 @@ func (c *TelnetConnection) Read(p []byte) (n int, err error) {
 }
 
 func (c *TelnetConnection) Write(p []byte) (n int, err error) {
-	c.Conn.SetWriteDeadline(time.Now().Add(15 * time.Second))
-	n, err = c.Conn.Write(p)
+	c.conn.SetWriteDeadline(time.Now().Add(15 * time.Second))
+	n, err = c.conn.Write(p)
 	if err != nil {
 		c.status = CSClosed
 	}

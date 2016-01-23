@@ -6,12 +6,6 @@ import (
 	"github.com/markdaws/gohome/event"
 )
 
-// At a certain time e.g. 8pm
-// time no year, no month, no day, hour, minute, second
-// After a certain delay every 5 minutes
-// Iterations - certain number of times
-// TODO: Be able to get sunrise/sunset time for a location: https://github.com/cpucycle/astrotime
-// Days of week - e.g. Tues/Wed/Sun
 type TimeTrigger struct {
 	Iterations uint64
 	Forever    bool
@@ -85,7 +79,7 @@ func (t *TimeTrigger) Init(done <-chan bool) (<-chan bool, bool) {
 
 func (t *TimeTrigger) ProcessEvent(e event.Event) bool {
 	if !t.At.IsZero() {
-		var count uint64 = 0
+		var count uint64
 		finalAt := t.At
 		for {
 			t.timer = time.NewTimer(finalAt.Sub(time.Now()))
@@ -99,7 +93,7 @@ func (t *TimeTrigger) ProcessEvent(e event.Event) bool {
 		}
 	} else if t.Interval != 0 {
 		t.ticker = time.NewTicker(t.Interval)
-		var count uint64 = 0
+		var count uint64
 		for _ = range t.ticker.C {
 			t.fire <- true
 			count++
@@ -110,3 +104,11 @@ func (t *TimeTrigger) ProcessEvent(e event.Event) bool {
 	}
 	return false
 }
+
+//TODO:
+// At a certain time e.g. 8pm
+// time no year, no month, no day, hour, minute, second
+// After a certain delay every 5 minutes
+// Iterations - certain number of times
+// TODO: Be able to get sunrise/sunset time for a location: https://github.com/cpucycle/astrotime
+// Days of week - e.g. Tues/Wed/Sun

@@ -13,12 +13,7 @@ import (
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/discovery"
-	"github.com/markdaws/gohome/log"
 )
-
-type Server interface {
-	ListenAndServe(port string) error
-}
 
 type wwwServer struct {
 	rootPath      string
@@ -27,20 +22,24 @@ type wwwServer struct {
 	eventLogger   gohome.WSEventLogger
 }
 
-func NewServer(
+// ListenAndServe creates a new WWW server, that handles API calls and also
+// runs the gohome website
+func ListenAndServe(
 	rootPath string,
+	port string,
 	system *gohome.System,
 	recipeManager *gohome.RecipeManager,
-	eventLogger gohome.WSEventLogger) Server {
-	return &wwwServer{
+	eventLogger gohome.WSEventLogger) error {
+	server := &wwwServer{
 		rootPath:      rootPath,
 		system:        system,
 		recipeManager: recipeManager,
 		eventLogger:   eventLogger,
 	}
+	return server.listenAndServe(port)
 }
 
-func (s *wwwServer) ListenAndServe(port string) error {
+func (s *wwwServer) listenAndServe(port string) error {
 
 	r := mux.NewRouter()
 
@@ -370,7 +369,7 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 		scenes := make(scenes, len(system.Scenes), len(system.Scenes))
-		var i int32 = 0
+		var i int32
 		for _, scene := range system.Scenes {
 			scenes[i] = jsonScene{
 				Address:     scene.Address,
@@ -392,7 +391,7 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		zones := make(zones, len(system.Zones), len(system.Zones))
-		var i int32 = 0
+		var i int32
 		for _, zone := range system.Zones {
 			zones[i] = jsonZone{
 				Address:     zone.Address,
@@ -417,7 +416,7 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		devices := make(devices, len(system.Devices), len(system.Devices))
-		var i int32 = 0
+		var i int32
 		for _, device := range system.Devices {
 			devices[i] = jsonDevice{
 				Address:     device.Address(),
@@ -473,7 +472,6 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 			},
 		})
 		if err != nil {
-			log.W("enqueue zone set level failed: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -493,14 +491,14 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 		}
 
 		var x struct {
-			Id string `json:"id"`
+			ID string `json:"id"`
 		}
 		if err = json.Unmarshal(body, &x); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		scene, ok := system.Scenes[x.Id]
+		scene, ok := system.Scenes[x.ID]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			return

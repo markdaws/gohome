@@ -43,7 +43,7 @@ func (p *connectionPool) Get() Connection {
 	if len(p.pool) == 0 {
 		return nil
 	}
-	for c, _ := range p.pool {
+	for c := range p.pool {
 		if p.pool[c] {
 			p.pool[c] = false
 			return c
@@ -53,22 +53,17 @@ func (p *connectionPool) Get() Connection {
 }
 
 func (p *connectionPool) Release(c Connection) {
-	fmt.Printf("releasing %s\n", c)
 	if _, ok := p.pool[c]; !ok {
-		fmt.Println("not in pool")
 		return
 	}
-	fmt.Println("in pool")
 
 	if c.Status() == CSClosed {
-		fmt.Println("conn was closed")
 		log.V("%s closed connection release, adding new connection", p)
 		delete(p.pool, c)
 		retryNewConnection(p, false)
 		return
 	}
 
-	fmt.Println("conn was not closed")
 	p.pool[c] = true
 }
 

@@ -156,7 +156,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			return nil, errors.New("Expected Devices elements to be objects")
 		}
 
-		var deviceID string = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
+		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
 			//ModelNumber: L-BDGPRO2-WH
 			sbp = makeDevice("L-BDGPRO2-WH", device, system, true, &comm.TelnetConnectionInfo{
@@ -187,7 +187,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		fmt.Printf("%d: %s\n", int(device["ID"].(float64)), device["Name"])
 
 		// Don't want to re-add the SBP
-		var deviceID string = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
+		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
 			continue
 		}
@@ -206,9 +206,9 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		z := zoneMap.(map[string]interface{})
 		fmt.Printf("%d: %s\n", int(z["ID"].(float64)), z["Name"])
 
-		var zoneID string = strconv.FormatFloat(z["ID"].(float64), 'f', 0, 64)
-		var zoneName string = z["Name"].(string)
-		var zoneTypeFinal zone.Type = zone.ZTLight
+		var zoneID = strconv.FormatFloat(z["ID"].(float64), 'f', 0, 64)
+		var zoneName = z["Name"].(string)
+		var zoneTypeFinal = zone.ZTLight
 		if zoneType, ok := z["Type"].(string); ok {
 			switch zoneType {
 			case "light":
@@ -217,7 +217,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				zoneTypeFinal = zone.ZTShade
 			}
 		}
-		var outputTypeFinal zone.Output = zone.OTContinuous
+		var outputTypeFinal = zone.OTContinuous
 		if outputType, ok := z["Output"].(string); ok {
 			switch outputType {
 			case "binary":

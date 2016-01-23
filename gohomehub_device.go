@@ -128,7 +128,6 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 				}
 
 				defer func() {
-					fmt.Printf("ghh - release: %s\n", conn.Status())
 					d.pools[z.Controller].Release(conn)
 				}()
 				return fluxwifi.SetLevel(rV, gV, bV, conn)

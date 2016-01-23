@@ -78,8 +78,7 @@ func main() {
 	// Start www server
 	done := make(chan bool)
 	go func() {
-		s := www.NewServer("./www", sys, rm, wsLogger)
-		err := s.ListenAndServe(config.WWWPort)
+		err := www.ListenAndServe("./www", config.WWWPort, sys, rm, wsLogger)
 		if err != nil {
 			fmt.Println("error with server")
 		}

@@ -18,7 +18,7 @@ import (
 // SetLevel changes the RGB values of the bulb. //TODO: conn parameter
 func SetLevel(r, g, b byte, w io.Writer) error {
 	bytes := []byte{0x31, r, g, b, 0x00, 0xf0, 0x0f}
-	var t int = 0
+	var t int
 	for _, v := range bytes {
 		t += int(v)
 	}
@@ -53,7 +53,7 @@ func Scan(waitTimeSeconds int) ([]BulbInfo, error) {
 	}
 
 	done := make(chan bool)
-	infos := make([]BulbInfo, 0)
+	var infos []BulbInfo
 
 	magicScanConst := "HF-A11ASSISTHREAD"
 	go func() {

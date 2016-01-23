@@ -75,9 +75,9 @@ func (l *wsEventLogger) StartConsumingEvents() chan<- event.Event {
 				// Don't block event broker
 				go func() {
 					//TODO: parellelize?
-					for conn, _ := range l.connections {
+					for conn := range l.connections {
 						dev := l.devicer.FromID(e.DeviceID)
-						var devName string = "unknown"
+						var devName = "unknown"
 						if dev != nil {
 							devName = dev.Name()
 						}
@@ -138,7 +138,7 @@ func (c *connection) writeLoop(l *wsEventLogger) {
 		ticker.Stop()
 	}()
 
-	var exit bool = false
+	var exit = false
 	for {
 		select {
 		case _, ok := <-c.writeChan:
