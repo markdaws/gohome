@@ -842,20 +842,21 @@
             }
             
             return (
-                <div className="cmp-Zone col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                <div className="cmp-Zone col-xs-12 col-sm-4 col-md-4 col-lg-4 clearfix">
                     <button className={"btn btn-primary zone" + (this.isRgb() ? " zone-rgb" : "")}>
                         <i className={icon}></i>
                         <span className="name">{this.props.name}</span>
-                        <div className={"sliderWrapper" + (this.state.showSlider ? "" : " hidden")} >
+                        <div className={"sliderWrapper pull-right" + (this.state.showSlider ? "" : " hidden")} >
                             <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
                 <span className="level pull-right">{this.state.value}%</span>
-                        </div>                
-                        <div className={"clickInfo" + (this.state.showSlider ? " hidden" : "")}>
+                </div>
+                <div className="clearfix footer">
+                        <div className={"clickInfo pull-right" + (this.state.showSlider ? " hidden" : "")}>
                             <span onClick={this.infoClicked}>Click to control</span>
                 </div>
-                                <a className="btn btn-default" onClick={this.turnOn}>On</a>
-                <a className="btn btn-default" onClick={this.turnOff}>Of</a>
-
+                                <a className="btn btn-default pull-left" onClick={this.turnOn}>On</a>
+                <a className="btn btn-default btnOff pull-left" onClick={this.turnOff}>Off</a>
+                </div>
                     </button>
                 </div>
             )

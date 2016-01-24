@@ -55,15 +55,22 @@ body {
 }
 .cmp-Zone .sliderWrapper {
     margin: 12px 0px 8px 12px;
+    width: 240px;
 }
 .cmp-Zone .slider.slider-horizontal {
     width: 80%;
+}
+.cmp-Zone .footer {
+    margin-top: 6px;
 }
 .cmp-Zone .clickInfo {
     text-align: center;
     margin: 12px 0px 8px 12px;
     font-style: italic;
     font-size: 14px;
+}
+.cmp-Zone .btnOff {
+    margin-left: 8px;
 }
 
 .cmp-System {

@@ -380,31 +380,32 @@ func importGoHomeHub(system *System) {
 
 	// 192.168.0.24 / fluxbulb
 	/*
-		zoneID := "216438039298518643"
-		z := &Zone{
-			LocalID:     zoneID,
-			GlobalID:    system.NextGlobalID(),
-			Name:        "bulb1",
-			Description: "tcp - bulb1",
-			Device:      tcp,
-			Type:        ZTLight,
-			Output:      OTContinuous,
-		}
-		fmt.Println("BULB ID: " + z.GlobalID)
-		tcp.Zones()[z.LocalID] = z
-		system.AddZone(z)
+				zoneID := "216438039298518643"
+				z := &Zone{
+					LocalID:     zoneID,
+					GlobalID:    system.NextGlobalID(),
+					Name:        "bulb1",
+					Description: "tcp - bulb1",
+					Device:      tcp,
+					Type:        ZTLight,
+					Output:      OTContinuous,
+				}
+				fmt.Println("BULB ID: " + z.GlobalID)
+				tcp.Zones()[z.LocalID] = z
+				system.AddZone(z)
 
-		s := &Scene{
-			LocalID:     "xxx",
-			GlobalID:    system.NextGlobalID(),
-			Name:        "Synthetic Scene",
-			Description: "Scene to control lutron + tcp lights",
-			Commands: []Command{
-				&ZoneSetLevelCommand{Zone: system.Zones["142"], Level: 30},
-				&ZoneSetLevelCommand{Zone: system.Zones["153"], Level: 75},
-			},
-		}
-		system.AddScene(s)*/
+				s := &Scene{
+					LocalID:     "xxx",
+					GlobalID:    system.NextGlobalID(),
+					Name:        "Synthetic Scene",
+					Description: "Scene to control lutron + tcp lights",
+		            Managed: true,
+					Commands: []Command{
+						&ZoneSetLevelCommand{Zone: system.Zones["142"], Level: 30},
+						&ZoneSetLevelCommand{Zone: system.Zones["153"], Level: 75},
+					},
+				}
+				system.AddScene(s)*/
 
 	//TODO:
 	//1. Discover bulbs

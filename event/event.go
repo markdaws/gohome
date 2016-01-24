@@ -12,23 +12,11 @@ type Event struct {
 	OriginalString string
 	DeviceID       string
 	ReplayCommand  cmd.Command
-	Type           EventType
 }
 
-var nextId int = 0
+var nextId int
 
-//TODO: Needed or just use command type?
-type EventType uint32
-
-const (
-	//TODO: Define event types
-	ETUnknown = iota
-
-	// Ping event to a device
-	ETPing
-)
-
-func New(deviceID string, cmd cmd.Command, orig string, t EventType) Event {
+func New(deviceID string, cmd cmd.Command, orig string) Event {
 	nextId++
 
 	return Event{
@@ -37,7 +25,6 @@ func New(deviceID string, cmd cmd.Command, orig string, t EventType) Event {
 		OriginalString: orig,
 		DeviceID:       deviceID,
 		ReplayCommand:  cmd,
-		Type:           t,
 	}
 }
 

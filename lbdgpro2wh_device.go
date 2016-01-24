@@ -178,7 +178,7 @@ func (d *Lbdgpro2whDevice) stream() error {
 		if d.evpFire != nil {
 			orig := scanner.Text()
 			if cmd := d.parseCommandString(orig); cmd != nil {
-				d.evpFire <- event.New(d.ID(), cmd, orig, event.ETUnknown)
+				d.evpFire <- event.New(d.ID(), cmd, orig)
 			}
 		}
 	}
