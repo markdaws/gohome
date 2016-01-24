@@ -88,6 +88,14 @@ body {
     width: 145px;
 }
 
+.cmp-ImportFluxWIFI .spinnerWrapper {
+    margin-top: 24px;
+    text-align: center;
+}
+.cmp-ImportFluxWIFI .spinnerWrapper .fa.fa-spinner {
+    font-size: 35px;
+}
+
 .cmp-ZoneInfo label {
     font-size: 12px;
     font-weight: normal;

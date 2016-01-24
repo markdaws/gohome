@@ -174,8 +174,41 @@
         getInitialState: function() {
             return {
                 discovering: false,
-                zones: []
+                zones: [],
+                loading: true,
+                devices: [],
             };
+        },
+
+        componentDidMount: function() {
+            var self = this;
+            $.ajax({
+                url: '/api/v1/systems/123/devices',
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    self.filterDevices(data || []);
+                },
+                error: function(xhr, status, err) {
+                    console.error(err.toString());
+                }
+            });
+        },
+
+        filterDevices: function(devices) {
+            var filteredDevices = [];
+            for (var i=0; i<devices.length; ++i) {
+                switch(devices[i].modelNumber) {
+                case 'GoHomeHub':
+                    filteredDevices.push(devices[i]);
+                    break;
+                }
+            }
+
+            this.setState({
+                devices: filteredDevices,
+                loading: false
+            });
         },
         
         discover: function() {
@@ -203,20 +236,52 @@
 
         render: function() {
 
+            var loading
+            if (this.state.loading) {
+                loading = <div className="spinnerWrapper">
+                    <i className="fa fa-spinner fa-spin"></i></div>
+            }
+
+            var noDeviceBody
+            if (!this.state.loading && this.state.devices.length === 0) {
+                noDeviceBody = (
+                    <div>
+                    <h3>Import failed</h3>
+                    <p>In order to import Flux WIFI bulbs, you must have a device in your system
+                    that is capable of controlling them.  Please add one of the following devices
+                    to your system first, then come back and try to import again:
+                    <ul>
+                        <li>GoHomeHub</li>
+                    </ul>
+                    </p>
+                    </div>
+                );
+            }
+            
             var zones
             if (this.state.zones.length > 0) {
                 zones = this.state.zones.map(function(zone) {
                     return <ZoneInfo zone={zone} key={zone.address} />
                 })
             }
+
+            var importBody
+            if (!this.state.loading && this.state.devices.length > 0) {
+                importBody = (
+                    <div>
+                    <button className={"btn btn-primary" + (this.state.discovering ? " disabled" : "")}
+                        onClick={this.discover}>Discover Zones</button>
+                    <i className={"fa fa-spinner fa-spin" + (this.state.discovering ? "" : " hidden")}></i>
+                    <h3 className={this.state.zones.length > 0 ? "" : " hidden"}>Zones</h3>
+                    {zones}
+                    </div>
+                );
+            }
             return (
                 <div className="cmp-ImportFluxWIFI">
-                <p>In order to import Flux WIFI bulbs, you must have a GoHomeHub device in your system, if not you need to create one first //TODO: Better show device picker first</p>
-                <button className={"btn btn-primary" + (this.state.discovering ? " disabled" : "")} onClick={this.discover}>Discover Zones</button>
-                <i className={"fa fa-spinner fa-spin" + (this.state.discovering ? "" : " hidden")}></i>
-
-                <h3 className={this.state.zones.length > 0 ? "" : " hidden"}>Zones</h3>
-                {zones}
+                    {loading}
+                    {noDeviceBody}
+                    {importBody}
                 </div>
             );
         }
