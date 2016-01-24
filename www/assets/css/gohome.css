@@ -69,8 +69,8 @@ body {
     font-style: italic;
     font-size: 14px;
 }
-.cmp-Zone .btnOff {
-    margin-left: 8px;
+.cmp-Zone .fa-power-off {
+    color: #fff;
 }
 
 .cmp-System {

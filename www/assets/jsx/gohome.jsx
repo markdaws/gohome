@@ -1,3 +1,4 @@
+//TODO: webpack, split up
 (function() {
 
     var UniqueIdMixin = {
@@ -199,7 +200,8 @@
             var filteredDevices = [];
             for (var i=0; i<devices.length; ++i) {
                 switch(devices[i].modelNumber) {
-                case 'GoHomeHub':
+                    default:
+//                case 'GoHomeHub':
                     filteredDevices.push(devices[i]);
                     break;
                 }
@@ -212,7 +214,10 @@
         },
         
         discover: function() {
-            this.setState({ discovering: true });
+            this.setState({
+                discovering: true,
+                zones: []
+            });
 
             var self = this;
             $.ajax({
@@ -246,22 +251,23 @@
             if (!this.state.loading && this.state.devices.length === 0) {
                 noDeviceBody = (
                     <div>
-                    <h3>Import failed</h3>
-                    <p>In order to import Flux WIFI bulbs, you must have a device in your system
-                    that is capable of controlling them.  Please add one of the following devices
-                    to your system first, then come back and try to import again:
-                    <ul>
-                        <li>GoHomeHub</li>
-                    </ul>
-                    </p>
+                        <h3>Import failed</h3>
+                        <p>In order to import Flux WIFI bulbs, you must have a device in your system
+                        that is capable of controlling them.  Please add one of the following devices
+                        to your system first, then come back and try to import again:
+                        </p>
+                        <ul>
+                           <li>GoHomeHub</li>
+                        </ul>
                     </div>
                 );
             }
             
             var zones
             if (this.state.zones.length > 0) {
+                var self = this
                 zones = this.state.zones.map(function(zone) {
-                    return <ZoneInfo zone={zone} key={zone.address} />
+                    return <ZoneInfo devices={self.state.devices} zone={zone} key={zone.address} />
                 })
             }
 
@@ -287,6 +293,34 @@
         }
     });
 
+    var DevicePicker = React.createClass({
+        getInitialState: function() {
+            return {
+                value: ''
+            };
+        },
+        
+        selected: function(evt) {
+            this.setState({ value: evt.target.value });
+        },
+        
+        render: function() {
+            var options = [];
+            this.props.devices.forEach(function(device) {
+                console.log(device)
+                options.push(<option key={device.id} value={device.id}>{device.name}</option>);
+            });
+            return (
+                <div className="cmp-DevicePicker">
+                    <select className="form-control" onChange={this.selected} value={this.state.value}>
+                        <option value="">Select a device...</option>
+                        {options}
+                    </select>
+                </div>
+            );
+        }
+    });
+    
     var ZoneInfo = React.createClass({
         mixins: [UniqueIdMixin],
         getInitialState: function() {
@@ -313,23 +347,11 @@
             this.setState({ zone : zone });
         },
 
-        /*
-        send: function(data, callback) {
-        $.ajax({
-                url: '/api/v1/systems/1/zones/' + this.props.id,
-                type: 'POST',
-                dataType: 'json',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(data),
-                success: function(data) {
-                    callback();
-                },
-                error: function(xhr, status, err) {
-                    callback(err);
-                }
-            });
-        }*/
-
+        devicePickerChanged: function(device) {
+            var zone = this.state.zone;
+            zone.deviceId = device.id;
+            this.setState({ zone: zone });
+        },
         
         render: function() {
             //TODO unique names for ids
@@ -349,7 +371,10 @@
                         <label className="control-label" htmlFor={"address" + this.getNextIdAndIncrement()}>Address</label>
                         <input value={zone.address} onChange={this.addressChanged} className="address form-control" type="text" id={"address" + this.getCurrentId()}/>
                     </div>
-
+                    <div className="form-group">
+                        <label className="control-label" htmlFor={"device" + this.getNextIdAndIncrement()}>Device</label>
+                        <DevicePicker devices={this.props.devices} change={this.devicePickerChanged}/>
+                    </div>
                     <div className="clearfix">
                         <button className="btn btn-primary pull-left" onClick={this.turnOn}>Turn On</button>
                         <button className="btn btn-primary btnOff pull-left" onClick={this.turnOff}>Turn Off</button>
@@ -781,7 +806,7 @@
                     self.setState({ value: evt.value.newValue });
                 });
                 s.on('slideStop', function(evt) {
-                    self.setValue(evt.value, 0, 0, 0, function(err) {
+                    self.setValue('setLevel', evt.value, 0, 0, 0, function(err) {
                         if (err) {
                             //TODO:
                             console.error(err);
@@ -805,6 +830,7 @@
                         }
                         var rgb = this.color.colors.rgb;
                         self.setValue(
+                            'setLevel',
                             0,
                             parseInt(rgb.r * 255),
                             parseInt(rgb.g * 255),
@@ -834,13 +860,14 @@
             return this.props.output === 'rgb';
         },
         
-        setValue: function(value, r, g, b, callback) {
+        setValue: function(cmd, value, r, g, b, callback) {
             if (!this.isRgb()) {
                 this.state.slider.slider('setValue', value, false, true);
             }
-            
+            //TODO: Need rgb
+            this.setState({ value: value });
             this.send({
-                cmd: 'setLevel',
+                cmd: cmd,
                 value: parseFloat(value),
                 r: r,
                 g: g,
@@ -848,24 +875,19 @@
             }, callback);
         },
 
-        turnOn: function(evt) {
+        toggleOn: function(evt) {
             evt.stopPropagation();
             evt.preventDefault();
-            this.send({
-                cmd: 'turnOn'
-            }, function(err) {
-                if (err) {
-                    console.error(err);
-                }
-            });
-        },
 
-        turnOff: function(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-            this.send({
-                cmd: 'turnOff'
-            }, function(err) {
+            var cmd, level;
+            if (this.state.value !== 0) {
+                cmd = 'turnOff';
+                level = 0;
+            } else {
+                cmd = 'turnOn';
+                level = 100;
+            }
+            this.setValue(cmd, level, 0, 0, 0, function(err) {
                 if (err) {
                     console.error(err);
                 }
@@ -913,15 +935,16 @@
                         <span className="name">{this.props.name}</span>
                         <div className={"sliderWrapper pull-right" + (this.state.showSlider ? "" : " hidden")} >
                             <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
-                <span className="level pull-right">{this.state.value}%</span>
-                </div>
-                <div className="clearfix footer">
-                        <div className={"clickInfo pull-right" + (this.state.showSlider ? " hidden" : "")}>
-                            <span onClick={this.infoClicked}>Click to control</span>
-                </div>
-                                <a className="btn btn-default pull-left" onClick={this.turnOn}>On</a>
-                <a className="btn btn-default btnOff pull-left" onClick={this.turnOff}>Off</a>
-                </div>
+                            <span className="level pull-right">{this.state.value}%</span>
+                        </div>
+                        <div className="clearfix footer">
+                            <div className={"clickInfo pull-right" + (this.state.showSlider ? " hidden" : "")}>
+                                <span onClick={this.infoClicked}>Click to control</span>
+                            </div>
+                            <a className="btn btn-link pull-left" onClick={this.toggleOn}>
+                                <i className="fa fa-power-off"></i>
+                            </a>
+                        </div>
                     </button>
                 </div>
             )

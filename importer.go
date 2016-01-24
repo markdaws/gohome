@@ -360,6 +360,7 @@ func importConnectedByTCP(system *System) {
 }
 
 func importGoHomeHub(system *System) {
+
 	ti := &comm.TelnetConnectionInfo{}
 	ghh := NewDevice(
 		"GoHomeHub",
