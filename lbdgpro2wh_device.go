@@ -12,6 +12,7 @@ import (
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/log"
+	"github.com/markdaws/gohome/zone"
 )
 
 //TODO: make lutron package
@@ -96,6 +97,28 @@ func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 					Device: d,
 					Value:  "#OUTPUT," + command.ZoneAddress + ",1,%.2f\r\n",
 					Args:   []interface{}{command.Level.Value},
+				}
+				return newCmd.Execute()
+			},
+		}, nil
+	case *cmd.ZoneTurnOn:
+		return &cmd.Func{
+			Func: func() error {
+				newCmd := &StringCommand{
+					Device: d,
+					Value:  "#OUTPUT," + command.ZoneAddress + ",1,%.2f\r\n",
+					Args:   []interface{}{100.0},
+				}
+				return newCmd.Execute()
+			},
+		}, nil
+	case *cmd.ZoneTurnOff:
+		return &cmd.Func{
+			Func: func() error {
+				newCmd := &StringCommand{
+					Device: d,
+					Value:  "#OUTPUT," + command.ZoneAddress + ",1,%.2f\r\n",
+					Args:   []interface{}{0.0},
 				}
 				return newCmd.Execute()
 			},
@@ -285,4 +308,8 @@ func (d *Lbdgpro2whDevice) parseZoneCommand(command string) cmd.Command {
 	}
 
 	return finalCmd
+}
+
+func (d *Lbdgpro2whDevice) SupportsController(c zone.Controller) bool {
+	return c == zone.ZCDefault
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -54,8 +55,26 @@ func (s *System) AddButton(b *Button) {
 	s.Buttons[b.ID] = b
 }
 
-func (s *System) AddZone(z *zone.Zone) {
+func (s *System) AddZone(z *zone.Zone) error {
+	errors := z.Validate()
+	if errors != nil {
+		return errors
+	}
+
+	d, ok := s.Devices[z.DeviceID]
+	if !ok {
+		errors = &validation.Errors{}
+		errors.Add("unknown device", "DeviceID")
+		return errors
+	}
+
+	z.ID = s.NextGlobalID()
+	err := d.AddZone(z)
+	if err != nil {
+		return err
+	}
 	s.Zones[z.ID] = z
+	return nil
 }
 
 func (s *System) AddScene(scn *Scene) {

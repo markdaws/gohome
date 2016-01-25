@@ -47,9 +47,9 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 			return nil, err
 		}
 
-		zones := make([]zone.Zone, len(infos))
+		zones := make([]zone.Zone, len(infos)*2)
 		for i, info := range infos {
-			zones[i] = zone.Zone{
+			zones[i*2] = zone.Zone{
 				Address:     info.IP,
 				Name:        info.ID,
 				Description: "Flux WIFI - " + info.Model,
@@ -59,15 +59,15 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 			}
 
 			//TODO: remove
-			/*
-				zones[i*2+1] = zone.Zone{
-					Address:     info.IP + "xx",
-					Name:        info.ID + " what",
-					Description: "Flux WIFI - " + info.Model,
-					Type:        zone.ZTShade,
-					Output:      zone.OTContinuous,
-					Controller:  zone.ZCFluxWIFI,
-				}*/
+
+			zones[i*2+1] = zone.Zone{
+				Address:     info.IP + "xx",
+				Name:        info.ID + " what",
+				Description: "Flux WIFI - " + info.Model,
+				Type:        zone.ZTShade,
+				Output:      zone.OTContinuous,
+				Controller:  zone.ZCFluxWIFI,
+			}
 		}
 		return zones, nil
 	}

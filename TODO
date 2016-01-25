@@ -176,4 +176,30 @@ package collections
   Recipes
 
 
+OM Validation
 
+jsx
+//mixin
+fieldChanged: function(evt) {
+    var st = evt.target['data-state']
+    var val = evt.target.value
+    this.state.name = val
+}
+
+errInfo: function(errors, inputid, msg) {
+    // returns help block if there is an error
+}
+<input data-state="zone.name" value={this.state.zone.name} onChange={this.fieldChanged} id={} />
+
+//Validation error response
+
+{
+    errors: {
+       "field1": {
+           "message": "is a required field"
+       },
+       "field2": {
+           "message": "foo device cannot control a flux wifi zone"
+       }
+   }
+}

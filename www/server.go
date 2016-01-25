@@ -13,6 +13,8 @@ import (
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/discovery"
+	"github.com/markdaws/gohome/validation"
+	"github.com/markdaws/gohome/zone"
 )
 
 type wwwServer struct {
@@ -59,6 +61,7 @@ func (s *wwwServer) listenAndServe(port string) error {
 	//TODO: Move api into separate http server
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiAddZoneHandler(s.system)).Methods("POST")
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
 
 	r.HandleFunc("/api/v1/discovery/{modelNumber}", apiDiscoveryHandler(s.system)).Methods("GET")
@@ -409,6 +412,89 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
+}
+
+func apiAddZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var data jsonZone
+		if err = json.Unmarshal(body, &data); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		z := &zone.Zone{
+			Address:     data.Address,
+			Name:        data.Name,
+			Description: data.Description,
+			DeviceID:    data.DeviceID,
+			Type:        zone.TypeFromString(data.Type),
+			Output:      zone.OutputFromString(data.Output),
+			Controller:  "TODO:",
+		}
+
+		errors := system.AddZone(z)
+		//errors := system.ValidateZone(z)
+		//TODO: Need to know if this is a validation error or something else ...
+		if errors != nil {
+			if valErrs, ok := errors.(*validation.Errors); ok {
+				fmt.Printf("%+v\n", valErrs.Errors[0])
+				w.WriteHeader(http.StatusBadRequest)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+			} else {
+				//Other kind of errors, TODO: log
+				w.WriteHeader(http.StatusBadRequest)
+			}
+			return
+		}
+
+		//TODO: need some kind of key to associate failures with
+		fmt.Printf("%+v\n", data)
+		// Validation
+		// must have a name
+		// must have a device id
+		// controller
+		// address
+		/*
+			system.Save(recipeManager)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}*/
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(struct{}{})
+	}
+
+	/*
+
+		zones := make(zones, len(system.Zones), len(system.Zones))
+		var i int32
+		for _, zone := range system.Zones {
+			zones[i] = jsonZone{
+				Address:     zone.Address,
+				ID:          zone.ID,
+				Name:        zone.Name,
+				Description: zone.Description,
+				Type:        zone.Type.ToString(),
+				Output:      zone.Output.ToString(),
+				Controller:  zone.Controller,
+			}
+			i++
+		}
+		sort.Sort(zones)
+		if err := json.NewEncoder(w).Encode(zones); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}*/
 }
 
 func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {

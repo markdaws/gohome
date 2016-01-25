@@ -55,7 +55,7 @@ body {
 }
 .cmp-Zone .sliderWrapper {
     margin: 12px 0px 8px 12px;
-    width: 240px;
+    width: 280px;
 }
 .cmp-Zone .slider.slider-horizontal {
     width: 80%;
@@ -69,8 +69,13 @@ body {
     font-style: italic;
     font-size: 14px;
 }
-.cmp-Zone .fa-power-off {
+.cmp-Zone .btn.zone .btnToggle .fa-power-off {
     color: #fff;
+    font-size: 24px;
+    margin-left: -1px;
+}
+.cmp-Zone .btnToggle {
+    padding-left: 0px;
 }
 
 .cmp-System {

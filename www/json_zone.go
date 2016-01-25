@@ -5,9 +5,15 @@ type jsonZone struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	DeviceID    string `json:"deviceId"`
 	Type        string `json:"type"`
 	Output      string `json:"output"`
 	Controller  string `json:"controller"`
+
+	// ClientID is an ID assigned on the client to the zone if the zone
+	// hasn't been created yet but still needs to be referenced uniquely
+	// by the client.
+	ClientID string `json:"clientId"`
 }
 type zones []jsonZone
 

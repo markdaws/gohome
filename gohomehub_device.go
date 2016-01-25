@@ -78,6 +78,7 @@ func (d *GoHomeHubDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 	case *cmd.ButtonRelease:
 		return nil, fmt.Errorf("goHomeHubDevice ButtonReleaseCommand not supported")
 	case *cmd.SceneSet:
+		return nil, fmt.Errorf("goHomeHubDevice SceneSetCommand not supported")
 		//TODO: Does this make sense, what does a scene mean in terms of this virtual hub?
 	default:
 		return nil, fmt.Errorf("goHomeHubDevice build commands not supported")
@@ -196,4 +197,8 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 	default:
 		return nil, fmt.Errorf("unsupported zone controller")
 	}
+}
+
+func (d *GoHomeHubDevice) SupportsController(c zone.Controller) bool {
+	return c == zone.ZCFluxWIFI
 }

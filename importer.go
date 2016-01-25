@@ -221,7 +221,6 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		}
 		newZone := &zone.Zone{
 			Address:     zoneID,
-			ID:          system.NextGlobalID(),
 			Name:        zoneName,
 			Description: zoneName,
 			DeviceID:    sbp.ID(),
@@ -229,7 +228,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			Output:      outputTypeFinal,
 		}
 		system.AddZone(newZone)
-		sbp.Zones()[newZone.Address] = newZone
+		//sbp.Zones()[newZone.Address] = newZone
 	}
 
 	//TODO: Move
@@ -317,7 +316,6 @@ func importConnectedByTCP(system *System) {
 	zoneID := "216438039298518643"
 	z := &zone.Zone{
 		Address:     zoneID,
-		ID:          system.NextGlobalID(),
 		Name:        "bulb1",
 		Description: "tcp - bulb1",
 		DeviceID:    tcp.ID(),
@@ -326,10 +324,11 @@ func importConnectedByTCP(system *System) {
 		Controller:  "TCP - LED A19 11W",
 	}
 	fmt.Println("BULB ID: " + z.ID)
-	tcp.Zones()[z.Address] = z
-	system.AddZone(z)
+	//	tcp.Zones()[z.Address] = z
 	system.AddDevice(tcp)
+	system.AddZone(z)
 
+	return
 	z1 := system.Zones["142"]
 	z2 := system.Zones["153"]
 	s := &Scene{
@@ -411,7 +410,6 @@ func importGoHomeHub(system *System) {
 
 	z := &zone.Zone{
 		Address:     "192.168.0.24:5577",
-		ID:          system.NextGlobalID(),
 		Name:        "FluxBulb",
 		Description: "Flux wifi bulb",
 		DeviceID:    ghh.ID(),
@@ -420,17 +418,18 @@ func importGoHomeHub(system *System) {
 		Controller:  zone.ZCFluxWIFI,
 	}
 	ghh.Zones()[z.Address] = z
-	z2 := &zone.Zone{
-		Address:     "192.168.0.24:55777",
-		ID:          system.NextGlobalID(),
-		Name:        "FluxBulb2",
-		Description: "Flux wifi bulb",
-		DeviceID:    ghh.ID(),
-		Type:        zone.ZTLight,
-		Output:      zone.OTRGB,
-		Controller:  zone.ZCFluxWIFI,
-	}
-	ghh.Zones()[z2.Address] = z2
+	/*
+		z2 := &zone.Zone{
+			Address:     "192.168.0.24:55777",
+			ID:          system.NextGlobalID(),
+			Name:        "FluxBulb2",
+			Description: "Flux wifi bulb",
+			DeviceID:    ghh.ID(),
+			Type:        zone.ZTLight,
+			Output:      zone.OTRGB,
+			Controller:  zone.ZCFluxWIFI,
+		}
+		ghh.Zones()[z2.Address] = z2*/
 
 	system.AddDevice(ghh)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
+	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -24,7 +25,9 @@ type Device interface {
 	ReleaseConnection(comm.Connection)
 	Stream() bool
 	BuildCommand(cmd.Command) (*cmd.Func, error)
+	SupportsController(c zone.Controller) bool
 
+	AddZone(z *zone.Zone) error
 	comm.Authenticator
 	event.Producer
 	fmt.Stringer
@@ -120,4 +123,27 @@ func (d *device) ProducesEvents() bool {
 
 func (d *device) String() string {
 	return fmt.Sprintf("Device[%s]", d.Name())
+}
+
+func (d *device) AddZone(z *zone.Zone) error {
+	errs := &validation.Errors{}
+
+	// Make sure zone doesn't have same address as any other zone
+	for _, cz := range d.zones {
+		if cz.Address == z.Address {
+			errs.Add("device already has a zone with the same address, must be unique", "Address")
+			return errs
+		}
+	}
+
+	d.zones[z.Address] = z
+	//TODO
+	/*
+		// Verify controller is supported by the device
+		if !interface{}(d).(Device).SupportsController(zone.ControllerFromString(z.Controller)) {
+			errs.Add("the device does not support controlling this kind of zone", "Controller")
+			return errs
+		}*/
+
+	return nil
 }

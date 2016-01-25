@@ -17,13 +17,47 @@
         cssSafeIdentifier: function(value) {
             return value.replace(/:/g, '_');
         }
-    }
+    };
 
     var AssetsMixin = {
         getImageUrl: function(imageName) {
             return 'assets/images/' + imageName;
         }
-    }
+    };
+
+    var InputValidationMixin = {
+        uid: function(field) {
+            return this.state.cid + '.' + field
+        },
+        getErr: function(field) {
+            if (!this.props.errors) {
+                return null;
+            }
+            return this.props.errors[this.uid(field)];            
+        },
+        hasErr: function(field) {
+            return this.getErr(field) != null;
+        },
+        errMsg: function(field) {
+            var err = this.getErr(field);
+            if (!err) {
+                return;
+            }
+            return <span className="help-block">{"Error - " + err.message}</span>
+        },
+        addErr: function(classes, field) {
+            if (this.hasErr(field)) {
+                return classes + " has-error";
+            }
+            return classes;
+        },
+        changed: function(evt) {
+            var statePath = evt.target.getAttribute('data-statepath');
+            var s = {}
+            s[statePath] = evt.target.value;
+            this.setState(s);
+        }
+    };
 
     var ControlApp = React.createClass({
         getInitialState: function() {
@@ -239,6 +273,29 @@
             });
         },
 
+        importZones: function() {
+            var zones = []
+            var self = this;
+            this.state.zones.forEach(function(zone) {
+                zones.push(self.refs["zone" + zone.address].toJson());
+            });
+            
+            $.ajax({
+                url: '/api/v1/systems/1/zones',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(zones[0]),
+                success: function(data) {
+                    data = data || {};
+                    self.setState({ errors: data.errors });
+                }.bind(this),
+                error: function(xhr, status, err) {
+                    self.setState({ errors: (JSON.parse(xhr.responseText) || {}).errors});
+                }.bind(this)
+            });
+        },
+
         render: function() {
 
             var loading
@@ -267,7 +324,7 @@
             if (this.state.zones.length > 0) {
                 var self = this
                 zones = this.state.zones.map(function(zone) {
-                    return <ZoneInfo devices={self.state.devices} zone={zone} key={zone.address} />
+                    return <ZoneInfo errors={self.state.errors} ref={"zone" + zone.address} devices={self.state.devices} name={zone.name} description={zone.description} address={zone.address} deviceId={zone.deviceId} key={zone.address} />
                 })
             }
 
@@ -276,8 +333,9 @@
                 importBody = (
                     <div>
                     <button className={"btn btn-primary" + (this.state.discovering ? " disabled" : "")}
-                        onClick={this.discover}>Discover Zones</button>
+                    onClick={this.discover}>Discover Zones</button>
                     <i className={"fa fa-spinner fa-spin" + (this.state.discovering ? "" : " hidden")}></i>
+                    <button className="btn btn-primary" onClick={this.importZones}>Import Selected</button>
                     <h3 className={this.state.zones.length > 0 ? "" : " hidden"}>Zones</h3>
                     {zones}
                     </div>
@@ -301,13 +359,15 @@
         },
         
         selected: function(evt) {
+            console.log('changed')
             this.setState({ value: evt.target.value });
+
+            this.props.changed && this.props.changed(evt.target.value);
         },
         
         render: function() {
             var options = [];
             this.props.devices.forEach(function(device) {
-                console.log(device)
                 options.push(<option key={device.id} value={device.id}>{device.name}</option>);
             });
             return (
@@ -322,58 +382,59 @@
     });
     
     var ZoneInfo = React.createClass({
-        mixins: [UniqueIdMixin],
+        mixins: [UniqueIdMixin, InputValidationMixin],
         getInitialState: function() {
             return {
-                zone: this.props.zone
+                cid: this.getNextIdAndIncrement() + '',
+                name: this.props.name,
+                description: this.props.description,
+                address: this.props.address,
+                deviceId: this.props.deviceId
             }
         },
 
-        nameChanged: function(evt) {
-            var zone = this.state.zone;
-            zone.name = evt.target.value;
-            this.setState({ zone : zone });
+        toJson: function() {
+            var s = this.state
+            return {
+                clientId: s.cid,
+                name: s.name,
+                description: s.description,
+                address: s.address,
+                deviceId: s.deviceId
+            }
         },
 
-        descriptionChanged: function(evt) {
-            var zone = this.state.zone;
-            zone.description = evt.target.value;
-            this.setState({ zone : zone });
+        devicePickerChanged: function(deviceId) {
+            console.log(deviceId)
+            this.setState({ deviceId: deviceId });
         },
 
-        addressChanged: function(evt) {
-            var zone = this.state.zone;
-            zone.address = evt.target.value;
-            this.setState({ zone : zone });
-        },
-
-        devicePickerChanged: function(device) {
-            var zone = this.state.zone;
-            zone.deviceId = device.id;
-            this.setState({ zone: zone });
-        },
-        
         render: function() {
-            //TODO unique names for ids
+            var zone = this.state.zone || {};
 
-            var zone = this.state.zone
+            //TODO: cid
+            var cid = this.state.cid;
             return (
                 <div className="cmp-ZoneInfo well">
-                    <div className="form-group">
-                        <label className="control-label" htmlFor={"name" + this.getNextIdAndIncrement()}>Name</label>
-                        <input value={zone.name} onChange={this.nameChanged} className="name form-control" type="text" id={"name" + this.getCurrentId()}/>
+                    <div className={this.addErr('form-group', 'name')}>
+                        <label className="control-label" htmlFor={this.uid('name')}>Name*</label>
+                        <input value={this.state.name} data-statepath="name" onChange={this.changed} className="name form-control" type="text" id={this.uid('name')}/>
+                        {this.errMsg('name')}
                     </div>
-                    <div className="form-group">
-                        <label className="control-label" htmlFor={"description" + this.getNextIdAndIncrement()}>Description</label>
-                        <input value={zone.description} onChange={this.descriptionChanged} className="description form-control" type="text" id={"description" + this.getCurrentId()}/>
+                    <div className={this.addErr("form-group", 'description')}>
+                        <label className="control-label" htmlFor={this.uid("description")}>Description</label>
+                        <input value={this.state.description} data-statepath="description" onChange={this.changed} className="description form-control" type="text" id={this.uid("description")}/>
+                        {this.errMsg('description')}
                     </div>
-                    <div className="form-group">
-                        <label className="control-label" htmlFor={"address" + this.getNextIdAndIncrement()}>Address</label>
-                        <input value={zone.address} onChange={this.addressChanged} className="address form-control" type="text" id={"address" + this.getCurrentId()}/>
+                    <div className={this.addErr("form-group", "address")}>
+                        <label className="control-label" htmlFor={this.uid("address")}>Address*</label>
+                        <input value={this.state.address} data-statepath="address" onChange={this.changed} className="address form-control" type="text" id={this.uid("address")}/>
+                        {this.errMsg('address')}
                     </div>
-                    <div className="form-group">
-                        <label className="control-label" htmlFor={"device" + this.getNextIdAndIncrement()}>Device</label>
-                        <DevicePicker devices={this.props.devices} change={this.devicePickerChanged}/>
+                    <div className={this.addErr("form-group", "deviceId")}>
+                        <label className="control-label" htmlFor={this.uid("deviceId")}>Device*</label>
+                        <DevicePicker devices={this.props.devices} changed={this.devicePickerChanged}/>
+                        {this.errMsg('deviceId')}
                     </div>
                     <div className="clearfix">
                         <button className="btn btn-primary pull-left" onClick={this.turnOn}>Turn On</button>
@@ -941,7 +1002,7 @@
                             <div className={"clickInfo pull-right" + (this.state.showSlider ? " hidden" : "")}>
                                 <span onClick={this.infoClicked}>Click to control</span>
                             </div>
-                            <a className="btn btn-link pull-left" onClick={this.toggleOn}>
+                            <a className="btn btn-link btnToggle pull-left" onClick={this.toggleOn}>
                                 <i className="fa fa-power-off"></i>
                             </a>
                         </div>
