@@ -6,6 +6,10 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
+var nextID int
+
+// Event represent an event that occurs in the system, such as a light being
+// turned on or off.
 type Event struct {
 	ID             int
 	Time           time.Time
@@ -14,13 +18,12 @@ type Event struct {
 	ReplayCommand  cmd.Command
 }
 
-var nextId int
-
+// New returns a new Event instance
 func New(deviceID string, cmd cmd.Command, orig string) Event {
-	nextId++
+	nextID++
 
 	return Event{
-		ID:             nextId,
+		ID:             nextID,
 		Time:           time.Now(),
 		OriginalString: orig,
 		DeviceID:       deviceID,

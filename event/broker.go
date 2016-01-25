@@ -6,6 +6,10 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
+// Broker is an interface for a type that implements a producer/consumer
+// pattern. You can register producers who will produce events and then
+// register consumers who will process the events. The job of the broker is
+// to receive the events and then forward them to all of the consumers
 type Broker interface {
 	AddProducer(Producer)
 	AddConsumer(Consumer)
@@ -13,6 +17,7 @@ type Broker interface {
 	Init()
 }
 
+// NewBroker returns a type that implements the Broker interface.
 func NewBroker() Broker {
 	return &broker{
 		consumers: make(map[string]chan<- Event),
