@@ -18,14 +18,14 @@ type Device interface {
 	Buttons() map[string]*Button
 	Devices() map[string]Device
 	Zones() map[string]*zone.Zone
-	ConnectionInfo() comm.ConnectionInfo
+	Auth() *comm.Auth
 	InitConnections()
 	Connect() (comm.Connection, error)
 	ReleaseConnection(comm.Connection)
-	Authenticate(comm.Connection) error
 	Stream() bool
 	BuildCommand(cmd.Command) (*cmd.Func, error)
 
+	comm.Authenticator
 	event.Producer
 	fmt.Stringer
 }
@@ -38,7 +38,7 @@ type device struct {
 	system      *System
 	//TODO: delete
 	producesEvents bool
-	connectionInfo comm.ConnectionInfo
+	auth           *comm.Auth
 	buttons        map[string]*Button
 	devices        map[string]Device
 	zones          map[string]*zone.Zone
@@ -47,17 +47,17 @@ type device struct {
 	evpFire        chan event.Event
 }
 
-func NewDevice(modelNumber, address, ID, name, description string, stream bool, ci comm.ConnectionInfo) Device {
+func NewDevice(modelNumber, address, ID, name, description string, stream bool, auth *comm.Auth) Device {
 	device := device{
-		address:        address,
-		id:             ID,
-		name:           name,
-		description:    description,
-		stream:         stream,
-		buttons:        make(map[string]*Button),
-		devices:        make(map[string]Device),
-		zones:          make(map[string]*zone.Zone),
-		connectionInfo: ci,
+		address:     address,
+		id:          ID,
+		name:        name,
+		description: description,
+		stream:      stream,
+		buttons:     make(map[string]*Button),
+		devices:     make(map[string]Device),
+		zones:       make(map[string]*zone.Zone),
+		auth:        auth,
 	}
 
 	switch modelNumber {
@@ -94,8 +94,8 @@ func (d *device) Description() string {
 	return d.description
 }
 
-func (d *device) ConnectionInfo() comm.ConnectionInfo {
-	return d.connectionInfo
+func (d *device) Auth() *comm.Auth {
+	return d.auth
 }
 
 func (d *device) Buttons() map[string]*Button {

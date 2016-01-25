@@ -59,22 +59,18 @@ func (d *Tcp600gwbDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 
 		output := int32(c.Level.Value)
 
-		// TODO: Move into connection info, user configurable
-		token := "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21"
-		host := "https://192.168.0.23"
-
 		var data string
 		if output == 0 || output == 1 {
 			data = "<gip><version>1</version><token>%s</token><did>%s</did><value>%d</value></gip>"
 		} else {
 			data = "<gip><version>1</version><token>%s</token><did>%s</did><value>%d</value><type>level</type></gip>"
 		}
-		data = fmt.Sprintf(data, token, c.ZoneAddress, output)
+		data = fmt.Sprintf(data, d.Auth().Token, c.ZoneAddress, output)
 
 		client := &http.Client{Transport: tr}
 		slc := fmt.Sprintf("cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>DeviceSendCommand</gcmd><gdata>%s</gdata></gwrcmd></gwrcmds>&fmt=xml", data)
 		fmt.Println(slc)
-		_, err := client.Post(host+"/gwr/gpo.php", "text/xml; charset=\"utf-8\"", bytes.NewReader([]byte(slc)))
+		_, err := client.Post(d.Address()+"/gwr/gpo.php", "text/xml; charset=\"utf-8\"", bytes.NewReader([]byte(slc)))
 		return err
 	}
 

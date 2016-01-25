@@ -25,9 +25,8 @@ func (d *Lbdgpro2whDevice) ModelNumber() string {
 }
 
 func (d *Lbdgpro2whDevice) InitConnections() {
-	ci := *d.connectionInfo.(*comm.TelnetConnectionInfo)
 	createConnection := func() comm.Connection {
-		conn := comm.NewTelnetConnection(ci)
+		conn := comm.NewTelnetConnection(d.Address(), d.Auth().Authenticator)
 		conn.SetPingCallback(func() error {
 			if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
 				return fmt.Errorf("%s ping failed: %s", d, err)
@@ -36,7 +35,7 @@ func (d *Lbdgpro2whDevice) InitConnections() {
 		})
 		return conn
 	}
-	ps := ci.PoolSize
+	ps := 2
 	log.V("%s init connections, pool size %d", d, ps)
 	d.pool = comm.NewConnectionPool(d.name, ps, createConnection)
 	log.V("%s connected", d)
@@ -59,8 +58,7 @@ func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
 		return fmt.Errorf("authenticate login failed: %s", err)
 	}
 
-	info := c.Info().(comm.TelnetConnectionInfo)
-	_, err = c.Write([]byte(info.Login + "\r\n"))
+	_, err = c.Write([]byte(d.auth.Login + "\r\n"))
 	if err != nil {
 		return fmt.Errorf("authenticate write login failed: %s", err)
 	}
@@ -70,7 +68,7 @@ func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
 		return fmt.Errorf("authenticate password failed: %s", err)
 	}
 
-	_, err = c.Write([]byte(info.Password + "\r\n"))
+	_, err = c.Write([]byte(d.auth.Password + "\r\n"))
 	if err != nil {
 		return fmt.Errorf("authenticate password failed: %s", err)
 	}

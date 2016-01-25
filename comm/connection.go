@@ -14,7 +14,6 @@ type Connection interface {
 	PingCallback() PingCallback
 	Status() ConnectionStatus
 	SetStatus(ConnectionStatus)
-	Info() ConnectionInfo
 }
 
 type PingCallback func() error

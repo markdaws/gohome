@@ -103,24 +103,22 @@ type sceneJSON struct {
 }
 
 type deviceJSON struct {
-	Address        string                    `json:"address"`
-	ID             string                    `json:"id"`
-	Name           string                    `json:"name"`
-	Description    string                    `json:"description"`
-	ModelNumber    string                    `json:"modelNumber"`
-	Buttons        []buttonJSON              `json:"buttons"`
-	Zones          []zoneJSON                `json:"zones"`
-	DeviceIDs      []string                  `json:"deviceIds"`
-	ConnectionInfo *telnetConnectionInfoJSON `json:"connectionInfo"`
-	Stream         bool                      `json:"stream"`
+	Address     string       `json:"address"`
+	ID          string       `json:"id"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	ModelNumber string       `json:"modelNumber"`
+	Buttons     []buttonJSON `json:"buttons"`
+	Zones       []zoneJSON   `json:"zones"`
+	DeviceIDs   []string     `json:"deviceIds"`
+	Auth        *authJSON    `json:"auth"`
+	Stream      bool         `json:"stream"`
 }
 
-type telnetConnectionInfoJSON struct {
-	PoolSize int    `json:"poolSize"`
+type authJSON struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
-	Network  string `json:"network"`
-	Address  string `json:"address"`
+	Token    string `json:"token"`
 }
 
 type commandJSON struct {
@@ -149,21 +147,18 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 
 	// Load all devices into global device list
 	for _, d := range s.Devices {
-		var ci *comm.TelnetConnectionInfo
-		if d.ConnectionInfo != nil {
-			//TODO: Only support telnet connectioninfo
-			ci = &comm.TelnetConnectionInfo{
-				Network:  d.ConnectionInfo.Network,
-				Address:  d.ConnectionInfo.Address,
-				Login:    d.ConnectionInfo.Login,
-				Password: d.ConnectionInfo.Password,
-				PoolSize: d.ConnectionInfo.PoolSize,
+		var auth *comm.Auth
+		if d.Auth != nil {
+			auth = &comm.Auth{
+				Login:    d.Auth.Login,
+				Password: d.Auth.Password,
+				Token:    d.Auth.Token,
 			}
 		}
 
-		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, ci)
-		if ci != nil {
-			dev.ConnectionInfo().(*comm.TelnetConnectionInfo).Authenticator = dev
+		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, auth)
+		if auth != nil {
+			dev.Auth().Authenticator = dev
 		}
 		sys.AddDevice(dev)
 	}
@@ -335,13 +330,12 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 			Stream:      device.Stream(),
 		}
 
-		if ci, ok := device.ConnectionInfo().(*comm.TelnetConnectionInfo); ok && ci != nil {
-			d.ConnectionInfo = &telnetConnectionInfoJSON{
-				PoolSize: ci.PoolSize,
-				Login:    ci.Login,
-				Password: ci.Password,
-				Network:  ci.Network,
-				Address:  ci.Address,
+		if device.Auth() != nil {
+			auth := device.Auth()
+			d.Auth = &authJSON{
+				Login:    auth.Login,
+				Password: auth.Password,
+				Token:    auth.Token,
 			}
 		}
 

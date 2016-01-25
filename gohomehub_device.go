@@ -29,13 +29,8 @@ func (d *GoHomeHubDevice) InitConnections() {
 	for _, z := range d.Zones() {
 		switch z.Controller {
 		case zone.ZCFluxWIFI:
-			ci := comm.TelnetConnectionInfo{
-				PoolSize: 2,
-				Network:  "tcp",
-				Address:  z.Address,
-			}
 			createConnection := func() comm.Connection {
-				conn := comm.NewTelnetConnection(ci)
+				conn := comm.NewTelnetConnection(z.Address, nil)
 				//TODO: Need to get some ping mechanism
 				/*
 					conn.SetPingCallback(func() error {
@@ -46,7 +41,7 @@ func (d *GoHomeHubDevice) InitConnections() {
 					})*/
 				return conn
 			}
-			ps := ci.PoolSize
+			ps := 2
 			log.V("%s init connections, pool size %d", d, ps)
 			d.pools[z.Controller] = comm.NewConnectionPool(d.name, ps, createConnection)
 			log.V("%s connected", d)

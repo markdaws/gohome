@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fromkeith/gossdp"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/connectedbytcp"
@@ -62,18 +61,17 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 	fmt.Println("\nDEVICES")
 
-	var makeDevice = func(modelNumber string, deviceMap map[string]interface{}, sys *System, stream bool, ci comm.ConnectionInfo) Device {
-		var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
+	var makeDevice = func(modelNumber, address string, deviceMap map[string]interface{}, sys *System, stream bool, auth *comm.Auth) Device {
 		var deviceName string = deviceMap["Name"].(string)
 
 		device := NewDevice(
 			modelNumber,
-			deviceID,
+			address,
 			sys.NextGlobalID(),
 			deviceName,
 			"",
 			stream,
-			ci)
+			auth)
 
 		for _, buttonMap := range deviceMap["Buttons"].([]interface{}) {
 			button := buttonMap.(map[string]interface{})
@@ -158,16 +156,11 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
-			//ModelNumber: L-BDGPRO2-WH
-			sbp = makeDevice("L-BDGPRO2-WH", device, system, true, &comm.TelnetConnectionInfo{
-				Network:       "tcp",
-				Address:       "192.168.0.10:23",
-				Login:         "lutron",
-				Password:      "integration",
-				PoolSize:      2,
-				Authenticator: sbp,
+			sbp = makeDevice("L-BDGPRO2-WH", "192.168.0.10:23", device, system, true, &comm.Auth{
+				Login:    "lutron",
+				Password: "integration",
 			})
-			sbp.ConnectionInfo().(*comm.TelnetConnectionInfo).Authenticator = sbp
+			sbp.Auth().Authenticator = sbp
 			makeScenes(system.Scenes, device, sbp)
 			break
 		}
@@ -191,7 +184,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		if deviceID == smartBridgeProID {
 			continue
 		}
-		gohomeDevice := makeDevice("", device, system, false, nil)
+		gohomeDevice := makeDevice("", deviceID, device, system, false, nil)
 		system.AddDevice(gohomeDevice)
 		sbp.Devices()[gohomeDevice.Address()] = gohomeDevice
 	}
@@ -245,12 +238,13 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	return system, nil
 }
 
+/*
 type tcpListener struct {
 }
 
 func (tcpListener) Response(m gossdp.ResponseMessage) {
 	fmt.Printf("%+v\n", m)
-}
+}*/
 
 //TODO: Temp function - import from UI
 func importConnectedByTCP(system *System) {
@@ -303,13 +297,15 @@ func importConnectedByTCP(system *System) {
 
 	tcp := NewDevice(
 		"TCP600GWB",
-		"tcphub",
+		"https://192.168.0.23",
 		system.NextGlobalID(),
 		"ConnectedByTcp Hub",
 		"Description",
 		false,
 		//TODO: Remove from NewDevice
-		nil)
+		&comm.Auth{
+			Token: "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21",
+		})
 
 	/*
 		//TODO: Fix
@@ -361,7 +357,6 @@ func importConnectedByTCP(system *System) {
 
 func importGoHomeHub(system *System) {
 
-	ti := &comm.TelnetConnectionInfo{}
 	ghh := NewDevice(
 		"GoHomeHub",
 		"gohomehub",
@@ -369,8 +364,7 @@ func importGoHomeHub(system *System) {
 		"GoHome Hub",
 		"GoHome Hub Description",
 		false,
-		//TODO: Remove from NewDevice
-		ti)
+		nil)
 
 	/*
 		//TODO: Fix
@@ -439,41 +433,4 @@ func importGoHomeHub(system *System) {
 	ghh.Zones()[z2.Address] = z2
 
 	system.AddDevice(ghh)
-
-	//TODO: Remove
-	c := comm.NewTelnetConnection(comm.TelnetConnectionInfo{
-		PoolSize: 2,
-		Network:  "tcp",
-		Address:  "192.168.0.24:5577",
-	})
-	err := c.Open()
-	if err != nil {
-		fmt.Printf("ERROR CONNECTING: %s", err)
-	} else {
-		/*
-			system.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
-				ZoneLocalID:  z.LocalID,
-				ZoneGlobalID: z.GlobalID,
-				ZoneName:     z.Name,
-				Level:        cmd.Level{R: 255, G: 0, B: 0},
-			})
-
-			b := []byte{0x31, 0x00, 0x00, 0xff, 0x00, 0xf0, 0x0f}
-			var t int = 0
-			for _, v := range b {
-				t += int(v)
-			}
-			cs := t & 0xff
-			b = append(b, byte(cs))
-			n, err := c.Write(b)
-			if err != nil {
-				fmt.Printf("ERROR SENDING %s\n", err)
-			} else {
-				fmt.Printf("Send data: %d\n", n)
-			}
-
-			_ = n
-			//		c.Close()
-		*/
-	}
 }
