@@ -441,8 +441,6 @@ func apiAddZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		}
 
 		errors := system.AddZone(z)
-		//errors := system.ValidateZone(z)
-		//TODO: Need to know if this is a validation error or something else ...
 		if errors != nil {
 			if valErrs, ok := errors.(*validation.Errors); ok {
 				fmt.Printf("%+v\n", valErrs.Errors[0])
@@ -456,45 +454,9 @@ func apiAddZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 			return
 		}
 
-		//TODO: need some kind of key to associate failures with
-		fmt.Printf("%+v\n", data)
-		// Validation
-		// must have a name
-		// must have a device id
-		// controller
-		// address
-		/*
-			system.Save(recipeManager)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}*/
-
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(struct{}{})
 	}
-
-	/*
-
-		zones := make(zones, len(system.Zones), len(system.Zones))
-		var i int32
-		for _, zone := range system.Zones {
-			zones[i] = jsonZone{
-				Address:     zone.Address,
-				ID:          zone.ID,
-				Name:        zone.Name,
-				Description: zone.Description,
-				Type:        zone.Type.ToString(),
-				Output:      zone.Output.ToString(),
-				Controller:  zone.Controller,
-			}
-			i++
-		}
-		sort.Sort(zones)
-		if err := json.NewEncoder(w).Encode(zones); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	}*/
 }
 
 func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {

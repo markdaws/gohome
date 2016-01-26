@@ -274,6 +274,12 @@
         },
 
         importZones: function() {
+            //TODO:
+            //1. Loop through all zones
+            //2. Show loading indicator on import button, disable it
+            //3. Show tick when success, x when failed on each zone info
+            //4. When discovering, show zones that are already in the system
+            //5. Handle clicking import multiple times for zones that already exist
             var zones = []
             var self = this;
             this.state.zones.forEach(function(zone) {
@@ -359,9 +365,7 @@
         },
         
         selected: function(evt) {
-            console.log('changed')
             this.setState({ value: evt.target.value });
-
             this.props.changed && this.props.changed(evt.target.value);
         },
         
@@ -389,7 +393,8 @@
                 name: this.props.name,
                 description: this.props.description,
                 address: this.props.address,
-                deviceId: this.props.deviceId
+                deviceId: this.props.deviceId,
+                type: this.props.type,
             }
         },
 
@@ -400,20 +405,20 @@
                 name: s.name,
                 description: s.description,
                 address: s.address,
-                deviceId: s.deviceId
+                deviceId: s.deviceId,
+                type: s.type,
             }
         },
 
         devicePickerChanged: function(deviceId) {
-            console.log(deviceId)
             this.setState({ deviceId: deviceId });
         },
 
-        render: function() {
-            var zone = this.state.zone || {};
+        zoneTypeChanged: function(type) {
+            this.setState({ type: type });
+        },
 
-            //TODO: cid
-            var cid = this.state.cid;
+        render: function() {
             return (
                 <div className="cmp-ZoneInfo well">
                     <div className={this.addErr('form-group', 'name')}>
@@ -436,10 +441,54 @@
                         <DevicePicker devices={this.props.devices} changed={this.devicePickerChanged}/>
                         {this.errMsg('deviceId')}
                     </div>
+                    <div className={this.addErr("form-group", "type")}>
+                        <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
+                        <ZoneTypePicker changed={this.zoneTypeChanged}/>
+                        {this.errMsg('type')}
+                    </div>
+
                     <div className="clearfix">
                         <button className="btn btn-primary pull-left" onClick={this.turnOn}>Turn On</button>
                         <button className="btn btn-primary btnOff pull-left" onClick={this.turnOff}>Turn Off</button>
                     </div>
+                </div>
+            );
+        }
+    });
+
+    var ZoneTypePicker = React.createClass({
+        //TODO: handle passing in an initial value
+        getInitialState: function() {
+            return {
+                value: this.props.type || 'unknown'
+            };
+        },
+
+        componentDidMount: function() {
+            // If a value wasn't passed in, raise a changed notification so callers
+            // can set their value accordingly since we default to unknown
+            if (this.state.value === 'unknown') {
+                this.props.changed && this.props.changed(this.state.value);
+            }
+        },
+        
+        selected: function(evt) {
+            this.setType(evt.target.value);
+        },
+
+        setType: function(type) {
+            this.setState({ value: type });
+            this.props.changed && this.props.changed(type);
+        },
+        
+        render: function() {
+            return (
+                <div className="cmp-ZoneTypePicker">
+                    <select className="form-control" onChange={this.selected} value={this.state.value}>
+                        <option value="unknown">Unknown</option>
+                        <option value="light">Light</option>
+                        <option value="shade">Shade</option>
+                    </select>
                 </div>
             );
         }
