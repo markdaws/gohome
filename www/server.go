@@ -437,7 +437,7 @@ func apiAddZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 			DeviceID:    data.DeviceID,
 			Type:        zone.TypeFromString(data.Type),
 			Output:      zone.OutputFromString(data.Output),
-			Controller:  "TODO:",
+			Controller:  data.Controller,
 		}
 
 		errors := system.AddZone(z)

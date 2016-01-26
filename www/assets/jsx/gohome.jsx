@@ -363,7 +363,10 @@
                 value: ''
             };
         },
-        
+
+        //TODO: If only one item in the list, select by default on load
+        //TODO: if output or type is unknown need to update zone control to be
+        //able to handle those values
         selected: function(evt) {
             this.setState({ value: evt.target.value });
             this.props.changed && this.props.changed(evt.target.value);
@@ -396,6 +399,7 @@
                 deviceId: this.props.deviceId,
                 type: this.props.type,
                 output: this.props.output,
+                controller: this.props.controller,
             }
         },
 
@@ -409,6 +413,7 @@
                 deviceId: s.deviceId,
                 type: s.type,
                 output: s.output,
+                controller: s.controller,
             }
         },
 
@@ -416,12 +421,16 @@
             this.setState({ deviceId: deviceId });
         },
 
-        zoneTypeChanged: function(type) {
+        typeChanged: function(type) {
             this.setState({ type: type });
         },
 
-        zoneOutputChanged: function(output) {
+        outputChanged: function(output) {
             this.setState({ output: output });
+        },
+
+        controllerChanged: function(controller) {
+            this.setState({ controller: controller });
         },
 
         render: function() {
@@ -449,13 +458,18 @@
                     </div>
                     <div className={this.addErr("form-group", "type")}>
                         <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
-                        <ZoneTypePicker changed={this.zoneTypeChanged}/>
+                        <ZoneTypePicker changed={this.typeChanged}/>
                         {this.errMsg('type')}
                     </div>
                     <div className={this.addErr("form-group", "output")}>
                         <label className="control-label" htmlFor={this.uid("output")}>Output*</label>
-                        <ZoneOutputPicker changed={this.zoneOutputChanged}/>
+                        <ZoneOutputPicker changed={this.outputChanged}/>
                         {this.errMsg('output')}
+                    </div>
+                    <div className={this.addErr("form-group", "controller")}>
+                        <label className="control-label" htmlFor={this.uid("controller")}>Controller*</label>
+                        <ZoneControllerPicker changed={this.controllerChanged}/>
+                        {this.errMsg('controller')}
                     </div>
                     <div className="clearfix">
                         <button className="btn btn-primary pull-left" onClick={this.turnOn}>Turn On</button>
@@ -535,6 +549,30 @@
                         <option value="binary">Binary</option>
                         <option value="rgb">RGB</option>
                         <option value="unknown">Unknown</option>
+                    </select>
+                </div>
+            );
+        }
+    });
+
+    var ZoneControllerPicker = React.createClass({
+        getInitialState: function() {
+            return {
+                value: this.props.type || ''
+            };
+        },
+
+        selected: function(evt) {
+            this.setState({ value: evt.target.value });
+            this.props.changed && this.props.changed(evt.target.value);
+        },
+        
+        render: function() {
+            return (
+                <div className="cmp-ZoneControllerPicker">
+                    <select className="form-control" onChange={this.selected} value={this.state.value}>
+                        <option value="">Default</option>
+                        <option value="FluxWIFI">Flux WIFI</option>
                     </select>
                 </div>
             );
