@@ -395,6 +395,7 @@
                 address: this.props.address,
                 deviceId: this.props.deviceId,
                 type: this.props.type,
+                output: this.props.output,
             }
         },
 
@@ -407,6 +408,7 @@
                 address: s.address,
                 deviceId: s.deviceId,
                 type: s.type,
+                output: s.output,
             }
         },
 
@@ -416,6 +418,10 @@
 
         zoneTypeChanged: function(type) {
             this.setState({ type: type });
+        },
+
+        zoneOutputChanged: function(output) {
+            this.setState({ output: output });
         },
 
         render: function() {
@@ -446,7 +452,11 @@
                         <ZoneTypePicker changed={this.zoneTypeChanged}/>
                         {this.errMsg('type')}
                     </div>
-
+                    <div className={this.addErr("form-group", "output")}>
+                        <label className="control-label" htmlFor={this.uid("output")}>Output*</label>
+                        <ZoneOutputPicker changed={this.zoneOutputChanged}/>
+                        {this.errMsg('output')}
+                    </div>
                     <div className="clearfix">
                         <button className="btn btn-primary pull-left" onClick={this.turnOn}>Turn On</button>
                         <button className="btn btn-primary btnOff pull-left" onClick={this.turnOff}>Turn Off</button>
@@ -457,7 +467,6 @@
     });
 
     var ZoneTypePicker = React.createClass({
-        //TODO: handle passing in an initial value
         getInitialState: function() {
             return {
                 value: this.props.type || 'unknown'
@@ -488,6 +497,44 @@
                         <option value="unknown">Unknown</option>
                         <option value="light">Light</option>
                         <option value="shade">Shade</option>
+                    </select>
+                </div>
+            );
+        }
+    });
+
+    var ZoneOutputPicker = React.createClass({
+        getInitialState: function() {
+            return {
+                value: this.props.type || 'continuous'
+            };
+        },
+
+        componentDidMount: function() {
+            // If a value wasn't passed in, raise a changed notification so callers
+            // can set their value accordingly since we default to unknown
+            if (this.state.value === 'continuous') {
+                this.props.changed && this.props.changed(this.state.value);
+            }
+        },
+        
+        selected: function(evt) {
+            this.setOutput(evt.target.value);
+        },
+
+        setOutput: function(output) {
+            this.setState({ value: output });
+            this.props.changed && this.props.changed(output);
+        },
+        
+        render: function() {
+            return (
+                <div className="cmp-ZoneOutputPicker">
+                    <select className="form-control" onChange={this.selected} value={this.state.value}>
+                        <option value="continuous">Continuous</option>
+                        <option value="binary">Binary</option>
+                        <option value="rgb">RGB</option>
+                        <option value="unknown">Unknown</option>
                     </select>
                 </div>
             );
