@@ -103,6 +103,9 @@ button.disabled {
 .cmp-ImportFluxWIFI .spinnerWrapper .fa.fa-spinner {
     font-size: 35px;
 }
+.cmp-ImportFluxWIFI .discover.fa-spinner {
+    margin-left: 12px;
+}
 
 .cmp-ZoneInfo label {
     font-size: 12px;

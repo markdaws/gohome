@@ -273,35 +273,6 @@
             });
         },
 
-        importZones: function() {
-            //TODO:
-            //1. Loop through all zones
-            //2. Show loading indicator on import button, disable it
-            //3. Show tick when success, x when failed on each zone info
-            //4. When discovering, show zones that are already in the system
-            //5. Handle clicking import multiple times for zones that already exist
-            var zones = []
-            var self = this;
-            this.state.zones.forEach(function(zone) {
-                zones.push(self.refs["zone" + zone.address].toJson());
-            });
-            
-            $.ajax({
-                url: '/api/v1/systems/1/zones',
-                type: 'POST',
-                dataType: 'json',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(zones[0]),
-                success: function(data) {
-                    data = data || {};
-                    self.setState({ errors: data.errors });
-                }.bind(this),
-                error: function(xhr, status, err) {
-                    self.setState({ errors: (JSON.parse(xhr.responseText) || {}).errors});
-                }.bind(this)
-            });
-        },
-
         render: function() {
 
             var loading
@@ -330,7 +301,7 @@
             if (this.state.zones.length > 0) {
                 var self = this
                 zones = this.state.zones.map(function(zone) {
-                    return <ZoneInfo errors={self.state.errors} ref={"zone" + zone.address} devices={self.state.devices} name={zone.name} description={zone.description} address={zone.address} deviceId={zone.deviceId} key={zone.address} />
+                    return <ZoneInfo errors={self.state.errors} ref={"zone" + zone.address} devices={self.state.devices} name={zone.name} description={zone.description} type="light" output="rgb" controller="FluxWIFI" address={zone.address} deviceId={zone.deviceId} key={zone.address} />
                 })
             }
 
@@ -340,8 +311,7 @@
                     <div>
                     <button className={"btn btn-primary" + (this.state.discovering ? " disabled" : "")}
                     onClick={this.discover}>Discover Zones</button>
-                    <i className={"fa fa-spinner fa-spin" + (this.state.discovering ? "" : " hidden")}></i>
-                    <button className="btn btn-primary" onClick={this.importZones}>Import Selected</button>
+                    <i className={"fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden")}></i>
                     <h3 className={this.state.zones.length > 0 ? "" : " hidden"}>Zones</h3>
                     {zones}
                     </div>
@@ -400,7 +370,7 @@
                 type: this.props.type,
                 output: this.props.output,
                 controller: this.props.controller,
-                errors: null
+                errors: null,
             }
         },
 
@@ -482,17 +452,17 @@
                     </div>
                     <div className={this.addErr("form-group", "type")}>
                         <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
-                        <ZoneTypePicker changed={this.typeChanged}/>
+                        <ZoneTypePicker type={this.props.type} changed={this.typeChanged}/>
                         {this.errMsg('type')}
                     </div>
                     <div className={this.addErr("form-group", "output")}>
                         <label className="control-label" htmlFor={this.uid("output")}>Output*</label>
-                        <ZoneOutputPicker changed={this.outputChanged}/>
+                        <ZoneOutputPicker output={this.props.output} changed={this.outputChanged}/>
                         {this.errMsg('output')}
                     </div>
                     <div className={this.addErr("form-group", "controller")}>
                         <label className="control-label" htmlFor={this.uid("controller")}>Controller*</label>
-                        <ZoneControllerPicker changed={this.controllerChanged}/>
+                        <ZoneControllerPicker controller={this.props.controller} changed={this.controllerChanged}/>
                         {this.errMsg('controller')}
                     </div>
                     <div className="clearfix">
@@ -613,12 +583,19 @@
         },
         
         render: function() {
+            var types = [
+                { str: "Unknown", val:"unknown" },
+                { str: "Light", val:"light" },
+                { str: "Shade", val:"shade" }
+            ];
+            var self = this;
+            var nodes = types.map(function(type) {
+                return <option value={type.val} key={type.val}>{type.str}</option>
+            });
             return (
                 <div className="cmp-ZoneTypePicker">
-                    <select className="form-control" onChange={this.selected} value={this.state.value}>
-                        <option value="unknown">Unknown</option>
-                        <option value="light">Light</option>
-                        <option value="shade">Shade</option>
+                    <select className="form-control" onChange={this.selected} defaultValue={this.props.type} value={this.state.value}>
+                        {nodes}
                     </select>
                 </div>
             );
@@ -628,7 +605,7 @@
     var ZoneOutputPicker = React.createClass({
         getInitialState: function() {
             return {
-                value: this.props.type || 'continuous'
+                value: this.props.output || 'continuous'
             };
         },
 
@@ -652,7 +629,7 @@
         render: function() {
             return (
                 <div className="cmp-ZoneOutputPicker">
-                    <select className="form-control" onChange={this.selected} value={this.state.value}>
+                    <select className="form-control" defaultValue={this.props.output} onChange={this.selected} value={this.state.value}>
                         <option value="continuous">Continuous</option>
                         <option value="binary">Binary</option>
                         <option value="rgb">RGB</option>
@@ -666,7 +643,7 @@
     var ZoneControllerPicker = React.createClass({
         getInitialState: function() {
             return {
-                value: this.props.type || ''
+                value: this.props.controller || ''
             };
         },
 
@@ -678,7 +655,7 @@
         render: function() {
             return (
                 <div className="cmp-ZoneControllerPicker">
-                    <select className="form-control" onChange={this.selected} value={this.state.value}>
+                    <select className="form-control" onChange={this.selected} defaultValue={this.props.controller} value={this.state.value}>
                         <option value="">Default</option>
                         <option value="FluxWIFI">Flux WIFI</option>
                     </select>

@@ -94,7 +94,7 @@ func Scan(waitTimeSeconds int) ([]BulbInfo, error) {
 			}
 
 			infos = append(infos, BulbInfo{
-				IP:    parts[0],
+				IP:    parts[0] + ":5577",
 				ID:    parts[1],
 				Model: parts[2],
 			})

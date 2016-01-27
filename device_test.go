@@ -1,5 +1,8 @@
 package gohome
 
+//TODO: After adding a zone, need to check connections are valid
+//and you can talk to the device immediately
+
 /*
 import (
 	"fmt"

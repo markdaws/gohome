@@ -131,7 +131,7 @@ func (d *device) AddZone(z *zone.Zone) error {
 	// Make sure zone doesn't have same address as any other zone
 	for _, cz := range d.zones {
 		if cz.Address == z.Address {
-			errs.Add("device already has a zone with the same address, must be unique", "Address")
+			errs.Add(fmt.Sprintf("device already has a zone with the same address [%s], must be unique", z.Address), "Address")
 			return errs
 		}
 	}

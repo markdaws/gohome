@@ -392,7 +392,6 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
 		zones := make(zones, len(system.Zones), len(system.Zones))
 		var i int32
 		for _, zone := range system.Zones {

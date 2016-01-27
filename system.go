@@ -69,6 +69,10 @@ func (s *System) AddZone(z *zone.Zone) error {
 	}
 
 	z.ID = s.NextGlobalID()
+
+	//TODO: When you add a zone, need to then also initconnetions
+	//so that the system can talk to the new zone ...
+	//TODO:!!
 	err := d.AddZone(z)
 	if err != nil {
 		return err
@@ -215,7 +219,6 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 				Output:      zone.OutputFromString(zn.Output),
 				Controller:  zn.Controller,
 			}
-			dev.Zones()[z.Address] = z
 			sys.AddZone(z)
 		}
 	}

@@ -30,6 +30,7 @@ func (d *GoHomeHubDevice) InitConnections() {
 		switch z.Controller {
 		case zone.ZCFluxWIFI:
 			createConnection := func() comm.Connection {
+				// Add he port number which is 5577 for Flux WIFI bulbs
 				conn := comm.NewTelnetConnection(z.Address, nil)
 				//TODO: Need to get some ping mechanism
 				/*
@@ -43,7 +44,7 @@ func (d *GoHomeHubDevice) InitConnections() {
 			}
 			ps := 2
 			log.V("%s init connections, pool size %d", d, ps)
-			d.pools[z.Controller] = comm.NewConnectionPool(d.name, ps, createConnection)
+			d.pools[z.ID] = comm.NewConnectionPool(d.name, ps, createConnection)
 			log.V("%s connected", d)
 		}
 	}
@@ -97,7 +98,7 @@ func (d *GoHomeHubDevice) buildZoneTurnOnCommand(c *cmd.ZoneTurnOn) (*cmd.Func, 
 	case zone.ZCFluxWIFI:
 		return &cmd.Func{
 			Func: func() error {
-				pool, ok := d.pools[z.Controller]
+				pool, ok := d.pools[z.ID]
 				if !ok || pool == nil {
 					return fmt.Errorf("gohomehub - connection pool not ready")
 				}
@@ -108,7 +109,7 @@ func (d *GoHomeHubDevice) buildZoneTurnOnCommand(c *cmd.ZoneTurnOn) (*cmd.Func, 
 				}
 
 				defer func() {
-					d.pools[z.Controller].Release(conn)
+					d.pools[z.ID].Release(conn)
 				}()
 				return fluxwifi.TurnOn(conn)
 			},
@@ -128,7 +129,7 @@ func (d *GoHomeHubDevice) buildZoneTurnOffCommand(c *cmd.ZoneTurnOff) (*cmd.Func
 	case zone.ZCFluxWIFI:
 		return &cmd.Func{
 			Func: func() error {
-				pool, ok := d.pools[z.Controller]
+				pool, ok := d.pools[z.ID]
 				if !ok || pool == nil {
 					return fmt.Errorf("gohomehub - connection pool not ready")
 				}
@@ -139,7 +140,7 @@ func (d *GoHomeHubDevice) buildZoneTurnOffCommand(c *cmd.ZoneTurnOff) (*cmd.Func
 				}
 
 				defer func() {
-					d.pools[z.Controller].Release(conn)
+					d.pools[z.ID].Release(conn)
 				}()
 				return fluxwifi.TurnOff(conn)
 			},
@@ -178,7 +179,7 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 					bV = rV
 				}
 
-				pool, ok := d.pools[z.Controller]
+				pool, ok := d.pools[z.ID]
 				if !ok || pool == nil {
 					return fmt.Errorf("gohomehub - connection pool not ready")
 				}
@@ -189,7 +190,7 @@ func (d *GoHomeHubDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 				}
 
 				defer func() {
-					d.pools[z.Controller].Release(conn)
+					d.pools[z.ID].Release(conn)
 				}()
 				return fluxwifi.SetLevel(rV, gV, bV, conn)
 			},

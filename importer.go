@@ -227,7 +227,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			Type:        zoneTypeFinal,
 			Output:      outputTypeFinal,
 		}
-		system.AddZone(newZone)
+		err := system.AddZone(newZone)
+		if err != nil {
+			fmt.Printf("err add zone: %s\n", err)
+		}
 		//sbp.Zones()[newZone.Address] = newZone
 	}
 
@@ -408,16 +411,17 @@ func importGoHomeHub(system *System) {
 
 	//Aim: Be able to configure and control bulb completely from gohome app
 
-	z := &zone.Zone{
-		Address:     "192.168.0.24:5577",
-		Name:        "FluxBulb",
-		Description: "Flux wifi bulb",
-		DeviceID:    ghh.ID(),
-		Type:        zone.ZTLight,
-		Output:      zone.OTRGB,
-		Controller:  zone.ZCFluxWIFI,
-	}
-	ghh.Zones()[z.Address] = z
+	/*
+		z := &zone.Zone{
+			Address:     "192.168.0.24:5577",
+			Name:        "FluxBulb",
+			Description: "Flux wifi bulb",
+			DeviceID:    ghh.ID(),
+			Type:        zone.ZTLight,
+			Output:      zone.OTRGB,
+			Controller:  zone.ZCFluxWIFI,
+		}
+		ghh.Zones()[z.Address] = z*/
 	/*
 		z2 := &zone.Zone{
 			Address:     "192.168.0.24:55777",
