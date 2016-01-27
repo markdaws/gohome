@@ -30,10 +30,10 @@
             return this.state.cid + '.' + field
         },
         getErr: function(field) {
-            if (!this.props.errors) {
+            if (!this.state.errors) {
                 return null;
             }
-            return this.props.errors[this.uid(field)];            
+            return this.state.errors[this.uid(field)];            
         },
         hasErr: function(field) {
             return this.getErr(field) != null;
@@ -400,6 +400,7 @@
                 type: this.props.type,
                 output: this.props.output,
                 controller: this.props.controller,
+                errors: null
             }
         },
 
@@ -415,6 +416,29 @@
                 output: s.output,
                 controller: s.controller,
             }
+        },
+
+        save: function() {
+            var saveBtn = this.refs.saveBtn;
+            saveBtn.saving();
+
+            this.setState({ errors: null });
+            
+            var self = this;
+            $.ajax({
+                url: '/api/v1/systems/1/zones',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(this.toJson()),
+                success: function(data) {
+                    saveBtn.success();
+                },
+                error: function(xhr, status, err) {
+                    self.setState({ errors: (JSON.parse(xhr.responseText) || {}).errors});
+                    saveBtn.failure();
+                }
+            });            
         },
 
         devicePickerChanged: function(deviceId) {
@@ -474,8 +498,92 @@
                     <div className="clearfix">
                         <button className="btn btn-primary pull-left" onClick={this.turnOn}>Turn On</button>
                         <button className="btn btn-primary btnOff pull-left" onClick={this.turnOff}>Turn Off</button>
+                        <div className="pull-right">
+                            <SaveBtn ref="saveBtn" clicked={this.save} text="Import" />
+                        </div>
                     </div>
                 </div>
+            );
+        }
+    });
+
+    var SaveBtn = React.createClass({
+        getInitialState: function() {
+            return {
+                current: 'default',
+                timeout: -1
+            };
+        },
+        reset: function() {
+            this.setState({ current: 'default' });
+        },
+        saving: function() {
+            this.setState({ current: 'saving' });
+        },
+        success: function() {
+            this.setState({ current: 'success' });
+        },
+        failure: function() {
+            this.clearTimeout();
+            var self = this;
+            var timeout = setTimeout(function() {
+                self.reset();
+            }, 1500);
+            this.setState({
+                current: 'failure',
+                timeout: timeout
+            });
+        },
+        clicked: function() {
+            this.props.clicked();
+        },
+        clearTimeout: function() {
+            clearTimeout(this.state.timeout);
+        },
+        render: function() {
+            var btnType, body;
+            var disabled = true;
+            switch (this.state.current) {
+            case 'default':
+                btnType = "btn-primary";
+                body = (
+                    <div>
+                        {this.props.text}
+                    </div>
+                );
+                disabled = false;
+                break;
+            case 'saving':
+                btnType = 'btn-primary';
+                body = (
+                    <div>
+                        <i className="fa fa-spinner fa-spin"></i>
+                    </div>
+                );                
+                break;
+            case 'success':
+                btnType = "btn-success";
+                body = (
+                    <div>
+                        <span className="glyphicon glyphicon-ok"></span>
+                    </div>
+                );
+                break;
+            case 'failure':
+                btnType = "btn-danger";
+                body = (
+                    <div>
+                        Error
+                    </div>
+                );
+                break;
+            }
+
+            var disabledClass = disabled ? " disabled" : "";
+            return (
+                <button className={"cmp-SaveBtn btn " + btnType + disabledClass} onClick={this.clicked}>
+                    {body}
+                </button>
             );
         }
     });

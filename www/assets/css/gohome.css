@@ -1,6 +1,10 @@
 body {
 }
 
+button.disabled {
+    pointer-events: none;
+}
+
 .controlPageWrapper {
     margin-top: 55px;
 }
@@ -85,7 +89,6 @@ body {
     margin-top: 12px;
 }
 .cmp-Import .fa.fa-spinner {
-    margin-left: 12px;
     font-size: 22px;
 }
 
@@ -107,6 +110,13 @@ body {
 }
 .cmp-ZoneInfo .btnOff {
     margin-left: 12px;
+}
+.cmp-ZoneInfo .btnSave span {
+    padding-left: 12px;
+}
+
+.cmp-SaveBtn {
+    width: 100px;
 }
 
 .cmp-DeviceList .header {
