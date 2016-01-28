@@ -28,6 +28,7 @@ type Device interface {
 	SupportsController(c zone.Controller) bool
 
 	AddZone(z *zone.Zone) error
+	Validate() *validation.Errors
 	comm.Authenticator
 	event.Producer
 	fmt.Stringer
@@ -50,6 +51,7 @@ type device struct {
 	evpFire        chan event.Event
 }
 
+//TODO: Remove ID from parameters, assign within the function
 func NewDevice(modelNumber, address, ID, name, description string, stream bool, auth *comm.Auth) Device {
 	device := device{
 		address:     address,
@@ -79,6 +81,22 @@ func NewDevice(modelNumber, address, ID, name, description string, stream bool, 
 	default:
 		return nil
 	}
+}
+
+func (d *device) Validate() *validation.Errors {
+	errors := &validation.Errors{}
+
+	if d.name == "" {
+		errors.Add("required field", "Name")
+	}
+
+	if errors.Has() {
+		return errors
+	}
+
+	//TODO: If this is a tcp device then we need a token, validate
+	//TODO: If tcp device, need an address
+	return nil
 }
 
 func (d *device) Address() string {

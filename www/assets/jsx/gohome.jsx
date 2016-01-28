@@ -56,6 +56,16 @@
             var s = {}
             s[statePath] = evt.target.value;
             this.setState(s);
+        },
+        isReadOnly: function(field) {
+            var fields = this.props.readOnlyFields || ''
+            var items = fields.split(',');
+            for (var i=0; i<items.length; ++i) {
+                if (items[i] === field) {
+                    return true;
+                }
+            }
+            return false;
         }
     };
 
@@ -152,7 +162,7 @@
             var body, importBtn
             if (this.state.importing) {
                 body = <Import/>
-                importBtn = <button className="btn btn-danger" onClick={this.cancelImport}>Cancel</button>
+                importBtn = <button className="btn btn-danger pull-right btnExitImport" onClick={this.cancelImport}>Exit Import</button>
             } else {
                 body = <SystemDeviceList/>
                 importBtn = <button className="btn btn-primary" onClick={this.importProduct}>Import</button>
@@ -190,7 +200,7 @@
             }
             return (
                 <div className="cmp-Import">
-                    <h4>Select a product to import</h4>
+                    <h3>Select a product to import</h3>
                     <select className="form-control" onChange={this.productSelected} value={this.state.selectedProduct}>
                         <option value="">Choose ...</option>
                         <option value="LLL">Lutron</option>
@@ -313,6 +323,7 @@
                     onClick={this.discover}>Discover Zones</button>
                     <i className={"fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden")}></i>
                     <h3 className={this.state.zones.length > 0 ? "" : " hidden"}>Zones</h3>
+                    <p className={this.state.zones.length > 0 ? "" : " hidden"}>Click "Import" next to each zone you want to import</p>
                     {zones}
                     </div>
                 );
@@ -701,7 +712,7 @@
         },
 
         getToken: function() {
-            var device = this.refs.devInfo.getValues();
+            var device = this.refs.devInfo.toJson();
             this.setState({
                 tokenMissingAddress: false,
                 tokenInProgress: true
@@ -752,74 +763,80 @@
                     <span className={"help-block" + (this.state.tokenError ? "" : " hidden")}>Error - unable to get the token, make sure you press the physical "sync" button on the TCP hub device before clicking the "Get Token" button otherwise this will fail</span>
                     <span className={"help-block" + (this.state.tokenMissingAddress ? "" : " hidden")}>Error - you must put a valid network address in the "Address" field first before clicking this button</span>
                 </div>
-                <DeviceInfo showToken="true" token={this.state.token} tokenError={this.state.tokenError} address={this.state.location} ref="devInfo"/>
+                <DeviceInfo modelNumber="TCP600GWB" readOnlyFields="modelNumber" showToken="true" token={this.state.token} tokenError={this.state.tokenError} address={this.state.location} ref="devInfo"/>
                 </div>
             )
         }
     });
 
     var DeviceInfo = React.createClass({
+        mixins: [UniqueIdMixin, InputValidationMixin],
         getInitialState: function() {
             return {
-                device: {
-                    name: this.props.name || '',
-                    description: this.props.description || '',
-                    address: this.props.address,
-                    id: '',
-                    modelNumber: '',
-                    securityToken: this.props.token,
-                    showToken: false
-                }
+                cid: this.getNextIdAndIncrement() + '',
+                name: this.props.name || '',
+                description: this.props.description || '',
+                address: this.props.address,
+                id: '',
+                modelNumber: this.props.modelNumber || '',
+                token: this.props.token,
+                showToken: false,
+                errors: null
             }
         },
 
-        getValues: function() {
-            return this.state.device;
+        toJson: function() {
+            var s = this.state;
+            return {
+                clientId: s.cid,
+                name: s.name,
+                description: s.description,
+                address: s.address,
+                modelNumber: s.modelNumber,
+                token: s.token
+            };
         },
 
         componentWillReceiveProps: function(nextProps) {
             var device = this.state.device;
             if (nextProps.name != "") {
-                device.name = nextProps.name;
+                this.setState({ name: nextProps.name });
             }
             if (nextProps.description != "") {
-                device.description = nextProps.description;
+                this.setState({ description: nextProps.description });
             }
             if (nextProps.address != "") {
-                device.address = nextProps.address;
+                this.setState({ address: nextProps.address });
             }
             if (nextProps.token != "") {
-                device.securityToken = nextProps.token;
+                this.setState({ token: nextProps.token });
             }
-            this.setState({ device: device });
-        },
-
-        nameChanged: function(evt) {
-            var device = this.state.device;
-            device.name = evt.target.value;
-            this.setState({ device: device });
-        },
-
-        descriptionChanged: function(evt) {
-            var device = this.state.device;
-            device.description = evt.target.value;
-            this.setState({ device: device });
-        },
-
-        addressChanged: function(evt) {
-            var device = this.state.device;
-            device.address = evt.target.value;
-            this.setState({ device: device });
-        },
-
-        tokenChanged: function(evt) {
-            var device = this.state.device;
-            device.securityToken = evt.target.value;
-            this.setState({ device: device });
         },
 
         testConnection: function() {
             //TODO: How to know what to call
+        },
+
+        save: function() {
+            var saveBtn = this.refs.saveBtn;
+            saveBtn.saving();
+            this.setState({ errors: null });
+
+            var self = this;
+            $.ajax({
+                url: '/api/v1/systems/1/devices',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(this.toJson()),
+                success: function(data) {
+                    saveBtn.success();
+                },
+                error: function(xhr, status, err) {
+                    self.setState({ errors: JSON.parse(xhr.responseText || '{}').errors});
+                    saveBtn.failure();
+                }
+            });            
         },
         
         render: function() {
@@ -829,34 +846,41 @@
             var token
             if (this.props.showToken) {
                 token = (
-                    <div className={"form-group" + (this.props.tokenError ? " has-error" : "")}>
-                        <label className="control-label" htmlFor="securitytoken">Security Token</label>
-                        <input value={device.securityToken} onChange={this.tokenChanged} className="securitytoken form-control" type="text" id="securitytoken"/>
-                        <span className={"help-block" + (this.props.tokenError ? "" : " hidden")}>Error - failed to fetch token, make sure you pressed the sync button on the tcp hub device before requesting the token</span>
+                    <div className={this.addErr("form-group", "token")}>
+                        <label className="control-label" htmlFor={this.uid("token")}>Security Token</label>
+                        <input value={this.state.token} data-statepath="token" onChange={this.changed} className="token form-control" type="text" id={this.uid("token")}/>
+                        {this.errMsg('token')}
                     </div>
                 );
             }
             
             return (
                 <div className="cmp-DeviceInfo well">
-                    <div className="form-group">
-                        <label className="control-label" htmlFor="name">Name</label>
-                        <input value={device.name} onChange={this.nameChanged} className="name form-control" type="text" id="name"/>
-                        <span className={"help-block hidden"}>Error - TODO:</span>
+                    <div className={this.addErr("form-group", "name")}>
+                        <label className="control-label" htmlFor={this.uid("name")}>Name</label>
+                        <input value={this.state.name} data-statepath="name" onChange={this.changed} className="name form-control" type="text" id="name"/>
+                        {this.errMsg("name")}
                     </div>
-                    <div className="form-group">
-                        <label className="control-label" htmlFor="description">Description</label>
-                        <input value={device.description} onChange={this.descriptionChanged} className="description form-control" type="text" id="description"/>
-                        <span className={"help-block hidden"}>Error - TODO:</span>
+                    <div className={this.addErr("form-group", "description")}>
+                        <label className="control-label" htmlFor={this.uid("description")}>Description</label>
+                        <input value={this.state.description} data-statepath="description" onChange={this.changed} className="description form-control" type="text" id={this.uid("description")}/>
+                        {this.errMsg("description")}
                     </div>
-                    <div className="form-group">
-                        <label className="control-label" htmlFor="address">Address</label>
-                        <input value={device.address} onChange={this.addressChanged} className="address form-control" type="text" id="address"/>
-                        <span className={"help-block hidden"}>Error - TODO:</span>
-                </div>
-                {token}
-                <button className="btn btn-primary" onClick={this.testConnection}>Test Connection</button>
-                
+                    <div className={this.addErr("form-group", "modelNumber")}>
+                        <label className="control-label" htmlFor={this.uid("modelNumber")}>Model Number</label>
+                        <input value={this.state.modelNumber} readOnly={this.isReadOnly("modelNumber")} data-statepath="modelNumber" onChange={this.changed} className="modelNumber form-control" type="text" id={this.uid("modelNumber")}/>
+                        {this.errMsg("modelNumber")}
+                    </div>
+                    <div className={this.addErr("form-group", "address")}>
+                        <label className="control-label" htmlFor={this.uid("address")}>Address</label>
+                        <input value={this.state.address} data-statepath="address" onChange={this.changed} className="address form-control" type="text" id={this.uid("address")}/>
+                        {this.errMsg("address")}
+                    </div>
+                    {token}
+                    <button className="btn btn-primary" onClick={this.testConnection}>Test Connection</button>
+                    <div className="pull-right">
+                        <SaveBtn ref="saveBtn" clicked={this.save} text="Import" />
+                    </div>
                 </div>
             );
         }

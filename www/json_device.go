@@ -6,6 +6,8 @@ type jsonDevice struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	ModelNumber string `json:"modelNumber"`
+	Token       string `json:"token"`
+	ClientID    string `json:"clientId"`
 	//TODO: Stream
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
+	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -97,4 +98,28 @@ func (d *Tcp600gwbDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 
 func (d *Tcp600gwbDevice) SupportsController(c zone.Controller) bool {
 	return c == zone.ZCDefault
+}
+
+func (d *Tcp600gwbDevice) Validate() *validation.Errors {
+	errors := d.device.Validate()
+	if errors == nil {
+		errors = &validation.Errors{}
+	}
+
+	if d.Address() == "" {
+		errors.Add("required field", "Address")
+	}
+
+	if d.Auth() == nil {
+		errors.Add("required field", "Token")
+	} else {
+		if d.Auth().Token == "" {
+			errors.Add("required field", "Token")
+		}
+	}
+
+	if errors.Has() {
+		return errors
+	}
+	return nil
 }

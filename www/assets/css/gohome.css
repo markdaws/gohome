@@ -82,7 +82,8 @@ button.disabled {
     padding-left: 0px;
 }
 
-.cmp-System {
+.cmp-System .btnExitImport {
+    margin-bottom: 12px;
 }
 
 .cmp-Import .content {

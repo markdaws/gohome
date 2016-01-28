@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/discovery"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
@@ -63,6 +64,7 @@ func (s *wwwServer) listenAndServe(port string) error {
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiAddZoneHandler(s.system)).Methods("POST")
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiAddDeviceHandler(s.system)).Methods("POST")
 
 	r.HandleFunc("/api/v1/discovery/{modelNumber}", apiDiscoveryHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/discovery/{modelNumber}/token", apiDiscoveryTokenHandler(s.system)).Methods("GET")
@@ -478,6 +480,58 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		if err := json.NewEncoder(w).Encode(devices); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+	}
+}
+
+func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var data jsonDevice
+		if err = json.Unmarshal(body, &data); err != nil {
+			fmt.Printf("%s\n", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var auth *comm.Auth
+		if data.Token != "" {
+			auth = &comm.Auth{
+				Token: data.Token,
+			}
+		}
+		//TODO: Don't pass in ID
+		d := gohome.NewDevice(
+			data.ModelNumber,
+			data.Address,
+			system.NextGlobalID(),
+			data.Name,
+			data.Description,
+			false, //TODO: stream?
+			auth,
+		)
+
+		errors := system.AddDevice(d)
+		if errors != nil {
+			if valErrs, ok := errors.(*validation.Errors); ok {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+			} else {
+				//Other kind of errors, TODO: log
+				w.WriteHeader(http.StatusBadRequest)
+			}
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(struct{}{})
 	}
 }
 

@@ -47,12 +47,20 @@ func (s *System) NextGlobalID() string {
 	return strconv.Itoa(gid)
 }
 
-func (s *System) AddDevice(d Device) {
-	s.Devices[d.ID()] = d
-}
-
 func (s *System) AddButton(b *Button) {
 	s.Buttons[b.ID] = b
+}
+
+func (s *System) AddDevice(d Device) error {
+	errors := d.Validate()
+	if errors != nil {
+		return errors
+	}
+
+	//TODO: What about address, allow duplicates?
+	//TODO: Add device need to init connections?
+	s.Devices[d.ID()] = d
+	return nil
 }
 
 func (s *System) AddZone(z *zone.Zone) error {
