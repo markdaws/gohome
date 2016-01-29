@@ -1,0 +1,29 @@
+{
+  "name": "gohome",
+  "version": "1.0.0",
+  "description": "Home of Things",
+  "main": "index.js",
+  "dependencies": {
+    "babel-core": "^6.4.5",
+    "babel-loader": "^6.2.1",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-react": "^6.3.13",
+    "react": "^0.14.7",
+    "react-dom": "^0.14.7",
+    "webpack": "^1.12.12"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markdaws/gohome.git"
+  },
+  "author": "Mark Dawson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/markdaws/gohome/issues"
+  },
+  "homepage": "https://github.com/markdaws/gohome#readme"
+}
