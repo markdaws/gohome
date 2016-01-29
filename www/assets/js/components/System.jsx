@@ -2,7 +2,7 @@ var React = require('react');
 var Import = require('./Import.jsx');
 var SystemDeviceList = require('./SystemDeviceList.jsx');
 
-module.exports = React.createClass({
+var System = React.createClass({
     getInitialState: function() {
         return {
             importing: false,
@@ -34,3 +34,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = System;

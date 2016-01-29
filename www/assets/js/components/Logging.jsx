@@ -2,7 +2,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var LogLine = require('./LogLine.jsx');
 
-module.exports = React.createClass({
+var Logging = React.createClass({
     getInitialState: function() {
         return {
             items: [],
@@ -107,3 +107,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = Logging;

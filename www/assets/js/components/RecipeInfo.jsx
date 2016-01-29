@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+var RecipeInfo = React.createClass({
     getInitialState: function() {
         return {
             enabled: this.props.recipe.enabled,
@@ -70,3 +70,4 @@ module.exports = React.createClass({
         )
     }
 });
+module.exports = RecipeInfo;

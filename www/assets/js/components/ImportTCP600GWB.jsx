@@ -1,7 +1,7 @@
 var React = require('react');
 var DeviceInfo = require('./DeviceInfo.jsx');
 
-module.exports = React.createClass({
+var ImportTCP600GWB = React.createClass({
     getInitialState: function() {
         return {
             location: "",
@@ -94,3 +94,4 @@ module.exports = React.createClass({
         )
     }
 });
+module.exports = ImportTCP600GWB;

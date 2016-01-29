@@ -76,7 +76,10 @@ func (s *System) AddZone(z *zone.Zone) error {
 		return errors
 	}
 
-	z.ID = s.NextGlobalID()
+	// If this is a new zone we need to assign a new id
+	if z.ID == "" {
+		z.ID = s.NextGlobalID()
+	}
 
 	//TODO: When you add a zone, need to then also initconnetions
 	//so that the system can talk to the new zone ...
@@ -91,6 +94,10 @@ func (s *System) AddZone(z *zone.Zone) error {
 
 func (s *System) AddScene(scn *Scene) {
 	s.Scenes[scn.ID] = scn
+}
+
+func (s *System) DeleteScene(scn *Scene) {
+	delete(s.Scenes, scn.ID)
 }
 
 func (s *System) AddRecipe(r *Recipe) {
@@ -227,7 +234,12 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 				Output:      zone.OutputFromString(zn.Output),
 				Controller:  zn.Controller,
 			}
-			sys.AddZone(z)
+			//TODO: Remove
+			fmt.Printf("zone id: %s : %s\n", zn.ID, zn.Name)
+			err := sys.AddZone(z)
+			if err != nil {
+				fmt.Printf("zone add error: %+v\n", err)
+			}
 		}
 	}
 
@@ -240,11 +252,14 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 		}
 
 		scene.Commands = make([]cmd.Command, len(scn.Commands))
+		//TODO: Harden, check map access is ok
 		for i, command := range scn.Commands {
 			var finalCmd cmd.Command
 			switch command.Type {
 			case "zoneSetLevel":
 				z := sys.Zones[command.Attributes["ZoneID"].(string)]
+				//fmt.Printf("zone: %+v\n", z)
+				//fmt.Printf("cmd: %+v\n", command)
 				finalCmd = &cmd.ZoneSetLevel{
 					ZoneAddress: z.Address,
 					ZoneID:      z.ID,
@@ -312,6 +327,7 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 		}
 
 		cmds := make([]commandJSON, len(scene.Commands))
+		//TODO: Put this somewhere common? also in www
 		for j, sCmd := range scene.Commands {
 			switch xCmd := sCmd.(type) {
 			case *cmd.ZoneSetLevel:

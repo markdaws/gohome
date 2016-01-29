@@ -1,7 +1,7 @@
 var React = require('react');
 var DeviceInfo = require('./DeviceInfo.jsx');
 
-module.exports = React.createClass({
+var SystemDeviceList = React.createClass({
     getInitialState: function() {
         return {
             loading: true,
@@ -56,3 +56,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = SystemDeviceList;

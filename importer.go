@@ -138,6 +138,13 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 							DeviceAddress: sbp.Address(),
 							DeviceID:      sbp.ID(),
 						},
+						//TODO: Remove only for debugging
+						&cmd.ZoneSetLevel{
+							ZoneAddress: "16",
+							ZoneID:      "142",
+							ZoneName:    "Fake zone" + btn.Address,
+							Level:       cmd.Level{Value: 55.0},
+						},
 					},
 				}
 			}

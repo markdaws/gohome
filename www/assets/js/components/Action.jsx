@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+var Action = React.createClass({
     handleClick: function(evt) {
         evt.preventDefault();
         evt.stopPropagation();
@@ -18,3 +18,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = Action;

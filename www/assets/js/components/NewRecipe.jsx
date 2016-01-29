@@ -4,7 +4,7 @@ var TriggerList = require('./TriggerList.jsx');
 var ActionList = require('./ActionList.jsx');
 var CookBookList = require('./CookBookList.jsx');
 
-module.exports = React.createClass({
+var NewRecipe = React.createClass({
     getInitialState: function() {
         return {
             triggerCookBookID: -1,
@@ -227,3 +227,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = NewRecipe;

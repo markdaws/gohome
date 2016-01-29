@@ -1,7 +1,7 @@
 var React = require('react');
 var CookBook = require('./CookBook.jsx');
 
-module.exports = React.createClass({
+var CookBookList = React.createClass({
     handleClick: function(cookBookID) {
         this.props.selected(cookBookID);
     },
@@ -20,3 +20,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = CookBookList;

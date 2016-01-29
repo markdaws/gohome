@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports =React.createClass({
+var ZoneTypePicker = React.createClass({
     getInitialState: function() {
         return {
             value: this.props.type || 'unknown'
@@ -43,3 +43,4 @@ module.exports =React.createClass({
         );
     }
 });
+module.exports = ZoneTypePicker;

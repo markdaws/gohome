@@ -1,5 +1,6 @@
 package gohome
 
+//TODO: very similar to command parameters, re-use?
 type Ingredient struct {
 	ID          string
 	Name        string

@@ -1,7 +1,7 @@
 var React = require('react');
 var Action = require('./Action.jsx');
 
-module.exports = React.createClass({
+var ActionList = React.createClass({
     handleClick: function(action) {
         this.props.selected(action);
     },
@@ -20,3 +20,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = ActionList;

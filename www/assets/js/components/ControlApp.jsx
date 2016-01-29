@@ -5,7 +5,7 @@ var ZoneList = require('./ZoneList.jsx');
 var Logging = require('./Logging.jsx');
 var RecipeApp = require('./RecipeApp.jsx');
 
-module.exports = React.createClass({
+var ControlApp = React.createClass({
     getInitialState: function() {
         return { scenes: [], zones: [], devices: [] };
     },
@@ -78,3 +78,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = ControlApp;

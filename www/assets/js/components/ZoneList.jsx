@@ -1,7 +1,7 @@
 var React = require('react');
 var Zone = require('./Zone.jsx');
 
-module.exports = React.createClass({
+var ZoneList = React.createClass({
     render: function() {
         //TODO: Add loading
         var self = this;
@@ -18,3 +18,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = ZoneList;

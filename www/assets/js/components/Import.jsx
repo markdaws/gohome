@@ -2,7 +2,7 @@ var React = require('react');
 var ImportFluxWIFI = require('./ImportFluxWIFI.jsx');
 var ImportTCP600GWB = require('./ImportTCP600GWB.jsx');
 
-module.exports =React.createClass({
+var Import = React.createClass({
     getInitialState: function() {
         return { selectedProduct: null };
     },
@@ -40,3 +40,4 @@ module.exports =React.createClass({
         )
     }
 });
+module.exports = Import;

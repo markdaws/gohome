@@ -61,11 +61,13 @@ func (s *wwwServer) listenAndServe(port string) error {
 
 	//TODO: Move api into separate http server
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}", apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiAddZoneHandler(s.system)).Methods("POST")
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiAddDeviceHandler(s.system)).Methods("POST")
 
+	// Discover devices and capabilities on the network
 	r.HandleFunc("/api/v1/discovery/{modelNumber}", apiDiscoveryHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/discovery/{modelNumber}/token", apiDiscoveryTokenHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/discovery/{modelNumber}/access", apiDiscoveryAccessHandler(s.system)).Methods("GET")
@@ -381,13 +383,70 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 				ID:          scene.ID,
 				Name:        scene.Name,
 				Description: scene.Description,
+				Managed:     scene.Managed,
 			}
+
+			cmds := make([]jsonCommand, len(scene.Commands))
+			for j, sCmd := range scene.Commands {
+				switch xCmd := sCmd.(type) {
+				case *cmd.ZoneSetLevel:
+					cmds[j] = jsonCommand{
+						Type: "zoneSetLevel",
+						Attributes: map[string]interface{}{
+							"ZoneID": xCmd.ZoneID,
+							"Level":  xCmd.Level.Value,
+						},
+					}
+				case *cmd.ButtonPress:
+					cmds[j] = jsonCommand{
+						Type: "buttonPress",
+						Attributes: map[string]interface{}{
+							"ButtonID": xCmd.ButtonID,
+						},
+					}
+				case *cmd.ButtonRelease:
+					cmds[j] = jsonCommand{
+						Type: "buttonRelease",
+						Attributes: map[string]interface{}{
+							"ButtonID": xCmd.ButtonID,
+						},
+					}
+				case *cmd.SceneSet:
+					//TODO:
+					fmt.Println("SceneSet command not implemented")
+				default:
+					fmt.Println("unknown scene command")
+				}
+			}
+
+			scenes[i].Commands = cmds
 			i++
 		}
 		sort.Sort(scenes)
 		if err := json.NewEncoder(w).Encode(scenes); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+	}
+}
+
+func apiSceneHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		sceneID := mux.Vars(r)["id"]
+		scene, ok := system.Scenes[sceneID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		system.DeleteScene(scene)
+		err := system.Save(recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(struct{}{})
 	}
 }
 

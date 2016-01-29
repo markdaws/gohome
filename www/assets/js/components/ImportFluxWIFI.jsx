@@ -1,7 +1,7 @@
 var React = require('react');
 var ZoneInfo = require('./ZoneInfo.jsx');
 
-module.exports = React.createClass({
+var ImportFluxWIFI = React.createClass({
     getInitialState: function() {
         return {
             discovering: false,
@@ -124,3 +124,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = ImportFluxWIFI;

@@ -2,7 +2,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var CssMixin = require('./CssMixin.jsx');
 
-module.exports = React.createClass({
+var Zone = React.createClass({
     mixins: [CssMixin],
     getInitialState: function() {
         return {
@@ -169,3 +169,4 @@ module.exports = React.createClass({
         )
     }
 });
+module.exports = Zone;

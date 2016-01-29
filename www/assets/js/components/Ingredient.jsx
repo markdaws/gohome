@@ -1,7 +1,7 @@
 var React = require('react');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 
-module.exports = React.createClass({
+var Ingredient = React.createClass({
     mixins: [UniqueIdMixin],
     getInitialState: function() {
         return {
@@ -70,3 +70,4 @@ module.exports = React.createClass({
         }
     }
 });
+module.exports = Ingredient;

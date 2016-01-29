@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+var LogLine = React.createClass({
     render: function() {
         return (
             <li className="cmp-LogLine">
@@ -12,3 +12,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = LogLine;

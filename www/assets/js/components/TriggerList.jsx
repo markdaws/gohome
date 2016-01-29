@@ -1,7 +1,7 @@
 var React = require('react');
 var Trigger = require('./Trigger.jsx');
 
-module.exports = React.createClass({
+var TriggerList = React.createClass({
     handleClick: function(trigger) {
         this.props.selected(trigger);
     },
@@ -21,3 +21,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = TriggerList;

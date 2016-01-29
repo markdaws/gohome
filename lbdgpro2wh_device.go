@@ -128,7 +128,9 @@ func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				newCmd := &StringCommand{
 					Device: d,
-					Value:  "#DEVICE," + command.DeviceAddress + "," + command.ButtonAddress + ",3\r\n",
+					//TODO: This device also has a local id of 1 which we have to send as well as
+					//an actual IP address... fix
+					Value: "#DEVICE," + command.DeviceAddress + "," + command.ButtonAddress + ",3\r\n",
 				}
 				return newCmd.Execute()
 			},

@@ -17,6 +17,11 @@ button.disabled {
     font-size: 35px;
 }
 
+.cmp-SceneList .editButtonWrapper {
+    padding-right: 14px;
+    padding-bottom: 14px;
+}
+
 .cmp-Scene .btn.scene {
     text-align: center;
     padding: 8px;
@@ -26,13 +31,17 @@ button.disabled {
 .cmp-Scene .btn.scene .fa {
     font-size: 30px;
 }
-
 .cmp-Scene .btn.scene .name {
     display:block;
     font-size: 18px;
     padding: 8px 0px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.cmp-SceneInfo label {
+    font-size: 12px;
+    font-weight: normal;
 }
 
 .cmp-Zone .btn.zone .name{

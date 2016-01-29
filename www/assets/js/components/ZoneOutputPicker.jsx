@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+var ZoneOutputPicker = React.createClass({
     getInitialState: function() {
         return {
             value: this.props.output || 'continuous'
@@ -37,3 +37,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = ZoneOutputPicker;

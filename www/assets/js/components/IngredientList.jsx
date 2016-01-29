@@ -1,7 +1,7 @@
 var React = require('react');
 var Ingredient = require('./Ingredient.jsx');
 
-module.exports = React.createClass({
+var IngredientList = React.createClass({
     render: function() {
         var self = this;
         var ingredientNodes = this.props.ingredients.map(function(ingredient) {
@@ -33,3 +33,4 @@ module.exports = React.createClass({
         return json;
     }
 });
+module.exports = IngredientList;

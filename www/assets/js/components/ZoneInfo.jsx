@@ -7,7 +7,7 @@ var ZoneControllerPicker = require('./ZoneControllerPicker.jsx');
 var ZoneOutputPicker = require('./ZoneOutputPicker.jsx');
 var ZoneTypePicker = require('./ZoneTypePicker.jsx');
 
-module.exports = React.createClass({
+var ZoneInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         return {
@@ -125,3 +125,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = ZoneInfo.jsx

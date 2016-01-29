@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+var SaveBtn = React.createClass({
     getInitialState: function() {
         return {
             current: 'default',
@@ -80,3 +80,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = SaveBtn;

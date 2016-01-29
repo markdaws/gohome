@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+var ZoneControllerPicker = React.createClass({
     getInitialState: function() {
         return {
             value: this.props.controller || ''
@@ -23,3 +23,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = ZoneControllerPicker;

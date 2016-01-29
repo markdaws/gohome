@@ -1,15 +1,12 @@
 var React = require('react');
 
-var DevicePicker = React.createClass({
+var ZonePicker = React.createClass({
     getInitialState: function() {
         return {
             value: ''
         };
     },
 
-    //TODO: If only one item in the list, select by default on load
-    //TODO: if output or type is unknown need to update zone control to be
-    //able to handle those values
     selected: function(evt) {
         this.setState({ value: evt.target.value });
         this.props.changed && this.props.changed(evt.target.value);
@@ -17,17 +14,17 @@ var DevicePicker = React.createClass({
     
     render: function() {
         var options = [];
-        this.props.devices.forEach(function(device) {
-            options.push(<option key={device.id} value={device.id}>{device.name}</option>);
+        this.props.zones.forEach(function(zone) {
+            options.push(<option key={zone.id} value={zone.id}>{zone.name}</option>);
         });
         return (
-            <div className="cmp-DevicePicker">
+            <div className="cmp-ZonePicker">
               <select className="form-control" onChange={this.selected} value={this.state.value}>
-                <option value="">Select a device...</option>
+                <option value="">Select a zone...</option>
                 {options}
               </select>
             </div>
         );
     }
 });
-module.exports = DevicePicker;
+module.exports = ZonePicker;

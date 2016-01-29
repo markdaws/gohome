@@ -3,7 +3,7 @@ var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 var InputValidationMixin = require('./InputValidationMixin.jsx')
 var SaveBtn = require('./SaveBtn.jsx');
 
-module.exports = React.createClass({
+var DeviceInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         return {
@@ -119,3 +119,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = DeviceInfo;

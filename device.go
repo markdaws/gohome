@@ -93,9 +93,6 @@ func (d *device) Validate() *validation.Errors {
 	if errors.Has() {
 		return errors
 	}
-
-	//TODO: If this is a tcp device then we need a token, validate
-	//TODO: If tcp device, need an address
 	return nil
 }
 

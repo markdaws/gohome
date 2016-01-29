@@ -2,7 +2,7 @@ var React = require('react');
 var NewRecipe = require('./NewRecipe.jsx');
 var RecipeList = require('./RecipeList.jsx');
 
-module.exports = React.createClass({
+var RecipeApp = React.createClass({
     getInitialState: function() {
         return {
             cookBooks: [],
@@ -56,3 +56,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = RecipeApp;

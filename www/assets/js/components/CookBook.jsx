@@ -1,7 +1,7 @@
 var React = require('react');
 var AssetsMixin = require('./AssetsMixin.jsx')
 
-module.exports = React.createClass({
+var CookBook = React.createClass({
     mixins: [AssetsMixin],
     handleClick: function(evt) {
         evt.preventDefault();
@@ -20,3 +20,4 @@ module.exports = React.createClass({
         );
     }
 });
+module.exports = CookBook;

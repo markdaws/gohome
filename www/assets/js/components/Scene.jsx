@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+var Scene = React.createClass({
     handleClick: function(event) {
         $.ajax({
             url: '/api/v1/systems/1/scenes/active',
@@ -30,3 +30,4 @@ module.exports = React.createClass({
         )
     }
 });
+module.exports = Scene;

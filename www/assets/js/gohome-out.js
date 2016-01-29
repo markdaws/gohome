@@ -46,53 +46,8 @@
 
 	'use strict';
 
-	//import SceneInfo from './components/SceneInfo.jsx';
-	/*
-	require('./components/Action.jsx');
-	require('./components/ActionList.jsx');
-	require('./components/AssetsMixin.jsx');
-	require('./components/ControlApp.jsx');
-	require('./components/CookBook.jsx');
-	require('./components/CookBookList.jsx');
-	require('./components/CssMixin.jsx');
-	require('./components/DeviceInfo.jsx');
-	require('./components/DevicePicker.jsx');
-	require('./components/Import.jsx');
-	require('./components/ImportFluxWIFI.jsx');
-	require('./components/ImportTCP600GWB.jsx');
-	require('./components/Ingredient.jsx');
-	require('./components/IngredientList.jsx');
-	require('./components/InputValidationMixin.jsx');
-	require('./components/Logging.jsx');
-	require('./components/LogLine.jsx');
-	require('./components/NewRecipe.jsx');
-	require('./components/RecipeApp.jsx');
-	require('./components/RecipeInfo.jsx');
-	require('./components/RecipeList.jsx');
-	require('./components/SaveBtn.jsx');
-	require('./components/Scene.jsx');
-	require('./components/SceneInfo.jsx');
-	require('./components/SceneList.jsx');
-	require('./components/System.jsx');
-	require('./components/SystemDeviceList.jsx');
-	require('./components/Trigger.jsx');
-	require('./components/TriggerList.jsx');
-	require('./components/UniqueIdMixin.jsx');
-	require('./components/Zone.jsx');
-	require('./components/ZoneControllerPicker.jsx');
-	require('./components/ZoneInfo.jsx');
-	require('./components/ZoneList.jsx');
-	require('./components/ZoneOutputPicker.jsx');
-	require('./components/ZoneTypePicker.jsx');
-	require('./../jsx/gohome.jsx');
-	 */
-
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
-	//import React from 'react';
-	//import ReactDOM from 'react-dom';
-
-	//import ControlApp from './components/ControlApp.jsx';
 	var ControlApp = __webpack_require__(159);
 
 	//TODO: Clean up
@@ -19714,8 +19669,8 @@
 	var Logging = __webpack_require__(179);
 	var RecipeApp = __webpack_require__(181);
 
-	module.exports = React.createClass({
-	  displayName: 'exports',
+	var ControlApp = React.createClass({
+	  displayName: 'ControlApp',
 
 	  getInitialState: function getInitialState() {
 	    return { scenes: [], zones: [], devices: [] };
@@ -19833,6 +19788,7 @@
 	    );
 	  }
 	});
+	module.exports = ControlApp;
 
 /***/ },
 /* 160 */
@@ -19844,8 +19800,8 @@
 	var Import = __webpack_require__(161);
 	var SystemDeviceList = __webpack_require__(173);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var System = React.createClass({
+	    displayName: 'System',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -19886,6 +19842,7 @@
 	        );
 	    }
 	});
+	module.exports = System;
 
 /***/ },
 /* 161 */
@@ -19897,8 +19854,8 @@
 	var ImportFluxWIFI = __webpack_require__(162);
 	var ImportTCP600GWB = __webpack_require__(171);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var Import = React.createClass({
+	    displayName: 'Import',
 
 	    getInitialState: function getInitialState() {
 	        return { selectedProduct: null };
@@ -19961,6 +19918,7 @@
 	        );
 	    }
 	});
+	module.exports = Import;
 
 /***/ },
 /* 162 */
@@ -19971,8 +19929,8 @@
 	var React = __webpack_require__(1);
 	var ZoneInfo = __webpack_require__(163);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var ImportFluxWIFI = React.createClass({
+	    displayName: 'ImportFluxWIFI',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -20122,6 +20080,7 @@
 	        );
 	    }
 	});
+	module.exports = ImportFluxWIFI;
 
 /***/ },
 /* 163 */
@@ -20138,8 +20097,8 @@
 	var ZoneOutputPicker = __webpack_require__(169);
 	var ZoneTypePicker = __webpack_require__(170);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var ZoneInfo = React.createClass({
+	    displayName: 'ZoneInfo',
 
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
@@ -20312,6 +20271,7 @@
 	        );
 	    }
 	});
+	module.exports = ZoneInfo.jsx;
 
 /***/ },
 /* 164 */
@@ -20394,8 +20354,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var SaveBtn = React.createClass({
+	    displayName: 'SaveBtn',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -20486,6 +20446,7 @@
 	        );
 	    }
 	});
+	module.exports = SaveBtn;
 
 /***/ },
 /* 167 */
@@ -20495,8 +20456,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var DevicePicker = React.createClass({
+	    displayName: 'DevicePicker',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -20537,6 +20498,7 @@
 	        );
 	    }
 	});
+	module.exports = DevicePicker;
 
 /***/ },
 /* 168 */
@@ -20546,8 +20508,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var ZoneControllerPicker = React.createClass({
+	    displayName: 'ZoneControllerPicker',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -20581,6 +20543,7 @@
 	        );
 	    }
 	});
+	module.exports = ZoneControllerPicker;
 
 /***/ },
 /* 169 */
@@ -20590,8 +20553,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var ZoneOutputPicker = React.createClass({
+	    displayName: 'ZoneOutputPicker',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -20647,6 +20610,7 @@
 	        );
 	    }
 	});
+	module.exports = ZoneOutputPicker;
 
 /***/ },
 /* 170 */
@@ -20656,8 +20620,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var ZoneTypePicker = React.createClass({
+	    displayName: 'ZoneTypePicker',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -20703,6 +20667,7 @@
 	        );
 	    }
 	});
+	module.exports = ZoneTypePicker;
 
 /***/ },
 /* 171 */
@@ -20713,8 +20678,8 @@
 	var React = __webpack_require__(1);
 	var DeviceInfo = __webpack_require__(172);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var ImportTCP600GWB = React.createClass({
+	    displayName: 'ImportTCP600GWB',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -20840,6 +20805,7 @@
 	        );
 	    }
 	});
+	module.exports = ImportTCP600GWB;
 
 /***/ },
 /* 172 */
@@ -20852,8 +20818,8 @@
 	var InputValidationMixin = __webpack_require__(165);
 	var SaveBtn = __webpack_require__(166);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var DeviceInfo = React.createClass({
+	    displayName: 'DeviceInfo',
 
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
@@ -21004,6 +20970,7 @@
 	        );
 	    }
 	});
+	module.exports = DeviceInfo;
 
 /***/ },
 /* 173 */
@@ -21014,8 +20981,8 @@
 	var React = __webpack_require__(1);
 	var DeviceInfo = __webpack_require__(172);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var SystemDeviceList = React.createClass({
+	    displayName: 'SystemDeviceList',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -21081,6 +21048,7 @@
 	        );
 	    }
 	});
+	module.exports = SystemDeviceList;
 
 /***/ },
 /* 174 */
@@ -21091,31 +21059,107 @@
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
 	var Scene = __webpack_require__(175);
+	var SceneInfo = __webpack_require__(194);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var SceneList = React.createClass({
+	    displayName: 'SceneList',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            editMode: false,
+	            scenes: this.props.scenes,
+	            zones: this.props.zones
+	        };
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.scenes) {
+	            this.setState({ scenes: nextProps.scenes });
+	        }
+	    },
 
 	    componentDidMount: function componentDidMount() {
+
+	        $.ajax({
+	            url: '/api/v1/systems/123/zones',
+	            dataType: 'json',
+	            cache: false,
+	            success: function (data) {
+	                this.setState({ zones: data });
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                console.error(err.toString());
+	            }.bind(this)
+	        });
+
 	        return;
 	        //TODO: Enable as part of a mode
 	        var el = ReactDOM.findDOMNode(this).getElementsByClassName('sceneList')[0];
 	        Sortable.create(el);
 	    },
 
+	    edit: function edit() {
+	        this.setState({ editMode: true });
+	    },
+
+	    sceneDeleted: function sceneDeleted(sceneId) {
+	        var scenes = this.state.scenes;
+	        for (var i = 0; i < scenes.length; ++i) {
+	            console.log(sceneId + " : " + scenes[i].id);
+	            if (scenes[i].id === sceneId) {
+	                scenes.splice(i, 1);
+	                console.log(scenes);
+	                this.setState({ scenes: scenes });
+	                break;
+	            }
+	        }
+	    },
+
 	    render: function render() {
-	        //TODO: Add loading
+
+	        var body;
 	        var self = this;
-	        var sceneNodes = Object.keys(this.props.scenes).map(function (id) {
-	            var scene = self.props.scenes[id];
-	            return React.createElement(Scene, { scene: scene, key: id });
-	        });
+	        if (this.state.editMode) {
+	            body = this.state.scenes.map(function (scene) {
+	                return React.createElement(SceneInfo, { onDestroy: self.sceneDeleted, zones: self.state.zones, scene: scene, key: scene.id });
+	            });
+	        } else {
+	            body = this.state.scenes.map(function (scene) {
+	                return React.createElement(Scene, { scene: scene, key: scene.id });
+	            });
+	        }
+
+	        //TODO: Add loading
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SceneList row' },
-	            sceneNodes
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix editButtonWrapper' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-primary btnEdit pull-right', onClick: this.edit },
+	                    'Edit'
+	                )
+	            ),
+	            body
 	        );
 	    }
 	});
+	module.exports = SceneList;
+
+	//TODO existing scene edit:
+	//1. Show scene info
+	//2. edit name + save
+	//3. make id readonly
+	//4. set address
+	//5. delete existing command
+	//6. edit existing command (zonesetlevel, buttonpress, buttonrelease, sceneset)
+	//7. add new command
+	//8. Test button
+
+	//TODO: Add new scene
+	//TODO: delete scene
 
 /***/ },
 /* 175 */
@@ -21125,8 +21169,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var Scene = React.createClass({
+	    displayName: 'Scene',
 
 	    handleClick: function handleClick(event) {
 	        $.ajax({
@@ -21165,6 +21209,7 @@
 	        );
 	    }
 	});
+	module.exports = Scene;
 
 /***/ },
 /* 176 */
@@ -21175,8 +21220,8 @@
 	var React = __webpack_require__(1);
 	var Zone = __webpack_require__(177);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var ZoneList = React.createClass({
+	    displayName: 'ZoneList',
 
 	    render: function render() {
 	        //TODO: Add loading
@@ -21192,6 +21237,7 @@
 	        );
 	    }
 	});
+	module.exports = ZoneList;
 
 /***/ },
 /* 177 */
@@ -21203,8 +21249,8 @@
 	var ReactDOM = __webpack_require__(158);
 	var CssMixin = __webpack_require__(178);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var Zone = React.createClass({
+	    displayName: 'Zone',
 
 	    mixins: [CssMixin],
 	    getInitialState: function getInitialState() {
@@ -21388,6 +21434,7 @@
 	        );
 	    }
 	});
+	module.exports = Zone;
 
 /***/ },
 /* 178 */
@@ -21411,8 +21458,8 @@
 	var ReactDOM = __webpack_require__(158);
 	var LogLine = __webpack_require__(180);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var Logging = React.createClass({
+	    displayName: 'Logging',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -21542,6 +21589,7 @@
 	        );
 	    }
 	});
+	module.exports = Logging;
 
 /***/ },
 /* 180 */
@@ -21551,8 +21599,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: "exports",
+	var LogLine = React.createClass({
+	    displayName: "LogLine",
 
 	    render: function render() {
 	        return React.createElement(
@@ -21586,6 +21634,7 @@
 	        );
 	    }
 	});
+	module.exports = LogLine;
 
 /***/ },
 /* 181 */
@@ -21597,8 +21646,8 @@
 	var NewRecipe = __webpack_require__(182);
 	var RecipeList = __webpack_require__(192);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var RecipeApp = React.createClass({
+	    displayName: 'RecipeApp',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -21659,6 +21708,7 @@
 	        );
 	    }
 	});
+	module.exports = RecipeApp;
 
 /***/ },
 /* 182 */
@@ -21672,8 +21722,8 @@
 	var ActionList = __webpack_require__(187);
 	var CookBookList = __webpack_require__(189);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var NewRecipe = React.createClass({
+	    displayName: 'NewRecipe',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -21951,6 +22001,7 @@
 	        );
 	    }
 	});
+	module.exports = NewRecipe;
 
 /***/ },
 /* 183 */
@@ -21961,8 +22012,8 @@
 	var React = __webpack_require__(1);
 	var Ingredient = __webpack_require__(184);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var IngredientList = React.createClass({
+	    displayName: 'IngredientList',
 
 	    render: function render() {
 	        var self = this;
@@ -21993,6 +22044,7 @@
 	        return json;
 	    }
 	});
+	module.exports = IngredientList;
 
 /***/ },
 /* 184 */
@@ -22003,8 +22055,8 @@
 	var React = __webpack_require__(1);
 	var UniqueIdMixin = __webpack_require__(164);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var Ingredient = React.createClass({
+	    displayName: 'Ingredient',
 
 	    mixins: [UniqueIdMixin],
 	    getInitialState: function getInitialState() {
@@ -22089,6 +22141,7 @@
 	        }
 	    }
 	});
+	module.exports = Ingredient;
 
 /***/ },
 /* 185 */
@@ -22099,8 +22152,8 @@
 	var React = __webpack_require__(1);
 	var Trigger = __webpack_require__(186);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var TriggerList = React.createClass({
+	    displayName: 'TriggerList',
 
 	    handleClick: function handleClick(trigger) {
 	        this.props.selected(trigger);
@@ -22119,6 +22172,7 @@
 	        );
 	    }
 	});
+	module.exports = TriggerList;
 
 /***/ },
 /* 186 */
@@ -22128,8 +22182,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: "exports",
+	var Trigger = React.createClass({
+	    displayName: "Trigger",
 
 	    handleClick: function handleClick(evt) {
 	        evt.preventDefault();
@@ -22158,6 +22212,7 @@
 	        );
 	    }
 	});
+	module.exports = Trigger;
 
 /***/ },
 /* 187 */
@@ -22168,8 +22223,8 @@
 	var React = __webpack_require__(1);
 	var Action = __webpack_require__(188);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var ActionList = React.createClass({
+	    displayName: 'ActionList',
 
 	    handleClick: function handleClick(action) {
 	        this.props.selected(action);
@@ -22187,6 +22242,7 @@
 	        );
 	    }
 	});
+	module.exports = ActionList;
 
 /***/ },
 /* 188 */
@@ -22196,8 +22252,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: "exports",
+	var Action = React.createClass({
+	    displayName: "Action",
 
 	    handleClick: function handleClick(evt) {
 	        evt.preventDefault();
@@ -22226,6 +22282,7 @@
 	        );
 	    }
 	});
+	module.exports = Action;
 
 /***/ },
 /* 189 */
@@ -22236,8 +22293,8 @@
 	var React = __webpack_require__(1);
 	var CookBook = __webpack_require__(190);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var CookBookList = React.createClass({
+	    displayName: 'CookBookList',
 
 	    handleClick: function handleClick(cookBookID) {
 	        this.props.selected(cookBookID);
@@ -22255,6 +22312,7 @@
 	        );
 	    }
 	});
+	module.exports = CookBookList;
 
 /***/ },
 /* 190 */
@@ -22265,8 +22323,8 @@
 	var React = __webpack_require__(1);
 	var AssetsMixin = __webpack_require__(191);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var CookBook = React.createClass({
+	    displayName: 'CookBook',
 
 	    mixins: [AssetsMixin],
 	    handleClick: function handleClick(evt) {
@@ -22288,6 +22346,7 @@
 	        );
 	    }
 	});
+	module.exports = CookBook;
 
 /***/ },
 /* 191 */
@@ -22310,8 +22369,8 @@
 	var React = __webpack_require__(1);
 	var RecipeInfo = __webpack_require__(193);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var RecipeList = React.createClass({
+	    displayName: 'RecipeList',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -22373,6 +22432,7 @@
 	        );
 	    }
 	});
+	module.exports = RecipeList;
 
 /***/ },
 /* 193 */
@@ -22382,8 +22442,8 @@
 
 	var React = __webpack_require__(1);
 
-	module.exports = React.createClass({
-	    displayName: 'exports',
+	var RecipeInfo = React.createClass({
+	    displayName: 'RecipeInfo',
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -22466,6 +22526,326 @@
 	        );
 	    }
 	});
+	module.exports = RecipeInfo;
+
+/***/ },
+/* 194 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var SaveBtn = __webpack_require__(166);
+	var InputValidationMixin = __webpack_require__(165);
+	var UniqueIdMixin = __webpack_require__(164);
+	var CommandInfo = __webpack_require__(195);
+
+	var SceneInfo = React.createClass({
+	    displayName: 'SceneInfo',
+
+	    mixins: [InputValidationMixin, UniqueIdMixin],
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            id: this.props.scene.id || '',
+	            name: this.props.scene.name || '',
+	            address: this.props.scene.address || '',
+	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
+	            commands: this.props.scene.commands || [],
+	            zones: this.props.zones || []
+	            //TODO: readonly id
+	        };
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        //Needed?
+	        if (nextProps.zones) {
+	            this.setState({ zones: nextProps.zones });
+	        }
+	    },
+
+	    toJson: function toJson() {
+	        var s = this.state;
+	        return {
+	            id: this.state.id,
+	            name: this.state.name,
+	            address: this.state.address,
+	            managed: this.state.managed
+	        };
+	    },
+
+	    deleteScene: function deleteScene() {
+	        var self = this;
+	        $.ajax({
+	            url: '/api/v1/systems/123/scenes/' + this.state.id,
+	            type: 'DELETE',
+	            cache: false,
+	            success: function (data) {
+	                self.props.onDestroy(self.state.id);
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                console.error(err);
+	            }.bind(this)
+	        });
+	    },
+
+	    render: function render() {
+	        var commands;
+	        //TODO: remove
+	        this.state.managed = true;
+	        var self = this;
+	        if (this.state.managed) {
+	            //TODO: What is the key here? Commands don't have ids ...
+	            commands = this.state.commands.map(function (command) {
+	                return React.createElement(CommandInfo, { zones: self.props.zones, command: command });
+	            });
+	        } else {
+	            commands = React.createElement(
+	                'p',
+	                null,
+	                'This is an unmanaged scene. The scene is controlled by a 3rd party device so we can\'t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.'
+	            );
+	        }
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SceneInfo well' },
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-danger pull-right', onClick: this.deleteScene },
+	                    'Delete Scene'
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "name") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("name") },
+	                    'Name*'
+	                ),
+	                React.createElement('input', { value: this.state.name, 'data-statepath': 'name', onChange: this.changed, className: 'name form-control', type: 'text', id: this.uid("name") }),
+	                this.errMsg("name")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "id") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("id") },
+	                    'ID'
+	                ),
+	                React.createElement('input', { value: this.state.id, readOnly: this.isReadOnly("id"), 'data-statepath': 'id', onChange: this.changed, className: 'id form-control', type: 'text', id: this.uid("id") }),
+	                this.errMsg("id")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "address") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("address") },
+	                    'Address'
+	                ),
+	                React.createElement('input', { value: this.state.adddress, 'data-statepath': 'address', onChange: this.changed, className: 'address form-control', type: 'text', id: this.uid("address") }),
+	                this.errMsg("address")
+	            ),
+	            React.createElement(
+	                'h3',
+	                null,
+	                'Commands'
+	            ),
+	            commands,
+	            React.createElement(
+	                'button',
+	                { className: 'btn btn-primary btnAddCommand' },
+	                'Add Command'
+	            )
+	        );
+	    }
+	});
+	module.exports = SceneInfo;
+
+/***/ },
+/* 195 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ZoneSetLevelCommand = __webpack_require__(196);
+	var SaveBtn = __webpack_require__(166);
+
+	var CommandInfo = React.createClass({
+	    displayName: 'CommandInfo',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            command: this.props.command
+	        };
+	    },
+
+	    deleteCommand: function deleteCommand() {
+	        //TODO:
+	    },
+
+	    save: function save() {
+	        var saveBtn = this.refs.saveBtn;
+	        saveBtn.saving();
+	    },
+
+	    render: function render() {
+	        var self = this;
+	        var command = this.state.command;
+	        var uiCmd;
+	        switch (command.type) {
+	            case 'buttonPress':
+	                //TODO:
+	                break;
+	            case 'buttonRelease':
+	                //TODO:
+	                break;
+	            case 'zoneSetLevel':
+	                uiCmd = React.createElement(ZoneSetLevelCommand, { zones: this.props.zones, command: command });
+	                break;
+	            case 'sceneSet':
+	                break;
+	            default:
+	                console.error('unknown command type: ' + command.type);
+	        }
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-CommandInfo well clearfix' },
+	            uiCmd,
+	            React.createElement(
+	                'button',
+	                { className: 'btn btn-danger btnDelete pull-right', onClick: this.deleteCommand },
+	                'Delete'
+	            ),
+	            React.createElement(SaveBtn, { text: 'Save', ref: 'saveBtn', clicked: this.save })
+	        );
+	    }
+	});
+	module.exports = CommandInfo;
+
+/***/ },
+/* 196 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(165);
+	var UniqueIdMixin = __webpack_require__(164);
+	var ZonePicker = __webpack_require__(197);
+
+	var ZoneSetLevelCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            level: this.props.command.attributes.Level || 0,
+	            zoneId: this.props.command.attributes.ZoneID || ''
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            Level: this.state.level,
+	            ZoneID: this.state.zoneId
+	        };
+	    },
+
+	    zonePickerChanged: function zonePickerChanged(zoneId) {
+	        this.setState({ zoneId: zoneId });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZoneSetLevelCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Zone Set Level'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "zoneId") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("zoneId") },
+	                    'Zone'
+	                ),
+	                React.createElement(ZonePicker, { changed: this.zonePickerChanged, zones: this.props.zones, zoneId: this.state.zoneId }),
+	                this.errMsg("zoneId")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "level") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("level") },
+	                    'Level'
+	                ),
+	                React.createElement('input', { value: this.state.level, 'data-statepath': 'level', onChange: this.changed, className: 'level form-control', type: 'text', id: this.uid("level") }),
+	                this.errMsg("level")
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneSetLevelCommand;
+
+/***/ },
+/* 197 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ZonePicker = React.createClass({
+	    displayName: 'ZonePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.zones.forEach(function (zone) {
+	            options.push(React.createElement(
+	                'option',
+	                { key: zone.id, value: zone.id },
+	                zone.name
+	            ));
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZonePicker' },
+	            React.createElement(
+	                'select',
+	                { className: 'form-control', onChange: this.selected, value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select a zone...'
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = ZonePicker;
 
 /***/ }
 /******/ ]);
