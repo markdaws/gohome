@@ -10,12 +10,21 @@ var CommandInfo = React.createClass({
     },
 
     deleteCommand: function() {
-        //TODO:
+        this.props.onDelete(this.props.index, function(err) {
+            console.log('I was deleted: ' + err);
+            // TODO: If there is an error then the delete button should
+            // show an error state ... 
+        });
     },
 
     save: function() {
         var saveBtn = this.refs.saveBtn;
         saveBtn.saving();
+
+        var cmd = this.refs.cmd.toJson();
+        this.props.onSave(cmd, function(err) {
+            console.log('save cb: ' + err);
+        });
     },
     
     render: function() {
@@ -30,7 +39,7 @@ var CommandInfo = React.createClass({
             //TODO:
             break;
         case 'zoneSetLevel':
-            uiCmd = <ZoneSetLevelCommand zones={this.props.zones} command={command} />;
+            uiCmd = <ZoneSetLevelCommand ref="cmd" zones={this.props.zones} command={command} />;
             break;
         case 'sceneSet':
             break;

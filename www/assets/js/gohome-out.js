@@ -22539,6 +22539,7 @@
 	var InputValidationMixin = __webpack_require__(165);
 	var UniqueIdMixin = __webpack_require__(164);
 	var CommandInfo = __webpack_require__(195);
+	var CommandTypePicker = __webpack_require__(198);
 
 	var SceneInfo = React.createClass({
 	    displayName: 'SceneInfo',
@@ -22574,6 +22575,7 @@
 	        };
 	    },
 
+	    //TODO: commands
 	    deleteScene: function deleteScene() {
 	        var self = this;
 	        $.ajax({
@@ -22589,15 +22591,63 @@
 	        });
 	    },
 
+	    saveCommand: function saveCommand(cmd, callback) {
+	        var self = this;
+	        $.ajax({
+	            url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands',
+	            type: 'POST',
+	            dataType: 'json',
+	            data: JSON.stringify(cmd),
+	            cache: false,
+	            success: function success(data) {
+	                console.log('saved command');
+	                callback();
+	            },
+	            error: function error(xhr, status, err) {
+	                console.error(err);
+	                callback(err);
+	            }
+	        });
+	    },
+
+	    deleteCommand: function deleteCommand(cmdIndex, callback) {
+	        //TODO: If new command, then just remove client side, don't send a network call
+	        var self = this;
+	        $.ajax({
+	            url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands/' + cmdIndex,
+	            type: 'DELETE',
+	            cache: false,
+	            success: function (data) {
+	                var commands = self.state.commands.filter(function (cmd, index) {
+	                    return index != cmdIndex;
+	                });
+	                self.setState({ commands: commands });
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                console.error(err);
+	                callback(err);
+	            }.bind(this)
+	        });
+	    },
+
+	    commandTypeChanged: function commandTypeChanged(cmdType) {
+	        var cmds = this.state.commands;
+	        cmds.push({ type: cmdType, attributes: {} });
+	        this.setState({ commands: cmds });
+	    },
+
 	    render: function render() {
 	        var commands;
 	        //TODO: remove
 	        this.state.managed = true;
 	        var self = this;
 	        if (this.state.managed) {
-	            //TODO: What is the key here? Commands don't have ids ...
+	            var cmdIndex = 0;
+	            //TODO: What is the key? can't be index
 	            commands = this.state.commands.map(function (command) {
-	                return React.createElement(CommandInfo, { zones: self.props.zones, command: command });
+	                var info = React.createElement(CommandInfo, { index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, zones: self.props.zones, command: command });
+	                cmdIndex++;
+	                return info;
 	            });
 	        } else {
 	            commands = React.createElement(
@@ -22652,15 +22702,15 @@
 	                this.errMsg("address")
 	            ),
 	            React.createElement(
-	                'h3',
-	                null,
-	                'Commands'
-	            ),
-	            commands,
-	            React.createElement(
-	                'button',
-	                { className: 'btn btn-primary btnAddCommand' },
-	                'Add Command'
+	                'div',
+	                { className: 'well' },
+	                React.createElement(
+	                    'h3',
+	                    null,
+	                    'Commands'
+	                ),
+	                commands,
+	                React.createElement(CommandTypePicker, { changed: this.commandTypeChanged })
 	            )
 	        );
 	    }
@@ -22687,12 +22737,21 @@
 	    },
 
 	    deleteCommand: function deleteCommand() {
-	        //TODO:
+	        this.props.onDelete(this.props.index, function (err) {
+	            console.log('I was deleted: ' + err);
+	            // TODO: If there is an error then the delete button should
+	            // show an error state ...
+	        });
 	    },
 
 	    save: function save() {
 	        var saveBtn = this.refs.saveBtn;
 	        saveBtn.saving();
+
+	        var cmd = this.refs.cmd.toJson();
+	        this.props.onSave(cmd, function (err) {
+	            console.log('save cb: ' + err);
+	        });
 	    },
 
 	    render: function render() {
@@ -22707,7 +22766,7 @@
 	                //TODO:
 	                break;
 	            case 'zoneSetLevel':
-	                uiCmd = React.createElement(ZoneSetLevelCommand, { zones: this.props.zones, command: command });
+	                uiCmd = React.createElement(ZoneSetLevelCommand, { ref: 'cmd', zones: this.props.zones, command: command });
 	                break;
 	            case 'sceneSet':
 	                break;
@@ -22753,8 +22812,11 @@
 
 	    toJson: function toJson() {
 	        return {
-	            Level: this.state.level,
-	            ZoneID: this.state.zoneId
+	            type: 'zoneSetLevel',
+	            attributes: {
+	                Level: parseFloat(this.state.level),
+	                ZoneID: this.state.zoneId
+	            }
 	        };
 	    },
 
@@ -22811,7 +22873,7 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            value: ''
+	            value: this.props.zoneId || ''
 	        };
 	    },
 
@@ -22821,6 +22883,7 @@
 	    },
 
 	    render: function render() {
+	        console.log(this.props.zoneId);
 	        var options = [];
 	        this.props.zones.forEach(function (zone) {
 	            options.push(React.createElement(
@@ -22834,7 +22897,7 @@
 	            { className: 'cmp-ZonePicker' },
 	            React.createElement(
 	                'select',
-	                { className: 'form-control', onChange: this.selected, value: this.state.value },
+	                { className: 'form-control', defaultValue: this.props.zoneId, onChange: this.selected, value: this.state.value },
 	                React.createElement(
 	                    'option',
 	                    { value: '' },
@@ -22846,6 +22909,55 @@
 	    }
 	});
 	module.exports = ZonePicker;
+
+/***/ },
+/* 198 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var CommandTypePicker = React.createClass({
+	    displayName: 'CommandTypePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: '' });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-CommandTypePicker' },
+	            React.createElement(
+	                'select',
+	                { className: 'form-control', onChange: this.selected, value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select...'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'zoneSetLevel' },
+	                    'Zone Set Level'
+	                )
+	            )
+	        );
+	    }
+	});
+	module.exports = CommandTypePicker;
+
+	//TODO: scene set
+	//TODO: button press
+	//TODO: button release
 
 /***/ }
 /******/ ]);

@@ -1,6 +1,10 @@
 package gohome
 
-import "github.com/markdaws/gohome/cmd"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/cmd"
+)
 
 type Scene struct {
 	Address     string
@@ -14,4 +18,18 @@ type Scene struct {
 	// create a GoHome scene, we do know what zones it will affect
 	Managed  bool
 	Commands []cmd.Command
+}
+
+func (s *Scene) DeleteCommand(i int) error {
+	if i < 0 || i >= len(s.Commands) {
+		return fmt.Errorf("invalid command index")
+	}
+
+	s.Commands, s.Commands[len(s.Commands)-1] = append(s.Commands[:i], s.Commands[i+1:]...), nil
+	return nil
+}
+
+func (s *Scene) AddCommand(c cmd.Command) error {
+	s.Commands = append(s.Commands, c)
+	return nil
 }

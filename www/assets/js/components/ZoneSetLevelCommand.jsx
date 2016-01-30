@@ -14,8 +14,11 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
 
     toJson: function() {
         return {
-            Level: this.state.level,
-            ZoneID: this.state.zoneId
+            type: 'zoneSetLevel',
+            attributes: {
+                Level: parseFloat(this.state.level),
+                ZoneID: this.state.zoneId
+            }
         };
     },
 

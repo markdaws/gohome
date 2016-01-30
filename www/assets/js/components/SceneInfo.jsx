@@ -3,6 +3,7 @@ var SaveBtn = require('./SaveBtn.jsx');
 var InputValidationMixin = require('./InputValidationMixin.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var CommandInfo = require('./CommandInfo.jsx');
+var CommandTypePicker = require('./CommandTypePicker.jsx');
 
 var SceneInfo = React.createClass({
     mixins: [InputValidationMixin, UniqueIdMixin],
@@ -33,6 +34,7 @@ var SceneInfo = React.createClass({
             name: this.state.name,
             address: this.state.address,
             managed: this.state.managed,
+            //TODO: commands
         };
     },
 
@@ -51,15 +53,63 @@ var SceneInfo = React.createClass({
         });
     },
 
+    saveCommand: function(cmd, callback) {
+        var self = this;
+        $.ajax({
+            url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands',
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify(cmd),
+            cache: false,
+            success: function(data) {
+                console.log('saved command');
+                callback();
+            },
+            error: function(xhr, status, err) {
+                console.error(err);
+                callback(err);
+            }
+        });
+    },
+    
+    deleteCommand: function(cmdIndex, callback) {
+        //TODO: If new command, then just remove client side, don't send a network call
+        var self = this;
+        $.ajax({
+            url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands/' + cmdIndex,
+            type: 'DELETE',
+            cache: false,
+            success: function(data) {
+                var commands = self.state.commands.filter(function(cmd, index) {
+                    return index != cmdIndex;
+                });
+                self.setState({ commands: commands });
+            }.bind(this),
+            error: function(xhr, status, err) {
+                console.error(err);
+                callback(err);
+            }.bind(this)
+        });
+    },
+
+    commandTypeChanged: function(cmdType) {
+        var cmds = this.state.commands;
+        cmds.push({ type: cmdType, attributes: {} });
+        this.setState({ commands: cmds });
+    },
+    
     render: function() {
         var commands
         //TODO: remove
         this.state.managed = true;
         var self = this;
         if (this.state.managed) {
-            //TODO: What is the key here? Commands don't have ids ...
+            var cmdIndex = 0;
+            //TODO: What is the key? can't be index
             commands = this.state.commands.map(function(command) {
-                return <CommandInfo zones={self.props.zones} command={command} />
+                var info = <CommandInfo index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} zones={self.props.zones} command={command} />
+                cmdIndex++;
+                return info;
             });
         } else {
             commands = <p>This is an unmanaged scene. The scene is controlled by a 3rd party device so we can&apos;t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.</p>
@@ -85,10 +135,12 @@ var SceneInfo = React.createClass({
                 <input value={this.state.adddress} data-statepath="address" onChange={this.changed} className="address form-control" type="text" id={this.uid("address")}/>
                 {this.errMsg("address")}
               </div>
-            
-              <h3>Commands</h3>
-              {commands}
-              <button className="btn btn-primary btnAddCommand">Add Command</button>
+
+              <div className="well">
+                <h3>Commands</h3>
+                {commands}
+                <CommandTypePicker changed={this.commandTypeChanged}/>
+              </div>
             </div>
         );
     }

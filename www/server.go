@@ -8,6 +8,7 @@ import (
 	"mime"
 	"net/http"
 	"sort"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
@@ -59,11 +60,17 @@ func (s *wwwServer) listenAndServe(port string) error {
 	// Websocket handler
 	r.HandleFunc("/api/v1/events/ws", s.eventLogger.HTTPHandler())
 
-	//TODO: Move api into separate http server
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}", apiSceneHandlerUpdate(s.system, s.recipeManager)).Methods("PUT")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands/{index}", apiSceneHandlerCommandDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands", apiSceneHandlerCommandAdd(s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}", apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/active", apiActiveScenesHandler(s.system)).Methods("POST")
+
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiAddZoneHandler(s.system)).Methods("POST")
+	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system)).Methods("GET")
+
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiAddDeviceHandler(s.system)).Methods("POST")
 
@@ -81,13 +88,6 @@ func (s *wwwServer) listenAndServe(port string) error {
 	r.HandleFunc("/api/v1/recipes/{id}", apiRecipeHandler(s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/recipes/{id}", apiRecipeHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
 	r.HandleFunc("/api/v1/recipes", apiRecipesHandlerGet(s.system, s.recipeManager)).Methods("GET")
-
-	//TODO: GET vs. POST
-	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system))
-
-	//TODO: Make for POST only
-	//TODO: Have GET version to see the currently active scenes
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/active", apiActiveScenesHandler(s.system)).Methods("POST")
 
 	sub := r.PathPrefix("/assets").Subrouter()
 	//sub.Methods("GET")
@@ -447,6 +447,144 @@ func apiSceneHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeMa
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(struct{}{})
+	}
+}
+
+func apiSceneHandlerCommandDelete(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		sceneID := mux.Vars(r)["sceneId"]
+		scene, ok := system.Scenes[sceneID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		commandIndex, err := strconv.Atoi(mux.Vars(r)["index"])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		err = scene.DeleteCommand(commandIndex)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		err = system.Save(recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(struct{}{})
+	}
+}
+
+func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		sceneID := mux.Vars(r)["sceneId"]
+		scene, ok := system.Scenes[sceneID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var command jsonCommand
+		if err = json.Unmarshal(body, &command); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var finalCmd cmd.Command
+		switch command.Type {
+		case "zoneSetLevel":
+			//TODO: check ZoneID can be transformed to string
+			z, ok := system.Zones[command.Attributes["ZoneID"].(string)]
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			finalCmd = &cmd.ZoneSetLevel{
+				ZoneAddress: z.Address,
+				ZoneID:      z.ID,
+				ZoneName:    z.Name,
+				Level:       cmd.Level{Value: float32(command.Attributes["Level"].(float64))},
+			}
+		case "buttonPress":
+			//TODO:
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		case "buttonRelease":
+			//TODO:
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		case "sceneSet":
+			//TODO: Implement
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		default:
+			//TODO:
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		err = scene.AddCommand(finalCmd)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		err = system.Save(recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(struct{}{})
+	}
+}
+
+func apiSceneHandlerUpdate(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		//TODO
+		/*
+			sceneID := mux.Vars(r)["id"]
+			scene, ok := system.Scenes[sceneID]
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			// What actions can the user perform
+			// Add command
+			// Delete command
+			// general name update
+			// command update
+
+
+			system.DeleteScene(scene)
+			err := system.Save(recipeManager)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			json.NewEncoder(w).Encode(struct{}{})
+		*/
 	}
 }
 
