@@ -7,19 +7,26 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         return {
+            cid: this.getNextIdAndIncrement() + '',
             level: this.props.command.attributes.Level || 0,
-            zoneId: this.props.command.attributes.ZoneID || ''
+            zoneId: this.props.command.attributes.ZoneID || '',
+            errors: null,
         }
     },
 
     toJson: function() {
         return {
             type: 'zoneSetLevel',
+            clientId: this.state.cid,
             attributes: {
                 Level: parseFloat(this.state.level),
                 ZoneID: this.state.zoneId
             }
         };
+    },
+
+    setErrors: function(errors) {
+        this.setState({ errors: errors });
     },
 
     zonePickerChanged: function(zoneId) {
@@ -30,10 +37,10 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
         return (
             <div className="cmp-ZoneSetLevelCommand">
               <h4>Zone Set Level</h4>
-              <div className={this.addErr("form-group", "zoneId")}>
-                <label className="control-label" htmlFor={this.uid("zoneId")}>Zone</label>
+              <div className={this.addErr("form-group", "attributes_ZoneID")}>
+                <label className="control-label" htmlFor={this.uid("attributes_zoneID")}>Zone</label>
                 <ZonePicker changed={this.zonePickerChanged} zones={this.props.zones} zoneId={this.state.zoneId} />
-                {this.errMsg("zoneId")}
+                {this.errMsg("attributes_ZoneID")}
               </div>
               <div className={this.addErr("form-group", "level")}>
                 <label className="control-label" htmlFor={this.uid("level")}>Level</label>

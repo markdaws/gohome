@@ -73,7 +73,7 @@ var SceneList = React.createClass({
         
         //TODO: Add loading
         return (
-            <div className="cmp-SceneList row">
+            <div className="cmp-SceneList">
               <div className="clearfix editButtonWrapper">
                 <button className="btn btn-primary btnEdit pull-right" onClick={this.edit}>Edit</button>
               </div>

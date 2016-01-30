@@ -489,29 +489,71 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 		sceneID := mux.Vars(r)["sceneId"]
 		scene, ok := system.Scenes[sceneID]
 		if !ok {
+			fmt.Println("a")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
 		if err != nil {
+			fmt.Printf("err: %s", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		var command jsonCommand
 		if err = json.Unmarshal(body, &command); err != nil {
+			fmt.Printf("err2 %s", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
+		/*TODO: remove
+		errors := system.AddZone(z)
+		if errors != nil {
+			if valErrs, ok := errors.(*validation.Errors); ok {
+				fmt.Printf("%+v\n", valErrs.Errors[0])
+				w.WriteHeader(http.StatusBadRequest)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+			} else {
+				//Other kind of errors, TODO: log
+				w.WriteHeader(http.StatusBadRequest)
+			}
+			return
+		}*/
+
 		var finalCmd cmd.Command
 		switch command.Type {
 		case "zoneSetLevel":
-			//TODO: check ZoneID can be transformed to string
+			if _, ok := command.Attributes["ZoneID"]; !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+				valErrs := &validation.Errors{}
+				// how to do attributes.zoneId?
+				valErrs.AddExplicitField("required field", "attributes_ZoneID")
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				return
+			}
+
+			if _, ok = command.Attributes["ZoneID"].(string); !ok {
+				//TODO: Is the wrong type
+			}
+
 			z, ok := system.Zones[command.Attributes["ZoneID"].(string)]
 			if !ok {
 				w.WriteHeader(http.StatusBadRequest)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+				valErrs := &validation.Errors{}
+
+				if command.Attributes["ZoneID"].(string) == "" {
+					valErrs.AddExplicitField("required field", "attributes_ZoneID")
+				} else {
+					valErrs.AddExplicitField("invalid zone ID", "attributes_ZoneID")
+				}
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
 				return
 			}
 

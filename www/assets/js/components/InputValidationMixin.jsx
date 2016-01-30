@@ -1,6 +1,7 @@
 module.exports = {
     uid: function(field) {
-        return this.state.cid + '.' + field
+        var id = this.state.cid == undefined ? this.state.id : this.state.cid;
+        return id + '_' + field
     },
     getErr: function(field) {
         if (!this.state.errors) {

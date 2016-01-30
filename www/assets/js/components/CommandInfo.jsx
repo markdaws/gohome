@@ -21,9 +21,15 @@ var CommandInfo = React.createClass({
         var saveBtn = this.refs.saveBtn;
         saveBtn.saving();
 
-        var cmd = this.refs.cmd.toJson();
-        this.props.onSave(cmd, function(err) {
-            console.log('save cb: ' + err);
+        var cmd = this.refs.cmd;
+        this.props.onSave(cmd.toJson(), function(errors) {
+            if (errors) {
+                cmd.setErrors(errors);
+                saveBtn.failure();
+            } else {
+                cmd.setErrors(null);
+                saveBtn.success();
+            }
         });
     },
     
@@ -47,7 +53,7 @@ var CommandInfo = React.createClass({
             console.error('unknown command type: ' + command.type);
         }
         return (
-            <div className="cmp-CommandInfo well clearfix">
+            <div className="cmp-CommandInfo well well-sm clearfix">
               {uiCmd}
               <button className="btn btn-danger btnDelete pull-right" onClick={this.deleteCommand}>Delete</button>
               <SaveBtn text="Save" ref="saveBtn" clicked={this.save}/>

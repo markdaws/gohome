@@ -17,6 +17,8 @@ type Error struct {
 
 	// The name of the field in the type which has the validation error e.g. "Name"
 	Field string
+
+	IgnoreJSONTag bool
 }
 
 // Error returns a friendly error string
@@ -32,8 +34,17 @@ type Errors struct {
 // Add inserts a new error into the Errors field
 func (errs *Errors) Add(msg, field string) {
 	errs.Errors = append(errs.Errors, Error{
-		MSG:   msg,
-		Field: field,
+		MSG:           msg,
+		Field:         field,
+		IgnoreJSONTag: false,
+	})
+}
+
+func (errs *Errors) AddExplicitField(msg, field string) {
+	errs.Errors = append(errs.Errors, Error{
+		MSG:           msg,
+		Field:         field,
+		IgnoreJSONTag: true,
 	})
 }
 
@@ -68,14 +79,20 @@ func NewErrorJSON(item interface{}, clientID string, errors *Errors) ErrorJSON {
 		Errors: make(map[string]map[string]string),
 	}
 	for _, e := range errors.Errors {
-		jsonField, err := JSONTagForField(item, e.Field)
-		if err != nil {
-			fmt.Println(err)
-			//TODO: Log?
-			continue
+		var jsonField string
+		if e.IgnoreJSONTag {
+			jsonField = e.Field
+		} else {
+			var err error
+			jsonField, err = JSONTagForField(item, e.Field)
+			if err != nil {
+				fmt.Println(err)
+				//TODO: Log?
+				continue
+			}
 		}
-		valErr.Errors[clientID+"."+jsonField] = make(map[string]string)
-		valErr.Errors[clientID+"."+jsonField]["message"] = e.MSG
+		valErr.Errors[clientID+"_"+jsonField] = make(map[string]string)
+		valErr.Errors[clientID+"_"+jsonField]["message"] = e.MSG
 	}
 	return valErr
 }

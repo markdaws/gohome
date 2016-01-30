@@ -43,6 +43,15 @@ button.disabled {
     font-size: 12px;
     font-weight: normal;
 }
+.cmp-SceneInfo .deleteWrapper {
+    margin-bottom: 14px;
+}
+.cmp-SceneInfo .commands {
+    background-color: #fff;
+}
+.cmp-SceneInfo .commands h3 {
+    margin-top: 0px;
+}
 
 .cmp-Zone .btn.zone .name{
     display:inline-block;
@@ -130,6 +139,9 @@ button.disabled {
 
 .cmp-SaveBtn {
     width: 100px;
+}
+.cmp-SaveBtn .fa.fa-spinner {
+    font-size: 16px;
 }
 
 .cmp-DeviceList .header {

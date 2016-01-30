@@ -20300,7 +20300,8 @@
 
 	module.exports = {
 	    uid: function uid(field) {
-	        return this.state.cid + '.' + field;
+	        var id = this.state.cid == undefined ? this.state.id : this.state.cid;
+	        return id + '_' + field;
 	    },
 	    getErr: function getErr(field) {
 	        if (!this.state.errors) {
@@ -21132,7 +21133,7 @@
 	        //TODO: Add loading
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-SceneList row' },
+	            { className: 'cmp-SceneList' },
 	            React.createElement(
 	                'div',
 	                { className: 'clearfix editButtonWrapper' },
@@ -22604,8 +22605,8 @@
 	                callback();
 	            },
 	            error: function error(xhr, status, err) {
-	                console.error(err);
-	                callback(err);
+	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                callback(errors);
 	            }
 	        });
 	    },
@@ -22643,9 +22644,12 @@
 	        var self = this;
 	        if (this.state.managed) {
 	            var cmdIndex = 0;
-	            //TODO: What is the key? can't be index
+
 	            commands = this.state.commands.map(function (command) {
-	                var info = React.createElement(CommandInfo, { index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, zones: self.props.zones, command: command });
+	                // This isn't a great idea for react, but we don't really have anything
+	                // that can be used as a key since commands don't have ids
+	                var key = Math.random();
+	                var info = React.createElement(CommandInfo, { key: key, index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, zones: self.props.zones, command: command });
 	                cmdIndex++;
 	                return info;
 	            });
@@ -22658,16 +22662,7 @@
 	        }
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-SceneInfo well' },
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-danger pull-right', onClick: this.deleteScene },
-	                    'Delete Scene'
-	                )
-	            ),
+	            { className: 'cmp-SceneInfo well well-sm' },
 	            React.createElement(
 	                'div',
 	                { className: this.addErr("form-group", "name") },
@@ -22703,13 +22698,28 @@
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: 'well' },
+	                { className: 'clearfix deleteWrapper' },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
+	                    'Toggle Commands'
+	                ),
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-danger pull-right', onClick: this.deleteScene },
+	                    'Delete Scene'
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse commands well well-sm', id: this.uid('commands') },
 	                React.createElement(
 	                    'h3',
 	                    null,
 	                    'Commands'
 	                ),
 	                commands,
+	                'Add Command: ',
 	                React.createElement(CommandTypePicker, { changed: this.commandTypeChanged })
 	            )
 	        );
@@ -22748,9 +22758,15 @@
 	        var saveBtn = this.refs.saveBtn;
 	        saveBtn.saving();
 
-	        var cmd = this.refs.cmd.toJson();
-	        this.props.onSave(cmd, function (err) {
-	            console.log('save cb: ' + err);
+	        var cmd = this.refs.cmd;
+	        this.props.onSave(cmd.toJson(), function (errors) {
+	            if (errors) {
+	                cmd.setErrors(errors);
+	                saveBtn.failure();
+	            } else {
+	                cmd.setErrors(null);
+	                saveBtn.success();
+	            }
 	        });
 	    },
 
@@ -22775,7 +22791,7 @@
 	        }
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-CommandInfo well clearfix' },
+	            { className: 'cmp-CommandInfo well well-sm clearfix' },
 	            uiCmd,
 	            React.createElement(
 	                'button',
@@ -22805,19 +22821,26 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        return {
+	            cid: this.getNextIdAndIncrement() + '',
 	            level: this.props.command.attributes.Level || 0,
-	            zoneId: this.props.command.attributes.ZoneID || ''
+	            zoneId: this.props.command.attributes.ZoneID || '',
+	            errors: null
 	        };
 	    },
 
 	    toJson: function toJson() {
 	        return {
 	            type: 'zoneSetLevel',
+	            clientId: this.state.cid,
 	            attributes: {
 	                Level: parseFloat(this.state.level),
 	                ZoneID: this.state.zoneId
 	            }
 	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
 	    },
 
 	    zonePickerChanged: function zonePickerChanged(zoneId) {
@@ -22835,14 +22858,14 @@
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: this.addErr("form-group", "zoneId") },
+	                { className: this.addErr("form-group", "attributes_ZoneID") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("zoneId") },
+	                    { className: 'control-label', htmlFor: this.uid("attributes_zoneID") },
 	                    'Zone'
 	                ),
 	                React.createElement(ZonePicker, { changed: this.zonePickerChanged, zones: this.props.zones, zoneId: this.state.zoneId }),
-	                this.errMsg("zoneId")
+	                this.errMsg("attributes_ZoneID")
 	            ),
 	            React.createElement(
 	                'div',

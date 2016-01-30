@@ -66,8 +66,8 @@ var SceneInfo = React.createClass({
                 callback();
             },
             error: function(xhr, status, err) {
-                console.error(err);
-                callback(err);
+                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                callback(errors);
             }
         });
     },
@@ -105,9 +105,12 @@ var SceneInfo = React.createClass({
         var self = this;
         if (this.state.managed) {
             var cmdIndex = 0;
-            //TODO: What is the key? can't be index
+
             commands = this.state.commands.map(function(command) {
-                var info = <CommandInfo index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} zones={self.props.zones} command={command} />
+                // This isn't a great idea for react, but we don't really have anything
+                // that can be used as a key since commands don't have ids
+                var key = Math.random();
+                var info = <CommandInfo key={key} index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} zones={self.props.zones} command={command} />
                 cmdIndex++;
                 return info;
             });
@@ -115,10 +118,7 @@ var SceneInfo = React.createClass({
             commands = <p>This is an unmanaged scene. The scene is controlled by a 3rd party device so we can&apos;t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.</p>
         }
         return (
-            <div className="cmp-SceneInfo well">
-              <div className="clearfix">
-                <button className="btn btn-danger pull-right" onClick={this.deleteScene}>Delete Scene</button>
-              </div>
+            <div className="cmp-SceneInfo well well-sm">
               <div className={this.addErr("form-group", "name")}>
                 <label className="control-label" htmlFor={this.uid("name")}>Name*</label>
                 <input value={this.state.name} data-statepath="name" onChange={this.changed} className="name form-control" type="text" id={this.uid("name")}/>
@@ -136,10 +136,17 @@ var SceneInfo = React.createClass({
                 {this.errMsg("address")}
               </div>
 
-              <div className="well">
+              <div className="clearfix deleteWrapper">
+                <a data-toggle="collapse" href={"#" + this.uid("commands")}>
+                  Toggle Commands
+                </a>
+                <button className="btn btn-danger pull-right" onClick={this.deleteScene}>Delete Scene</button>
+              </div>
+
+              <div className="collapse commands well well-sm" id={this.uid('commands')}>
                 <h3>Commands</h3>
                 {commands}
-                <CommandTypePicker changed={this.commandTypeChanged}/>
+                Add Command: <CommandTypePicker changed={this.commandTypeChanged}/>
               </div>
             </div>
         );
