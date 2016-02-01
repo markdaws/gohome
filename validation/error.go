@@ -31,6 +31,18 @@ type Errors struct {
 	Errors []Error
 }
 
+// NewErrors creates an Errors instance and adds one error to the Errors
+// field, using the field and msg values
+func NewErrors(field, msg string, isExplicit bool) *Errors {
+	e := &Errors{}
+	if isExplicit {
+		e.AddExplicitField(msg, field)
+	} else {
+		e.Add(msg, field)
+	}
+	return e
+}
+
 // Add inserts a new error into the Errors field
 func (errs *Errors) Add(msg, field string) {
 	errs.Errors = append(errs.Errors, Error{

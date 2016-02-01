@@ -135,15 +135,14 @@ var SceneInfo = React.createClass({
                 <input value={this.state.adddress} data-statepath="address" onChange={this.changed} className="address form-control" type="text" id={this.uid("address")}/>
                 {this.errMsg("address")}
               </div>
-
-              <div className="clearfix deleteWrapper">
-                <a data-toggle="collapse" href={"#" + this.uid("commands")}>
-                  Toggle Commands
-                </a>
-                <button className="btn btn-danger pull-right" onClick={this.deleteScene}>Delete Scene</button>
-              </div>
-
-              <div className="collapse commands well well-sm" id={this.uid('commands')}>
+              <a data-toggle="collapse" href={"#" + this.uid("commands")}>
+                More Info
+                <i className="glyphicon glyphicon-menu-down"></i>
+              </a>
+              <div className="collapse commands" id={this.uid('commands')}>
+                <div className="clearfix deleteWrapper">
+                  <button className="btn btn-danger pull-right" onClick={this.deleteScene}>Delete Scene</button>
+                </div>
                 <h3>Commands</h3>
                 {commands}
                 Add Command: <CommandTypePicker changed={this.commandTypeChanged}/>

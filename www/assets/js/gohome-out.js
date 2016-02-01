@@ -22697,22 +22697,23 @@
 	                this.errMsg("address")
 	            ),
 	            React.createElement(
-	                'div',
-	                { className: 'clearfix deleteWrapper' },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
-	                    'Toggle Commands'
-	                ),
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-danger pull-right', onClick: this.deleteScene },
-	                    'Delete Scene'
-	                )
+	                'a',
+	                { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
+	                'More Info',
+	                React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: 'collapse commands well well-sm', id: this.uid('commands') },
+	                { className: 'collapse commands', id: this.uid('commands') },
+	                React.createElement(
+	                    'div',
+	                    { className: 'clearfix deleteWrapper' },
+	                    React.createElement(
+	                        'button',
+	                        { className: 'btn btn-danger pull-right', onClick: this.deleteScene },
+	                        'Delete Scene'
+	                    )
+	                ),
 	                React.createElement(
 	                    'h3',
 	                    null,
