@@ -1,5 +1,6 @@
 var React = require('react');
 var ZoneSetLevelCommand = require('./ZoneSetLevelCommand.jsx');
+var SceneSetCommand = require('./SceneSetCommand.jsx');
 var SaveBtn = require('./SaveBtn.jsx');
 
 var CommandInfo = React.createClass({
@@ -55,6 +56,7 @@ var CommandInfo = React.createClass({
             uiCmd = <ZoneSetLevelCommand ref="cmd" zones={this.props.zones} command={command} />;
             break;
         case 'sceneSet':
+            uiCmd = <SceneSetCommand ref="cmd" scenes={this.props.scenes} command={command} />;
             break;
         default:
             console.error('unknown command type: ' + command.type);

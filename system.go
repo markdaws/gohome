@@ -234,8 +234,6 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 				Output:      zone.OutputFromString(zn.Output),
 				Controller:  zn.Controller,
 			}
-			//TODO: Remove
-			fmt.Printf("zone id: %s : %s\n", zn.ID, zn.Name)
 			err := sys.AddZone(z)
 			if err != nil {
 				fmt.Printf("zone add error: %+v\n", err)
@@ -258,8 +256,6 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			switch command.Type {
 			case "zoneSetLevel":
 				z := sys.Zones[command.Attributes["ZoneID"].(string)]
-				//fmt.Printf("zone: %+v\n", z)
-				//fmt.Printf("cmd: %+v\n", command)
 				finalCmd = &cmd.ZoneSetLevel{
 					ZoneAddress: z.Address,
 					ZoneID:      z.ID,
@@ -285,7 +281,11 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 					DeviceID:      btn.Device.ID(),
 				}
 			case "sceneSet":
-				//TODO: Implement
+				scn := sys.Scenes[command.Attributes["SceneID"].(string)]
+				finalCmd = &cmd.SceneSet{
+					SceneID:   scn.ID,
+					SceneName: scn.Name,
+				}
 			default:
 				return nil, fmt.Errorf("unknown command type %s", command.Type)
 			}
@@ -353,8 +353,12 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 					},
 				}
 			case *cmd.SceneSet:
-				//TODO:
-				return fmt.Errorf("unknown command type SceneSet")
+				cmds[j] = commandJSON{
+					Type: "sceneSet",
+					Attributes: map[string]interface{}{
+						"SceneID": xCmd.SceneID,
+					},
+				}
 			default:
 				return fmt.Errorf("unknown command type")
 			}

@@ -38,7 +38,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
             <div className="cmp-ZoneSetLevelCommand">
               <h4>Zone Set Level</h4>
               <div className={this.addErr("form-group", "attributes_ZoneID")}>
-                <label className="control-label" htmlFor={this.uid("attributes_zoneID")}>Zone</label>
+                <label className="control-label" htmlFor={this.uid("attributes_ZoneID")}>Zone*</label>
                 <ZonePicker changed={this.zonePickerChanged} zones={this.props.zones} zoneId={this.state.zoneId} />
                 {this.errMsg("attributes_ZoneID")}
               </div>

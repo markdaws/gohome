@@ -13,7 +13,6 @@ var ZonePicker = React.createClass({
     },
     
     render: function() {
-        console.log(this.props.zoneId);
         var options = [];
         this.props.zones.forEach(function(zone) {
             options.push(<option key={zone.id} value={zone.id}>{zone.name}</option>);
@@ -21,7 +20,7 @@ var ZonePicker = React.createClass({
         return (
             <div className="cmp-ZonePicker">
               <select className="form-control" defaultValue={this.props.zoneId} onChange={this.selected} value={this.state.value}>
-                <option value="">Select a zone...</option>
+                <option value="">Select a Zone...</option>
                 {options}
               </select>
             </div>

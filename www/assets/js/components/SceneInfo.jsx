@@ -15,7 +15,8 @@ var SceneInfo = React.createClass({
             address: this.props.scene.address || '',
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
             commands: this.props.scene.commands || [],
-            zones: this.props.zones || []
+            zones: this.props.zones || [],
+            scenes: this.props.scenes || []
             //TODO: readonly id
         };
     },
@@ -24,6 +25,9 @@ var SceneInfo = React.createClass({
         //Needed?
         if (nextProps.zones) {
             this.setState({ zones: nextProps.zones });
+        }
+        if (nextProps.scenes) {
+            this.setState({ scenes: nextProps.scenes });
         }
     },
     
@@ -118,7 +122,7 @@ var SceneInfo = React.createClass({
                 // This isn't a great idea for react, but we don't really have anything
                 // that can be used as a key since commands don't have ids
                 var key = Math.random();
-                var info = <CommandInfo isNew={command.isNew} key={key} index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} zones={self.props.zones} command={command} />
+                var info = <CommandInfo isNew={command.isNew} key={key} index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} scenes={self.props.scenes} zones={self.props.zones} command={command} />
                 cmdIndex++;
                 return info;
             });

@@ -21077,10 +21077,14 @@
 	        if (nextProps.scenes) {
 	            this.setState({ scenes: nextProps.scenes });
 	        }
+	        if (nextProps.zones) {
+	            this.setState({ zones: nextProps.zones });
+	        }
 	    },
 
 	    componentDidMount: function componentDidMount() {
 
+	        //TODO: Needed?
 	        $.ajax({
 	            url: '/api/v1/systems/123/zones',
 	            dataType: 'json',
@@ -21122,7 +21126,7 @@
 	        var self = this;
 	        if (this.state.editMode) {
 	            body = this.state.scenes.map(function (scene) {
-	                return React.createElement(SceneInfo, { onDestroy: self.sceneDeleted, zones: self.state.zones, scene: scene, key: scene.id });
+	                return React.createElement(SceneInfo, { onDestroy: self.sceneDeleted, scenes: self.state.scenes, zones: self.state.zones, scene: scene, key: scene.id });
 	            });
 	        } else {
 	            body = this.state.scenes.map(function (scene) {
@@ -22554,7 +22558,8 @@
 	            address: this.props.scene.address || '',
 	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
 	            commands: this.props.scene.commands || [],
-	            zones: this.props.zones || []
+	            zones: this.props.zones || [],
+	            scenes: this.props.scenes || []
 	            //TODO: readonly id
 	        };
 	    },
@@ -22563,6 +22568,9 @@
 	        //Needed?
 	        if (nextProps.zones) {
 	            this.setState({ zones: nextProps.zones });
+	        }
+	        if (nextProps.scenes) {
+	            this.setState({ scenes: nextProps.scenes });
 	        }
 	    },
 
@@ -22657,7 +22665,7 @@
 	                // This isn't a great idea for react, but we don't really have anything
 	                // that can be used as a key since commands don't have ids
 	                var key = Math.random();
-	                var info = React.createElement(CommandInfo, { isNew: command.isNew, key: key, index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, zones: self.props.zones, command: command });
+	                var info = React.createElement(CommandInfo, { isNew: command.isNew, key: key, index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, scenes: self.props.scenes, zones: self.props.zones, command: command });
 	                cmdIndex++;
 	                return info;
 	            });
@@ -22744,6 +22752,7 @@
 
 	var React = __webpack_require__(1);
 	var ZoneSetLevelCommand = __webpack_require__(196);
+	var SceneSetCommand = __webpack_require__(199);
 	var SaveBtn = __webpack_require__(166);
 
 	var CommandInfo = React.createClass({
@@ -22801,6 +22810,7 @@
 	                uiCmd = React.createElement(ZoneSetLevelCommand, { ref: 'cmd', zones: this.props.zones, command: command });
 	                break;
 	            case 'sceneSet':
+	                uiCmd = React.createElement(SceneSetCommand, { ref: 'cmd', scenes: this.props.scenes, command: command });
 	                break;
 	            default:
 	                console.error('unknown command type: ' + command.type);
@@ -22877,8 +22887,8 @@
 	                { className: this.addErr("form-group", "attributes_ZoneID") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_zoneID") },
-	                    'Zone'
+	                    { className: 'control-label', htmlFor: this.uid("attributes_ZoneID") },
+	                    'Zone*'
 	                ),
 	                React.createElement(ZonePicker, { changed: this.zonePickerChanged, zones: this.props.zones, zoneId: this.state.zoneId }),
 	                this.errMsg("attributes_ZoneID")
@@ -22922,7 +22932,6 @@
 	    },
 
 	    render: function render() {
-	        console.log(this.props.zoneId);
 	        var options = [];
 	        this.props.zones.forEach(function (zone) {
 	            options.push(React.createElement(
@@ -22940,7 +22949,7 @@
 	                React.createElement(
 	                    'option',
 	                    { value: '' },
-	                    'Select a zone...'
+	                    'Select a Zone...'
 	                ),
 	                options
 	            )
@@ -22985,6 +22994,11 @@
 	                ),
 	                React.createElement(
 	                    'option',
+	                    { value: 'sceneSet' },
+	                    'Scene Set'
+	                ),
+	                React.createElement(
+	                    'option',
 	                    { value: 'zoneSetLevel' },
 	                    'Zone Set Level'
 	                )
@@ -22994,9 +23008,129 @@
 	});
 	module.exports = CommandTypePicker;
 
-	//TODO: scene set
 	//TODO: button press
 	//TODO: button release
+
+/***/ },
+/* 199 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(165);
+	var UniqueIdMixin = __webpack_require__(164);
+	var ScenePicker = __webpack_require__(200);
+
+	var SceneSetCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            cid: this.getNextIdAndIncrement() + '',
+	            sceneId: this.props.command.attributes.SceneID || '',
+	            errors: null
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            scenes: []
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'sceneSet',
+	            clientId: this.state.cid,
+	            attributes: {
+	                SceneID: this.state.sceneId
+	            }
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    scenePickerChanged: function scenePickerChanged(sceneId) {
+	        this.setState({ sceneId: sceneId });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SceneSetCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Scene Set'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_SceneID") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_SceneID") },
+	                    'Scene*'
+	                ),
+	                React.createElement(ScenePicker, { changed: this.scenePickerChanged, scenes: this.props.scenes, sceneId: this.state.sceneId }),
+	                this.errMsg("attributes_SceneID")
+	            )
+	        );
+	    }
+	});
+	module.exports = SceneSetCommand;
+
+/***/ },
+/* 200 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ScenePicker = React.createClass({
+	    displayName: 'ScenePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.sceneId || ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.scenes.forEach(function (scene) {
+	            options.push(React.createElement(
+	                'option',
+	                { key: scene.id, value: scene.id },
+	                scene.name
+	            ));
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ScenePicker' },
+	            React.createElement(
+	                'select',
+	                { className: 'form-control', defaultValue: this.props.sceneId, onChange: this.selected, value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select a Scene...'
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = ScenePicker;
 
 /***/ }
 /******/ ]);

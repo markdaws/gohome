@@ -16,10 +16,14 @@ var SceneList = React.createClass({
         if (nextProps.scenes) {
             this.setState({ scenes: nextProps.scenes });
         }
+        if (nextProps.zones) {
+            this.setState({ zones: nextProps.zones });
+        }
     },
     
     componentDidMount: function() {
 
+        //TODO: Needed?
         $.ajax({
             url: '/api/v1/systems/123/zones',
             dataType: 'json',
@@ -61,7 +65,7 @@ var SceneList = React.createClass({
         var self = this;
         if (this.state.editMode) {
             body = this.state.scenes.map(function(scene) {
-                return <SceneInfo onDestroy={self.sceneDeleted} zones={self.state.zones} scene={scene} key={scene.id}/>
+                return <SceneInfo onDestroy={self.sceneDeleted} scenes={self.state.scenes} zones={self.state.zones} scene={scene} key={scene.id}/>
             });
         } else {
             body = this.state.scenes.map(function(scene) {

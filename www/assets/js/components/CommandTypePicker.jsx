@@ -17,6 +17,7 @@ var CommandTypePicker = React.createClass({
             <div className="cmp-CommandTypePicker">
               <select className="form-control" onChange={this.selected} value={this.state.value}>
                 <option value="">Select...</option>
+                <option value="sceneSet">Scene Set</option>
                 <option value="zoneSetLevel">Zone Set Level</option>
               </select>
             </div>
@@ -25,6 +26,5 @@ var CommandTypePicker = React.createClass({
 });
 module.exports = CommandTypePicker;
 
-//TODO: scene set
 //TODO: button press
 //TODO: button release

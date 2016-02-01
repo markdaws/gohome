@@ -412,8 +412,12 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 						},
 					}
 				case *cmd.SceneSet:
-					//TODO:
-					fmt.Println("SceneSet command not implemented")
+					cmds[j] = jsonCommand{
+						Type: "sceneSet",
+						Attributes: map[string]interface{}{
+							"SceneID": xCmd.SceneID,
+						},
+					}
 				default:
 					fmt.Println("unknown scene command")
 				}
@@ -491,7 +495,6 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 		sceneID := mux.Vars(r)["sceneId"]
 		scene, ok := system.Scenes[sceneID]
 		if !ok {
-			fmt.Println("a")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -519,8 +522,10 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 			}
 
 			if _, ok = command.Attributes["ZoneID"].(string); !ok {
+				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attributes_ZoneID", "must be a string data type", true)
 				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				return
 			}
 
 			z, ok := system.Zones[command.Attributes["ZoneID"].(string)]
@@ -538,11 +543,13 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 
 			_, ok = command.Attributes["Level"]
 			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attribute_Level", "required field", true)
 				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
 				return
 			}
 			if _, ok = command.Attributes["Level"].(float64); !ok {
+				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attribute_Level", "must be a float data type", true)
 				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
 				return
@@ -563,9 +570,37 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		case "sceneSet":
-			//TODO: Implement
-			w.WriteHeader(http.StatusBadRequest)
-			return
+			if _, ok := command.Attributes["SceneID"]; !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				valErrs := validation.NewErrors("attribute_SceneID", "required field", true)
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				return
+			}
+
+			if _, ok = command.Attributes["SceneID"].(string); !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				valErrs := validation.NewErrors("attributes_SceneID", "must be a string data type", true)
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				return
+			}
+
+			scene, ok := system.Scenes[command.Attributes["SceneID"].(string)]
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				var valErrs *validation.Errors
+				if command.Attributes["SceneID"].(string) == "" {
+					valErrs = validation.NewErrors("attributes_SceneID", "required field", true)
+				} else {
+					valErrs = validation.NewErrors("attributes_SceneID", "invalid Scene ID", true)
+				}
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				return
+			}
+			finalCmd = &cmd.SceneSet{
+				scene.ID,
+				scene.Name,
+			}
+
 		default:
 			//TODO:
 			w.WriteHeader(http.StatusBadRequest)
