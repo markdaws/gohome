@@ -43,14 +43,14 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return nil, err
 	}
 
-	var configJson map[string]interface{}
-	if err = json.Unmarshal(bytes, &configJson); err != nil {
+	var configJSON map[string]interface{}
+	if err = json.Unmarshal(bytes, &configJSON); err != nil {
 		return nil, err
 	}
 
 	system := NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cmdProcessor)
 
-	root, ok := configJson["LIPIdList"].(map[string]interface{})
+	root, ok := configJSON["LIPIdList"].(map[string]interface{})
 	if !ok {
 		return nil, errors.New("Missing LIPIdList key, or value not a map")
 	}
