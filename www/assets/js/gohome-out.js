@@ -22611,9 +22611,17 @@
 	        });
 	    },
 
-	    deleteCommand: function deleteCommand(cmdIndex, callback) {
-	        //TODO: If new command, then just remove client side, don't send a network call
+	    deleteCommand: function deleteCommand(cmdIndex, isNewCmd, callback) {
 	        var self = this;
+
+	        if (isNewCmd) {
+	            var commands = self.state.commands.filter(function (cmd, index) {
+	                return index != cmdIndex;
+	            });
+	            self.setState({ commands: commands });
+	            return;
+	        }
+
 	        $.ajax({
 	            url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands/' + cmdIndex,
 	            type: 'DELETE',
@@ -22649,7 +22657,7 @@
 	                // This isn't a great idea for react, but we don't really have anything
 	                // that can be used as a key since commands don't have ids
 	                var key = Math.random();
-	                var info = React.createElement(CommandInfo, { showSaveBtn: command.isNew, key: key, index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, zones: self.props.zones, command: command });
+	                var info = React.createElement(CommandInfo, { isNew: command.isNew, key: key, index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, zones: self.props.zones, command: command });
 	                cmdIndex++;
 	                return info;
 	            });
@@ -22743,12 +22751,13 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            command: this.props.command
+	            command: this.props.command,
+	            isNew: this.props.isNew
 	        };
 	    },
 
 	    deleteCommand: function deleteCommand() {
-	        this.props.onDelete(this.props.index, function (err) {
+	        this.props.onDelete(this.props.index, this.state.isNew, function (err) {
 	            console.log('I was deleted: ' + err);
 	            // TODO: If there is an error then the delete button should
 	            // show an error state ...
@@ -22760,13 +22769,14 @@
 	        saveBtn.saving();
 
 	        var cmd = this.refs.cmd;
+	        var self = this;
 	        this.props.onSave(cmd.toJson(), function (errors) {
 	            if (errors) {
 	                cmd.setErrors(errors);
 	                saveBtn.failure();
 	            } else {
 	                cmd.setErrors(null);
-	                saveBtn.success();
+	                self.setState({ isNew: false });
 	            }
 	        });
 	    },
@@ -22775,7 +22785,7 @@
 	        var self = this;
 	        var command = this.state.command;
 	        var saveBtn;
-	        if (this.props.showSaveBtn) {
+	        if (this.state.isNew) {
 	            saveBtn = React.createElement(SaveBtn, { text: 'Save', ref: 'saveBtn', clicked: this.save });
 	        }
 

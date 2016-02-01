@@ -72,9 +72,17 @@ var SceneInfo = React.createClass({
         });
     },
     
-    deleteCommand: function(cmdIndex, callback) {
-        //TODO: If new command, then just remove client side, don't send a network call
+    deleteCommand: function(cmdIndex, isNewCmd, callback) {
         var self = this;
+        
+        if (isNewCmd) {
+            var commands = self.state.commands.filter(function(cmd, index) {
+                return index != cmdIndex;
+            });
+            self.setState({ commands: commands });
+            return;
+        }
+
         $.ajax({
             url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands/' + cmdIndex,
             type: 'DELETE',
@@ -110,7 +118,7 @@ var SceneInfo = React.createClass({
                 // This isn't a great idea for react, but we don't really have anything
                 // that can be used as a key since commands don't have ids
                 var key = Math.random();
-                var info = <CommandInfo showSaveBtn={command.isNew} key={key} index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} zones={self.props.zones} command={command} />
+                var info = <CommandInfo isNew={command.isNew} key={key} index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} zones={self.props.zones} command={command} />
                 cmdIndex++;
                 return info;
             });

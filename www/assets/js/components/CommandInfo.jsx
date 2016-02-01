@@ -5,12 +5,13 @@ var SaveBtn = require('./SaveBtn.jsx');
 var CommandInfo = React.createClass({
     getInitialState: function() {
         return {
-            command: this.props.command
+            command: this.props.command,
+            isNew: this.props.isNew
         }
     },
 
     deleteCommand: function() {
-        this.props.onDelete(this.props.index, function(err) {
+        this.props.onDelete(this.props.index, this.state.isNew, function(err) {
             console.log('I was deleted: ' + err);
             // TODO: If there is an error then the delete button should
             // show an error state ... 
@@ -22,13 +23,14 @@ var CommandInfo = React.createClass({
         saveBtn.saving();
 
         var cmd = this.refs.cmd;
+        var self = this;
         this.props.onSave(cmd.toJson(), function(errors) {
             if (errors) {
                 cmd.setErrors(errors);
                 saveBtn.failure();
             } else {
                 cmd.setErrors(null);
-                saveBtn.success();
+                self.setState({ isNew: false });
             }
         });
     },
@@ -37,7 +39,7 @@ var CommandInfo = React.createClass({
         var self = this;
         var command = this.state.command;
         var saveBtn
-        if (this.props.showSaveBtn) {
+        if (this.state.isNew) {
             saveBtn = <SaveBtn text="Save" ref="saveBtn" clicked={this.save}/>
         }
         
