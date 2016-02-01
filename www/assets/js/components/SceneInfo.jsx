@@ -94,7 +94,7 @@ var SceneInfo = React.createClass({
 
     commandTypeChanged: function(cmdType) {
         var cmds = this.state.commands;
-        cmds.push({ type: cmdType, attributes: {} });
+        cmds.push({ isNew: true, type: cmdType, attributes: {} });
         this.setState({ commands: cmds });
     },
     
@@ -110,7 +110,7 @@ var SceneInfo = React.createClass({
                 // This isn't a great idea for react, but we don't really have anything
                 // that can be used as a key since commands don't have ids
                 var key = Math.random();
-                var info = <CommandInfo key={key} index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} zones={self.props.zones} command={command} />
+                var info = <CommandInfo showSaveBtn={command.isNew} key={key} index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} zones={self.props.zones} command={command} />
                 cmdIndex++;
                 return info;
             });

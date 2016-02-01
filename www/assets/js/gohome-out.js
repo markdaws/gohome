@@ -22633,7 +22633,7 @@
 
 	    commandTypeChanged: function commandTypeChanged(cmdType) {
 	        var cmds = this.state.commands;
-	        cmds.push({ type: cmdType, attributes: {} });
+	        cmds.push({ isNew: true, type: cmdType, attributes: {} });
 	        this.setState({ commands: cmds });
 	    },
 
@@ -22649,7 +22649,7 @@
 	                // This isn't a great idea for react, but we don't really have anything
 	                // that can be used as a key since commands don't have ids
 	                var key = Math.random();
-	                var info = React.createElement(CommandInfo, { key: key, index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, zones: self.props.zones, command: command });
+	                var info = React.createElement(CommandInfo, { showSaveBtn: command.isNew, key: key, index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, zones: self.props.zones, command: command });
 	                cmdIndex++;
 	                return info;
 	            });
@@ -22774,6 +22774,11 @@
 	    render: function render() {
 	        var self = this;
 	        var command = this.state.command;
+	        var saveBtn;
+	        if (this.props.showSaveBtn) {
+	            saveBtn = React.createElement(SaveBtn, { text: 'Save', ref: 'saveBtn', clicked: this.save });
+	        }
+
 	        var uiCmd;
 	        switch (command.type) {
 	            case 'buttonPress':
@@ -22799,7 +22804,7 @@
 	                { className: 'btn btn-danger btnDelete pull-right', onClick: this.deleteCommand },
 	                'Delete'
 	            ),
-	            React.createElement(SaveBtn, { text: 'Save', ref: 'saveBtn', clicked: this.save })
+	            saveBtn
 	        );
 	    }
 	});

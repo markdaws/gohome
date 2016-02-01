@@ -36,6 +36,11 @@ var CommandInfo = React.createClass({
     render: function() {
         var self = this;
         var command = this.state.command;
+        var saveBtn
+        if (this.props.showSaveBtn) {
+            saveBtn = <SaveBtn text="Save" ref="saveBtn" clicked={this.save}/>
+        }
+        
         var uiCmd;
         switch (command.type) {
         case 'buttonPress':
@@ -56,7 +61,7 @@ var CommandInfo = React.createClass({
             <div className="cmp-CommandInfo well well-sm clearfix">
               {uiCmd}
               <button className="btn btn-danger btnDelete pull-right" onClick={this.deleteCommand}>Delete</button>
-              <SaveBtn text="Save" ref="saveBtn" clicked={this.save}/>
+              {saveBtn}
             </div>
         );
     }
