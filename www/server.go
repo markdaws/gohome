@@ -544,22 +544,77 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 			_, ok = command.Attributes["Level"]
 			if !ok {
 				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attribute_Level", "required field", true)
+				valErrs := validation.NewErrors("attributes_Level", "required field", true)
 				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
 				return
 			}
 			if _, ok = command.Attributes["Level"].(float64); !ok {
 				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attribute_Level", "must be a float data type", true)
+				valErrs := validation.NewErrors("attributes_Level", "must be a float data type", true)
 				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
 				return
+			}
+
+			//TODO: remove
+			var r, g, b byte
+			if true || z.Output == zone.OTRGB {
+				_, ok = command.Attributes["R"]
+				if !ok {
+					w.WriteHeader(http.StatusBadRequest)
+					valErrs := validation.NewErrors("attributes_R", "required field", true)
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					return
+				}
+				if _, ok = command.Attributes["R"].(float64); !ok {
+					w.WriteHeader(http.StatusBadRequest)
+					valErrs := validation.NewErrors("attributes_R", "must be an integer data type", true)
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					return
+				}
+
+				_, ok = command.Attributes["G"]
+				if !ok {
+					w.WriteHeader(http.StatusBadRequest)
+					valErrs := validation.NewErrors("attributes_G", "required field", true)
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					return
+				}
+				if _, ok = command.Attributes["G"].(float64); !ok {
+					w.WriteHeader(http.StatusBadRequest)
+					valErrs := validation.NewErrors("attributes_G", "must be an integer data type", true)
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					return
+				}
+
+				_, ok = command.Attributes["B"]
+				if !ok {
+					w.WriteHeader(http.StatusBadRequest)
+					valErrs := validation.NewErrors("attributes_B", "required field", true)
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					return
+				}
+				if _, ok = command.Attributes["B"].(float64); !ok {
+					w.WriteHeader(http.StatusBadRequest)
+					valErrs := validation.NewErrors("attributes_B", "must be an integer data type", true)
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					return
+				}
+
+				r = byte(command.Attributes["R"].(float64))
+				g = byte(command.Attributes["G"].(float64))
+				b = byte(command.Attributes["B"].(float64))
 			}
 
 			finalCmd = &cmd.ZoneSetLevel{
 				ZoneAddress: z.Address,
 				ZoneID:      z.ID,
 				ZoneName:    z.Name,
-				Level:       cmd.Level{Value: float32(command.Attributes["Level"].(float64))},
+				Level: cmd.Level{
+					Value: float32(command.Attributes["Level"].(float64)),
+					R:     r,
+					G:     g,
+					B:     b,
+				},
 			}
 		case "buttonPress":
 			//TODO:

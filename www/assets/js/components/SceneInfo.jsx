@@ -148,7 +148,7 @@ var SceneInfo = React.createClass({
                 {this.errMsg("address")}
               </div>
               <a data-toggle="collapse" href={"#" + this.uid("commands")}>
-                More Info
+                Toggle Info
                 <i className="glyphicon glyphicon-menu-down"></i>
               </a>
               <div className="collapse commands" id={this.uid('commands')}>

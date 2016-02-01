@@ -18,7 +18,6 @@ button.disabled {
 }
 
 .cmp-SceneList .editButtonWrapper {
-    padding-right: 14px;
     padding-bottom: 14px;
 }
 
@@ -107,6 +106,11 @@ button.disabled {
 }
 .cmp-Zone .btnToggle {
     padding-left: 0px;
+}
+
+.cmp-ZoneSetLevelCommand p {
+    font-size: 12px;
+    font-weight: normal;
 }
 
 .cmp-System .btnExitImport {

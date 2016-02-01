@@ -22715,7 +22715,7 @@
 	            React.createElement(
 	                'a',
 	                { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
-	                'More Info',
+	                'Toggle Info',
 	                React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
 	            ),
 	            React.createElement(
@@ -22846,9 +22846,13 @@
 
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
+	        var attr = this.props.command.attributes;
 	        return {
 	            cid: this.getNextIdAndIncrement() + '',
-	            level: this.props.command.attributes.Level || 0,
+	            level: attr.Level || 0,
+	            r: attr.R || 0,
+	            g: attr.G || 0,
+	            b: attr.B || 0,
 	            zoneId: this.props.command.attributes.ZoneID || '',
 	            errors: null
 	        };
@@ -22860,6 +22864,9 @@
 	            clientId: this.state.cid,
 	            attributes: {
 	                Level: parseFloat(this.state.level),
+	                R: parseInt(this.state.r),
+	                G: parseInt(this.state.g),
+	                B: parseInt(this.state.b),
 	                ZoneID: this.state.zoneId
 	            }
 	        };
@@ -22874,6 +22881,7 @@
 	    },
 
 	    render: function render() {
+	        //TODO: If output type is RGB, show RGB values
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ZoneSetLevelCommand' },
@@ -22895,14 +22903,57 @@
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: this.addErr("form-group", "level") },
+	                { className: this.addErr("form-group", "attributes_Level") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("level") },
-	                    'Level'
+	                    { className: 'control-label', htmlFor: this.uid("attributes_Level") },
+	                    'Level [0-100]'
 	                ),
-	                React.createElement('input', { value: this.state.level, 'data-statepath': 'level', onChange: this.changed, className: 'level form-control', type: 'text', id: this.uid("level") }),
-	                this.errMsg("level")
+	                React.createElement('input', { value: this.state.level, 'data-statepath': 'level', onChange: this.changed, className: 'level form-control', type: 'text', id: this.uid("attributes_Level") }),
+	                this.errMsg("attributes_Level")
+	            ),
+	            React.createElement(
+	                'p',
+	                null,
+	                React.createElement(
+	                    'strong',
+	                    null,
+	                    'NOTE:'
+	                ),
+	                ' To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (100/Value)'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_R") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_R") },
+	                    'Level - Red [0-255]'
+	                ),
+	                React.createElement('input', { value: this.state.r, 'data-statepath': 'r', onChange: this.changed, className: 'r form-control', type: 'text', id: this.uid("attributes_R") }),
+	                this.errMsg("attributes_R")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_G") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_G") },
+	                    'Level - Green [0-255]'
+	                ),
+	                React.createElement('input', { value: this.state.g, 'data-statepath': 'g', onChange: this.changed, className: 'g form-control', type: 'text', id: this.uid("attributes_G") }),
+	                this.errMsg("attributes_G")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_B") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_B") },
+	                    'Level - Blue [0-255]'
+	                ),
+	                React.createElement('input', { value: this.state.b, 'data-statepath': 'b', onChange: this.changed, className: 'b form-control', type: 'text', id: this.uid("attributes_B") }),
+	                this.errMsg("attributes_B")
 	            )
 	        );
 	    }
