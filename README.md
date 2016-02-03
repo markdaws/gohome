@@ -44,10 +44,10 @@ The goHome server is developed using golang (http://golang.org) In order to deve
 
 ###gohome web UI
 The web UI is developed using the React framework: https://facebook.github.io/react/ In order to develop the web UI:
-1. Setup the goHome Server, following the above instructions
-2. Install node.js: https://nodejs.org
-3. Change to the root gohome directory
-4. Run: "npm install"
-5. Run: "node_modules/webpack/bin/webpack.js --watch --config ./webpack.config.js"
+ 1. Setup the goHome Server, following the above instructions
+ 2. Install node.js: https://nodejs.org
+ 3. Change to the root gohome directory
+ 4. Run: "npm install"
+ 5. Run: "node_modules/webpack/bin/webpack.js --watch --config ./webpack.config.js"
 webpack is used to build the React source, the --watch option allows the tool to automatically rebuild the code when it detects any dependant file has changed. This way you just save your modified file and refresh the browser to see the latest changes.
-6. All web UI code is located at gohome/www/assets
+ 6. All web UI code is located at gohome/www/assets
