@@ -8,6 +8,12 @@ var CommandTypePicker = require('./CommandTypePicker.jsx');
 var SceneInfo = React.createClass({
     mixins: [InputValidationMixin, UniqueIdMixin],
 
+    getDefaultProps: function() {
+        return {
+            buttons: []
+        };
+    },
+    
     getInitialState: function() {
         return {
             id: this.props.scene.id || '',
@@ -16,7 +22,7 @@ var SceneInfo = React.createClass({
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
             commands: this.props.scene.commands || [],
             zones: this.props.zones || [],
-            scenes: this.props.scenes || []
+            scenes: this.props.scenes || [],
             //TODO: readonly id
         };
     },
@@ -119,10 +125,22 @@ var SceneInfo = React.createClass({
             var cmdIndex = 0;
 
             commands = this.state.commands.map(function(command) {
-                // This isn't a great idea for react, but we don't really have anything
-                // that can be used as a key since commands don't have ids
+                // This isn't a great idea for react, but we don't have anything
+                // that can be used as a key since commands don't have ids, will take
+                // the perf hit for now
                 var key = Math.random();
-                var info = <CommandInfo isNew={command.isNew} key={key} index={cmdIndex} onSave={self.saveCommand} onDelete={self.deleteCommand} scenes={self.props.scenes} zones={self.props.zones} command={command} />
+                var info = (
+                    <CommandInfo
+                      isNew={command.isNew}
+                      key={key}
+                      index={cmdIndex}
+                      onSave={self.saveCommand}
+                      onDelete={self.deleteCommand}
+                      scenes={self.props.scenes}
+                      zones={self.props.zones}
+                      buttons={self.props.buttons}
+                      command={command} />
+                    );
                 cmdIndex++;
                 return info;
             });

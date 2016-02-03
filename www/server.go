@@ -67,6 +67,8 @@ func (s *wwwServer) listenAndServe(port string) error {
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}", apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes/active", apiActiveScenesHandler(s.system)).Methods("POST")
 
+	r.HandleFunc("/api/v1/systems/{systemId}/buttons", apiButtonsHandler(s.system)).Methods("GET")
+
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiAddZoneHandler(s.system)).Methods("POST")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system)).Methods("GET")
@@ -616,14 +618,52 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 					B:     b,
 				},
 			}
-		case "buttonPress":
-			//TODO:
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		case "buttonRelease":
-			//TODO:
-			w.WriteHeader(http.StatusBadRequest)
-			return
+		case "buttonPress", "buttonRelease":
+			if _, ok := command.Attributes["ButtonID"]; !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				valErrs := validation.NewErrors("attribute_ButtonID", "required field", true)
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				return
+			}
+
+			if _, ok = command.Attributes["ButtonID"].(string); !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				valErrs := validation.NewErrors("attributes_ButtonID", "must be a string data type", true)
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				return
+			}
+
+			button, ok := system.Buttons[command.Attributes["ButtonID"].(string)]
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				var valErrs *validation.Errors
+				if command.Attributes["ButtonID"].(string) == "" {
+					valErrs = validation.NewErrors("attributes_ButtonID", "required field", true)
+				} else {
+					valErrs = validation.NewErrors("attributes_ButtonID", "invalid Button ID", true)
+				}
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				return
+			}
+
+			if command.Type == "buttonPress" {
+				finalCmd = &cmd.ButtonPress{
+					ButtonAddress: button.Address,
+					ButtonID:      button.ID,
+					DeviceName:    button.Device.Name(),
+					DeviceAddress: button.Device.Address(),
+					DeviceID:      button.Device.ID(),
+				}
+			} else {
+				finalCmd = &cmd.ButtonRelease{
+					ButtonAddress: button.Address,
+					ButtonID:      button.ID,
+					DeviceName:    button.Device.Name(),
+					DeviceAddress: button.Device.Address(),
+					DeviceID:      button.Device.ID(),
+				}
+			}
+
 		case "sceneSet":
 			if _, ok := command.Attributes["SceneID"]; !ok {
 				w.WriteHeader(http.StatusBadRequest)
@@ -707,6 +747,26 @@ func apiSceneHandlerUpdate(system *gohome.System, recipeManager *gohome.RecipeMa
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			json.NewEncoder(w).Encode(struct{}{})
 		*/
+	}
+}
+
+func apiButtonsHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		buttons := make(buttons, len(system.Buttons), len(system.Buttons))
+		var i int32
+		for _, button := range system.Buttons {
+			buttons[i] = jsonButton{
+				ID:       button.ID,
+				Name:     button.Name,
+				FullName: button.Device.Name() + " / " + button.Name,
+			}
+			i++
+		}
+		sort.Sort(buttons)
+		if err := json.NewEncoder(w).Encode(buttons); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 }
 

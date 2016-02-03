@@ -7,13 +7,13 @@ var RecipeApp = require('./RecipeApp.jsx');
 
 var ControlApp = React.createClass({
     getInitialState: function() {
-        return { scenes: [], zones: [], devices: [] };
+        return { scenes: [], zones: [], devices: [], buttons: [] };
     },
 
     componentDidMount: function() {
         //TODO: Have a loading indicator for scenes + zones
         $.ajax({
-            url: this.props.url,
+            url: '/api/v1/systems/123/scenes',
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -25,7 +25,7 @@ var ControlApp = React.createClass({
         });
 
         $.ajax({
-            url: this.props.zoneUrl,
+            url: '/api/v1/systems/123/zones',
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -35,6 +35,19 @@ var ControlApp = React.createClass({
                 console.error(err.toString());
             }.bind(this)
         });
+
+        $.ajax({
+            url: '/api/v1/systems/123/buttons',
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                this.setState({buttons: data});
+            }.bind(this),
+            error: function(xhr, status, err) {
+                console.error(err.toString());
+            }.bind(this)
+        });
+        
     },
 
     render: function() {
@@ -62,7 +75,10 @@ var ControlApp = React.createClass({
                   <System />
                 </div>
                 <div role="tabpanel" className="tab-pane fade" id="scenes">
-                  <SceneList scenes={this.state.scenes} />
+                  <SceneList
+                    scenes={this.state.scenes}
+                    zones={this.state.zones}
+                    buttons={this.state.buttons} />
                 </div>
                 <div role="tabpanel" className="tab-pane fade" id="zones">
                   <ZoneList zones={this.state.zones} />

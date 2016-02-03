@@ -50,10 +50,7 @@
 	var ReactDOM = __webpack_require__(158);
 	var ControlApp = __webpack_require__(159);
 
-	//TODO: Clean up
-	var apiUrl = '/api/v1/systems/123/scenes';
-	var apiUrlZones = '/api/v1/systems/123/zones';
-	ReactDOM.render(React.createElement(ControlApp, { url: apiUrl, zoneUrl: apiUrlZones }), document.getElementsByClassName('content')[0]);
+	ReactDOM.render(React.createElement(ControlApp, null), document.getElementsByClassName('content')[0]);
 
 /***/ },
 /* 1 */
@@ -19670,123 +19667,138 @@
 	var RecipeApp = __webpack_require__(181);
 
 	var ControlApp = React.createClass({
-	  displayName: 'ControlApp',
+	    displayName: 'ControlApp',
 
-	  getInitialState: function getInitialState() {
-	    return { scenes: [], zones: [], devices: [] };
-	  },
+	    getInitialState: function getInitialState() {
+	        return { scenes: [], zones: [], devices: [], buttons: [] };
+	    },
 
-	  componentDidMount: function componentDidMount() {
-	    //TODO: Have a loading indicator for scenes + zones
-	    $.ajax({
-	      url: this.props.url,
-	      dataType: 'json',
-	      cache: false,
-	      success: function (data) {
-	        this.setState({ scenes: data });
-	      }.bind(this),
-	      error: function (xhr, status, err) {
-	        console.error(err.toString());
-	      }.bind(this)
-	    });
+	    componentDidMount: function componentDidMount() {
+	        //TODO: Have a loading indicator for scenes + zones
+	        $.ajax({
+	            url: '/api/v1/systems/123/scenes',
+	            dataType: 'json',
+	            cache: false,
+	            success: function (data) {
+	                this.setState({ scenes: data });
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                console.error(err.toString());
+	            }.bind(this)
+	        });
 
-	    $.ajax({
-	      url: this.props.zoneUrl,
-	      dataType: 'json',
-	      cache: false,
-	      success: function (data) {
-	        this.setState({ zones: data });
-	      }.bind(this),
-	      error: function (xhr, status, err) {
-	        console.error(err.toString());
-	      }.bind(this)
-	    });
-	  },
+	        $.ajax({
+	            url: '/api/v1/systems/123/zones',
+	            dataType: 'json',
+	            cache: false,
+	            success: function (data) {
+	                this.setState({ zones: data });
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                console.error(err.toString());
+	            }.bind(this)
+	        });
 
-	  render: function render() {
-	    return React.createElement(
-	      'div',
-	      { className: 'cmp-ControlApp' },
-	      React.createElement(
-	        'ul',
-	        { className: 'nav nav-tabs', role: 'tablist' },
-	        React.createElement(
-	          'li',
-	          { role: 'presentation', className: 'active' },
-	          React.createElement(
-	            'a',
-	            { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
-	            'System'
-	          )
-	        ),
-	        React.createElement(
-	          'li',
-	          { role: 'presentation' },
-	          React.createElement(
-	            'a',
-	            { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
-	            'Scenes'
-	          )
-	        ),
-	        React.createElement(
-	          'li',
-	          { role: 'presentation' },
-	          React.createElement(
-	            'a',
-	            { href: '#zones', role: 'tab', 'aria-controls': 'zones', 'data-toggle': 'tab' },
-	            'Zones'
-	          )
-	        ),
-	        React.createElement(
-	          'li',
-	          { role: 'presentation' },
-	          React.createElement(
-	            'a',
-	            { href: '#logging', role: 'tab', 'aria-controls': 'logging', 'data-toggle': 'tab' },
-	            'Logging'
-	          )
-	        ),
-	        React.createElement(
-	          'li',
-	          { role: 'presentation' },
-	          React.createElement(
-	            'a',
-	            { href: '#recipes', role: 'tab', 'aria-controls': 'recipes', 'data-toggle': 'tab' },
-	            'Recipes'
-	          )
-	        )
-	      ),
-	      React.createElement(
-	        'div',
-	        { className: 'tab-content' },
-	        React.createElement(
-	          'div',
-	          { role: 'tabpanel', className: 'tab-pane active', id: 'system' },
-	          React.createElement(System, null)
-	        ),
-	        React.createElement(
-	          'div',
-	          { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
-	          React.createElement(SceneList, { scenes: this.state.scenes })
-	        ),
-	        React.createElement(
-	          'div',
-	          { role: 'tabpanel', className: 'tab-pane fade', id: 'zones' },
-	          React.createElement(ZoneList, { zones: this.state.zones })
-	        ),
-	        React.createElement(
-	          'div',
-	          { role: 'tabpanel', className: 'tab-pane fade', id: 'logging' },
-	          React.createElement(Logging, null)
-	        ),
-	        React.createElement(
-	          'div',
-	          { role: 'tabpanel', className: 'tab-pane fade', id: 'recipes' },
-	          React.createElement(RecipeApp, null)
-	        )
-	      )
-	    );
-	  }
+	        $.ajax({
+	            url: '/api/v1/systems/123/buttons',
+	            dataType: 'json',
+	            cache: false,
+	            success: function (data) {
+	                this.setState({ buttons: data });
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                console.error(err.toString());
+	            }.bind(this)
+	        });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ControlApp' },
+	            React.createElement(
+	                'ul',
+	                { className: 'nav nav-tabs', role: 'tablist' },
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation', className: 'active' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
+	                        'System'
+	                    )
+	                ),
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
+	                        'Scenes'
+	                    )
+	                ),
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#zones', role: 'tab', 'aria-controls': 'zones', 'data-toggle': 'tab' },
+	                        'Zones'
+	                    )
+	                ),
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#logging', role: 'tab', 'aria-controls': 'logging', 'data-toggle': 'tab' },
+	                        'Logging'
+	                    )
+	                ),
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#recipes', role: 'tab', 'aria-controls': 'recipes', 'data-toggle': 'tab' },
+	                        'Recipes'
+	                    )
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'tab-content' },
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane active', id: 'system' },
+	                    React.createElement(System, null)
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
+	                    React.createElement(SceneList, {
+	                        scenes: this.state.scenes,
+	                        zones: this.state.zones,
+	                        buttons: this.state.buttons })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'zones' },
+	                    React.createElement(ZoneList, { zones: this.state.zones })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'logging' },
+	                    React.createElement(Logging, null)
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'recipes' },
+	                    React.createElement(RecipeApp, null)
+	                )
+	            )
+	        );
+	    }
 	});
 	module.exports = ControlApp;
 
@@ -21126,7 +21138,13 @@
 	        var self = this;
 	        if (this.state.editMode) {
 	            body = this.state.scenes.map(function (scene) {
-	                return React.createElement(SceneInfo, { onDestroy: self.sceneDeleted, scenes: self.state.scenes, zones: self.state.zones, scene: scene, key: scene.id });
+	                return React.createElement(SceneInfo, {
+	                    onDestroy: self.sceneDeleted,
+	                    scenes: self.state.scenes,
+	                    zones: self.state.zones,
+	                    buttons: self.props.buttons,
+	                    scene: scene,
+	                    key: scene.id });
 	            });
 	        } else {
 	            body = this.state.scenes.map(function (scene) {
@@ -21154,17 +21172,13 @@
 	module.exports = SceneList;
 
 	//TODO existing scene edit:
-	//1. Show scene info
 	//2. edit name + save
 	//3. make id readonly
 	//4. set address
 	//5. delete existing command
-	//6. edit existing command (zonesetlevel, buttonpress, buttonrelease, sceneset)
-	//7. add new command
 	//8. Test button
 
 	//TODO: Add new scene
-	//TODO: delete scene
 
 /***/ },
 /* 175 */
@@ -22551,6 +22565,12 @@
 
 	    mixins: [InputValidationMixin, UniqueIdMixin],
 
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            buttons: []
+	        };
+	    },
+
 	    getInitialState: function getInitialState() {
 	        return {
 	            id: this.props.scene.id || '',
@@ -22560,10 +22580,10 @@
 	            commands: this.props.scene.commands || [],
 	            zones: this.props.zones || [],
 	            scenes: this.props.scenes || []
-	            //TODO: readonly id
 	        };
 	    },
 
+	    //TODO: readonly id
 	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
 	        //Needed?
 	        if (nextProps.zones) {
@@ -22662,10 +22682,20 @@
 	            var cmdIndex = 0;
 
 	            commands = this.state.commands.map(function (command) {
-	                // This isn't a great idea for react, but we don't really have anything
-	                // that can be used as a key since commands don't have ids
+	                // This isn't a great idea for react, but we don't have anything
+	                // that can be used as a key since commands don't have ids, will take
+	                // the perf hit for now
 	                var key = Math.random();
-	                var info = React.createElement(CommandInfo, { isNew: command.isNew, key: key, index: cmdIndex, onSave: self.saveCommand, onDelete: self.deleteCommand, scenes: self.props.scenes, zones: self.props.zones, command: command });
+	                var info = React.createElement(CommandInfo, {
+	                    isNew: command.isNew,
+	                    key: key,
+	                    index: cmdIndex,
+	                    onSave: self.saveCommand,
+	                    onDelete: self.deleteCommand,
+	                    scenes: self.props.scenes,
+	                    zones: self.props.zones,
+	                    buttons: self.props.buttons,
+	                    command: command });
 	                cmdIndex++;
 	                return info;
 	            });
@@ -22754,6 +22784,8 @@
 	var ZoneSetLevelCommand = __webpack_require__(196);
 	var SceneSetCommand = __webpack_require__(199);
 	var SaveBtn = __webpack_require__(166);
+	var ButtonPressCommand = __webpack_require__(201);
+	var ButtonReleaseCommand = __webpack_require__(203);
 
 	var CommandInfo = React.createClass({
 	    displayName: 'CommandInfo',
@@ -22801,10 +22833,10 @@
 	        var uiCmd;
 	        switch (command.type) {
 	            case 'buttonPress':
-	                //TODO:
+	                uiCmd = React.createElement(ButtonPressCommand, { ref: 'cmd', buttons: this.props.buttons, command: command });
 	                break;
 	            case 'buttonRelease':
-	                //TODO:
+	                uiCmd = React.createElement(ButtonReleaseCommand, { ref: 'cmd', buttons: this.props.buttons, command: command });
 	                break;
 	            case 'zoneSetLevel':
 	                uiCmd = React.createElement(ZoneSetLevelCommand, { ref: 'cmd', zones: this.props.zones, command: command });
@@ -22847,6 +22879,7 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        var attr = this.props.command.attributes;
+	        //TODO: Why use state?
 	        return {
 	            cid: this.getNextIdAndIncrement() + '',
 	            level: attr.Level || 0,
@@ -22881,7 +22914,6 @@
 	    },
 
 	    render: function render() {
-	        //TODO: If output type is RGB, show RGB values
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ZoneSetLevelCommand' },
@@ -23045,6 +23077,16 @@
 	                ),
 	                React.createElement(
 	                    'option',
+	                    { value: 'buttonPress' },
+	                    'Button Press'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'buttonRelease' },
+	                    'Button Release'
+	                ),
+	                React.createElement(
+	                    'option',
 	                    { value: 'sceneSet' },
 	                    'Scene Set'
 	                ),
@@ -23058,9 +23100,6 @@
 	    }
 	});
 	module.exports = CommandTypePicker;
-
-	//TODO: button press
-	//TODO: button release
 
 /***/ },
 /* 199 */
@@ -23182,6 +23221,199 @@
 	    }
 	});
 	module.exports = ScenePicker;
+
+/***/ },
+/* 201 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(165);
+	var UniqueIdMixin = __webpack_require__(164);
+	var ButtonPicker = __webpack_require__(202);
+
+	var ButtonPressCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            cid: this.getNextIdAndIncrement() + '',
+	            buttonId: this.props.command.attributes.ButtonID || '',
+	            errors: null
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            buttons: []
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'buttonPress',
+	            clientId: this.state.cid,
+	            attributes: {
+	                ButtonID: this.state.buttonId
+	            }
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    buttonPickerChanged: function buttonPickerChanged(buttonId) {
+	        this.setState({ buttonId: buttonId });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ButtonPressCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Button Press'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_ButtonID") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
+	                    'Button*'
+	                ),
+	                React.createElement(ButtonPicker, { changed: this.buttonPickerChanged, buttons: this.props.buttons, buttonId: this.state.buttonId }),
+	                this.errMsg("attributes_ButtonID")
+	            )
+	        );
+	    }
+	});
+	module.exports = ButtonPressCommand;
+
+/***/ },
+/* 202 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ButtonPicker = React.createClass({
+	    displayName: 'ButtonPicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.buttonId || ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.buttons.forEach(function (button) {
+	            options.push(React.createElement(
+	                'option',
+	                { key: button.id, value: button.id },
+	                button.fullName
+	            ));
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ButtonPicker' },
+	            React.createElement(
+	                'select',
+	                { className: 'form-control', defaultValue: this.props.buttonId, onChange: this.selected, value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select a Button...'
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = ButtonPicker;
+
+/***/ },
+/* 203 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(165);
+	var UniqueIdMixin = __webpack_require__(164);
+	var ButtonPicker = __webpack_require__(202);
+
+	var ButtonReleaseCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            cid: this.getNextIdAndIncrement() + '',
+	            buttonId: this.props.command.attributes.ButtonID || '',
+	            errors: null
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            buttons: []
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'buttonRelease',
+	            clientId: this.state.cid,
+	            attributes: {
+	                ButtonID: this.state.buttonId
+	            }
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    buttonPickerChanged: function buttonPickerChanged(buttonId) {
+	        this.setState({ buttonId: buttonId });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ButtonReleaseCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Button Release'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_ButtonID") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
+	                    'Button*'
+	                ),
+	                React.createElement(ButtonPicker, { changed: this.buttonPickerChanged, buttons: this.props.buttons, buttonId: this.state.buttonId }),
+	                this.errMsg("attributes_ButtonID")
+	            )
+	        );
+	    }
+	});
+	module.exports = ButtonReleaseCommand;
 
 /***/ }
 /******/ ]);

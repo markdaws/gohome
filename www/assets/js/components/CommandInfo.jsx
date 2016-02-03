@@ -2,6 +2,8 @@ var React = require('react');
 var ZoneSetLevelCommand = require('./ZoneSetLevelCommand.jsx');
 var SceneSetCommand = require('./SceneSetCommand.jsx');
 var SaveBtn = require('./SaveBtn.jsx');
+var ButtonPressCommand = require('./ButtonPressCommand.jsx');
+var ButtonReleaseCommand = require('./ButtonReleaseCommand.jsx');
 
 var CommandInfo = React.createClass({
     getInitialState: function() {
@@ -47,10 +49,10 @@ var CommandInfo = React.createClass({
         var uiCmd;
         switch (command.type) {
         case 'buttonPress':
-            //TODO:
+            uiCmd = <ButtonPressCommand ref="cmd" buttons={this.props.buttons} command={command}/>;
             break;
         case 'buttonRelease':
-            //TODO:
+            uiCmd = <ButtonReleaseCommand ref="cmd" buttons={this.props.buttons} command={command}/>;
             break;
         case 'zoneSetLevel':
             uiCmd = <ZoneSetLevelCommand ref="cmd" zones={this.props.zones} command={command} />;

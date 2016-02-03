@@ -7,6 +7,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         var attr = this.props.command.attributes;
+        //TODO: Why use state?
         return {
             cid: this.getNextIdAndIncrement() + '',
             level: attr.Level || 0,
@@ -41,7 +42,6 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
     },
     
     render: function() {
-        //TODO: If output type is RGB, show RGB values
         return (
             <div className="cmp-ZoneSetLevelCommand">
               <h4>Zone Set Level</h4>

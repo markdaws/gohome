@@ -65,7 +65,15 @@ var SceneList = React.createClass({
         var self = this;
         if (this.state.editMode) {
             body = this.state.scenes.map(function(scene) {
-                return <SceneInfo onDestroy={self.sceneDeleted} scenes={self.state.scenes} zones={self.state.zones} scene={scene} key={scene.id}/>
+                return (
+                    <SceneInfo
+                      onDestroy={self.sceneDeleted}
+                      scenes={self.state.scenes}
+                      zones={self.state.zones}
+                      buttons={self.props.buttons}
+                      scene={scene}
+                      key={scene.id} />
+                );
             });
         } else {
             body = this.state.scenes.map(function(scene) {
@@ -89,14 +97,10 @@ var SceneList = React.createClass({
 module.exports = SceneList;
 
 //TODO existing scene edit:
-//1. Show scene info
 //2. edit name + save
 //3. make id readonly
 //4. set address
 //5. delete existing command
-//6. edit existing command (zonesetlevel, buttonpress, buttonrelease, sceneset)
-//7. add new command
 //8. Test button
 
 //TODO: Add new scene
-//TODO: delete scene
