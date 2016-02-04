@@ -21119,13 +21119,15 @@
 	        this.setState({ editMode: true });
 	    },
 
+	    endEdit: function endEdit() {
+	        this.setState({ editMode: false });
+	    },
+
 	    sceneDeleted: function sceneDeleted(sceneId) {
 	        var scenes = this.state.scenes;
 	        for (var i = 0; i < scenes.length; ++i) {
-	            console.log(sceneId + " : " + scenes[i].id);
 	            if (scenes[i].id === sceneId) {
 	                scenes.splice(i, 1);
-	                console.log(scenes);
 	                this.setState({ scenes: scenes });
 	                break;
 	            }
@@ -21135,6 +21137,7 @@
 	    render: function render() {
 
 	        var body;
+	        var btn;
 	        var self = this;
 	        if (this.state.editMode) {
 	            body = this.state.scenes.map(function (scene) {
@@ -21146,39 +21149,35 @@
 	                    scene: scene,
 	                    key: scene.id });
 	            });
+	            btn = React.createElement(
+	                'button',
+	                { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
+	                'Done'
+	            );
 	        } else {
 	            body = this.state.scenes.map(function (scene) {
 	                return React.createElement(Scene, { scene: scene, key: scene.id });
 	            });
+	            btn = React.createElement(
+	                'button',
+	                { className: 'btn btn-primary btnEdit pull-right', onClick: this.edit },
+	                'Edit'
+	            );
 	        }
 
-	        //TODO: Add loading
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SceneList' },
 	            React.createElement(
 	                'div',
-	                { className: 'clearfix editButtonWrapper' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-primary btnEdit pull-right', onClick: this.edit },
-	                    'Edit'
-	                )
+	                { className: 'clearfix buttonWrapper' },
+	                btn
 	            ),
 	            body
 	        );
 	    }
 	});
 	module.exports = SceneList;
-
-	//TODO existing scene edit:
-	//2. edit name + save
-	//3. make id readonly
-	//4. set address
-	//5. delete existing command
-	//8. Test button
-
-	//TODO: Add new scene
 
 /***/ },
 /* 175 */
@@ -22879,7 +22878,6 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        var attr = this.props.command.attributes;
-	        //TODO: Why use state?
 	        return {
 	            cid: this.getNextIdAndIncrement() + '',
 	            level: attr.Level || 0,
@@ -22895,11 +22893,12 @@
 	        return {
 	            type: 'zoneSetLevel',
 	            clientId: this.state.cid,
+	            //TODO: correctly capitalize json values
 	            attributes: {
 	                Level: parseFloat(this.state.level),
-	                R: parseInt(this.state.r),
-	                G: parseInt(this.state.g),
-	                B: parseInt(this.state.b),
+	                R: parseInt(this.state.r, 10),
+	                G: parseInt(this.state.g, 10),
+	                B: parseInt(this.state.b, 10),
 	                ZoneID: this.state.zoneId
 	            }
 	        };
@@ -22914,6 +22913,9 @@
 	    },
 
 	    render: function render() {
+	        //TODO: Only show RGB if this is an OTRGB
+	        //TODO: Insert RGB Picker in UI as well
+	        //TODO: For binary outputs should have a picker on/off not 0-100
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ZoneSetLevelCommand' },
@@ -22952,7 +22954,7 @@
 	                    null,
 	                    'NOTE:'
 	                ),
-	                ' To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (100/Value)'
+	                ' To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (Value/100)'
 	            ),
 	            React.createElement(
 	                'div',

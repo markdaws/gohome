@@ -17,8 +17,11 @@ button.disabled {
     font-size: 35px;
 }
 
-.cmp-SceneList .editButtonWrapper {
+.cmp-SceneList .buttonWrapper {
     padding-bottom: 14px;
+}
+.cmp-SceneList .buttonWrapper .btnEdit {
+    margin-right: 15px;
 }
 
 .cmp-SceneList .cmp-SceneInfo {

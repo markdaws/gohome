@@ -46,13 +46,15 @@ var SceneList = React.createClass({
         this.setState({ editMode: true });
     },
 
+    endEdit: function() {
+        this.setState({ editMode: false });
+    },
+
     sceneDeleted: function(sceneId) {
         var scenes = this.state.scenes;
         for (var i=0; i<scenes.length; ++i) {
-            console.log(sceneId + " : " + scenes[i].id);
             if (scenes[i].id === sceneId) {
                 scenes.splice(i, 1);
-                console.log(scenes);
                 this.setState({ scenes: scenes });
                 break;
             }
@@ -62,6 +64,7 @@ var SceneList = React.createClass({
     render: function() {
 
         var body;
+        var btn;
         var self = this;
         if (this.state.editMode) {
             body = this.state.scenes.map(function(scene) {
@@ -75,19 +78,20 @@ var SceneList = React.createClass({
                       key={scene.id} />
                 );
             });
+            btn = <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>;
         } else {
             body = this.state.scenes.map(function(scene) {
                 return (
                     <Scene scene={scene} key={scene.id}/>
                 );
             });
+            btn = <button className="btn btn-primary btnEdit pull-right" onClick={this.edit}>Edit</button>;
         }
         
-        //TODO: Add loading
         return (
             <div className="cmp-SceneList">
-              <div className="clearfix editButtonWrapper">
-                <button className="btn btn-primary btnEdit pull-right" onClick={this.edit}>Edit</button>
+              <div className="clearfix buttonWrapper">
+                {btn}
               </div>
               {body}
             </div>
@@ -95,12 +99,3 @@ var SceneList = React.createClass({
     }
 });
 module.exports = SceneList;
-
-//TODO existing scene edit:
-//2. edit name + save
-//3. make id readonly
-//4. set address
-//5. delete existing command
-//8. Test button
-
-//TODO: Add new scene
