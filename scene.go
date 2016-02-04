@@ -42,10 +42,6 @@ func (s *Scene) Validate() *validation.Errors {
 		errors.Add("required field", "Name")
 	}
 
-	if s.Address == "" {
-		errors.Add("required field", "Address")
-	}
-
 	if errors.Has() {
 		return errors
 	}

@@ -62,6 +62,7 @@ func (s *wwwServer) listenAndServe(port string) error {
 
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}", apiSceneHandlerUpdate(s.system, s.recipeManager)).Methods("PUT")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiSceneHandlerCreate(s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands/{index}", apiSceneHandlerCommandDelete(s.system, s.recipeManager)).Methods("DELETE")
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands", apiSceneHandlerCommandAdd(s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}", apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
@@ -771,6 +772,53 @@ func apiSceneHandlerUpdate(system *gohome.System, recipeManager *gohome.RecipeMa
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(struct{}{})
+	}
+}
+
+func apiSceneHandlerCreate(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var scene jsonScene
+		if err = json.Unmarshal(body, &scene); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		newScene := &gohome.Scene{
+			Address:     scene.Address,
+			Name:        scene.Name,
+			Description: scene.Description,
+			Managed:     true,
+		}
+
+		err = system.AddScene(newScene)
+		if err != nil {
+			if valErrs, ok := err.(*validation.Errors); ok {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&scene, scene.ClientID, valErrs))
+			} else {
+				//Other kind of errors, TODO: log
+				w.WriteHeader(http.StatusBadRequest)
+			}
+			return
+		}
+
+		err = system.Save(recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(struct {
+			ID string `json:"id"`
+		}{ID: newScene.ID})
 	}
 }
 

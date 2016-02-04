@@ -98,7 +98,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return device
 	}
 
-	var makeScenes = func(sceneContainer map[string]*Scene, deviceMap map[string]interface{}, sbp Device) error {
+	var makeScenes = func(deviceMap map[string]interface{}, sbp Device) error {
 		buttons, ok := deviceMap["Buttons"].([]interface{})
 		if !ok {
 			return errors.New("Missing Buttons key, or value not array")
@@ -116,11 +116,9 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				var buttonID string = strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
 				var buttonName = button["Name"].(string)
 
-				var globalID = system.NextGlobalID()
 				var btn = sbp.Buttons()[buttonID]
-				sceneContainer[globalID] = &Scene{
+				scene := &Scene{
 					Address:     buttonID,
-					ID:          globalID,
 					Name:        buttonName,
 					Description: buttonName,
 					Commands: []cmd.Command{
@@ -147,6 +145,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 						},
 					},
 				}
+				err := system.AddScene(scene)
+				if err != nil {
+					fmt.Printf("error adding scene: %s\n", err)
+				}
 			}
 		}
 
@@ -168,7 +170,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				Password: "integration",
 			})
 			sbp.Auth().Authenticator = sbp
-			makeScenes(system.Scenes, device, sbp)
+			makeScenes(device, sbp)
 			break
 		}
 	}
@@ -343,7 +345,6 @@ func importConnectedByTCP(system *System) {
 	z2 := system.Zones["153"]
 	s := &Scene{
 		Address:     "xxx",
-		ID:          system.NextGlobalID(),
 		Name:        "Synthetic Scene",
 		Description: "Scene to control lutron + tcp lights",
 		Commands: []cmd.Command{

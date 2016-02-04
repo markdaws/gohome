@@ -17,13 +17,14 @@ var SceneInfo = React.createClass({
     getInitialState: function() {
         return {
             id: this.props.scene.id || '',
+            clientId: this.props.scene.clientId,
             name: this.props.scene.name || '',
             address: this.props.scene.address || '',
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
             commands: this.props.scene.commands || [],
             zones: this.props.zones || [],
             scenes: this.props.scenes || [],
-            dirty: false
+            dirty: (this.props.scene.id || '') === ''
         };
     },
 
@@ -121,21 +122,45 @@ var SceneInfo = React.createClass({
 
         this.setState({ errors: null });
         var self = this;
-        $.ajax({
-            url: '/api/v1/systems/123/scenes/' + this.state.id,
-            type: 'PUT',
-            dataType: 'json',
-            data: JSON.stringify(this.toJson()),
-            cache: false,
-            success: function(data) {
-                self.setState({ dirty: false });
-            },
-            error: function(xhr, status, err) {
-                var errors = (JSON.parse(xhr.responseText) || {}).errors;
-                self.setState({ errors: errors });
-                saveBtn.failure();
-            }
-        });        
+
+        if (this.state.id === '') {
+            // This is a new scene
+            $.ajax({
+                url: '/api/v1/systems/123/scenes',
+                type: 'POST',
+                dataType: 'json',
+                data: JSON.stringify(this.toJson()),
+                cache: false,
+                success: function(data) {
+                    self.setState({
+                        dirty: false,
+                        id: data.id
+                    });
+                },
+                error: function(xhr, status, err) {
+                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                    self.setState({ errors: errors });
+                    saveBtn.failure();
+                }
+            });
+        } else {
+            // Update to existing scene
+            $.ajax({
+                url: '/api/v1/systems/123/scenes/' + this.state.id,
+                type: 'PUT',
+                dataType: 'json',
+                data: JSON.stringify(this.toJson()),
+                cache: false,
+                success: function(data) {
+                    self.setState({ dirty: false });
+                },
+                error: function(xhr, status, err) {
+                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                    self.setState({ errors: errors });
+                    saveBtn.failure();
+                }
+            });
+        }
     },
     
     render: function() {
@@ -146,26 +171,36 @@ var SceneInfo = React.createClass({
         if (this.state.managed) {
             var cmdIndex = 0;
 
-            commands = this.state.commands.map(function(command) {
-                // This isn't a great idea for react, but we don't have anything
-                // that can be used as a key since commands don't have ids, will take
-                // the perf hit for now
-                var key = Math.random();
-                var info = (
-                    <CommandInfo
-                      isNew={command.isNew}
-                      key={key}
-                      index={cmdIndex}
-                      onSave={self.saveCommand}
-                      onDelete={self.deleteCommand}
-                      scenes={self.props.scenes}
-                      zones={self.props.zones}
-                      buttons={self.props.buttons}
-                      command={command} />
+            if (this.state.id === '') {
+                commands = <p>To Add commands, first save the scene.</p>
+            } else {
+                commands = this.state.commands.map(function(command) {
+                    // This isn't a great idea for react, but we don't have anything
+                    // that can be used as a key since commands don't have ids, will take
+                    // the perf hit for now
+                    var key = Math.random();
+                    var info = (
+                        <CommandInfo
+                        isNew={command.isNew}
+                        key={key}
+                        index={cmdIndex}
+                        onSave={self.saveCommand}
+                        onDelete={self.deleteCommand}
+                        scenes={self.props.scenes}
+                        zones={self.props.zones}
+                        buttons={self.props.buttons}
+                        command={command} />
                     );
-                cmdIndex++;
-                return info;
-            });
+                    cmdIndex++;
+                    return info;
+                });
+                commands = (
+                    <div>
+                      {commands}
+                      Add Command: <CommandTypePicker changed={this.commandTypeChanged}/>
+                    </div>
+                );
+            }
         } else {
             commands = <p>This is an unmanaged scene. The scene is controlled by a 3rd party device so we can&apos;t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.</p>
         }
@@ -227,7 +262,6 @@ var SceneInfo = React.createClass({
               <div className="collapse commands" id={this.uid("commands")}>
                 <h3>Commands</h3>
                 {commands}
-                Add Command: <CommandTypePicker changed={this.commandTypeChanged}/>
               </div>
             </div>
         );

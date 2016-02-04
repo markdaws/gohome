@@ -2,8 +2,11 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var Scene = require('./Scene.jsx');
 var SceneInfo = require('./SceneInfo.jsx');
+var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 
 var SceneList = React.createClass({
+    mixins: [UniqueIdMixin],
+    
     getInitialState: function() {
         return {
             editMode: false,
@@ -61,9 +64,15 @@ var SceneList = React.createClass({
         }
     },
 
+    newScene: function() {
+        var scenes = this.state.scenes;
+        scenes.unshift({ clientId: 'scenelist_' + this.getNextIdAndIncrement() + '' });
+        this.setState({ scenes: scenes });
+    },
+
     render: function() {
         var body;
-        var btn;
+        var btns;
         var self = this;
         if (this.state.editMode) {
             body = this.state.scenes.map(function(scene) {
@@ -75,24 +84,31 @@ var SceneList = React.createClass({
                       buttons={self.props.buttons}
                       scene={scene}
                       readOnlyFields="id"
-                      key={scene.id} />
+                      key={scene.id || scene.clientId} />
                 );
             });
-            btn = <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>;
+            btns = (
+                <div className="clearfix buttonWrapper">
+                  <button className="btn btn-primary btnNew pull-left" onClick={this.newScene}>New Scene</button>
+                  <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
+                </div>
+            );
         } else {
             body = this.state.scenes.map(function(scene) {
                 return (
                     <Scene scene={scene} key={scene.id}/>
                 );
             });
-            btn = <button className="btn btn-primary btnEdit pull-right" onClick={this.edit}>Edit</button>;
+            btns = (
+                <div className="clearfix buttonWrapper">
+                  <button className="btn btn-primary btnEdit pull-right" onClick={this.edit}>Edit</button>
+                </div>
+            );
         }
         
         return (
             <div className="cmp-SceneList">
-              <div className="clearfix buttonWrapper">
-                {btn}
-              </div>
+              {btns}
               {body}
             </div>
         );

@@ -7,6 +7,7 @@ type jsonScene struct {
 	Description string        `json:"description"`
 	Managed     bool          `json:"managed"`
 	Commands    []jsonCommand `json:"commands"`
+	ClientID    string        `json:"clientId"`
 }
 type scenes []jsonScene
 

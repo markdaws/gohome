@@ -21074,9 +21074,12 @@
 	var ReactDOM = __webpack_require__(158);
 	var Scene = __webpack_require__(175);
 	var SceneInfo = __webpack_require__(194);
+	var UniqueIdMixin = __webpack_require__(164);
 
 	var SceneList = React.createClass({
 	    displayName: 'SceneList',
+
+	    mixins: [UniqueIdMixin],
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -21135,9 +21138,15 @@
 	        }
 	    },
 
+	    newScene: function newScene() {
+	        var scenes = this.state.scenes;
+	        scenes.unshift({ clientId: 'scenelist_' + this.getNextIdAndIncrement() + '' });
+	        this.setState({ scenes: scenes });
+	    },
+
 	    render: function render() {
 	        var body;
-	        var btn;
+	        var btns;
 	        var self = this;
 	        if (this.state.editMode) {
 	            body = this.state.scenes.map(function (scene) {
@@ -21148,32 +21157,41 @@
 	                    buttons: self.props.buttons,
 	                    scene: scene,
 	                    readOnlyFields: 'id',
-	                    key: scene.id });
+	                    key: scene.id || scene.clientId });
 	            });
-	            btn = React.createElement(
-	                'button',
-	                { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
-	                'Done'
+	            btns = React.createElement(
+	                'div',
+	                { className: 'clearfix buttonWrapper' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-primary btnNew pull-left', onClick: this.newScene },
+	                    'New Scene'
+	                ),
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
+	                    'Done'
+	                )
 	            );
 	        } else {
 	            body = this.state.scenes.map(function (scene) {
 	                return React.createElement(Scene, { scene: scene, key: scene.id });
 	            });
-	            btn = React.createElement(
-	                'button',
-	                { className: 'btn btn-primary btnEdit pull-right', onClick: this.edit },
-	                'Edit'
+	            btns = React.createElement(
+	                'div',
+	                { className: 'clearfix buttonWrapper' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-primary btnEdit pull-right', onClick: this.edit },
+	                    'Edit'
+	                )
 	            );
 	        }
 
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SceneList' },
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix buttonWrapper' },
-	                btn
-	            ),
+	            btns,
 	            body
 	        );
 	    }
@@ -22574,13 +22592,14 @@
 	    getInitialState: function getInitialState() {
 	        return {
 	            id: this.props.scene.id || '',
+	            clientId: this.props.scene.clientId,
 	            name: this.props.scene.name || '',
 	            address: this.props.scene.address || '',
 	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
 	            commands: this.props.scene.commands || [],
 	            zones: this.props.zones || [],
 	            scenes: this.props.scenes || [],
-	            dirty: false
+	            dirty: (this.props.scene.id || '') === ''
 	        };
 	    },
 
@@ -22678,21 +22697,45 @@
 
 	        this.setState({ errors: null });
 	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/systems/123/scenes/' + this.state.id,
-	            type: 'PUT',
-	            dataType: 'json',
-	            data: JSON.stringify(this.toJson()),
-	            cache: false,
-	            success: function success(data) {
-	                self.setState({ dirty: false });
-	            },
-	            error: function error(xhr, status, err) {
-	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
-	                self.setState({ errors: errors });
-	                saveBtn.failure();
-	            }
-	        });
+
+	        if (this.state.id === '') {
+	            // This is a new scene
+	            $.ajax({
+	                url: '/api/v1/systems/123/scenes',
+	                type: 'POST',
+	                dataType: 'json',
+	                data: JSON.stringify(this.toJson()),
+	                cache: false,
+	                success: function success(data) {
+	                    self.setState({
+	                        dirty: false,
+	                        id: data.id
+	                    });
+	                },
+	                error: function error(xhr, status, err) {
+	                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                    self.setState({ errors: errors });
+	                    saveBtn.failure();
+	                }
+	            });
+	        } else {
+	            // Update to existing scene
+	            $.ajax({
+	                url: '/api/v1/systems/123/scenes/' + this.state.id,
+	                type: 'PUT',
+	                dataType: 'json',
+	                data: JSON.stringify(this.toJson()),
+	                cache: false,
+	                success: function success(data) {
+	                    self.setState({ dirty: false });
+	                },
+	                error: function error(xhr, status, err) {
+	                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                    self.setState({ errors: errors });
+	                    saveBtn.failure();
+	                }
+	            });
+	        }
 	    },
 
 	    render: function render() {
@@ -22703,24 +22746,39 @@
 	        if (this.state.managed) {
 	            var cmdIndex = 0;
 
-	            commands = this.state.commands.map(function (command) {
-	                // This isn't a great idea for react, but we don't have anything
-	                // that can be used as a key since commands don't have ids, will take
-	                // the perf hit for now
-	                var key = Math.random();
-	                var info = React.createElement(CommandInfo, {
-	                    isNew: command.isNew,
-	                    key: key,
-	                    index: cmdIndex,
-	                    onSave: self.saveCommand,
-	                    onDelete: self.deleteCommand,
-	                    scenes: self.props.scenes,
-	                    zones: self.props.zones,
-	                    buttons: self.props.buttons,
-	                    command: command });
-	                cmdIndex++;
-	                return info;
-	            });
+	            if (this.state.id === '') {
+	                commands = React.createElement(
+	                    'p',
+	                    null,
+	                    'To Add commands, first save the scene.'
+	                );
+	            } else {
+	                commands = this.state.commands.map(function (command) {
+	                    // This isn't a great idea for react, but we don't have anything
+	                    // that can be used as a key since commands don't have ids, will take
+	                    // the perf hit for now
+	                    var key = Math.random();
+	                    var info = React.createElement(CommandInfo, {
+	                        isNew: command.isNew,
+	                        key: key,
+	                        index: cmdIndex,
+	                        onSave: self.saveCommand,
+	                        onDelete: self.deleteCommand,
+	                        scenes: self.props.scenes,
+	                        zones: self.props.zones,
+	                        buttons: self.props.buttons,
+	                        command: command });
+	                    cmdIndex++;
+	                    return info;
+	                });
+	                commands = React.createElement(
+	                    'div',
+	                    null,
+	                    commands,
+	                    'Add Command: ',
+	                    React.createElement(CommandTypePicker, { changed: this.commandTypeChanged })
+	                );
+	            }
 	        } else {
 	            commands = React.createElement(
 	                'p',
@@ -22816,9 +22874,7 @@
 	                    null,
 	                    'Commands'
 	                ),
-	                commands,
-	                'Add Command: ',
-	                React.createElement(CommandTypePicker, { changed: this.commandTypeChanged })
+	                commands
 	            )
 	        );
 	    }

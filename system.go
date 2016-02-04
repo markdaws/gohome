@@ -92,8 +92,15 @@ func (s *System) AddZone(z *zone.Zone) error {
 	return nil
 }
 
-func (s *System) AddScene(scn *Scene) {
+func (s *System) AddScene(scn *Scene) error {
+	errors := scn.Validate()
+	if errors != nil {
+		return errors
+	}
+
+	scn.ID = s.NextGlobalID()
 	s.Scenes[scn.ID] = scn
+	return nil
 }
 
 func (s *System) DeleteScene(scn *Scene) {
