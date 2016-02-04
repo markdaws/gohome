@@ -62,7 +62,6 @@ var SceneList = React.createClass({
     },
 
     render: function() {
-
         var body;
         var btn;
         var self = this;
@@ -75,6 +74,7 @@ var SceneList = React.createClass({
                       zones={self.state.zones}
                       buttons={self.props.buttons}
                       scene={scene}
+                      readOnlyFields="id"
                       key={scene.id} />
                 );
             });

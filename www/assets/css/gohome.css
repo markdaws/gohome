@@ -45,12 +45,15 @@ button.disabled {
     text-overflow: ellipsis;
 }
 
+.cmp-SceneInfo .btnDelete {
+    padding: 0;
+}
 .cmp-SceneInfo label {
     font-size: 12px;
     font-weight: normal;
 }
-.cmp-SceneInfo .deleteWrapper {
-    margin-bottom: 14px;
+.cmp-SceneInfo .commands {
+    margin-top: 14px;
 }
 .cmp-SceneInfo .commands h3 {
     margin-top: 0px;
@@ -63,6 +66,9 @@ button.disabled {
 .cmp-CommandInfo {
     background-color: #fff;
 }
+.cmp-CommandInfo .btnDelete {
+    padding: 0;
+}                 
 
 .cmp-Zone .btn.zone .name{
     display:inline-block;

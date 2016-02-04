@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/validation"
 )
 
 type Scene struct {
@@ -31,5 +32,22 @@ func (s *Scene) DeleteCommand(i int) error {
 
 func (s *Scene) AddCommand(c cmd.Command) error {
 	s.Commands = append(s.Commands, c)
+	return nil
+}
+
+func (s *Scene) Validate() *validation.Errors {
+	errors := &validation.Errors{}
+
+	if s.Name == "" {
+		errors.Add("required field", "Name")
+	}
+
+	if s.Address == "" {
+		errors.Add("required field", "Address")
+	}
+
+	if errors.Has() {
+		return errors
+	}
 	return nil
 }

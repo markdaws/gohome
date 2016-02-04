@@ -20345,6 +20345,7 @@
 	        var statePath = evt.target.getAttribute('data-statepath');
 	        var s = {};
 	        s[statePath] = evt.target.value;
+	        s.dirty = true;
 	        this.setState(s);
 	    },
 	    isReadOnly: function isReadOnly(field) {
@@ -21135,7 +21136,6 @@
 	    },
 
 	    render: function render() {
-
 	        var body;
 	        var btn;
 	        var self = this;
@@ -21147,6 +21147,7 @@
 	                    zones: self.state.zones,
 	                    buttons: self.props.buttons,
 	                    scene: scene,
+	                    readOnlyFields: 'id',
 	                    key: scene.id });
 	            });
 	            btn = React.createElement(
@@ -22578,11 +22579,11 @@
 	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
 	            commands: this.props.scene.commands || [],
 	            zones: this.props.zones || [],
-	            scenes: this.props.scenes || []
+	            scenes: this.props.scenes || [],
+	            dirty: false
 	        };
 	    },
 
-	    //TODO: readonly id
 	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
 	        //Needed?
 	        if (nextProps.zones) {
@@ -22603,7 +22604,6 @@
 	        };
 	    },
 
-	    //TODO: commands
 	    deleteScene: function deleteScene() {
 	        var self = this;
 	        $.ajax({
@@ -22672,6 +22672,29 @@
 	        this.setState({ commands: cmds });
 	    },
 
+	    save: function save() {
+	        var saveBtn = this.refs.saveBtn;
+	        saveBtn.saving();
+
+	        this.setState({ errors: null });
+	        var self = this;
+	        $.ajax({
+	            url: '/api/v1/systems/123/scenes/' + this.state.id,
+	            type: 'PUT',
+	            dataType: 'json',
+	            data: JSON.stringify(this.toJson()),
+	            cache: false,
+	            success: function success(data) {
+	                self.setState({ dirty: false });
+	            },
+	            error: function error(xhr, status, err) {
+	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                self.setState({ errors: errors });
+	                saveBtn.failure();
+	            }
+	        });
+	    },
+
 	    render: function render() {
 	        var commands;
 	        //TODO: remove
@@ -22705,9 +22728,23 @@
 	                'This is an unmanaged scene. The scene is controlled by a 3rd party device so we can\'t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.'
 	            );
 	        }
+
+	        var saveBtn;
+	        if (this.state.dirty) {
+	            saveBtn = React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                React.createElement(SaveBtn, { text: 'Save', ref: 'saveBtn', clicked: this.save })
+	            );
+	        }
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SceneInfo well well-sm' },
+	            React.createElement(
+	                'button',
+	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteScene },
+	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
+	            ),
 	            React.createElement(
 	                'div',
 	                { className: this.addErr("form-group", "name") },
@@ -22716,7 +22753,13 @@
 	                    { className: 'control-label', htmlFor: this.uid("name") },
 	                    'Name*'
 	                ),
-	                React.createElement('input', { value: this.state.name, 'data-statepath': 'name', onChange: this.changed, className: 'name form-control', type: 'text', id: this.uid("name") }),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this.changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid("name") }),
 	                this.errMsg("name")
 	            ),
 	            React.createElement(
@@ -22727,7 +22770,14 @@
 	                    { className: 'control-label', htmlFor: this.uid("id") },
 	                    'ID'
 	                ),
-	                React.createElement('input', { value: this.state.id, readOnly: this.isReadOnly("id"), 'data-statepath': 'id', onChange: this.changed, className: 'id form-control', type: 'text', id: this.uid("id") }),
+	                React.createElement('input', {
+	                    value: this.state.id,
+	                    readOnly: this.isReadOnly("id"),
+	                    'data-statepath': 'id',
+	                    onChange: this.changed,
+	                    className: 'id form-control',
+	                    type: 'text',
+	                    id: this.uid("id") }),
 	                this.errMsg("id")
 	            ),
 	            React.createElement(
@@ -22738,27 +22788,29 @@
 	                    { className: 'control-label', htmlFor: this.uid("address") },
 	                    'Address'
 	                ),
-	                React.createElement('input', { value: this.state.adddress, 'data-statepath': 'address', onChange: this.changed, className: 'address form-control', type: 'text', id: this.uid("address") }),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this.changed,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
 	                this.errMsg("address")
 	            ),
 	            React.createElement(
-	                'a',
-	                { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
-	                'Toggle Info',
-	                React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
+	                    'Toggle Info',
+	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                ),
+	                saveBtn
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: 'collapse commands', id: this.uid('commands') },
-	                React.createElement(
-	                    'div',
-	                    { className: 'clearfix deleteWrapper' },
-	                    React.createElement(
-	                        'button',
-	                        { className: 'btn btn-danger pull-right', onClick: this.deleteScene },
-	                        'Delete Scene'
-	                    )
-	                ),
+	                { className: 'collapse commands', id: this.uid("commands") },
 	                React.createElement(
 	                    'h3',
 	                    null,
@@ -22849,12 +22901,12 @@
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-CommandInfo well well-sm clearfix' },
-	            uiCmd,
 	            React.createElement(
 	                'button',
-	                { className: 'btn btn-danger btnDelete pull-right', onClick: this.deleteCommand },
-	                'Delete'
+	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteCommand },
+	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
 	            ),
+	            uiCmd,
 	            saveBtn
 	        );
 	    }

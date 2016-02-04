@@ -23,7 +23,7 @@ var SceneInfo = React.createClass({
             commands: this.props.scene.commands || [],
             zones: this.props.zones || [],
             scenes: this.props.scenes || [],
-            //TODO: readonly id
+            dirty: false
         };
     },
 
@@ -44,7 +44,6 @@ var SceneInfo = React.createClass({
             name: this.state.name,
             address: this.state.address,
             managed: this.state.managed,
-            //TODO: commands
         };
     },
 
@@ -115,6 +114,29 @@ var SceneInfo = React.createClass({
         cmds.push({ isNew: true, type: cmdType, attributes: {} });
         this.setState({ commands: cmds });
     },
+
+    save: function() {
+        var saveBtn = this.refs.saveBtn;
+        saveBtn.saving();
+
+        this.setState({ errors: null });
+        var self = this;
+        $.ajax({
+            url: '/api/v1/systems/123/scenes/' + this.state.id,
+            type: 'PUT',
+            dataType: 'json',
+            data: JSON.stringify(this.toJson()),
+            cache: false,
+            success: function(data) {
+                self.setState({ dirty: false });
+            },
+            error: function(xhr, status, err) {
+                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                self.setState({ errors: errors });
+                saveBtn.failure();
+            }
+        });        
+    },
     
     render: function() {
         var commands
@@ -147,32 +169,62 @@ var SceneInfo = React.createClass({
         } else {
             commands = <p>This is an unmanaged scene. The scene is controlled by a 3rd party device so we can&apos;t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.</p>
         }
+
+        var saveBtn;
+        if (this.state.dirty) {
+            saveBtn = (
+                <div className="pull-right">
+                  <SaveBtn text="Save" ref="saveBtn" clicked={this.save} />
+                </div>
+            );
+        }
         return (
             <div className="cmp-SceneInfo well well-sm">
+              <button className="btn btn-link btnDelete pull-right" onClick={this.deleteScene}>
+                <i className="glyphicon glyphicon-trash"></i>
+              </button>
               <div className={this.addErr("form-group", "name")}>
                 <label className="control-label" htmlFor={this.uid("name")}>Name*</label>
-                <input value={this.state.name} data-statepath="name" onChange={this.changed} className="name form-control" type="text" id={this.uid("name")}/>
+                <input
+                  value={this.state.name}
+                  data-statepath="name"
+                  onChange={this.changed}
+                  className="name form-control"
+                  type="text"
+                  id={this.uid("name")}/>
                 {this.errMsg("name")}
               </div>
               <div className={this.addErr("form-group", "id")}>
                 <label className="control-label" htmlFor={this.uid("id")}>ID</label>
-                <input value={this.state.id} readOnly={this.isReadOnly("id")} data-statepath="id" onChange={this.changed} className="id form-control" type="text" id={this.uid("id")}/>
+                <input
+                  value={this.state.id}
+                  readOnly={this.isReadOnly("id")}
+                  data-statepath="id"
+                  onChange={this.changed}
+                  className="id form-control"
+                  type="text"
+                  id={this.uid("id")}/>
                 {this.errMsg("id")}
-            </div>
-              {/*<!-- TODO: Only needed for unmanaged scenes -->*/}
+              </div>
               <div className={this.addErr("form-group", "address")}>
                 <label className="control-label" htmlFor={this.uid("address")}>Address</label>
-                <input value={this.state.adddress} data-statepath="address" onChange={this.changed} className="address form-control" type="text" id={this.uid("address")}/>
+                <input
+                  value={this.state.address}
+                  data-statepath="address"
+                  onChange={this.changed}
+                  className="address form-control"
+                  type="text"
+                  id={this.uid("address")}/>
                 {this.errMsg("address")}
               </div>
-              <a data-toggle="collapse" href={"#" + this.uid("commands")}>
-                Toggle Info
-                <i className="glyphicon glyphicon-menu-down"></i>
-              </a>
-              <div className="collapse commands" id={this.uid('commands')}>
-                <div className="clearfix deleteWrapper">
-                  <button className="btn btn-danger pull-right" onClick={this.deleteScene}>Delete Scene</button>
-                </div>
+              <div className="clearfix">
+                <a data-toggle="collapse" href={"#" + this.uid("commands")}>
+                  Toggle Info
+                  <i className="glyphicon glyphicon-menu-down"></i>
+                </a>
+                {saveBtn}
+              </div>
+              <div className="collapse commands" id={this.uid("commands")}>
                 <h3>Commands</h3>
                 {commands}
                 Add Command: <CommandTypePicker changed={this.commandTypeChanged}/>

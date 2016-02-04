@@ -29,6 +29,7 @@ module.exports = {
         var statePath = evt.target.getAttribute('data-statepath');
         var s = {}
         s[statePath] = evt.target.value;
+        s.dirty = true;
         this.setState(s);
     },
     isReadOnly: function(field) {

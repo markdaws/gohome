@@ -65,8 +65,10 @@ var CommandInfo = React.createClass({
         }
         return (
             <div className="cmp-CommandInfo well well-sm clearfix">
+              <button className="btn btn-link btnDelete pull-right" onClick={this.deleteCommand}>
+                <i className="glyphicon glyphicon-trash"></i>
+              </button>
               {uiCmd}
-              <button className="btn btn-danger btnDelete pull-right" onClick={this.deleteCommand}>Delete</button>
               {saveBtn}
             </div>
         );

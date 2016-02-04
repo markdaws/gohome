@@ -697,7 +697,6 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 			}
 
 		default:
-			//TODO:
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -720,33 +719,58 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 
 func apiSceneHandlerUpdate(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		sceneID := mux.Vars(r)["id"]
+		scene, ok := system.Scenes[sceneID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-		//TODO
-		/*
-			sceneID := mux.Vars(r)["id"]
-			scene, ok := system.Scenes[sceneID]
-			if !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-			// What actions can the user perform
-			// Add command
-			// Delete command
-			// general name update
-			// command update
+		var updates struct {
+			Name        *string `json:"name"`
+			Address     *string `json:"address"`
+			Description *string `json:"description"`
+		}
+		if err = json.Unmarshal(body, &updates); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
+		var updatedScene = *scene
+		if updates.Name != nil {
+			updatedScene.Name = *updates.Name
+		}
+		if updates.Address != nil {
+			updatedScene.Address = *updates.Address
+		}
+		if updates.Description != nil {
+			updatedScene.Description = *updates.Description
+		}
 
-			system.DeleteScene(scene)
-			err := system.Save(recipeManager)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
+		valErrs := updatedScene.Validate()
+		if valErrs != nil {
+			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(struct{}{})
-		*/
+			json.NewEncoder(w).Encode(validation.NewErrorJSON(&updates, sceneID, valErrs))
+			return
+		}
+
+		system.Scenes[sceneID] = &updatedScene
+
+		err = system.Save(recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(struct{}{})
 	}
 }
 
