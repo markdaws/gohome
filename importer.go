@@ -10,7 +10,6 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
-	"github.com/markdaws/gohome/connectedbytcp"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -64,6 +63,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	var makeDevice = func(
 		modelNumber, name, address string,
 		deviceMap map[string]interface{},
+		hub Device,
 		sys *System,
 		stream bool,
 		auth *comm.Auth) Device {
@@ -74,6 +74,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			sys.NextGlobalID(),
 			name,
 			"",
+			hub,
 			stream,
 			auth)
 
@@ -164,7 +165,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
 
-			sbp = makeDevice("L-BDGPRO2-WH", "Smart Bridge - Hub", "192.168.0.10:23", device, system, true, &comm.Auth{
+			sbp = makeDevice("L-BDGPRO2-WH", "Smart Bridge - Hub", "192.168.0.10:23", device, nil, system, true, &comm.Auth{
 				Login:    "lutron",
 				Password: "integration",
 			})
@@ -176,10 +177,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			// to press the buttons, so here, we make another device and assign the buttons to this
 			// new device and use the lutron hub solely for communicating to.
 			fmt.Printf("phantom id: %s\n", deviceID)
-			sbpSceneDevice := makeDevice("", "Smart Bridge - Phantom Buttons", deviceID, device, system, false, nil)
+			sbpSceneDevice := makeDevice("", "Smart Bridge - Phantom Buttons", deviceID, device, sbp, system, false, nil)
 			system.AddDevice(sbpSceneDevice)
-			sbp.Devices()[sbpSceneDevice.Address()] = sbpSceneDevice
-			makeScenes(device, sbp)
+			sbp.AddDevice(sbpSceneDevice)
+			makeScenes(device, sbpSceneDevice)
 			break
 		}
 	}
@@ -203,9 +204,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			continue
 		}
 		var deviceName string = device["Name"].(string)
-		gohomeDevice := makeDevice("", deviceName, deviceID, device, system, false, nil)
+		gohomeDevice := makeDevice("", deviceName, deviceID, device, sbp, system, false, nil)
+		//TODO: Errors
 		system.AddDevice(gohomeDevice)
-		sbp.Devices()[gohomeDevice.Address()] = gohomeDevice
+		sbp.AddDevice(gohomeDevice)
 	}
 
 	zones, ok := root["Zones"].([]interface{})
@@ -262,84 +264,19 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	return system, nil
 }
 
-/*
-type tcpListener struct {
-}
-
-func (tcpListener) Response(m gossdp.ResponseMessage) {
-	fmt.Printf("%+v\n", m)
-}*/
-
 //TODO: Temp function - import from UI
 func importConnectedByTCP(system *System) {
-
-	/*
-		b := tcpListener{}
-		c, err := gossdp.NewSsdpClient(b)
-		if err != nil {
-			log.Println("Failed to start client: ", err)
-			return
-		}
-		defer c.Stop()
-		go c.Start()
-
-		err = c.ListenFor("urn:greenwavereality-com:service:gop:1")
-		time.Sleep(30 * time.Second)
-	*/
-	/*
-		{MaxAge:7200 SearchType:urn:greenwavereality-com:service:gop:1 DeviceId:71403833960916 Usn:uuid:71403833960916::urn:greenwavereality-com:service:gop:1 Location:https://192.168.0.23 Server:linux UPnP/1.1 Apollo3/3.0.74 RawResponse:0xc2080305a0 Urn:urn:greenwavereality-com:service:gop:1}
-	*/
-
-	/*
-			//1. Press sync button on hub
-			//2. Execute following url
-			//https://192.168.0.23/gwr/gop.php?cmd=GWRLogin&data=%3Cgip%3E%3Cversion%3E1%3C/version%3E%3Cemail%3Etest%3C/email%3E%3Cpassword%3Etest%3C/password%3E%3C/gip%3E
-			//3. Get response: <gip><version>1</version><rc>200</rc><token>ar6thtpqg6yinh219pn0c4t814dqkye1f0j3sfye</token></gip>
-			//4. Use token in commands
-
-		data := "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21</token><fields>name,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml"
-		_ = data
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		client := &http.Client{Transport: tr}
-		slc := "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>DeviceSendCommand</gcmd><gdata><gip><version>1</version><token>79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21</token><did>216438039298518643</did><value>100</value><type>level</type></gip></gdata></gwrcmd></gwrcmds>&fmt=xml"
-		_ = slc
-		resp, err := client.Post("https://192.168.0.23/gwr/gpo.php", "text/xml; charset=\"utf-8\"", bytes.NewReader([]byte(data)))
-		xx, err := ioutil.ReadAll(resp.Body)
-		fmt.Println(string(xx))
-		fmt.Println(err)
-	*/
-
-	data, err := connectedbytcp.RoomGetCarousel("https://192.168.0.23", "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21")
-	//	fmt.Printf("%+v\n", data)
-	//	fmt.Println(err)
-
-	token, err := connectedbytcp.GetToken("https://192.168.0.23")
-	//	fmt.Printf("TOKEN: %s", token)
-	//	fmt.Println(err)
-
-	_ = token
-	_ = err
-	_ = data
 	tcp := NewDevice(
 		"TCP600GWB",
 		"https://192.168.0.23",
 		system.NextGlobalID(),
 		"ConnectedByTcp Hub",
 		"Description",
+		nil,
 		false,
-		//TODO: Remove from NewDevice
 		&comm.Auth{
 			Token: "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21",
 		})
-
-	/*
-		//TODO: Fix
-		tcp2 := tcp.(*Tcp600gwbDevice)
-		tcp2.Token = "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21"
-		tcp2.Host = "https://192.168.0.23"
-	*/
 
 	zoneID := "216438039298518643"
 	z := &zone.Zone{
@@ -351,113 +288,19 @@ func importConnectedByTCP(system *System) {
 		Output:      zone.OTContinuous,
 		Controller:  "TCP - LED A19 11W",
 	}
-	//	fmt.Println("BULB ID: " + z.ID)
-	//	tcp.Zones()[z.Address] = z
 	system.AddDevice(tcp)
 	system.AddZone(z)
-
-	return
-	z1 := system.Zones["142"]
-	z2 := system.Zones["153"]
-	s := &Scene{
-		Address:     "xxx",
-		Name:        "Synthetic Scene",
-		Description: "Scene to control lutron + tcp lights",
-		Commands: []cmd.Command{
-			&cmd.ZoneSetLevel{
-				ZoneAddress: z1.Address,
-				ZoneID:      z1.ID,
-				ZoneName:    z1.Name,
-				Level:       cmd.Level{Value: 30},
-			},
-			&cmd.ZoneSetLevel{
-				ZoneAddress: z2.Address,
-				ZoneID:      z2.ID,
-				ZoneName:    z2.Name,
-				Level:       cmd.Level{Value: 30},
-			},
-		},
-	}
-	system.AddScene(s)
 }
 
 func importGoHomeHub(system *System) {
-
 	ghh := NewDevice(
 		"GoHomeHub",
 		"gohomehub",
 		system.NextGlobalID(),
 		"GoHome Hub",
 		"GoHome Hub Description",
+		nil,
 		false,
 		nil)
-
-	/*
-		//TODO: Fix
-		tcp2 := tcp.(*Tcp600gwbDevice)
-		tcp2.Token = "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21"
-		tcp2.Host = "https://192.168.0.23"
-	*/
-
-	// 192.168.0.24 / fluxbulb
-	/*
-				zoneID := "216438039298518643"
-				z := &Zone{
-					LocalID:     zoneID,
-					GlobalID:    system.NextGlobalID(),
-					Name:        "bulb1",
-					Description: "tcp - bulb1",
-					Device:      tcp,
-					Type:        ZTLight,
-					Output:      OTContinuous,
-				}
-				fmt.Println("BULB ID: " + z.GlobalID)
-				tcp.Zones()[z.LocalID] = z
-				system.AddZone(z)
-
-				s := &Scene{
-					LocalID:     "xxx",
-					GlobalID:    system.NextGlobalID(),
-					Name:        "Synthetic Scene",
-					Description: "Scene to control lutron + tcp lights",
-		            Managed: true,
-					Commands: []Command{
-						&ZoneSetLevelCommand{Zone: system.Zones["142"], Level: 30},
-						&ZoneSetLevelCommand{Zone: system.Zones["153"], Level: 75},
-					},
-				}
-				system.AddScene(s)*/
-
-	//TODO:
-	//1. Discover bulbs
-	//2. Configure bulb
-	//3. Control bulb
-
-	//Aim: Be able to configure and control bulb completely from gohome app
-
-	/*
-		z := &zone.Zone{
-			Address:     "192.168.0.24:5577",
-			Name:        "FluxBulb",
-			Description: "Flux wifi bulb",
-			DeviceID:    ghh.ID(),
-			Type:        zone.ZTLight,
-			Output:      zone.OTRGB,
-			Controller:  zone.ZCFluxWIFI,
-		}
-		ghh.Zones()[z.Address] = z*/
-	/*
-		z2 := &zone.Zone{
-			Address:     "192.168.0.24:55777",
-			ID:          system.NextGlobalID(),
-			Name:        "FluxBulb2",
-			Description: "Flux wifi bulb",
-			DeviceID:    ghh.ID(),
-			Type:        zone.ZTLight,
-			Output:      zone.OTRGB,
-			Controller:  zone.ZCFluxWIFI,
-		}
-		ghh.Zones()[z2.Address] = z2*/
-
 	system.AddDevice(ghh)
 }

@@ -73,7 +73,7 @@ func (s *wwwServer) listenAndServe(port string) error {
 
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiAddZoneHandler(s.system)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system)).Methods("PUT")
 
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiAddDeviceHandler(s.system)).Methods("POST")
@@ -965,6 +965,8 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 			system.NextGlobalID(),
 			data.Name,
 			data.Description,
+			//TODO: Hub
+			nil,
 			false, //TODO: stream?
 			auth,
 		)

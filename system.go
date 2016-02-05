@@ -154,6 +154,7 @@ type deviceJSON struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description"`
 	ModelNumber string       `json:"modelNumber"`
+	HubID       string       `json:"hubId"`
 	Buttons     []buttonJSON `json:"buttons"`
 	Zones       []zoneJSON   `json:"zones"`
 	DeviceIDs   []string     `json:"deviceIds"`
@@ -207,7 +208,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 		}
 
 		log.V("loaded Device: ID:%s, Name:%s, Model:%s, Address:%s", d.ID, d.Name, d.ModelNumber, d.Address)
-		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, auth)
+		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, nil, d.Stream, auth)
 		if auth != nil {
 			dev.Auth().Authenticator = dev
 		}
@@ -224,9 +225,17 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 	for _, d := range s.Devices {
 		dev := sys.Devices[d.ID]
 		for _, dID := range d.DeviceIDs {
-			//TODO: function
 			childDev := sys.Devices[dID]
-			dev.Devices()[childDev.Address()] = childDev
+			dev.AddDevice(childDev)
+		}
+
+		// If the device has a hub we have to correctly set up that relationship
+		if d.HubID != "" {
+			hub, ok := sys.Devices[d.HubID]
+			if !ok {
+				return nil, fmt.Errorf("invalid hub ID: %s", d.HubID)
+			}
+			dev.SetHub(hub)
 		}
 
 		for _, btn := range d.Buttons {
@@ -404,11 +413,18 @@ func (s *System) Save(recipeManager *RecipeManager) error {
 	i = 0
 	out.Devices = make([]deviceJSON, len(s.Devices))
 	for _, device := range s.Devices {
+		hub := device.Hub()
+		var hubID = ""
+		if hub != nil {
+			hubID = hub.ID()
+		}
+
 		d := deviceJSON{
 			Address:     device.Address(),
 			ID:          device.ID(),
 			Name:        device.Name(),
 			Description: device.Description(),
+			HubID:       hubID,
 			ModelNumber: device.ModelNumber(),
 			Stream:      device.Stream(),
 		}

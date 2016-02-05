@@ -116,7 +116,7 @@ var Zone = React.createClass({
     send: function(data, callback) {
         $.ajax({
             url: '/api/v1/systems/1/zones/' + this.props.id,
-            type: 'POST',
+            type: 'PUT',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data),

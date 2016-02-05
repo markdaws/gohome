@@ -26,8 +26,10 @@ type Device interface {
 	Stream() bool
 	BuildCommand(cmd.Command) (*cmd.Func, error)
 	SupportsController(c zone.Controller) bool
-
-	AddZone(z *zone.Zone) error
+	Hub() Device
+	SetHub(Device)
+	AddZone(*zone.Zone) error
+	AddDevice(Device) error
 	Validate() *validation.Errors
 	comm.Authenticator
 	event.Producer
@@ -40,6 +42,7 @@ type device struct {
 	name        string
 	description string
 	system      *System
+	hub         Device
 	//TODO: delete
 	producesEvents bool
 	auth           *comm.Auth
@@ -52,12 +55,13 @@ type device struct {
 }
 
 //TODO: Remove ID from parameters, assign within the function
-func NewDevice(modelNumber, address, ID, name, description string, stream bool, auth *comm.Auth) Device {
+func NewDevice(modelNumber, address, ID, name, description string, hub Device, stream bool, auth *comm.Auth) Device {
 	device := device{
 		address:     address,
 		id:          ID,
 		name:        name,
 		description: description,
+		hub:         hub,
 		stream:      stream,
 		buttons:     make(map[string]*Button),
 		devices:     make(map[string]Device),
@@ -140,6 +144,14 @@ func (d *device) String() string {
 	return fmt.Sprintf("Device[%s]", d.Name())
 }
 
+func (d *device) Hub() Device {
+	return d.hub
+}
+
+func (d *device) SetHub(h Device) {
+	d.hub = h
+}
+
 func (d *device) AddZone(z *zone.Zone) error {
 	errs := &validation.Errors{}
 
@@ -160,5 +172,14 @@ func (d *device) AddZone(z *zone.Zone) error {
 			return errs
 		}*/
 
+	return nil
+}
+
+func (d *device) AddDevice(cd Device) error {
+	if _, ok := d.devices[cd.Address()]; ok {
+		return fmt.Errorf("device with address: %s already added to parent device", cd.Address())
+	}
+
+	d.devices[cd.Address()] = cd
 	return nil
 }
