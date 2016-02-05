@@ -47,6 +47,7 @@ func (s *wwwServer) listenAndServe(port string) error {
 
 	r := mux.NewRouter()
 
+	//TODO: Break up into multiple files
 	mime.AddExtensionType(".jsx", "text/jsx")
 	mime.AddExtensionType(".woff", "application/font-woff")
 	mime.AddExtensionType(".woff2", "application/font-woff2")
@@ -1081,6 +1082,8 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 			SceneName: scene.Name,
 		})
 		if err != nil {
+			//TODO: log
+			fmt.Printf("enqueue failed: %s\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

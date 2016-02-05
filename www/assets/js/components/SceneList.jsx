@@ -65,6 +65,7 @@ var SceneList = React.createClass({
     },
 
     newScene: function() {
+        //TODO: This is not the way...
         var scenes = this.state.scenes;
         scenes.unshift({ clientId: 'scenelist_' + this.getNextIdAndIncrement() + '' });
         this.setState({ scenes: scenes });

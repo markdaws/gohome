@@ -27,3 +27,5 @@ var CommandTypePicker = React.createClass({
     }
 });
 module.exports = CommandTypePicker;
+
+//TODO: turnOn/turnOff

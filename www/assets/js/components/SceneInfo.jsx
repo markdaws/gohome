@@ -172,7 +172,7 @@ var SceneInfo = React.createClass({
             var cmdIndex = 0;
 
             if (this.state.id === '') {
-                commands = <p>To Add commands, first save the scene.</p>
+                commands = <p>To add commands, first save the scene.</p>
             } else {
                 commands = this.state.commands.map(function(command) {
                     // This isn't a great idea for react, but we don't have anything

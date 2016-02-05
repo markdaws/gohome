@@ -24,6 +24,7 @@ type importer struct {
 func (i importer) ImportFromFile(path, importerID string, cp CommandProcessor) (*System, error) {
 	switch importerID {
 	case "L-BDGPRO2-WH":
+		//TODO: "1" should not be hard coded
 		return importL_BDGPRO2_WH(path, "1", cp)
 	default:
 		return nil, errors.New("unknown import type: " + importerID)
@@ -61,14 +62,18 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 	fmt.Println("\nDEVICES")
 
-	var makeDevice = func(modelNumber, address string, deviceMap map[string]interface{}, sys *System, stream bool, auth *comm.Auth) Device {
-		var deviceName string = deviceMap["Name"].(string)
+	var makeDevice = func(
+		modelNumber, name, address string,
+		deviceMap map[string]interface{},
+		sys *System,
+		stream bool,
+		auth *comm.Auth) Device {
 
 		device := NewDevice(
 			modelNumber,
 			address,
 			sys.NextGlobalID(),
-			deviceName,
+			name,
 			"",
 			stream,
 			auth)
@@ -104,6 +109,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			return errors.New("Missing Buttons key, or value not array")
 		}
 
+		//TODO: remove
 		//var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
 		for _, buttonMap := range buttons {
 			button, ok := buttonMap.(map[string]interface{})
@@ -136,13 +142,6 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 							DeviceAddress: sbp.Address(),
 							DeviceID:      sbp.ID(),
 						},
-						//TODO: Remove only for debugging
-						&cmd.ZoneSetLevel{
-							ZoneAddress: "16",
-							ZoneID:      "142",
-							ZoneName:    "Fake zone" + btn.Address,
-							Level:       cmd.Level{Value: 55.0},
-						},
 					},
 				}
 				err := system.AddScene(scene)
@@ -165,11 +164,22 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
-			sbp = makeDevice("L-BDGPRO2-WH", "192.168.0.10:23", device, system, true, &comm.Auth{
+
+			sbp = makeDevice("L-BDGPRO2-WH", "Smart Bridge - Hub", "192.168.0.10:23", device, system, true, &comm.Auth{
 				Login:    "lutron",
 				Password: "integration",
 			})
 			sbp.Auth().Authenticator = sbp
+
+			// The smart bridge pro controls scenes by having phantom buttons that can be pressed,
+			// each button activates a different scene. This means it really has two addresses, the
+			// first is the IP address to talk to it, but then it also have the DeviceID which is needed
+			// to press the buttons, so here, we make another device and assign the buttons to this
+			// new device and use the lutron hub solely for communicating to.
+			fmt.Printf("phantom id: %s\n", deviceID)
+			sbpSceneDevice := makeDevice("", "Smart Bridge - Phantom Buttons", deviceID, device, system, false, nil)
+			system.AddDevice(sbpSceneDevice)
+			sbp.Devices()[sbpSceneDevice.Address()] = sbpSceneDevice
 			makeScenes(device, sbp)
 			break
 		}
@@ -193,7 +203,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		if deviceID == smartBridgeProID {
 			continue
 		}
-		gohomeDevice := makeDevice("", deviceID, device, system, false, nil)
+		var deviceName string = device["Name"].(string)
+		gohomeDevice := makeDevice("", deviceName, deviceID, device, system, false, nil)
 		system.AddDevice(gohomeDevice)
 		sbp.Devices()[gohomeDevice.Address()] = gohomeDevice
 	}
@@ -239,6 +250,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		err := system.AddZone(newZone)
 		if err != nil {
 			fmt.Printf("err add zone: %s\n", err)
+		} else {
+			fmt.Printf("added zone %s with ID %s\n", newZone.Name, newZone.ID)
 		}
 		//sbp.Zones()[newZone.Address] = newZone
 	}

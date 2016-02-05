@@ -20283,7 +20283,7 @@
 	        );
 	    }
 	});
-	module.exports = ZoneInfo.jsx;
+	module.exports = ZoneInfo;
 
 /***/ },
 /* 164 */
@@ -21139,6 +21139,7 @@
 	    },
 
 	    newScene: function newScene() {
+	        //TODO: This is not the way...
 	        var scenes = this.state.scenes;
 	        scenes.unshift({ clientId: 'scenelist_' + this.getNextIdAndIncrement() + '' });
 	        this.setState({ scenes: scenes });
@@ -22750,7 +22751,7 @@
 	                commands = React.createElement(
 	                    'p',
 	                    null,
-	                    'To Add commands, first save the scene.'
+	                    'To add commands, first save the scene.'
 	                );
 	            } else {
 	                commands = this.state.commands.map(function (command) {
@@ -23210,6 +23211,8 @@
 	    }
 	});
 	module.exports = CommandTypePicker;
+
+	//TODO: turnOn/turnOff
 
 /***/ },
 /* 199 */

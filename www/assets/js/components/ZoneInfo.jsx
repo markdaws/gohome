@@ -125,4 +125,4 @@ var ZoneInfo = React.createClass({
         );
     }
 });
-module.exports = ZoneInfo.jsx
+module.exports = ZoneInfo;

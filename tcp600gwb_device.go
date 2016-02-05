@@ -15,10 +15,6 @@ import (
 
 type Tcp600gwbDevice struct {
 	device
-
-	/* //TODO: Need to export to config file
-	Host  string
-	Token string*/
 }
 
 func (d *Tcp600gwbDevice) ModelNumber() string {

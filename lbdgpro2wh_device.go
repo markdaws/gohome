@@ -135,7 +135,6 @@ func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 				return newCmd.Execute()
 			},
 		}, nil
-
 	case *cmd.ButtonRelease:
 		return &cmd.Func{
 			Func: func() error {
