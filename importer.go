@@ -60,8 +60,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return nil, errors.New("Missing Devices key, or value not a map")
 	}
 
-	fmt.Println("\nDEVICES")
-
+	//TODO: Add logging
 	var makeDevice = func(
 		modelNumber, name, address string,
 		deviceMap map[string]interface{},
@@ -117,7 +116,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				return errors.New("Expected Button elements to be objects")
 			}
 			if name, ok := button["Name"]; ok && !strings.HasPrefix(name.(string), "Button ") {
-				fmt.Printf("  Scene %d: %s\n", int(button["Number"].(float64)), name)
+				//fmt.Printf("  Scene %d: %s\n", int(button["Number"].(float64)), name)
 
 				var buttonID string = strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
 				var buttonName = button["Name"].(string)
@@ -196,7 +195,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			return nil, errors.New("Expected Devices elements to be objects")
 		}
 
-		fmt.Printf("%d: %s\n", int(device["ID"].(float64)), device["Name"])
+		//fmt.Printf("%d: %s\n", int(device["ID"].(float64)), device["Name"])
 
 		// Don't want to re-add the SBP
 		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
@@ -214,10 +213,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return nil, errors.New("Missing Zones key")
 	}
 
-	fmt.Println("\nZONES")
+	//fmt.Println("\nZONES")
 	for _, zoneMap := range zones {
 		z := zoneMap.(map[string]interface{})
-		fmt.Printf("%d: %s\n", int(z["ID"].(float64)), z["Name"])
+		//fmt.Printf("%d: %s\n", int(z["ID"].(float64)), z["Name"])
 
 		var zoneID = strconv.FormatFloat(z["ID"].(float64), 'f', 0, 64)
 		var zoneName = z["Name"].(string)
@@ -247,11 +246,12 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			Type:        zoneTypeFinal,
 			Output:      outputTypeFinal,
 		}
+		//TODO: proper logging
 		err := system.AddZone(newZone)
 		if err != nil {
 			fmt.Printf("err add zone: %s\n", err)
 		} else {
-			fmt.Printf("added zone %s with ID %s\n", newZone.Name, newZone.ID)
+			//fmt.Printf("added zone %s with ID %s\n", newZone.Name, newZone.ID)
 		}
 		//sbp.Zones()[newZone.Address] = newZone
 	}
@@ -312,13 +312,16 @@ func importConnectedByTCP(system *System) {
 	*/
 
 	data, err := connectedbytcp.RoomGetCarousel("https://192.168.0.23", "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21")
-	fmt.Printf("%+v\n", data)
-	fmt.Println(err)
+	//	fmt.Printf("%+v\n", data)
+	//	fmt.Println(err)
 
 	token, err := connectedbytcp.GetToken("https://192.168.0.23")
-	fmt.Printf("TOKEN: %s", token)
-	fmt.Println(err)
+	//	fmt.Printf("TOKEN: %s", token)
+	//	fmt.Println(err)
 
+	_ = token
+	_ = err
+	_ = data
 	tcp := NewDevice(
 		"TCP600GWB",
 		"https://192.168.0.23",
@@ -348,7 +351,7 @@ func importConnectedByTCP(system *System) {
 		Output:      zone.OTContinuous,
 		Controller:  "TCP - LED A19 11W",
 	}
-	fmt.Println("BULB ID: " + z.ID)
+	//	fmt.Println("BULB ID: " + z.ID)
 	//	tcp.Zones()[z.Address] = z
 	system.AddDevice(tcp)
 	system.AddZone(z)

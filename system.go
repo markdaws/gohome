@@ -8,6 +8,7 @@ import (
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
@@ -174,14 +175,18 @@ type commandJSON struct {
 func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandProcessor) (*System, error) {
 	//TODO: Verify deviceIds exist etc
 
+	log.V("loading system from %s", path)
+
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
+		log.V("failed to read file: %", err)
 		return nil, err
 	}
 
 	var s systemJSON
 	err = json.Unmarshal(b, &s)
 	if err != nil {
+		log.V("failed to unmarshal system json: %s", err)
 		return nil, err
 	}
 
@@ -201,11 +206,17 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			}
 		}
 
+		log.V("loaded Device: ID:%s, Name:%s, Model:%s, Address:%s", d.ID, d.Name, d.ModelNumber, d.Address)
 		dev := NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, d.Stream, auth)
 		if auth != nil {
 			dev.Auth().Authenticator = dev
 		}
-		sys.AddDevice(dev)
+
+		err = sys.AddDevice(dev)
+		if err != nil {
+			log.V("failed to add device to system: %s", err)
+			return nil, err
+		}
 	}
 
 	// Have to go back through patching up devices to point to their child devices
@@ -213,6 +224,7 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 	for _, d := range s.Devices {
 		dev := sys.Devices[d.ID]
 		for _, dID := range d.DeviceIDs {
+			//TODO: function
 			childDev := sys.Devices[dID]
 			dev.Devices()[childDev.Address()] = childDev
 		}
@@ -225,7 +237,8 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 				Description: btn.Description,
 				Device:      dev,
 			}
-			//TODO: Add button
+
+			//TODO: Add button function
 			dev.Buttons()[b.Address] = b
 			sys.AddButton(b)
 		}
@@ -241,10 +254,16 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 				Output:      zone.OutputFromString(zn.Output),
 				Controller:  zn.Controller,
 			}
+
 			err := sys.AddZone(z)
 			if err != nil {
-				fmt.Printf("zone add error: %+v\n", err)
+				log.V("failed to add zone: %s", err)
+				return nil, err
 			}
+
+			log.V("loaded Zone: ID:%s, Name:%s, Address:%s, Type:%s, Output:%s, Controller:%s",
+				zn.ID, zn.Name, zn.Address, zn.Type, zn.Output, zn.Controller,
+			)
 		}
 	}
 
@@ -298,7 +317,14 @@ func LoadSystem(path string, recipeManager *RecipeManager, cmdProcessor CommandP
 			}
 			scene.Commands[i] = finalCmd
 		}
-		sys.AddScene(scene)
+		err = sys.AddScene(scene)
+		if err != nil {
+			log.V("failed to add scene: %s", err)
+			return nil, err
+		}
+		log.V("loaded Scene: ID:%s, Name:%s, Address:%s, Managed:%t",
+			scene.ID, scene.Name, scene.Address, scene.Managed,
+		)
 	}
 
 	for _, r := range s.Recipes {
