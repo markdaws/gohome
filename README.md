@@ -45,28 +45,28 @@ Since a scene is just a group of commands you can mak a scene do literally anyth
 
 ##API Support
 ###Scenes
-GET /api/v1/scenes
-GET /api/v1/scenes/<ID>
-DELETE /api/v1/scenes/<ID>
-PUT /api/v1/scenes/<ID>
-POST /api/v1/scenes
-POST /api/v1/scenes/active
-POST /api/v1/scenes/<ID>/commands
-DELETE /api/v1/scenes/<ID>/commands/<INDEX>
+ - GET /api/v1/scenes
+ - GET /api/v1/scenes/<ID>
+ - DELETE /api/v1/scenes/<ID>
+ - PUT /api/v1/scenes/<ID>
+ - POST /api/v1/scenes
+ - POST /api/v1/scenes/active
+ - POST /api/v1/scenes/<ID>/commands
+ - DELETE /api/v1/scenes/<ID>/commands/<INDEX>
 
 ###Zones
-GET /api/v1/zones
-POST /api/v1/zones
-PUT /api/v1/zones/<ID>
+ - GET /api/v1/zones
+ - POST /api/v1/zones
+ - PUT /api/v1/zones/<ID>
 
 ###Discovery
-GET /api/v1/discovery/<MODEL_NUMBER>
-GET /api/v1/discovery/<MODEL_NUMBER>/token
-GET /api/v1/discovery/<MODEL_NUMBER>/access
-GET /api/v1/discovery/<MODEL_NUMBER>/zones
+ - GET /api/v1/discovery/<MODEL_NUMBER>
+ - GET /api/v1/discovery/<MODEL_NUMBER>/token
+ - GET /api/v1/discovery/<MODEL_NUMBER>/access
+ - GET /api/v1/discovery/<MODEL_NUMBER>/zones
 
 ###Events
-/api/v1/events/ws
+ /api/v1/events/ws
 
 ##Development
 Currently there are two main parts to the project, the golang powered server and the web UI.
