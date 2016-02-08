@@ -12,10 +12,9 @@ import (
 // CREDIT: All the knowledge of how to control this product came from:
 // https://github.com/beville/flux_led
 
-//TODO: Turn on/off
 //TODO: Get current level
 
-// SetLevel changes the RGB values of the bulb. //TODO: conn parameter
+// SetLevel changes the RGB values of the bulb.
 func SetLevel(r, g, b byte, w io.Writer) error {
 	return write(w, []byte{0x31, r, g, b, 0x00, 0xf0, 0x0f})
 }

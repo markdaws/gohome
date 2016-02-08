@@ -131,13 +131,28 @@ var Zone = React.createClass({
 
     render: function() {
         var value = this.state.value;
-        var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
+        var icon;
+        switch (this.props.type) {
+        case 'light':
+            icon = 'fa fa-lightbulb-o';
+            break;
+        case 'shade':
+            icon = 'fa fa-picture-o';
+            break;
+        case 'outlet':
+            icon = 'fa fa-plug';
+            break;
+        default:
+            icon = 'fa fa-question';
+            break;
+        }
 
         var stepSize
         switch (this.props.output) {
         case 'continuous':
             stepSize = 1;
             break;
+            //TODO: If binary don't show a slider, only on/off
         case 'binary':
             stepSize = 100;
             break;
@@ -146,18 +161,23 @@ var Zone = React.createClass({
         default:
             stepSize = 1;
         }
-        
+
+        var hasSlider = true;
+        if (this.props.output === 'binary') {
+            hasSlider = false;
+        }
+        //TODO: show the last action e.g. currently on or currently off
         return (
             <div className="cmp-Zone col-xs-12 col-sm-4 col-md-4 col-lg-4 clearfix">
               <button className={"btn btn-primary zone" + (this.isRgb() ? " zone-rgb" : "")}>
                 <i className={icon}></i>
                 <span className="name">{this.props.name}</span>
-                <div className={"sliderWrapper pull-right" + (this.state.showSlider ? "" : " hidden")} >
+                <div className={"sliderWrapper pull-right" + ((hasSlider && this.state.showSlider) ? "" : " hidden")} >
                   <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
                   <span className="level pull-right">{this.state.value}%</span>
                 </div>
                 <div className="clearfix footer">
-                  <div className={"clickInfo pull-right" + (this.state.showSlider ? " hidden" : "")}>
+                  <div className={"clickInfo pull-right" + ((!hasSlider || this.state.showSlider) ? " hidden" : "")}>
                     <span onClick={this.infoClicked}>Click to control</span>
                   </div>
                   <a className="btn btn-link btnToggle pull-left" onClick={this.toggleOn}>

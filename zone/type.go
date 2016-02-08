@@ -6,6 +6,7 @@ const (
 	ZTUnknown Type = iota
 	ZTLight
 	ZTShade
+	ZTOutlet
 
 	//Garage door
 	//Sprinkler
@@ -19,6 +20,8 @@ func TypeFromString(zt string) Type {
 	switch zt {
 	case "light":
 		return ZTLight
+	case "outlet":
+		return ZTOutlet
 	case "shade":
 		return ZTShade
 	case "unknown":
@@ -33,6 +36,8 @@ func (zt Type) ToString() string {
 	switch zt {
 	case ZTLight:
 		return "light"
+	case ZTOutlet:
+		return "outlet"
 	case ZTShade:
 		return "shade"
 	default:

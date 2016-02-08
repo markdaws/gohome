@@ -7,7 +7,9 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/zone"
@@ -260,7 +262,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 	//TODO: Move
 	importConnectedByTCP(system)
-	importGoHomeHub(system)
+	ghh := importGoHomeHub(system)
+	importBelkin(ghh, system)
 	return system, nil
 }
 
@@ -292,7 +295,7 @@ func importConnectedByTCP(system *System) {
 	system.AddZone(z)
 }
 
-func importGoHomeHub(system *System) {
+func importGoHomeHub(system *System) Device {
 	ghh := NewDevice(
 		"GoHomeHub",
 		"gohomehub",
@@ -315,4 +318,32 @@ func importGoHomeHub(system *System) {
 	}
 	system.AddZone(z)
 	ghh.AddZone(z)
+	return ghh
+}
+
+func importBelkin(ghh Device, system *System) {
+	return
+	responses, err := belkin.Scan(belkin.DTInsight, 5)
+	fmt.Printf("got responses: %s\n", responses)
+	fmt.Println(err)
+
+	belkin.LoadDevice(responses[0])
+	err = belkin.TurnOn(strings.Replace(responses[0].Location, "/setup.xml", "", -1))
+	fmt.Println(err)
+	time.Sleep(10 * time.Second)
+	err = belkin.TurnOff(strings.Replace(responses[0].Location, "/setup.xml", "", -1))
+	return
+	/*
+		z := &zone.Zone{
+			Address:     location,
+			Name:        "Belkin Insight Switch",
+			Description: "Belkin",
+			DeviceID:    ghh.ID(),
+			Type:        zone.ZTOutlet,
+			Output:      zone.OTBinary,
+			Controller:  zone.ZCWeMoInsightSwitch,
+		}
+		system.AddZone(z)
+		ghh.AddZone(z)
+	*/
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/connectedbytcp"
 	"github.com/markdaws/gohome/fluxwifi"
 	"github.com/markdaws/gohome/zone"
@@ -70,6 +71,12 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 			}
 		}
 		return zones, nil
+
+	case "F7C029V2":
+		responses, err := belkin.Scan(belkin.DTInsight, 5)
+		fmt.Printf("%+v\n", responses)
+		fmt.Printf("%s\n", err)
+		return nil, fmt.Errorf("not implemented")
 	}
 	return nil, ErrUnsupported
 }

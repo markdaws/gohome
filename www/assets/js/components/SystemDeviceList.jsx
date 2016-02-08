@@ -36,6 +36,7 @@ var SystemDeviceList = React.createClass({
                 name={device.name}
                 description={device.description}
                 address={device.address}
+                modelNumber={device.modelNumber}
                 key={device.id}
                 />
             );

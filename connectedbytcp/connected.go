@@ -26,20 +26,25 @@ var ErrUnauthorized = errors.New("unauthorized")
 var rootCmd = "cmd=%s&data=%s&fmt=xml"
 
 type tcpListener struct {
+	URN  string
 	done chan string
 }
 
 func (t tcpListener) Response(m gossdp.ResponseMessage) {
 	// example response
 	// {MaxAge:7200 SearchType:urn:greenwavereality-com:service:gop:1 DeviceId:71403833960916 Usn:uuid:71403833960916::urn:greenwavereality-com:service:gop:1 Location:https://192.168.0.23 Server:linux UPnP/1.1 Apollo3/3.0.74 RawResponse:0xc2080305a0 Urn:urn:greenwavereality-com:service:gop:1}
+	if m.SearchType != t.URN {
+		return
+	}
 	t.done <- m.Location
 }
 
 // Discover returns the address e.g. https://192.168.0.23 of the ConnectByTCP Hub if
 // one was found on the network.
 func Discover() (string, error) {
+	URN := "urn:greenwavereality-com:service:gop:1"
 	done := make(chan string)
-	l := tcpListener{done: done}
+	l := tcpListener{done: done, URN: URN}
 
 	//TODO: What is max timeout, set one
 	c, err := gossdp.NewSsdpClient(l)
@@ -49,7 +54,7 @@ func Discover() (string, error) {
 
 	defer c.Stop()
 	go c.Start()
-	err = c.ListenFor("urn:greenwavereality-com:service:gop:1")
+	err = c.ListenFor(URN)
 	if err != nil {
 		return "", fmt.Errorf("discovery failed: %s", err)
 	}

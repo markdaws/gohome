@@ -21031,6 +21031,7 @@
 	                name: device.name,
 	                description: device.description,
 	                address: device.address,
+	                modelNumber: device.modelNumber,
 	                key: device.id
 	            });
 	        });
@@ -21411,13 +21412,28 @@
 
 	    render: function render() {
 	        var value = this.state.value;
-	        var icon = this.props.type === 'light' ? 'fa fa-lightbulb-o' : 'fa fa-picture-o';
+	        var icon;
+	        switch (this.props.type) {
+	            case 'light':
+	                icon = 'fa fa-lightbulb-o';
+	                break;
+	            case 'shade':
+	                icon = 'fa fa-picture-o';
+	                break;
+	            case 'outlet':
+	                icon = 'fa fa-plug';
+	                break;
+	            default:
+	                icon = 'fa fa-question';
+	                break;
+	        }
 
 	        var stepSize;
 	        switch (this.props.output) {
 	            case 'continuous':
 	                stepSize = 1;
 	                break;
+	            //TODO: If binary don't show a slider, only on/off
 	            case 'binary':
 	                stepSize = 100;
 	                break;
@@ -21427,6 +21443,11 @@
 	                stepSize = 1;
 	        }
 
+	        var hasSlider = true;
+	        if (this.props.output === 'binary') {
+	            hasSlider = false;
+	        }
+	        //TODO: show the last action e.g. currently on or currently off
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-Zone col-xs-12 col-sm-4 col-md-4 col-lg-4 clearfix' },
@@ -21441,7 +21462,7 @@
 	                ),
 	                React.createElement(
 	                    'div',
-	                    { className: "sliderWrapper pull-right" + (this.state.showSlider ? "" : " hidden") },
+	                    { className: "sliderWrapper pull-right" + (hasSlider && this.state.showSlider ? "" : " hidden") },
 	                    React.createElement('input', { className: 'valueSlider', type: 'text', 'data-slider-value': '0', 'data-slider-min': '00', 'data-slider-max': '100', 'data-slider-step': stepSize, 'data-slider-orientation': 'horizontal' }),
 	                    React.createElement(
 	                        'span',
@@ -21455,7 +21476,7 @@
 	                    { className: 'clearfix footer' },
 	                    React.createElement(
 	                        'div',
-	                        { className: "clickInfo pull-right" + (this.state.showSlider ? " hidden" : "") },
+	                        { className: "clickInfo pull-right" + (!hasSlider || this.state.showSlider ? " hidden" : "") },
 	                        React.createElement(
 	                            'span',
 	                            { onClick: this.infoClicked },
