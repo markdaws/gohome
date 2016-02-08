@@ -74,7 +74,7 @@ type ScanResponse struct {
 
 // Scan detects Belkin devices on the network
 func Scan(dt DeviceType, waitTimeSeconds int) ([]ScanResponse, error) {
-	responses := make([]ScanResponse, 0)
+	var responses []ScanResponse
 	l := belkinListener{
 		URN:       string(dt),
 		Responses: &responses,

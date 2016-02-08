@@ -38,6 +38,10 @@ func (t tcpListener) Response(m gossdp.ResponseMessage) {
 	}
 	t.done <- m.Location
 }
+func (l tcpListener) Tracef(fmt string, args ...interface{}) {}
+func (l tcpListener) Infof(fmt string, args ...interface{})  {}
+func (l tcpListener) Warnf(fmt string, args ...interface{})  {}
+func (l tcpListener) Errorf(fmt string, args ...interface{}) {}
 
 // Discover returns the address e.g. https://192.168.0.23 of the ConnectByTCP Hub if
 // one was found on the network.
@@ -47,7 +51,7 @@ func Discover() (string, error) {
 	l := tcpListener{done: done, URN: URN}
 
 	//TODO: What is max timeout, set one
-	c, err := gossdp.NewSsdpClient(l)
+	c, err := gossdp.NewSsdpClientWithLogger(l, l)
 	if err != nil {
 		return "", fmt.Errorf("failed to start ssdp discovery client: %s", err)
 	}
