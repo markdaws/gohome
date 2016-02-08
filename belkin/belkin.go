@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/fromkeith/gossdp"
@@ -14,6 +15,8 @@ import (
 
 // CREDIT: All the knowledge of how to control this product came from:
 // https://github.com/timonreinhard/wemo-client
+
+//TODO: Support setting up wifi network
 
 // DeviceType represents an identifier for the type of Belkin device you want to
 // scan the network for
@@ -96,6 +99,7 @@ func Scan(dt DeviceType, waitTimeSeconds int) ([]ScanResponse, error) {
 	return responses, nil
 }
 
+// LoadDevice fetches all of the device specific information
 func LoadDevice(scanResponse ScanResponse) (*Device, error) {
 	client := http.Client{}
 	resp, err := client.Get(scanResponse.Location)
@@ -119,7 +123,10 @@ func LoadDevice(scanResponse ScanResponse) (*Device, error) {
 	return &root.Device, nil
 }
 
+// TurnOn turns on a binary device. The location string should be the value
+// returned in the ScanResponse.Location field
 func TurnOn(location string) error {
+	location = parseLocation(location)
 	return SendSOAP(
 		location,
 		"urn:Belkin:service:basicevent:1",
@@ -129,6 +136,8 @@ func TurnOn(location string) error {
 	)
 }
 
+// TurnOff turns off a binary device. The location string should be the value
+// returned in the ScanResponse.Location field
 func TurnOff(location string) error {
 	return SendSOAP(
 		location,
@@ -139,6 +148,7 @@ func TurnOff(location string) error {
 	)
 }
 
+// SendSOAP sends a SOAP message to the device.
 func SendSOAP(location, serviceType, controlURL, action, body string) error {
 	url := location + controlURL
 	resp, err := postData(url, action, serviceType, body)
@@ -173,6 +183,10 @@ func postData(url, action, serviceType, body string) (*http.Response, error) {
 	req.Header.Add("SOAPACTION", "\""+serviceType+"#"+action+"\"")
 	req.Header.Add("Content-Type", "text/xml; charset=\"utf-8\"")
 	return client.Do(req)
+}
+
+func parseLocation(location string) string {
+	return strings.Replace(location, "/setup.xml", "", -1)
 }
 
 type belkinListener struct {
