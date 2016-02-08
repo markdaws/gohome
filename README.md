@@ -10,12 +10,23 @@ Web/iOS/Android/Apple Watch
 ###Lutron Caseta Wireless Smart Bridge
 ###Flux WIFI Bulbs
 ###ConnectedByTCP Bulbs
+###Belkin WeMo Insight Switch
 Ideally we would support as many different types of hardware as possible, if you want to see support for a piece of hardware submit an issue.
 
 #Core Concepts
 
 ##Devices
 ##Zones
+A Zone is a controllable output. For example a zone could be a piece of wire with several bulbs attached to it, or it could be a shade, or an outlet. It's something that you can control.  In the case of lights, generally a Zone will be the wire with light attached to it that then connects to a switch or dimmer. Currently there are several types of Zones:
+ - Light
+ - Shade
+ - Outlet
+
+The type lets the UI know what controls to show for a particular Zone.  Along with the Type a Zone has an Output value which can be:
+ - Continuous: Something that can be set between 0 and 100 e.g. a dimmable bulb
+ - Binary: Something that can be set on or off e.g. an outlet
+ - RGB: A Zone that doesn't have just one value, but can display different colors e.g. Flux WIFI bulb
+
 ##Buttons
 ##Commands
 ###Supported Commands
@@ -32,12 +43,34 @@ Since a scene is just a group of commands you can mak a scene do literally anyth
 
 ###Recipes/Actions/Triggers
 
-#API Support
-//TODO: List out API path, request,response
+##API Support
+###Scenes
+ - GET /api/v1/scenes
+ - GET /api/v1/scenes/<ID>
+ - DELETE /api/v1/scenes/<ID>
+ - PUT /api/v1/scenes/<ID>
+ - POST /api/v1/scenes
+ - POST /api/v1/scenes/active
+ - POST /api/v1/scenes/<ID>/commands
+ - DELETE /api/v1/scenes/<ID>/commands/<INDEX>
 
+###Zones
+ - GET /api/v1/zones
+ - POST /api/v1/zones
+ - PUT /api/v1/zones/<ID>
 
+###Discovery
+ - GET /api/v1/discovery/<MODEL_NUMBER>
+ - GET /api/v1/discovery/<MODEL_NUMBER>/token
+ - GET /api/v1/discovery/<MODEL_NUMBER>/access
+ - GET /api/v1/discovery/<MODEL_NUMBER>/zones
+
+###Events
+ /api/v1/events/ws
 
 ##Development
+Currently there are two main parts to the project, the golang powered server and the web UI.
+
 ###gohome Server
 The goHome server is developed using golang (http://golang.org) In order to develop the code:
 //TODO:
