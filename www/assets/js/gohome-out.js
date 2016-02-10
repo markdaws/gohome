@@ -23336,6 +23336,7 @@
 	    },
 
 	    render: function render() {
+	        //TODO: Filter out the parent scene from the scenes list so it can't call itself
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SceneSetCommand' },

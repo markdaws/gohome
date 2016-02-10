@@ -38,6 +38,7 @@ var SceneSetCommand = module.exports = React.createClass({
     },
     
     render: function() {
+        //TODO: Filter out the parent scene from the scenes list so it can't call itself
         return (
             <div className="cmp-SceneSetCommand">
               <h4>Scene Set</h4>

@@ -36,6 +36,8 @@ func (s *Scene) AddCommand(c cmd.Command) error {
 }
 
 func (s *Scene) Validate() *validation.Errors {
+	//TODO: Verify that there isn't an infinite loop where scene A -> B -> C -> A otherwise
+	//app will crash
 	errors := &validation.Errors{}
 
 	if s.Name == "" {
