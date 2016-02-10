@@ -6,12 +6,13 @@ var SaveBtn = require('./SaveBtn.jsx');
 var DeviceInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
+        //TODO: need state?
         return {
             cid: this.getNextIdAndIncrement() + '',
             name: this.props.name || '',
             description: this.props.description || '',
             address: this.props.address,
-            id: '',
+            id: this.props.id,
             modelNumber: this.props.modelNumber || '',
             token: this.props.token,
             showToken: false,
@@ -27,7 +28,8 @@ var DeviceInfo = React.createClass({
             description: s.description,
             address: s.address,
             modelNumber: s.modelNumber,
-            token: s.token
+            token: s.token,
+            id: s.id,
         };
     },
 
@@ -82,7 +84,13 @@ var DeviceInfo = React.createClass({
             token = (
                 <div className={this.addErr("form-group", "token")}>
                   <label className="control-label" htmlFor={this.uid("token")}>Security Token</label>
-                  <input value={this.state.token} data-statepath="token" onChange={this.changed} className="token form-control" type="text" id={this.uid("token")}/>
+                  <input
+                    value={this.state.token}
+                    data-statepath="token"
+                    onChange={this.changed}
+                    className="token form-control"
+                    type="text"
+                    id={this.uid("token")} />
                   {this.errMsg('token')}
                 </div>
             );
@@ -92,22 +100,59 @@ var DeviceInfo = React.createClass({
             <div className="cmp-DeviceInfo well">
               <div className={this.addErr("form-group", "name")}>
                 <label className="control-label" htmlFor={this.uid("name")}>Name</label>
-                <input value={this.state.name} data-statepath="name" onChange={this.changed} className="name form-control" type="text" id="name"/>
+                <input
+                  value={this.state.name}
+                  data-statepath="name"
+                  onChange={this.changed}
+                  className="name form-control"
+                  type="text"
+                  id={this.uid("name")} />
+                {this.errMsg("name")}
+              </div>
+              <div className={this.addErr("form-group", "id")}>
+                <label className="control-label" htmlFor={this.uid("id")}>ID</label>
+                <input
+                  value={this.state.id}
+                  readOnly={this.isReadOnly("id")}
+                  data-statepath="id"
+                  onChange={this.changed}
+                  className="id form-control"
+                  type="text"
+                  id={this.uid("id")} />
                 {this.errMsg("name")}
               </div>
               <div className={this.addErr("form-group", "description")}>
                 <label className="control-label" htmlFor={this.uid("description")}>Description</label>
-                <input value={this.state.description} data-statepath="description" onChange={this.changed} className="description form-control" type="text" id={this.uid("description")}/>
+                <input
+                  value={this.state.description}
+                  data-statepath="description"
+                  onChange={this.changed}
+                  className="description form-control"
+                  type="text"
+                  id={this.uid("description")} />
                 {this.errMsg("description")}
               </div>
               <div className={this.addErr("form-group", "modelNumber")}>
                 <label className="control-label" htmlFor={this.uid("modelNumber")}>Model Number</label>
-                <input value={this.state.modelNumber} readOnly={this.isReadOnly("modelNumber")} data-statepath="modelNumber" onChange={this.changed} className="modelNumber form-control" type="text" id={this.uid("modelNumber")}/>
+                <input
+                  value={this.state.modelNumber}
+                  readOnly={this.isReadOnly("modelNumber")}
+                  data-statepath="modelNumber"
+                  onChange={this.changed}
+                  className="modelNumber form-control"
+                  type="text"
+                  id={this.uid("modelNumber")} />
                 {this.errMsg("modelNumber")}
               </div>
               <div className={this.addErr("form-group", "address")}>
                 <label className="control-label" htmlFor={this.uid("address")}>Address</label>
-                <input value={this.state.address} data-statepath="address" onChange={this.changed} className="address form-control" type="text" id={this.uid("address")}/>
+                <input
+                  value={this.state.address}
+                  data-statepath="address"
+                  onChange={this.changed}
+                  className="address form-control"
+                  type="text"
+                  id={this.uid("address")} />
                 {this.errMsg("address")}
               </div>
               {token}

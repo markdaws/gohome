@@ -20837,12 +20837,13 @@
 
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
+	        //TODO: need state?
 	        return {
 	            cid: this.getNextIdAndIncrement() + '',
 	            name: this.props.name || '',
 	            description: this.props.description || '',
 	            address: this.props.address,
-	            id: '',
+	            id: this.props.id,
 	            modelNumber: this.props.modelNumber || '',
 	            token: this.props.token,
 	            showToken: false,
@@ -20858,7 +20859,8 @@
 	            description: s.description,
 	            address: s.address,
 	            modelNumber: s.modelNumber,
-	            token: s.token
+	            token: s.token,
+	            id: s.id
 	        };
 	    },
 
@@ -20918,7 +20920,13 @@
 	                    { className: 'control-label', htmlFor: this.uid("token") },
 	                    'Security Token'
 	                ),
-	                React.createElement('input', { value: this.state.token, 'data-statepath': 'token', onChange: this.changed, className: 'token form-control', type: 'text', id: this.uid("token") }),
+	                React.createElement('input', {
+	                    value: this.state.token,
+	                    'data-statepath': 'token',
+	                    onChange: this.changed,
+	                    className: 'token form-control',
+	                    type: 'text',
+	                    id: this.uid("token") }),
 	                this.errMsg('token')
 	            );
 	        }
@@ -20934,7 +20942,31 @@
 	                    { className: 'control-label', htmlFor: this.uid("name") },
 	                    'Name'
 	                ),
-	                React.createElement('input', { value: this.state.name, 'data-statepath': 'name', onChange: this.changed, className: 'name form-control', type: 'text', id: 'name' }),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this.changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid("name") }),
+	                this.errMsg("name")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "id") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("id") },
+	                    'ID'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.id,
+	                    readOnly: this.isReadOnly("id"),
+	                    'data-statepath': 'id',
+	                    onChange: this.changed,
+	                    className: 'id form-control',
+	                    type: 'text',
+	                    id: this.uid("id") }),
 	                this.errMsg("name")
 	            ),
 	            React.createElement(
@@ -20945,7 +20977,13 @@
 	                    { className: 'control-label', htmlFor: this.uid("description") },
 	                    'Description'
 	                ),
-	                React.createElement('input', { value: this.state.description, 'data-statepath': 'description', onChange: this.changed, className: 'description form-control', type: 'text', id: this.uid("description") }),
+	                React.createElement('input', {
+	                    value: this.state.description,
+	                    'data-statepath': 'description',
+	                    onChange: this.changed,
+	                    className: 'description form-control',
+	                    type: 'text',
+	                    id: this.uid("description") }),
 	                this.errMsg("description")
 	            ),
 	            React.createElement(
@@ -20956,7 +20994,14 @@
 	                    { className: 'control-label', htmlFor: this.uid("modelNumber") },
 	                    'Model Number'
 	                ),
-	                React.createElement('input', { value: this.state.modelNumber, readOnly: this.isReadOnly("modelNumber"), 'data-statepath': 'modelNumber', onChange: this.changed, className: 'modelNumber form-control', type: 'text', id: this.uid("modelNumber") }),
+	                React.createElement('input', {
+	                    value: this.state.modelNumber,
+	                    readOnly: this.isReadOnly("modelNumber"),
+	                    'data-statepath': 'modelNumber',
+	                    onChange: this.changed,
+	                    className: 'modelNumber form-control',
+	                    type: 'text',
+	                    id: this.uid("modelNumber") }),
 	                this.errMsg("modelNumber")
 	            ),
 	            React.createElement(
@@ -20967,7 +21012,13 @@
 	                    { className: 'control-label', htmlFor: this.uid("address") },
 	                    'Address'
 	                ),
-	                React.createElement('input', { value: this.state.address, 'data-statepath': 'address', onChange: this.changed, className: 'address form-control', type: 'text', id: this.uid("address") }),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this.changed,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
 	                this.errMsg("address")
 	            ),
 	            token,
@@ -21032,6 +21083,8 @@
 	                description: device.description,
 	                address: device.address,
 	                modelNumber: device.modelNumber,
+	                id: device.id,
+	                readOnlyFields: 'id',
 	                key: device.id
 	            });
 	        });

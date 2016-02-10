@@ -33,11 +33,13 @@ var SystemDeviceList = React.createClass({
         var deviceNodes = this.state.devices.map(function(device) {
             return (
                 <DeviceInfo
-                name={device.name}
-                description={device.description}
-                address={device.address}
-                modelNumber={device.modelNumber}
-                key={device.id}
+                  name={device.name}
+                  description={device.description}
+                  address={device.address}
+                  modelNumber={device.modelNumber}
+                  id={device.id}
+                  readOnlyFields="id"
+                  key={device.id}
                 />
             );
         })
