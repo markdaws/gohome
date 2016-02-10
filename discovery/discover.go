@@ -18,11 +18,14 @@ func Discover(modelNumber string) (map[string]string, error) {
 
 	switch modelNumber {
 	case "TCP600GWB":
-		location, err := connectedbytcp.Discover()
+		responses, err := connectedbytcp.Scan(5)
 		if err != nil {
 			return nil, fmt.Errorf("discover failed: %s", err)
 		}
-		data["location"] = location
+
+		if len(responses) > 0 {
+			data["location"] = responses[0].Location
+		}
 		return data, nil
 	}
 	return nil, ErrUnsupported
@@ -74,9 +77,9 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 
 	case "F7C029V2":
 		responses, err := belkin.Scan(belkin.DTInsight, 5)
-		fmt.Printf("%+v\n", responses)
-		fmt.Printf("%s\n", err)
-		return nil, fmt.Errorf("not implemented")
+		_ = responses
+		_ = err
+		return nil, fmt.Errorf("//TODO:not implemented")
 	}
 	return nil, ErrUnsupported
 }

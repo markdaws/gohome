@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/fromkeith/gossdp"
 	"github.com/nu7hatch/gouuid"
@@ -25,49 +26,41 @@ var ErrUnauthorized = errors.New("unauthorized")
 
 var rootCmd = "cmd=%s&data=%s&fmt=xml"
 
-type tcpListener struct {
-	URN  string
-	done chan string
+// ScanResponse contains information from a device that responded to a scan response
+type ScanResponse struct {
+	MaxAge     int
+	SearchType string
+	DeviceID   string
+	USN        string
+	Location   string
+	Server     string
+	URN        string
 }
-
-func (t tcpListener) Response(m gossdp.ResponseMessage) {
-	// example response
-	// {MaxAge:7200 SearchType:urn:greenwavereality-com:service:gop:1 DeviceId:71403833960916 Usn:uuid:71403833960916::urn:greenwavereality-com:service:gop:1 Location:https://192.168.0.23 Server:linux UPnP/1.1 Apollo3/3.0.74 RawResponse:0xc2080305a0 Urn:urn:greenwavereality-com:service:gop:1}
-	if m.SearchType != t.URN {
-		return
-	}
-	t.done <- m.Location
-}
-func (l tcpListener) Tracef(fmt string, args ...interface{}) {}
-func (l tcpListener) Infof(fmt string, args ...interface{})  {}
-func (l tcpListener) Warnf(fmt string, args ...interface{})  {}
-func (l tcpListener) Errorf(fmt string, args ...interface{}) {}
 
 // Discover returns the address e.g. https://192.168.0.23 of the ConnectByTCP Hub if
 // one was found on the network.
-func Discover() (string, error) {
+func Scan(waitTimeSeconds int) ([]ScanResponse, error) {
 	URN := "urn:greenwavereality-com:service:gop:1"
-	done := make(chan string)
-	l := tcpListener{done: done, URN: URN}
+	var responses []ScanResponse
+	l := tcpListener{
+		URN:       URN,
+		Responses: &responses,
+	}
 
-	//TODO: What is max timeout, set one
 	c, err := gossdp.NewSsdpClientWithLogger(l, l)
 	if err != nil {
-		return "", fmt.Errorf("failed to start ssdp discovery client: %s", err)
+		return nil, fmt.Errorf("failed to start ssdp discovery client: %s", err)
 	}
 
 	defer c.Stop()
 	go c.Start()
 	err = c.ListenFor(URN)
 	if err != nil {
-		return "", fmt.Errorf("discovery failed: %s", err)
+		return nil, fmt.Errorf("discovery failed: %s", err)
 	}
 
-	location := <-done
-	if location == "" {
-		return "", fmt.Errorf("discover failed, no location found")
-	}
-	return location, nil
+	time.Sleep(time.Duration(waitTimeSeconds) * time.Second)
+	return responses, nil
 }
 
 // GetToken returns the security token required to make any API calls to the
@@ -219,3 +212,28 @@ func postData(address, command, data string) (*http.Response, error) {
 }
 
 //TODO: netstat - verify connections are closed correctly
+type tcpListener struct {
+	URN       string
+	Responses *[]ScanResponse
+}
+
+func (t tcpListener) Response(m gossdp.ResponseMessage) {
+	// example response
+	// {MaxAge:7200 SearchType:urn:greenwavereality-com:service:gop:1 DeviceId:71403833960916 Usn:uuid:71403833960916::urn:greenwavereality-com:service:gop:1 Location:https://192.168.0.23 Server:linux UPnP/1.1 Apollo3/3.0.74 RawResponse:0xc2080305a0 Urn:urn:greenwavereality-com:service:gop:1}
+	if m.SearchType != t.URN {
+		return
+	}
+
+	*t.Responses = append(*t.Responses, ScanResponse{
+		MaxAge:     m.MaxAge,
+		SearchType: m.SearchType,
+		DeviceID:   m.DeviceId,
+		USN:        m.Usn,
+		Location:   m.Location,
+		Server:     m.Server,
+	})
+}
+func (l tcpListener) Tracef(fmt string, args ...interface{}) {}
+func (l tcpListener) Infof(fmt string, args ...interface{})  {}
+func (l tcpListener) Warnf(fmt string, args ...interface{})  {}
+func (l tcpListener) Errorf(fmt string, args ...interface{}) {}
