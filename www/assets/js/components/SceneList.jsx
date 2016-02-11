@@ -3,6 +3,8 @@ var ReactDOM = require('react-dom');
 var Scene = require('./Scene.jsx');
 var SceneInfo = require('./SceneInfo.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
+var SceneStore = require('../stores/SceneStore.js');
+var SceneActions = require('../actions/SceneActions.js');
 
 var SceneList = React.createClass({
     mixins: [UniqueIdMixin],
@@ -10,39 +12,32 @@ var SceneList = React.createClass({
     getInitialState: function() {
         return {
             editMode: false,
-            scenes: this.props.scenes,
-            zones: this.props.zones,
+            //TODO: remove
+            zones: []
         };
     },
 
     componentWillReceiveProps: function(nextProps) {
-        if (nextProps.scenes) {
-            this.setState({ scenes: nextProps.scenes });
-        }
         if (nextProps.zones) {
             this.setState({ zones: nextProps.zones });
         }
     },
     
     componentDidMount: function() {
+        SceneStore.addChangeListener(this._onChange);
+        SceneActions.loadAll();
 
-        //TODO: Needed?
-        $.ajax({
-            url: '/api/v1/systems/123/zones',
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                this.setState({zones: data});
-            }.bind(this),
-            error: function(xhr, status, err) {
-                console.error(err.toString());
-            }.bind(this)
-        });
-
-        return;
         //TODO: Enable as part of a mode
-        var el = ReactDOM.findDOMNode(this).getElementsByClassName('sceneList')[0];
-        Sortable.create(el);
+        //var el = ReactDOM.findDOMNode(this).getElementsByClassName('sceneList')[0];
+        //Sortable.create(el);
+    },
+
+    componentWillUnmount: function() {
+        SceneStore.removeChangeListener(this._onChange);
+    },
+
+    _onChange: function() {
+        this.forceUpdate();
     },
 
     edit: function() {
@@ -53,34 +48,27 @@ var SceneList = React.createClass({
         this.setState({ editMode: false });
     },
 
-    sceneDeleted: function(sceneId) {
-        var scenes = this.state.scenes;
-        for (var i=0; i<scenes.length; ++i) {
-            if (scenes[i].id === sceneId) {
-                scenes.splice(i, 1);
-                this.setState({ scenes: scenes });
-                break;
-            }
-        }
-    },
-
     newScene: function() {
-        //TODO: This is not the way...
-        var scenes = this.state.scenes;
-        scenes.unshift({ clientId: 'scenelist_' + this.getNextIdAndIncrement() + '' });
-        this.setState({ scenes: scenes });
+        SceneActions.newClient();
     },
 
     render: function() {
         var body;
         var btns;
-        var self = this;
+        var scenes = SceneStore.getAll();
         if (this.state.editMode) {
-            body = this.state.scenes.map(function(scene) {
+            var newScene = SceneStore.getNewScene();
+
+            // If the user is in the process of creating a new scene we append the
+            // current new scene object to the front of the list
+            if (newScene) {
+                scenes = scenes.unshift(newScene);
+            }
+
+            var self = this;
+            body = scenes.map(function(scene) {
                 return (
                     <SceneInfo
-                      onDestroy={self.sceneDeleted}
-                      scenes={self.state.scenes}
                       zones={self.state.zones}
                       buttons={self.props.buttons}
                       scene={scene}
@@ -95,7 +83,9 @@ var SceneList = React.createClass({
                 </div>
             );
         } else {
-            body = this.state.scenes.map(function(scene) {
+
+            console.log(scenes)
+            body = scenes.map(function(scene) {
                 return (
                     <Scene scene={scene} key={scene.id}/>
                 );

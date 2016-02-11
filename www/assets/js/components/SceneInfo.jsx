@@ -4,12 +4,14 @@ var InputValidationMixin = require('./InputValidationMixin.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var CommandInfo = require('./CommandInfo.jsx');
 var CommandTypePicker = require('./CommandTypePicker.jsx');
+var SceneActions = require('../actions/SceneActions.js');
 
 var SceneInfo = React.createClass({
     mixins: [InputValidationMixin, UniqueIdMixin],
 
     getDefaultProps: function() {
         return {
+            //TODO: remove
             buttons: []
         };
     },
@@ -33,6 +35,7 @@ var SceneInfo = React.createClass({
         if (nextProps.zones) {
             this.setState({ zones: nextProps.zones });
         }
+        //TODO: Pass in state via props or go to store directly?
         if (nextProps.scenes) {
             this.setState({ scenes: nextProps.scenes });
         }
@@ -45,22 +48,67 @@ var SceneInfo = React.createClass({
             name: this.state.name,
             address: this.state.address,
             managed: this.state.managed,
+            clientId: this.state.clientId,
         };
     },
 
-    deleteScene: function() {
+    saveScene: function() {
+        var saveBtn = this.refs.saveBtn;
+        saveBtn.saving();
+
+        this.setState({ errors: null });
         var self = this;
-        $.ajax({
-            url: '/api/v1/systems/123/scenes/' + this.state.id,
-            type: 'DELETE',
-            cache: false,
-            success: function(data) {
-                self.props.onDestroy(self.state.id);
-            }.bind(this),
-            error: function(xhr, status, err) {
-                console.error(err);
-            }.bind(this)
-        });
+
+        if (this.state.id === '') {
+            SceneActions.create(this.toJson());
+
+            //TODO: How to handle success/fail responses
+            /*
+            $.ajax({
+                url: '/api/v1/systems/123/scenes',
+                type: 'POST',
+                dataType: 'json',
+                data: JSON.stringify(this.toJson()),
+                cache: false,
+                success: function(data) {
+                    self.setState({
+                        dirty: false,
+                        id: data.id
+                    });
+                },
+                error: function(xhr, status, err) {
+                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                    self.setState({ errors: errors });
+                    saveBtn.failure();
+                }
+            });*/
+        } else {
+            //TODO: Flux
+            // Update to existing scene
+            $.ajax({
+                url: '/api/v1/systems/123/scenes/' + this.state.id,
+                type: 'PUT',
+                dataType: 'json',
+                data: JSON.stringify(this.toJson()),
+                cache: false,
+                success: function(data) {
+                    self.setState({ dirty: false });
+                },
+                error: function(xhr, status, err) {
+                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                    self.setState({ errors: errors });
+                    saveBtn.failure();
+                }
+            });
+        }
+    },
+    
+    deleteScene: function() {
+        SceneActions.destroy(this.state.id);
+
+        // TODO: What about scenes that have not been saved, in processs of
+        // being created
+        // TODO: How to handle errors, or success
     },
 
     saveCommand: function(cmd, callback) {
@@ -115,53 +163,6 @@ var SceneInfo = React.createClass({
         cmds.push({ isNew: true, type: cmdType, attributes: {} });
         this.setState({ commands: cmds });
     },
-
-    save: function() {
-        var saveBtn = this.refs.saveBtn;
-        saveBtn.saving();
-
-        this.setState({ errors: null });
-        var self = this;
-
-        if (this.state.id === '') {
-            // This is a new scene
-            $.ajax({
-                url: '/api/v1/systems/123/scenes',
-                type: 'POST',
-                dataType: 'json',
-                data: JSON.stringify(this.toJson()),
-                cache: false,
-                success: function(data) {
-                    self.setState({
-                        dirty: false,
-                        id: data.id
-                    });
-                },
-                error: function(xhr, status, err) {
-                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
-                    self.setState({ errors: errors });
-                    saveBtn.failure();
-                }
-            });
-        } else {
-            // Update to existing scene
-            $.ajax({
-                url: '/api/v1/systems/123/scenes/' + this.state.id,
-                type: 'PUT',
-                dataType: 'json',
-                data: JSON.stringify(this.toJson()),
-                cache: false,
-                success: function(data) {
-                    self.setState({ dirty: false });
-                },
-                error: function(xhr, status, err) {
-                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
-                    self.setState({ errors: errors });
-                    saveBtn.failure();
-                }
-            });
-        }
-    },
     
     render: function() {
         var commands
@@ -209,7 +210,7 @@ var SceneInfo = React.createClass({
         if (this.state.dirty) {
             saveBtn = (
                 <div className="pull-right">
-                  <SaveBtn text="Save" ref="saveBtn" clicked={this.save} />
+                  <SaveBtn text="Save" ref="saveBtn" clicked={this.saveScene} />
                 </div>
             );
         }

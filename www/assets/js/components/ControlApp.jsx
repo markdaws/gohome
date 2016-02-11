@@ -4,38 +4,16 @@ var SceneList = require('./SceneList.jsx');
 var ZoneList = require('./ZoneList.jsx');
 var Logging = require('./Logging.jsx');
 var RecipeApp = require('./RecipeApp.jsx');
+var AppDispatcher = require('../dispatcher/AppDispatcher.js');
+var Constants = require('../constants/constants.js');
 
 var ControlApp = React.createClass({
     getInitialState: function() {
-        return { scenes: [], zones: [], devices: [], buttons: [] };
+        return { devices: [], buttons: [] };
     },
 
     componentDidMount: function() {
-        //TODO: Have a loading indicator for scenes + zones
-        $.ajax({
-            url: '/api/v1/systems/123/scenes',
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                this.setState({scenes: data});
-            }.bind(this),
-            error: function(xhr, status, err) {
-                console.error(err.toString());
-            }.bind(this)
-        });
-
-        $.ajax({
-            url: '/api/v1/systems/123/zones',
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                this.setState({zones: data});
-            }.bind(this),
-            error: function(xhr, status, err) {
-                console.error(err.toString());
-            }.bind(this)
-        });
-
+        //TODO: remove
         $.ajax({
             url: '/api/v1/systems/123/buttons',
             dataType: 'json',
@@ -76,12 +54,10 @@ var ControlApp = React.createClass({
                 </div>
                 <div role="tabpanel" className="tab-pane fade" id="scenes">
                   <SceneList
-                    scenes={this.state.scenes}
-                    zones={this.state.zones}
                     buttons={this.state.buttons} />
                 </div>
                 <div role="tabpanel" className="tab-pane fade" id="zones">
-                  <ZoneList zones={this.state.zones} />
+                  <ZoneList />
                 </div>
                 <div role="tabpanel" className="tab-pane fade" id="logging">
                   <Logging />
