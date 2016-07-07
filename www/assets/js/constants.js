@@ -13,11 +13,11 @@ module.exports = keyMirror({
     SCENE_CREATE_RAW: null,
     SCENE_CREATE_FAIL: null,
     SCENE_NEW_CLIENT: null,
-    
+
     SCENE_DESTROY: null,
     SCENE_DESTROY_RAW: null,
     SCENE_DESTROY_FAIL: null,
-    
+
     //TODO:
     SCENE_UPDATE: null,
     SCENE_CREATE_COMMAND: null,

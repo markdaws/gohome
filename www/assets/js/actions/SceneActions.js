@@ -1,5 +1,5 @@
 var AppDispatcher = require('../dispatcher/AppDispatcher.js');
-var Constants = require('../constants/constants.js');
+var Constants = require('../constants.js');
 var Api = require('../utils/API.js');
 
 var SceneActions = {
@@ -20,16 +20,27 @@ var SceneActions = {
     },
 
     loadAll: function() {
-        AppDispatcher.dispatch({
-            actionType: Constants.SCENE_LOAD_ALL,
-        });
-        Api.sceneLoadAll();
+        return function(dispatch) {
+            dispatch({
+                type: Constants.SCENE_LOAD_ALL
+            });
+
+            Api.sceneLoadAll(function(error, data) {
+                //error.err / error.status / error.xhr
+                if (error) {
+                    dispatch({ type: Constants.SCENE_LOAD_ALL_FAIL, err: error });
+                    return;
+                }
+
+                dispatch({ type: Constants.SCENE_LOAD_ALL_RAW, data: data });
+            });
+        };
     },
-    
+
     newClient: function() {
-        AppDispatcher.dispatch({
-            actionType: Constants.SCENE_NEW_CLIENT,
-        });
+        return {
+            type: Constants.SCENE_NEW_CLIENT
+        };
     }
 };
 module.exports = SceneActions;

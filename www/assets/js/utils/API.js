@@ -1,26 +1,23 @@
 var AppDispatcher = require('../dispatcher/AppDispatcher.js');
-var Constants = require('../constants/constants.js');
+var Constants = require('../constants.js');
 
 /*
  API provides helper methods to access all of the gohome REST APIs
 */
 var API = {
     // sceneLoadAll loads all of the scenes from the backing store
-    sceneLoadAll: function() {
+    sceneLoadAll: function(callback) {
         $.ajax({
             url: '/api/v1/systems/123/scenes',
             dataType: 'json',
             cache: false,
             success: function(data) {
-                AppDispatcher.dispatch({
-                    actionType: Constants.SCENE_LOAD_ALL_RAW,
-                    raw: data,
-                });
+                callback(null, data);
             },
             error: function(xhr, status, err) {
-                AppDispatcher.dispatch({
-                    actionType: Constants.SCENE_LOAD_ALL_FAIL,
+                callback({
                     err: err,
+                    status: status,
                     xhr: xhr,
                 });
             }

@@ -5,7 +5,7 @@ var ZoneList = require('./ZoneList.jsx');
 var Logging = require('./Logging.jsx');
 var RecipeApp = require('./RecipeApp.jsx');
 var AppDispatcher = require('../dispatcher/AppDispatcher.js');
-var Constants = require('../constants/constants.js');
+var Constants = require('../constants.js');
 
 var ControlApp = React.createClass({
     getInitialState: function() {

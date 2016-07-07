@@ -15,10 +15,15 @@
     "object-assign": "^4.0.1",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
+    "react-redux": "^4.4.5",
+    "redux": "^3.5.2",
+    "redux-thunk": "^2.1.0",
     "sass-loader": "^3.1.2",
     "webpack": "^1.12.12"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "redux-devtools": "^3.3.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -1,14 +1,16 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
+var Redux = require('redux');
+var ReactRedux = require('react-redux');
 var Scene = require('./Scene.jsx');
 var SceneInfo = require('./SceneInfo.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
-var SceneStore = require('../stores/SceneStore.js');
+//var SceneStore = require('../stores/SceneStore.js');
 var SceneActions = require('../actions/SceneActions.js');
 
 var SceneList = React.createClass({
     mixins: [UniqueIdMixin],
-    
+
     getInitialState: function() {
         return {
             editMode: false,
@@ -24,8 +26,9 @@ var SceneList = React.createClass({
     },
     
     componentDidMount: function() {
-        SceneStore.addChangeListener(this._onChange);
-        SceneActions.loadAll();
+        //SceneStore.addChangeListener(this._onChange);
+        //SceneActions.loadAll();
+        this.props.loadAllScenes();
 
         //TODO: Enable as part of a mode
         //var el = ReactDOM.findDOMNode(this).getElementsByClassName('sceneList')[0];
@@ -33,7 +36,7 @@ var SceneList = React.createClass({
     },
 
     componentWillUnmount: function() {
-        SceneStore.removeChangeListener(this._onChange);
+        //SceneStore.removeChangeListener(this._onChange);
     },
 
     _onChange: function() {
@@ -48,16 +51,13 @@ var SceneList = React.createClass({
         this.setState({ editMode: false });
     },
 
-    newScene: function() {
-        SceneActions.newClient();
-    },
-
     render: function() {
         var body;
         var btns;
-        var scenes = SceneStore.getAll();
+        var scenes = this.props.scenes.items;//SceneStore.getAll();
         if (this.state.editMode) {
-            var newScene = SceneStore.getNewScene();
+            //TODO: ??
+            var newScene = null;//SceneStore.getNewScene();
 
             // If the user is in the process of creating a new scene we append the
             // current new scene object to the front of the list
@@ -78,7 +78,7 @@ var SceneList = React.createClass({
             });
             btns = (
                 <div className="clearfix buttonWrapper">
-                  <button className="btn btn-primary btnNew pull-left" onClick={this.newScene}>New Scene</button>
+                  <button className="btn btn-primary btnNew pull-left" onClick={this.props.newScene}>New Scene</button>
                   <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
                 </div>
             );
@@ -105,4 +105,23 @@ var SceneList = React.createClass({
         );
     }
 });
-module.exports = SceneList;
+
+function mapStateToProps(state) {
+    return {
+        scenes: state.scenes
+    }
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        newScene: function() {
+            dispatch(SceneActions.newClient());
+        },
+        loadAllScenes: function() {
+            dispatch(SceneActions.loadAll());
+        }
+    }
+}
+
+var SceneListContainer = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
+module.exports = SceneListContainer;
