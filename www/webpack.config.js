@@ -2,9 +2,9 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-    entry: './www/assets/js/gohome.js',
+    entry: './assets/js/gohome.js',
     output: {
-        path: './www/assets/js/',
+        path: './assets/js/',
         filename: 'gohome-out.js'
     },
     module: {

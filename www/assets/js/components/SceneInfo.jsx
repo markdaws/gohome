@@ -53,14 +53,15 @@ var SceneInfo = React.createClass({
     },
 
     saveScene: function() {
-        var saveBtn = this.refs.saveBtn;
-        saveBtn.saving();
+        //saveBtn = this.refs.saveBtn;
+        //saveBtn.saving();
 
         this.setState({ errors: null });
         var self = this;
 
         if (this.state.id === '') {
-            SceneActions.create(this.toJson());
+            this.props.saveScene(this.toJson());
+            //SceneActions.create(this.toJson());
 
             //TODO: How to handle success/fail responses
             /*
@@ -112,6 +113,7 @@ var SceneInfo = React.createClass({
     },
 
     saveCommand: function(cmd, callback) {
+        //TODO: Cleanup API + redux
         var self = this;
         $.ajax({
             url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands',
@@ -165,6 +167,7 @@ var SceneInfo = React.createClass({
     },
     
     render: function() {
+        console.log('rendering info: ' + this.props.createErr);
         var commands
         //TODO: remove
         this.state.managed = true;
@@ -208,9 +211,14 @@ var SceneInfo = React.createClass({
 
         var saveBtn;
         if (this.state.dirty) {
+            var saveResult;
             saveBtn = (
                 <div className="pull-right">
-                  <SaveBtn text="Save" ref="saveBtn" clicked={this.saveScene} />
+                    <SaveBtn
+                        text="Save"
+                        ref="saveBtn"
+                        status={this.props.saveStatus}
+                        clicked={this.saveScene} />
                 </div>
             );
         }

@@ -1,5 +1,4 @@
-var Api = require('../utils/API.js');
-var Constants = require('../Constants.js');
+var Constants = require('../constants.js');
 var initialState = require('../initialState.js');
 
 var clientId = 1;
@@ -13,26 +12,45 @@ module.exports = function(state, action) {
         break;
 
     case Constants.SCENE_LOAD_ALL_FAIL:
-        console.log('scene load all fail');
-        console.log(action);
-
         newState.loading = false;
         //TODO: Log fail in the UI
         break;
 
     case Constants.SCENE_LOAD_ALL_RAW:
-        console.log('scene load all raw');
-        console.log(action);
-
         newState.loading = false;
         newState.items = action.data;
         break;
 
     case Constants.SCENE_NEW_CLIENT:
-        console.log('scene new client');
-
-        newState.items.push({ clientId: 'scene_cid_' + clientId + '' });
+        newState.newSceneInfo = {
+            scene: { clientId: 'scene_cid_' + clientId + '' },
+            saveErr: null
+        };
         ++clientId;
+        break;
+
+    case Constants.SCENE_CREATE:
+        newState.newSceneInfo.saveStatus = 'saving';
+        break;
+
+    case Constants.SCENE_CREATE_RAW:
+        newState.newSceneInfo.saveStatus = 'success';
+        // TODO: Refetch all scenes
+        break;
+
+    case Constants.SCENE_CREATE_FAIL:
+        newState.newSceneInfo.saveStatus = 'error';
+        newState.newSceneInfo.saveErr = action.err;
+        break;
+
+    case Constants.SCENE_DESTROY:
+        //TODO:
+        break;
+    case Constants.SCENE_DESTROY_RAW:
+        //TODO:
+        break;
+    case Constants.SCENE_DESTROY_FAIL:
+        //TODO:
         break;
 
     default:

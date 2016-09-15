@@ -1,41 +1,60 @@
 var React = require('react');
+var ReactRedux = require('react-redux');
 var Zone = require('./Zone.jsx');
-var Api = require('../utils/API.js');
-var ZoneStore = require('../stores/ZoneStore.js');
+var ZoneActions = require('../actions/ZoneActions.js');
 
 var ZoneList = React.createClass({
-    getInitialState: function() {
-        return {
-            zones: ZoneStore.getAll()
-        }
-    },
-    
     componentDidMount: function() {
-        ZoneStore.addChangeListener(this._onChange);
-        Api.zoneLoadAll();
+        console.log('mounted');
+        this.props.loadAllZones();
     },
 
-    componentWillUnmount: function() {
-        ZoneStore.removeChangeListener(this._onChange);
-    },
-
-    _onChange: function() {
-        this.setState({ zones: ZoneStore.getAll() });
-    },
-    
     render: function() {
-        //TODO: Add loading UI
-        var zoneNodes = []
-        this.state.zones.forEach(function(zone) {
+        var zoneNodes = [];
+        var zones = this.props.zones;
+        zones.items.forEach(function(zone) {
             zoneNodes.push(
                 <Zone id={zone.id} name={zone.name} type={zone.type} output={zone.output} key={zone.id}/>
             );
         })
+
+        var loading;
+        if (zones.loading) {
+            loading = (
+                <div className="spinnerWrapper">
+                    <p>Loading Zones ...</p>
+                    <i className="fa fa-spinner fa-spin"></i>
+                </div>
+            );
+        }
+
+        var error;
+        if (zones.loadingErr) {
+            error = <div>There was an error loading your zones. Please refresh the page.</div>;
+        }
         return (
             <div className="cmp-ZoneList row">
-              {zoneNodes}
+                {error}
+                {loading}
+                {zoneNodes}
             </div>
         );
     }
 });
-module.exports = ZoneList;
+
+function mapStateToProps(state) {
+    return {
+        zones: state.zones
+    };
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        loadAllZones: function() {
+            dispatch(ZoneActions.loadAll());
+        }
+    }
+}
+
+var ZoneListContainer = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ZoneList);
+module.exports = ZoneListContainer;

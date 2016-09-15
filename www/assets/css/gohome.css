@@ -1,4 +1,11 @@
+/*TODO: Split into separate files*/
+
 body {
+}
+
+.spinnerWrapper {
+    margin-top: 24px;
+    text-align: center;
 }
 
 button.disabled {
@@ -116,6 +123,9 @@ button.disabled {
 .cmp-Zone .btnToggle {
     padding-left: 0px;
 }
+.cmp-Zone .name {
+    min-width: 60px; /*Stops slider jumping up */
+}
 
 .cmp-ZoneSetLevelCommand p {
     font-size: 12px;
@@ -137,10 +147,6 @@ button.disabled {
     width: 145px;
 }
 
-.cmp-ImportFluxWIFI .spinnerWrapper {
-    margin-top: 24px;
-    text-align: center;
-}
 .cmp-ImportFluxWIFI .spinnerWrapper .fa.fa-spinner {
     font-size: 35px;
 }

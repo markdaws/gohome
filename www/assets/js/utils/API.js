@@ -1,4 +1,3 @@
-var AppDispatcher = require('../dispatcher/AppDispatcher.js');
 var Constants = require('../constants.js');
 
 /*
@@ -25,7 +24,7 @@ var API = {
     },
 
     // sceneCreate creates a new scene in the backing store
-    sceneCreate: function(scene) {
+    sceneCreate: function(scene, callback) {
         // Note: new scenes don't have an ID yet, since the server has to assign that, but
         // they do have a clientId which is a unique ID created on the client so they can
         // still be distinguished from one another
@@ -36,16 +35,11 @@ var API = {
             data: JSON.stringify(scene),
             cache: false,
             success: function(data) {
-                AppDispatcher.dispatch({
-                    actionType: Constants.SCENE_CREATE_RAW,
-                    raw: data,
-                    clientId: scene.clientId,
-                });
+                callback(null, data);
             },
             error: function(xhr, status, err) {
                 var errors = (JSON.parse(xhr.responseText) || {}).errors;
-                AppDispatcher.dispatch({
-                    actionType: Constants.SCENE_CREATE_FAIL,
+                callback({
                     err: err,
                     xhr: xhr,
                     validationErrors: errors,
@@ -62,38 +56,37 @@ var API = {
             type: 'DELETE',
             cache: false,
             success: function(data) {
+                /*//TODO:
                 AppDispatcher.dispatch({
                     actionType: Constants.SCENE_DESTROY_RAW,
                     id: id,
-                });
+                });*/
             },
             error: function(xhr, status, err) {
+                /*//TODO:
                 AppDispatcher.dispatch({
                     actionType: Constants.SCENE_DESTROY_FAIL,
                     id: id,
                     err: err,
                     xhr: xhr,
-                });
+                });*/
             }
         });
     },
 
     // zoneLoadAll loads all of the zones from the backing store
-    zoneLoadAll: function() {
+    zoneLoadAll: function(callback) {
         $.ajax({
             url: '/api/v1/systems/123/zones',
             dataType: 'json',
             cache: false,
             success: function(data) {
-                AppDispatcher.dispatch({
-                    actionType: Constants.ZONE_LOAD_ALL_RAW,
-                    raw: data,
-                });
+                callback(null, data);
             },
             error: function(xhr, status, err) {
-                AppDispatcher.dispatch({
-                    actionType: Constants.ZONE_LOAD_ALL_FAIL,
+                callback({
                     err: err,
+                    status: status,
                     xhr: xhr,
                 });
             }

@@ -5,7 +5,6 @@ var ReactRedux = require('react-redux');
 var Scene = require('./Scene.jsx');
 var SceneInfo = require('./SceneInfo.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
-//var SceneStore = require('../stores/SceneStore.js');
 var SceneActions = require('../actions/SceneActions.js');
 
 var SceneList = React.createClass({
@@ -26,8 +25,6 @@ var SceneList = React.createClass({
     },
     
     componentDidMount: function() {
-        //SceneStore.addChangeListener(this._onChange);
-        //SceneActions.loadAll();
         this.props.loadAllScenes();
 
         //TODO: Enable as part of a mode
@@ -36,7 +33,6 @@ var SceneList = React.createClass({
     },
 
     componentWillUnmount: function() {
-        //SceneStore.removeChangeListener(this._onChange);
     },
 
     _onChange: function() {
@@ -54,40 +50,46 @@ var SceneList = React.createClass({
     render: function() {
         var body;
         var btns;
-        var scenes = this.props.scenes.items;//SceneStore.getAll();
+
+        //TODO: What about loading fail?
+        //this.props.scenes.loading
+
+        var scenes = this.props.scenes.items;
         if (this.state.editMode) {
-            //TODO: ??
-            var newScene = null;//SceneStore.getNewScene();
+            var newScene = this.props.scenes.newSceneInfo;
 
             // If the user is in the process of creating a new scene we append the
             // current new scene object to the front of the list
             if (newScene) {
-                scenes = scenes.unshift(newScene);
+                // Since we are modifying the array for rendering, shallow copy array
+                scenes = scenes.slice();
+                scenes.unshift(newScene.scene);
             }
 
-            var self = this;
             body = scenes.map(function(scene) {
+                var createResponse;
                 return (
                     <SceneInfo
-                      zones={self.state.zones}
-                      buttons={self.props.buttons}
-                      scene={scene}
-                      readOnlyFields="id"
-                      key={scene.id || scene.clientId} />
+                        zones={this.state.zones}
+                        buttons={this.props.buttons}
+                        scene={scene}
+                        readOnlyFields="id"
+                        key={scene.id || scene.clientId}
+                        saveScene={this.props.saveScene}
+                        saveStatus={(newScene || {}).saveStatus} />
                 );
-            });
+            }.bind(this));
             btns = (
                 <div className="clearfix buttonWrapper">
-                  <button className="btn btn-primary btnNew pull-left" onClick={this.props.newScene}>New Scene</button>
+                  <button className="btn btn-primary btnNew pull-left" onClick={this.props.newClientScene}>New Scene</button>
                   <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
                 </div>
             );
         } else {
 
-            console.log(scenes)
             body = scenes.map(function(scene) {
                 return (
-                    <Scene scene={scene} key={scene.id}/>
+                    <Scene scene={scene} key={scene.id || scene.clientId}/>
                 );
             });
             btns = (
@@ -114,14 +116,19 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        newScene: function() {
+        newClientScene: function() {
             dispatch(SceneActions.newClient());
         },
         loadAllScenes: function() {
             dispatch(SceneActions.loadAll());
+        },
+        saveScene: function(scene) {
+            dispatch(SceneActions.create(scene));
         }
     }
 }
 
 var SceneListContainer = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
 module.exports = SceneListContainer;
+
+//TODO: Hide "New Scene" button after click
