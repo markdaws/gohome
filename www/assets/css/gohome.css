@@ -1,6 +1,7 @@
 /*TODO: Split into separate files*/
 
-body {
+body, html {
+    overflow-x: hidden;
 }
 
 .spinnerWrapper {
@@ -13,7 +14,7 @@ button.disabled {
 }
 
 .controlPageWrapper {
-    margin-top: 55px;
+    margin-top: 0px;
 }
 
 .tab-content {
@@ -75,47 +76,61 @@ button.disabled {
 }
 .cmp-CommandInfo .btnDelete {
     padding: 0;
-}                 
-
-.cmp-Zone .btn.zone .name{
-    display:inline-block;
-    font-size: 16px;
-    margin-left: 8px;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
-.cmp-Zone .btn.zone {
+
+.cmp-Zone .zone {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: 2e6da4;
+    border-radius: 4px;
     padding: 8px;
     display: block;
     margin-bottom: 12px;
+}
+.cmp-Zone .zone .name{
+    display: block;
+    font-size: 16px;
+    margin-left: 45px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cmp-Zone .zone .fa {
+    font-size: 30px;
+    text-align: center;
+    width: 30px;
 }
 .cmp-Zone button {
     width: 100%;
     text-align: left;
     height: 90px;
 }
-.cmp-Zone .btn.zone .fa {
-    font-size: 30px;
-    text-align: center;
-    width: 30px;
-}
 .cmp-Zone .sliderWrapper {
-    margin: 12px 0px 8px 12px;
-    width: 280px;
+    margin: 8px 12px 8px 8px;
+    position: absolute;
+    left: 67px;
+    right: 21px;
+}
+.cmp-Zone .sliderWrapper .level {
+    display: block;
+    text-align: center;
+    font-size: 10px;
 }
 .cmp-Zone .slider.slider-horizontal {
-    width: 80%;
+    width: 100%;
 }
 .cmp-Zone .footer {
-    margin-top: 6px;
+    color: #fff;
+    margin-top: 14px;
 }
 .cmp-Zone .clickInfo {
     text-align: center;
     margin: 12px 0px 8px 12px;
     font-style: italic;
-    font-size: 14px;
+    font-size: 10px;
+    text-decoration: underline;
 }
-.cmp-Zone .btn.zone .btnToggle .fa-power-off {
+.cmp-Zone .zone .btnToggle .fa-power-off {
     color: #fff;
     font-size: 24px;
     margin-left: -1px;

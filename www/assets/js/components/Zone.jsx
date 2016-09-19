@@ -1,3 +1,4 @@
+var ClassNames = require('classnames');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var CssMixin = require('./CssMixin.jsx');
@@ -6,7 +7,7 @@ var Zone = React.createClass({
     mixins: [CssMixin],
     getInitialState: function() {
         return {
-            value: 0,
+            value: -1,
             showSlider: false,
             slider: null
         }
@@ -14,7 +15,7 @@ var Zone = React.createClass({
 
     componentDidMount: function() {
         var self = this;
-        
+
         switch (this.props.output) {
         case 'binary':
         case 'continuous':
@@ -78,7 +79,7 @@ var Zone = React.createClass({
     isRgb: function() {
         return this.props.output === 'rgb';
     },
-    
+
     setValue: function(cmd, value, r, g, b, callback) {
         if (!this.isRgb()) {
             this.state.slider.slider('setValue', value, false, true);
@@ -97,6 +98,10 @@ var Zone = React.createClass({
     toggleOn: function(evt) {
         evt.stopPropagation();
         evt.preventDefault();
+
+        if (!this.isRgb()) {
+            this.setState({ showSlider: true });
+        }
 
         var cmd, level;
         if (this.state.value !== 0) {
@@ -130,7 +135,8 @@ var Zone = React.createClass({
     },
 
     render: function() {
-        var value = this.state.value;
+        var value = this.state.value === -1 ? "?" : this.state.value;
+
         var icon;
         switch (this.props.type) {
         case 'light':
@@ -169,22 +175,22 @@ var Zone = React.createClass({
         //TODO: show the last action e.g. currently on or currently off
         return (
             <div className="cmp-Zone col-xs-12 col-sm-4 col-md-4 col-lg-4 clearfix">
-              <button className={"btn btn-primary zone" + (this.isRgb() ? " zone-rgb" : "")}>
-                <i className={icon}></i>
-                <span className="name">{this.props.name}</span>
-                <div className={"sliderWrapper pull-right" + ((hasSlider && this.state.showSlider) ? "" : " hidden")} >
-                  <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
-                  <span className="level pull-right">{this.state.value}%</span>
+                <div className={"zone" + (this.isRgb() ? " zone-rgb" : "")}>
+                    <i className={ClassNames(icon, 'pull-left')}></i>
+                    <span className="name">{this.props.name}</span>
+                    <div className={"sliderWrapper pull-right" + ((hasSlider && this.state.showSlider) ? "" : " hidden")} >
+                        <span className="level">{value}%</span>
+                        <input className="valueSlider" type="text" data-slider-value="0" data-slider-min="00" data-slider-max="100" data-slider-step={stepSize} data-slider-orientation="horizontal"></input>
+                    </div>
+                    <div className="clearfix footer">
+                        <div className={"clickInfo pull-right" + ((!hasSlider || this.state.showSlider) ? " hidden" : "")}>
+                            <span onClick={this.infoClicked}>Set Level</span>
+                        </div>
+                        <a className="btn btn-link btnToggle pull-left" onClick={this.toggleOn}>
+                            <i className="fa fa-power-off"></i>
+                        </a>
+                    </div>
                 </div>
-                <div className="clearfix footer">
-                  <div className={"clickInfo pull-right" + ((!hasSlider || this.state.showSlider) ? " hidden" : "")}>
-                    <span onClick={this.infoClicked}>Click to control</span>
-                  </div>
-                  <a className="btn btn-link btnToggle pull-left" onClick={this.toggleOn}>
-                    <i className="fa fa-power-off"></i>
-                  </a>
-                </div>
-              </button>
             </div>
         )
     }

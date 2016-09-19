@@ -1,3 +1,4 @@
+var ClassNames = require('classnames');
 var React = require('react');
 var ReactRedux = require('react-redux');
 var Zone = require('./Zone.jsx');
@@ -5,7 +6,6 @@ var ZoneActions = require('../actions/ZoneActions.js');
 
 var ZoneList = React.createClass({
     componentDidMount: function() {
-        console.log('mounted');
         this.props.loadAllZones();
     },
 
@@ -32,8 +32,13 @@ var ZoneList = React.createClass({
         if (zones.loadingErr) {
             error = <div>There was an error loading your zones. Please refresh the page.</div>;
         }
+
+        var classNames = ClassNames({
+            'cmp-ZoneList': true,
+            'row': !zones.loadingErr
+        });
         return (
-            <div className="cmp-ZoneList row">
+            <div className={classNames}>
                 {error}
                 {loading}
                 {zoneNodes}

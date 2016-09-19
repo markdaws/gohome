@@ -50,7 +50,7 @@
 	var ReactDOM = __webpack_require__(158);
 	var ControlApp = __webpack_require__(159);
 	var Provider = __webpack_require__(190).Provider;
-	var store = __webpack_require__(238);
+	var store = __webpack_require__(239);
 
 	ReactDOM.render(React.createElement(
 	    Provider,
@@ -19762,89 +19762,89 @@
 	var System = __webpack_require__(160);
 	var SceneList = __webpack_require__(174);
 	var ZoneList = __webpack_require__(219);
-	var Logging = __webpack_require__(223);
-	var RecipeApp = __webpack_require__(225);
+	var Logging = __webpack_require__(224);
+	var RecipeApp = __webpack_require__(226);
 	var Constants = __webpack_require__(216);
 
 	var ControlApp = React.createClass({
-	  displayName: 'ControlApp',
+	    displayName: 'ControlApp',
 
-	  getInitialState: function getInitialState() {
-	    return { devices: [], buttons: [] };
-	  },
+	    getInitialState: function getInitialState() {
+	        return { devices: [], buttons: [] };
+	    },
 
-	  componentDidMount: function componentDidMount() {
-	    //TODO: remove, scenes can fetch buttons
-	    $.ajax({
-	      url: '/api/v1/systems/123/buttons',
-	      dataType: 'json',
-	      cache: false,
-	      success: function (data) {
-	        this.setState({ buttons: data });
-	      }.bind(this),
-	      error: function (xhr, status, err) {
-	        console.error(err.toString());
-	      }.bind(this)
-	    });
-	  },
+	    componentDidMount: function componentDidMount() {
+	        //TODO: remove, scenes can fetch buttons
+	        $.ajax({
+	            url: '/api/v1/systems/123/buttons',
+	            dataType: 'json',
+	            cache: false,
+	            success: function (data) {
+	                this.setState({ buttons: data });
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                console.error(err.toString());
+	            }.bind(this)
+	        });
+	    },
 
-	  render: function render() {
-	    return React.createElement(
-	      'div',
-	      { className: 'cmp-ControlApp' },
-	      React.createElement(
-	        'ul',
-	        { className: 'nav nav-tabs', role: 'tablist' },
-	        React.createElement(
-	          'li',
-	          { role: 'presentation', className: '' },
-	          React.createElement(
-	            'a',
-	            { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
-	            'System'
-	          )
-	        ),
-	        React.createElement(
-	          'li',
-	          { role: 'presentation' },
-	          React.createElement(
-	            'a',
-	            { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
-	            'Scenes'
-	          )
-	        ),
-	        React.createElement(
-	          'li',
-	          { role: 'presentation', className: 'active' },
-	          React.createElement(
-	            'a',
-	            { href: '#zones', role: 'tab', 'aria-controls': 'zones', 'data-toggle': 'tab' },
-	            'Zones'
-	          )
-	        )
-	      ),
-	      React.createElement(
-	        'div',
-	        { className: 'tab-content' },
-	        React.createElement(
-	          'div',
-	          { role: 'tabpanel', className: 'tab-pane fade', id: 'system' },
-	          React.createElement(System, null)
-	        ),
-	        React.createElement(
-	          'div',
-	          { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
-	          React.createElement(SceneList, {
-	            buttons: this.state.buttons })
-	        ),
-	        React.createElement(
-	          'div',
-	          { role: 'tabpanel', className: 'tab-pane active', id: 'zones' },
-	          React.createElement(ZoneList, null)
-	        )
-	      )
-	    );
-	  }
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ControlApp' },
+	            React.createElement(
+	                'ul',
+	                { className: 'nav nav-tabs', role: 'tablist' },
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
+	                        'Scenes'
+	                    )
+	                ),
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation', className: 'active' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#zones', role: 'tab', 'aria-controls': 'zones', 'data-toggle': 'tab' },
+	                        'Zones'
+	                    )
+	                ),
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation', className: '' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
+	                        'System'
+	                    )
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'tab-content' },
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
+	                    React.createElement(SceneList, {
+	                        buttons: this.state.buttons })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane active', id: 'zones' },
+	                    React.createElement(ZoneList, null)
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'system' },
+	                    React.createElement(System, null)
+	                )
+	            )
+	        );
+	    }
 	});
 	module.exports = ControlApp;
 
@@ -24356,16 +24356,16 @@
 
 	'use strict';
 
+	var ClassNames = __webpack_require__(220);
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(190);
-	var Zone = __webpack_require__(220);
-	var ZoneActions = __webpack_require__(222);
+	var Zone = __webpack_require__(221);
+	var ZoneActions = __webpack_require__(223);
 
 	var ZoneList = React.createClass({
 	    displayName: 'ZoneList',
 
 	    componentDidMount: function componentDidMount() {
-	        console.log('mounted');
 	        this.props.loadAllZones();
 	    },
 
@@ -24398,9 +24398,14 @@
 	                'There was an error loading your zones. Please refresh the page.'
 	            );
 	        }
+
+	        var classNames = ClassNames({
+	            'cmp-ZoneList': true,
+	            'row': !zones.loadingErr
+	        });
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-ZoneList row' },
+	            { className: classNames },
 	            error,
 	            loading,
 	            zoneNodes
@@ -24429,11 +24434,66 @@
 /* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = [];
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+
+			return classes.join(' ');
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
+
+
+/***/ },
+/* 221 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 
+	var ClassNames = __webpack_require__(220);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
-	var CssMixin = __webpack_require__(221);
+	var CssMixin = __webpack_require__(222);
 
 	var Zone = React.createClass({
 	    displayName: 'Zone',
@@ -24441,7 +24501,7 @@
 	    mixins: [CssMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            value: 0,
+	            value: -1,
 	            showSlider: false,
 	            slider: null
 	        };
@@ -24526,6 +24586,10 @@
 	        evt.stopPropagation();
 	        evt.preventDefault();
 
+	        if (!this.isRgb()) {
+	            this.setState({ showSlider: true });
+	        }
+
 	        var cmd, level;
 	        if (this.state.value !== 0) {
 	            cmd = 'turnOff';
@@ -24558,7 +24622,8 @@
 	    },
 
 	    render: function render() {
-	        var value = this.state.value;
+	        var value = this.state.value === -1 ? "?" : this.state.value;
+
 	        var icon;
 	        switch (this.props.type) {
 	            case 'light':
@@ -24599,9 +24664,9 @@
 	            'div',
 	            { className: 'cmp-Zone col-xs-12 col-sm-4 col-md-4 col-lg-4 clearfix' },
 	            React.createElement(
-	                'button',
-	                { className: "btn btn-primary zone" + (this.isRgb() ? " zone-rgb" : "") },
-	                React.createElement('i', { className: icon }),
+	                'div',
+	                { className: "zone" + (this.isRgb() ? " zone-rgb" : "") },
+	                React.createElement('i', { className: ClassNames(icon, 'pull-left') }),
 	                React.createElement(
 	                    'span',
 	                    { className: 'name' },
@@ -24610,13 +24675,13 @@
 	                React.createElement(
 	                    'div',
 	                    { className: "sliderWrapper pull-right" + (hasSlider && this.state.showSlider ? "" : " hidden") },
-	                    React.createElement('input', { className: 'valueSlider', type: 'text', 'data-slider-value': '0', 'data-slider-min': '00', 'data-slider-max': '100', 'data-slider-step': stepSize, 'data-slider-orientation': 'horizontal' }),
 	                    React.createElement(
 	                        'span',
-	                        { className: 'level pull-right' },
-	                        this.state.value,
+	                        { className: 'level' },
+	                        value,
 	                        '%'
-	                    )
+	                    ),
+	                    React.createElement('input', { className: 'valueSlider', type: 'text', 'data-slider-value': '0', 'data-slider-min': '00', 'data-slider-max': '100', 'data-slider-step': stepSize, 'data-slider-orientation': 'horizontal' })
 	                ),
 	                React.createElement(
 	                    'div',
@@ -24627,7 +24692,7 @@
 	                        React.createElement(
 	                            'span',
 	                            { onClick: this.infoClicked },
-	                            'Click to control'
+	                            'Set Level'
 	                        )
 	                    ),
 	                    React.createElement(
@@ -24643,7 +24708,7 @@
 	module.exports = Zone;
 
 /***/ },
-/* 221 */
+/* 222 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -24655,7 +24720,7 @@
 	};
 
 /***/ },
-/* 222 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -24684,14 +24749,14 @@
 	module.exports = ZoneActions;
 
 /***/ },
-/* 223 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
-	var LogLine = __webpack_require__(224);
+	var LogLine = __webpack_require__(225);
 
 	var Logging = React.createClass({
 	    displayName: 'Logging',
@@ -24827,7 +24892,7 @@
 	module.exports = Logging;
 
 /***/ },
-/* 224 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -24872,14 +24937,14 @@
 	module.exports = LogLine;
 
 /***/ },
-/* 225 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var NewRecipe = __webpack_require__(226);
-	var RecipeList = __webpack_require__(236);
+	var NewRecipe = __webpack_require__(227);
+	var RecipeList = __webpack_require__(237);
 
 	var RecipeApp = React.createClass({
 	    displayName: 'RecipeApp',
@@ -24946,16 +25011,16 @@
 	module.exports = RecipeApp;
 
 /***/ },
-/* 226 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var IngredientList = __webpack_require__(227);
-	var TriggerList = __webpack_require__(229);
-	var ActionList = __webpack_require__(231);
-	var CookBookList = __webpack_require__(233);
+	var IngredientList = __webpack_require__(228);
+	var TriggerList = __webpack_require__(230);
+	var ActionList = __webpack_require__(232);
+	var CookBookList = __webpack_require__(234);
 
 	var NewRecipe = React.createClass({
 	    displayName: 'NewRecipe',
@@ -25239,13 +25304,13 @@
 	module.exports = NewRecipe;
 
 /***/ },
-/* 227 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Ingredient = __webpack_require__(228);
+	var Ingredient = __webpack_require__(229);
 
 	var IngredientList = React.createClass({
 	    displayName: 'IngredientList',
@@ -25282,7 +25347,7 @@
 	module.exports = IngredientList;
 
 /***/ },
-/* 228 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25379,13 +25444,13 @@
 	module.exports = Ingredient;
 
 /***/ },
-/* 229 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Trigger = __webpack_require__(230);
+	var Trigger = __webpack_require__(231);
 
 	var TriggerList = React.createClass({
 	    displayName: 'TriggerList',
@@ -25410,7 +25475,7 @@
 	module.exports = TriggerList;
 
 /***/ },
-/* 230 */
+/* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -25450,13 +25515,13 @@
 	module.exports = Trigger;
 
 /***/ },
-/* 231 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Action = __webpack_require__(232);
+	var Action = __webpack_require__(233);
 
 	var ActionList = React.createClass({
 	    displayName: 'ActionList',
@@ -25480,7 +25545,7 @@
 	module.exports = ActionList;
 
 /***/ },
-/* 232 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -25520,13 +25585,13 @@
 	module.exports = Action;
 
 /***/ },
-/* 233 */
+/* 234 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var CookBook = __webpack_require__(234);
+	var CookBook = __webpack_require__(235);
 
 	var CookBookList = React.createClass({
 	    displayName: 'CookBookList',
@@ -25550,13 +25615,13 @@
 	module.exports = CookBookList;
 
 /***/ },
-/* 234 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var AssetsMixin = __webpack_require__(235);
+	var AssetsMixin = __webpack_require__(236);
 
 	var CookBook = React.createClass({
 	    displayName: 'CookBook',
@@ -25584,7 +25649,7 @@
 	module.exports = CookBook;
 
 /***/ },
-/* 235 */
+/* 236 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -25596,7 +25661,7 @@
 	};
 
 /***/ },
-/* 236 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25604,7 +25669,7 @@
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	var React = __webpack_require__(1);
-	var RecipeInfo = __webpack_require__(237);
+	var RecipeInfo = __webpack_require__(238);
 
 	var RecipeList = React.createClass({
 	    displayName: 'RecipeList',
@@ -25672,7 +25737,7 @@
 	module.exports = RecipeList;
 
 /***/ },
-/* 237 */
+/* 238 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25766,16 +25831,16 @@
 	module.exports = RecipeInfo;
 
 /***/ },
-/* 238 */
+/* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Redux = __webpack_require__(175);
-	var thunk = __webpack_require__(239).default;
-	var initialState = __webpack_require__(240);
-	var scenesReducer = __webpack_require__(241);
-	var zonesReducer = __webpack_require__(242);
+	var thunk = __webpack_require__(240).default;
+	var initialState = __webpack_require__(241);
+	var scenesReducer = __webpack_require__(242);
+	var zonesReducer = __webpack_require__(243);
 
 	var rootReducer = Redux.combineReducers({
 	    scenes: scenesReducer,
@@ -25785,7 +25850,7 @@
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
 
 /***/ },
-/* 239 */
+/* 240 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -25813,7 +25878,7 @@
 	exports['default'] = thunk;
 
 /***/ },
-/* 240 */
+/* 241 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -25845,13 +25910,13 @@
 	};
 
 /***/ },
-/* 241 */
+/* 242 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(216);
-	var initialState = __webpack_require__(240);
+	var initialState = __webpack_require__(241);
 
 	var clientId = 1;
 
@@ -25913,13 +25978,13 @@
 	};
 
 /***/ },
-/* 242 */
+/* 243 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(216);
-	var initialState = __webpack_require__(240);
+	var initialState = __webpack_require__(241);
 
 	module.exports = function (state, action) {
 	    var newState = Object.assign({}, state);
