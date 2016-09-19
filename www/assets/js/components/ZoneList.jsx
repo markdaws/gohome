@@ -10,16 +10,28 @@ var ZoneList = React.createClass({
     },
 
     render: function() {
-        var zoneNodes = [];
-        var zones = this.props.zones;
-        zones.items.forEach(function(zone) {
-            zoneNodes.push(
-                <Zone id={zone.id} name={zone.name} type={zone.type} output={zone.output} key={zone.id}/>
-            );
+        var lightZones = [];
+        var shadeZones = [];
+        var otherZones = [];
+        this.props.zones.items.forEach(function(zone) {
+            var cmpZone = <Zone id={zone.id} name={zone.name} type={zone.type} output={zone.output} key={zone.id}/>;
+
+            switch(zone.type) {
+                    //TODO: Put in enum somewhere
+                case 'light':
+                    lightZones.push(cmpZone);
+                    break;
+                case 'shade':
+                    shadeZones.push(cmpZone);
+                    break;
+                default:
+                    otherZones.push(cmpZone);
+                    break;
+            }
         })
 
         var loading;
-        if (zones.loading) {
+        if (this.props.zones.loading) {
             loading = (
                 <div className="spinnerWrapper">
                     <p>Loading Zones ...</p>
@@ -29,19 +41,24 @@ var ZoneList = React.createClass({
         }
 
         var error;
-        if (zones.loadingErr) {
+        if (this.props.zones.loadingErr) {
             error = <div>There was an error loading your zones. Please refresh the page.</div>;
         }
 
         var classNames = ClassNames({
             'cmp-ZoneList': true,
-            'row': !zones.loadingErr
+            'row': !this.props.zones.loadingErr
         });
         return (
             <div className={classNames}>
                 {error}
                 {loading}
-                {zoneNodes}
+                <h2 className={ClassNames({ 'hidden': lightZones.length === 0 || loading})}>Lights</h2>
+                {lightZones}
+                <h2 className={ClassNames({ 'hidden': shadeZones.length === 0 || loading})}>Shades</h2>
+                {shadeZones}
+                <h2 className={ClassNames({ 'hidden': otherZones.length === 0 || loading})}>Other Zones</h2>
+                {otherZones}
             </div>
         );
     }

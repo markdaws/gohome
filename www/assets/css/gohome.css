@@ -142,6 +142,11 @@ button.disabled {
     min-width: 60px; /*Stops slider jumping up */
 }
 
+.cmp-ZoneList h2 {
+    margin-left: 12px;
+    margin-top: 0px;
+}
+
 .cmp-ZoneSetLevelCommand p {
     font-size: 12px;
     font-weight: normal;

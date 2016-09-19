@@ -24370,14 +24370,28 @@
 	    },
 
 	    render: function render() {
-	        var zoneNodes = [];
-	        var zones = this.props.zones;
-	        zones.items.forEach(function (zone) {
-	            zoneNodes.push(React.createElement(Zone, { id: zone.id, name: zone.name, type: zone.type, output: zone.output, key: zone.id }));
+	        var lightZones = [];
+	        var shadeZones = [];
+	        var otherZones = [];
+	        this.props.zones.items.forEach(function (zone) {
+	            var cmpZone = React.createElement(Zone, { id: zone.id, name: zone.name, type: zone.type, output: zone.output, key: zone.id });
+
+	            switch (zone.type) {
+	                //TODO: Put in enum somewhere
+	                case 'light':
+	                    lightZones.push(cmpZone);
+	                    break;
+	                case 'shade':
+	                    shadeZones.push(cmpZone);
+	                    break;
+	                default:
+	                    otherZones.push(cmpZone);
+	                    break;
+	            }
 	        });
 
 	        var loading;
-	        if (zones.loading) {
+	        if (this.props.zones.loading) {
 	            loading = React.createElement(
 	                'div',
 	                { className: 'spinnerWrapper' },
@@ -24391,7 +24405,7 @@
 	        }
 
 	        var error;
-	        if (zones.loadingErr) {
+	        if (this.props.zones.loadingErr) {
 	            error = React.createElement(
 	                'div',
 	                null,
@@ -24401,14 +24415,31 @@
 
 	        var classNames = ClassNames({
 	            'cmp-ZoneList': true,
-	            'row': !zones.loadingErr
+	            'row': !this.props.zones.loadingErr
 	        });
 	        return React.createElement(
 	            'div',
 	            { className: classNames },
 	            error,
 	            loading,
-	            zoneNodes
+	            React.createElement(
+	                'h2',
+	                { className: ClassNames({ 'hidden': lightZones.length === 0 || loading }) },
+	                'Lights'
+	            ),
+	            lightZones,
+	            React.createElement(
+	                'h2',
+	                { className: ClassNames({ 'hidden': shadeZones.length === 0 || loading }) },
+	                'Shades'
+	            ),
+	            shadeZones,
+	            React.createElement(
+	                'h2',
+	                { className: ClassNames({ 'hidden': otherZones.length === 0 || loading }) },
+	                'Other Zones'
+	            ),
+	            otherZones
 	        );
 	    }
 	});
