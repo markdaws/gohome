@@ -1,7 +1,7 @@
 # gohome
 golang powered home automation server
 
-Note - this is not ready for production yet, it's running all the lights in my house but I am still working on getting a v1 that supports saving/loading and setup via the UI vs. hacking JSON files.  Should be ready for use in the next few weeks (mid March), if you try to run any of this code before then, you're going to have a bad time.
+Note - this is not ready for production yet, it's running all the lights in my house but I am still working on getting a v1 that supports saving/loading and setup via the UI vs. hacking JSON files.  Should be ready for use in the next few weeks (mid October), if you try to run any of this code before then, you're going to have a bad time.
 
 #Project Aims
 Web/iOS/Android/Apple Watch
@@ -46,24 +46,24 @@ Since a scene is just a group of commands you can mak a scene do literally anyth
 ##API Support
 ###Scenes
  - GET /api/v1/scenes
- - GET /api/v1/scenes/<ID>
- - DELETE /api/v1/scenes/<ID>
- - PUT /api/v1/scenes/<ID>
+ - GET /api/v1/scenes/&lt;ID&gt;
+ - DELETE /api/v1/scenes/&lt;ID&gt;
+ - PUT /api/v1/scenes/&lt;ID&gt;
  - POST /api/v1/scenes
  - POST /api/v1/scenes/active
- - POST /api/v1/scenes/<ID>/commands
- - DELETE /api/v1/scenes/<ID>/commands/<INDEX>
+ - POST /api/v1/scenes/&lt;ID&gt;/commands
+ - DELETE /api/v1/scenes/&lt;ID&gt;/commands/&lt;INDEX&gt;
 
 ###Zones
  - GET /api/v1/zones
  - POST /api/v1/zones
- - PUT /api/v1/zones/<ID>
+ - PUT /api/v1/zones/&lt;ID&gt;
 
 ###Discovery
- - GET /api/v1/discovery/<MODEL_NUMBER>
- - GET /api/v1/discovery/<MODEL_NUMBER>/token
- - GET /api/v1/discovery/<MODEL_NUMBER>/access
- - GET /api/v1/discovery/<MODEL_NUMBER>/zones
+ - GET /api/v1/discovery/&lt;MODEL_NUMBER&gt;
+ - GET /api/v1/discovery/&lt;MODEL_NUMBER&gt;/token
+ - GET /api/v1/discovery/&lt;MODEL_NUMBER&gt;/access
+ - GET /api/v1/discovery/&lt;MODEL_NUMBER&gt;/zones
 
 ###Events
  /api/v1/events/ws
