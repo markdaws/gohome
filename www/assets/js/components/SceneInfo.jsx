@@ -15,7 +15,7 @@ var SceneInfo = React.createClass({
             buttons: []
         };
     },
-    
+
     getInitialState: function() {
         return {
             id: this.props.scene.id || '',
@@ -24,14 +24,17 @@ var SceneInfo = React.createClass({
             address: this.props.scene.address || '',
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
             commands: this.props.scene.commands || [],
+            dirty: (this.props.scene.id || '') === '',
+
+            //TODO: Needed?
             zones: this.props.zones || [],
-            scenes: this.props.scenes || [],
-            dirty: (this.props.scene.id || '') === ''
+            //TODO: Needed?
+            scenes: this.props.scenes || []
         };
     },
 
     componentWillReceiveProps: function(nextProps) {
-        //Needed?
+        //TODO: Needed?
         if (nextProps.zones) {
             this.setState({ zones: nextProps.zones });
         }
@@ -40,7 +43,7 @@ var SceneInfo = React.createClass({
             this.setState({ scenes: nextProps.scenes });
         }
     },
-    
+
     toJson: function() {
         var s = this.state;
         return {
@@ -64,6 +67,7 @@ var SceneInfo = React.createClass({
             //SceneActions.create(this.toJson());
 
             //TODO: How to handle success/fail responses
+            //TODO: Need to remove dirty flag on success
             /*
             $.ajax({
                 url: '/api/v1/systems/123/scenes',
@@ -84,7 +88,7 @@ var SceneInfo = React.createClass({
                 }
             });*/
         } else {
-            //TODO: Flux
+            //TODO: Redux
             // Update to existing scene
             $.ajax({
                 url: '/api/v1/systems/123/scenes/' + this.state.id,
@@ -103,9 +107,9 @@ var SceneInfo = React.createClass({
             });
         }
     },
-    
+
     deleteScene: function() {
-        SceneActions.destroy(this.state.id);
+        this.props.deleteScene(this.state.id);
 
         // TODO: What about scenes that have not been saved, in processs of
         // being created
@@ -131,7 +135,7 @@ var SceneInfo = React.createClass({
             }
         });
     },
-    
+
     deleteCommand: function(cmdIndex, isNewCmd, callback) {
         var self = this;
         
@@ -165,10 +169,10 @@ var SceneInfo = React.createClass({
         cmds.push({ isNew: true, type: cmdType, attributes: {} });
         this.setState({ commands: cmds });
     },
-    
+
     render: function() {
-        console.log('rendering info: ' + this.props.createErr);
         var commands
+
         //TODO: remove
         this.state.managed = true;
         var self = this;

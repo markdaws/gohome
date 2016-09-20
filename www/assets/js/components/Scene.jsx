@@ -20,7 +20,7 @@ var Scene = React.createClass({
     render: function() {
         return (
             <div className="cmp-Scene col-xs-6 col-sm-3 col-md-3 col-lg-3">
-              <a className="btn btn-primary scene" onClick={this.handleClick}>
+              <a role="button" className="btn btn-primary scene" onClick={this.handleClick}>
                 <div>
                   <i className="fa fa-sliders"></i>
                 </div>

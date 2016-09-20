@@ -24,7 +24,8 @@ module.exports = function(state, action) {
     case Constants.SCENE_NEW_CLIENT:
         newState.newSceneInfo = {
             scene: { clientId: 'scene_cid_' + clientId + '' },
-            saveErr: null
+            saveErr: null,
+            saveStatus: null
         };
         ++clientId;
         break;
@@ -44,10 +45,15 @@ module.exports = function(state, action) {
         break;
 
     case Constants.SCENE_DESTROY:
-        //TODO:
         break;
     case Constants.SCENE_DESTROY_RAW:
-        //TODO:
+        
+        for (var i=0; i<newState.items.length; ++i) {
+            if (newState.items[i].id === action.id) {
+                newState.items.splice(i, 1);
+                break;
+            }
+        }
         break;
     case Constants.SCENE_DESTROY_FAIL:
         //TODO:

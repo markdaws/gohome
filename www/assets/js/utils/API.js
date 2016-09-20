@@ -50,26 +50,20 @@ var API = {
     },
 
     // sceneDestroy deletes the scene with the specified ID from the backing store
-    sceneDestroy: function(id) {
+    sceneDestroy: function(id, callback) {
         $.ajax({
             url: '/api/v1/systems/123/scenes/' + id,
             type: 'DELETE',
             cache: false,
             success: function(data) {
-                /*//TODO:
-                AppDispatcher.dispatch({
-                    actionType: Constants.SCENE_DESTROY_RAW,
-                    id: id,
-                });*/
+                callback(null, data);
             },
             error: function(xhr, status, err) {
-                /*//TODO:
-                AppDispatcher.dispatch({
-                    actionType: Constants.SCENE_DESTROY_FAIL,
-                    id: id,
+                callback({
                     err: err,
-                    xhr: xhr,
-                });*/
+                    status: status,
+                    xhr: xhr
+                });
             }
         });
     },

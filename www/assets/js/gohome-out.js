@@ -19797,7 +19797,7 @@
 	                { className: 'nav nav-tabs', role: 'tablist' },
 	                React.createElement(
 	                    'li',
-	                    { role: 'presentation' },
+	                    { role: 'presentation', className: 'active' },
 	                    React.createElement(
 	                        'a',
 	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
@@ -19806,7 +19806,7 @@
 	                ),
 	                React.createElement(
 	                    'li',
-	                    { role: 'presentation', className: 'active' },
+	                    { role: 'presentation', className: '' },
 	                    React.createElement(
 	                        'a',
 	                        { href: '#zones', role: 'tab', 'aria-controls': 'zones', 'data-toggle': 'tab' },
@@ -19828,13 +19828,13 @@
 	                { className: 'tab-content' },
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
+	                    { role: 'tabpanel', className: 'tab-pane active', id: 'scenes' },
 	                    React.createElement(SceneList, {
 	                        buttons: this.state.buttons })
 	                ),
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane active', id: 'zones' },
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'zones' },
 	                    React.createElement(ZoneList, null)
 	                ),
 	                React.createElement(
@@ -20361,15 +20361,18 @@
 	        var id = this.state.cid == undefined ? this.state.id : this.state.cid;
 	        return id + '_' + field;
 	    },
+
 	    getErr: function getErr(field) {
 	        if (!this.state.errors) {
 	            return null;
 	        }
 	        return this.state.errors[this.uid(field)];
 	    },
+
 	    hasErr: function hasErr(field) {
 	        return this.getErr(field) != null;
 	    },
+
 	    errMsg: function errMsg(field) {
 	        var err = this.getErr(field);
 	        if (!err) {
@@ -20381,12 +20384,14 @@
 	            "Error - " + err.message
 	        );
 	    },
+
 	    addErr: function addErr(classes, field) {
 	        if (this.hasErr(field)) {
 	            return classes + " has-error";
 	        }
 	        return classes;
 	    },
+
 	    changed: function changed(evt) {
 	        var statePath = evt.target.getAttribute('data-statepath');
 	        var s = {};
@@ -20394,6 +20399,7 @@
 	        s.dirty = true;
 	        this.setState(s);
 	    },
+
 	    isReadOnly: function isReadOnly(field) {
 	        var fields = this.props.readOnlyFields || '';
 	        var items = fields.split(',');
@@ -21207,6 +21213,10 @@
 	        if (this.state.editMode) {
 	            var newScene = this.props.scenes.newSceneInfo;
 
+	            //TODO:Remove
+	            //newScene.saveStatus
+	            //newScene.saveErr
+
 	            // If the user is in the process of creating a new scene we append the
 	            // current new scene object to the front of the list
 	            if (newScene) {
@@ -21224,6 +21234,7 @@
 	                    readOnlyFields: 'id',
 	                    key: scene.id || scene.clientId,
 	                    saveScene: this.props.saveScene,
+	                    deleteScene: this.props.deleteScene,
 	                    saveStatus: (newScene || {}).saveStatus });
 	            }.bind(this));
 	            btns = React.createElement(
@@ -21250,8 +21261,8 @@
 	                { className: 'clearfix buttonWrapper' },
 	                React.createElement(
 	                    'button',
-	                    { className: 'btn btn-primary btnEdit pull-right', onClick: this.edit },
-	                    'Edit'
+	                    { className: 'btn btn-default btnEdit pull-right', onClick: this.edit },
+	                    React.createElement('i', { className: 'fa fa-cog', 'aria-hidden': 'true' })
 	                )
 	            );
 	        }
@@ -21281,14 +21292,15 @@
 	        },
 	        saveScene: function saveScene(scene) {
 	            dispatch(SceneActions.create(scene));
+	        },
+	        deleteScene: function deleteScene(id) {
+	            dispatch(SceneActions.destroy(id));
 	        }
 	    };
 	}
 
 	var SceneListContainer = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
 	module.exports = SceneListContainer;
-
-	//TODO: Hide "New Scene" button after click
 
 /***/ },
 /* 175 */
@@ -23096,7 +23108,7 @@
 	            { className: 'cmp-Scene col-xs-6 col-sm-3 col-md-3 col-lg-3' },
 	            React.createElement(
 	                'a',
-	                { className: 'btn btn-primary scene', onClick: this.handleClick },
+	                { role: 'button', className: 'btn btn-primary scene', onClick: this.handleClick },
 	                React.createElement(
 	                    'div',
 	                    null,
@@ -23147,14 +23159,17 @@
 	            address: this.props.scene.address || '',
 	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
 	            commands: this.props.scene.commands || [],
+	            dirty: (this.props.scene.id || '') === '',
+
+	            //TODO: Needed?
 	            zones: this.props.zones || [],
-	            scenes: this.props.scenes || [],
-	            dirty: (this.props.scene.id || '') === ''
+	            //TODO: Needed?
+	            scenes: this.props.scenes || []
 	        };
 	    },
 
 	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        //Needed?
+	        //TODO: Needed?
 	        if (nextProps.zones) {
 	            this.setState({ zones: nextProps.zones });
 	        }
@@ -23187,6 +23202,7 @@
 	            //SceneActions.create(this.toJson());
 
 	            //TODO: How to handle success/fail responses
+	            //TODO: Need to remove dirty flag on success
 	            /*
 	            $.ajax({
 	                url: '/api/v1/systems/123/scenes',
@@ -23207,7 +23223,7 @@
 	                }
 	            });*/
 	        } else {
-	            //TODO: Flux
+	            //TODO: Redux
 	            // Update to existing scene
 	            $.ajax({
 	                url: '/api/v1/systems/123/scenes/' + this.state.id,
@@ -23228,7 +23244,7 @@
 	    },
 
 	    deleteScene: function deleteScene() {
-	        SceneActions.destroy(this.state.id);
+	        this.props.deleteScene(this.state.id);
 
 	        // TODO: What about scenes that have not been saved, in processs of
 	        // being created
@@ -23290,8 +23306,8 @@
 	    },
 
 	    render: function render() {
-	        console.log('rendering info: ' + this.props.createErr);
 	        var commands;
+
 	        //TODO: remove
 	        this.state.managed = true;
 	        var self = this;
@@ -24110,13 +24126,17 @@
 	    },
 
 	    destroy: function destroy(id) {
-	        //TODO:
-	        /*
-	        AppDispatcher.dispatch({
-	            actionType: Constants.SCENE_DESTROY,
-	            id: id,
-	        });*/
-	        Api.sceneDestroy(id);
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_DESTROY, id: id });
+
+	            Api.sceneDestroy(id, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_DESTROY_FAIL, err: err, id: id });
+	                    return;
+	                }
+	                dispatch({ type: Constants.SCENE_DESTROY_RAW, err: err, id: id });
+	            });
+	        };
 	    },
 
 	    loadAll: function loadAll() {
@@ -24305,26 +24325,20 @@
 	    },
 
 	    // sceneDestroy deletes the scene with the specified ID from the backing store
-	    sceneDestroy: function sceneDestroy(id) {
+	    sceneDestroy: function sceneDestroy(id, callback) {
 	        $.ajax({
 	            url: '/api/v1/systems/123/scenes/' + id,
 	            type: 'DELETE',
 	            cache: false,
 	            success: function success(data) {
-	                /*//TODO:
-	                AppDispatcher.dispatch({
-	                    actionType: Constants.SCENE_DESTROY_RAW,
-	                    id: id,
-	                });*/
+	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                /*//TODO:
-	                AppDispatcher.dispatch({
-	                    actionType: Constants.SCENE_DESTROY_FAIL,
-	                    id: id,
+	                callback({
 	                    err: err,
-	                    xhr: xhr,
-	                });*/
+	                    status: status,
+	                    xhr: xhr
+	                });
 	            }
 	        });
 	    },
@@ -25972,7 +25986,8 @@
 	        case Constants.SCENE_NEW_CLIENT:
 	            newState.newSceneInfo = {
 	                scene: { clientId: 'scene_cid_' + clientId + '' },
-	                saveErr: null
+	                saveErr: null,
+	                saveStatus: null
 	            };
 	            ++clientId;
 	            break;
@@ -25992,10 +26007,15 @@
 	            break;
 
 	        case Constants.SCENE_DESTROY:
-	            //TODO:
 	            break;
 	        case Constants.SCENE_DESTROY_RAW:
-	            //TODO:
+
+	            for (var i = 0; i < newState.items.length; ++i) {
+	                if (newState.items[i].id === action.id) {
+	                    newState.items.splice(i, 1);
+	                    break;
+	                }
+	            }
 	            break;
 	        case Constants.SCENE_DESTROY_FAIL:
 	            //TODO:

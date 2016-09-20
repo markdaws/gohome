@@ -17,13 +17,17 @@ var SceneActions = {
     },
 
     destroy: function(id) {
-        //TODO:
-        /*
-        AppDispatcher.dispatch({
-            actionType: Constants.SCENE_DESTROY,
-            id: id,
-        });*/
-        Api.sceneDestroy(id);
+        return function(dispatch) {
+            dispatch({ type: Constants.SCENE_DESTROY, id: id });
+
+            Api.sceneDestroy(id, function(err, data) {
+                if (err) {
+                    dispatch({ type: Constants.SCENE_DESTROY_FAIL, err: err, id: id });
+                    return;
+                }
+                dispatch({ type: Constants.SCENE_DESTROY_RAW, err: err, id: id });
+            });
+        };
     },
 
     loadAll: function() {

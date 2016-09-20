@@ -58,6 +58,10 @@ var SceneList = React.createClass({
         if (this.state.editMode) {
             var newScene = this.props.scenes.newSceneInfo;
 
+            //TODO:Remove
+            //newScene.saveStatus
+            //newScene.saveErr
+
             // If the user is in the process of creating a new scene we append the
             // current new scene object to the front of the list
             if (newScene) {
@@ -76,13 +80,14 @@ var SceneList = React.createClass({
                         readOnlyFields="id"
                         key={scene.id || scene.clientId}
                         saveScene={this.props.saveScene}
+                        deleteScene={this.props.deleteScene}
                         saveStatus={(newScene || {}).saveStatus} />
                 );
             }.bind(this));
             btns = (
                 <div className="clearfix buttonWrapper">
-                  <button className="btn btn-primary btnNew pull-left" onClick={this.props.newClientScene}>New Scene</button>
-                  <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
+                    <button className="btn btn-primary btnNew pull-left" onClick={this.props.newClientScene}>New Scene</button>
+                    <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
                 </div>
             );
         } else {
@@ -94,15 +99,17 @@ var SceneList = React.createClass({
             });
             btns = (
                 <div className="clearfix buttonWrapper">
-                  <button className="btn btn-primary btnEdit pull-right" onClick={this.edit}>Edit</button>
+                    <button className="btn btn-default btnEdit pull-right" onClick={this.edit}>
+                        <i className="fa fa-cog" aria-hidden="true"></i>
+                    </button>
                 </div>
             );
         }
         
         return (
             <div className="cmp-SceneList">
-              {btns}
-              {body}
+                {btns}
+                {body}
             </div>
         );
     }
@@ -124,11 +131,12 @@ function mapDispatchToProps(dispatch) {
         },
         saveScene: function(scene) {
             dispatch(SceneActions.create(scene));
+        },
+        deleteScene: function(id) {
+            dispatch(SceneActions.destroy(id));
         }
     }
 }
 
 var SceneListContainer = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
 module.exports = SceneListContainer;
-
-//TODO: Hide "New Scene" button after click
