@@ -16,6 +16,13 @@ var SceneActions = {
         };
     },
 
+    destroyClient: function() {
+        return function(dispatch) {
+            dispatch({ type: Constants.SCENE_DESTROY, id: "" });
+            dispatch({ type: Constants.SCENE_DESTROY_RAW, id: "" });
+        };
+    },
+
     destroy: function(id) {
         return function(dispatch) {
             dispatch({ type: Constants.SCENE_DESTROY, id: id });
@@ -25,7 +32,7 @@ var SceneActions = {
                     dispatch({ type: Constants.SCENE_DESTROY_FAIL, err: err, id: id });
                     return;
                 }
-                dispatch({ type: Constants.SCENE_DESTROY_RAW, err: err, id: id });
+                dispatch({ type: Constants.SCENE_DESTROY_RAW, data: data, id: id });
             });
         };
     },

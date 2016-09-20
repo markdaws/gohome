@@ -47,11 +47,16 @@ module.exports = function(state, action) {
     case Constants.SCENE_DESTROY:
         break;
     case Constants.SCENE_DESTROY_RAW:
-        
-        for (var i=0; i<newState.items.length; ++i) {
-            if (newState.items[i].id === action.id) {
-                newState.items.splice(i, 1);
-                break;
+        // This is a client scene, before it was sent to the server
+        if (action.id === "") {
+            newState.newSceneInfo = null;
+        }
+        else {
+            for (var i=0; i<newState.items.length; ++i) {
+                if (newState.items[i].id === action.id) {
+                    newState.items.splice(i, 1);
+                    break;
+                }
             }
         }
         break;

@@ -110,10 +110,7 @@ var SceneInfo = React.createClass({
 
     deleteScene: function() {
         this.props.deleteScene(this.state.id);
-
-        // TODO: What about scenes that have not been saved, in processs of
-        // being created
-        // TODO: How to handle errors, or success
+        // TODO: How to handle errors
     },
 
     saveCommand: function(cmd, callback) {

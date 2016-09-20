@@ -21294,7 +21294,11 @@
 	            dispatch(SceneActions.create(scene));
 	        },
 	        deleteScene: function deleteScene(id) {
-	            dispatch(SceneActions.destroy(id));
+	            if (id === "") {
+	                dispatch(SceneActions.destroyClient());
+	            } else {
+	                dispatch(SceneActions.destroy(id));
+	            }
 	        }
 	    };
 	}
@@ -23245,10 +23249,7 @@
 
 	    deleteScene: function deleteScene() {
 	        this.props.deleteScene(this.state.id);
-
-	        // TODO: What about scenes that have not been saved, in processs of
-	        // being created
-	        // TODO: How to handle errors, or success
+	        // TODO: How to handle errors
 	    },
 
 	    saveCommand: function saveCommand(cmd, callback) {
@@ -24125,6 +24126,13 @@
 	        };
 	    },
 
+	    destroyClient: function destroyClient() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_DESTROY, id: "" });
+	            dispatch({ type: Constants.SCENE_DESTROY_RAW, id: "" });
+	        };
+	    },
+
 	    destroy: function destroy(id) {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.SCENE_DESTROY, id: id });
@@ -24134,7 +24142,7 @@
 	                    dispatch({ type: Constants.SCENE_DESTROY_FAIL, err: err, id: id });
 	                    return;
 	                }
-	                dispatch({ type: Constants.SCENE_DESTROY_RAW, err: err, id: id });
+	                dispatch({ type: Constants.SCENE_DESTROY_RAW, data: data, id: id });
 	            });
 	        };
 	    },
@@ -26009,11 +26017,15 @@
 	        case Constants.SCENE_DESTROY:
 	            break;
 	        case Constants.SCENE_DESTROY_RAW:
-
-	            for (var i = 0; i < newState.items.length; ++i) {
-	                if (newState.items[i].id === action.id) {
-	                    newState.items.splice(i, 1);
-	                    break;
+	            // This is a client scene, before it was sent to the server
+	            if (action.id === "") {
+	                newState.newSceneInfo = null;
+	            } else {
+	                for (var i = 0; i < newState.items.length; ++i) {
+	                    if (newState.items[i].id === action.id) {
+	                        newState.items.splice(i, 1);
+	                        break;
+	                    }
 	                }
 	            }
 	            break;

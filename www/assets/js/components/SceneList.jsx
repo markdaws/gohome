@@ -133,7 +133,11 @@ function mapDispatchToProps(dispatch) {
             dispatch(SceneActions.create(scene));
         },
         deleteScene: function(id) {
-            dispatch(SceneActions.destroy(id));
+            if (id === "") {
+                dispatch(SceneActions.destroyClient());
+            } else {
+                dispatch(SceneActions.destroy(id));
+            }
         }
     }
 }
