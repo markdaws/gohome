@@ -8,7 +8,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
     getInitialState: function() {
         var attr = this.props.command.attributes;
         return {
-            cid: this.getNextIdAndIncrement() + '',
+            clientId: this.getNextIdAndIncrement() + '',
             level: attr.Level || 0,
             r: attr.R || 0,
             g: attr.G || 0,
@@ -21,7 +21,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
     toJson: function() {
         return {
             type: 'zoneSetLevel',
-            clientId: this.state.cid,
+            clientId: this.state.clientId,
             //TODO: correctly capitalize json values
             attributes: {
                 Level: parseFloat(this.state.level),

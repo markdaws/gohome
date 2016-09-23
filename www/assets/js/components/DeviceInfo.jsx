@@ -8,7 +8,7 @@ var DeviceInfo = React.createClass({
     getInitialState: function() {
         //TODO: need state?
         return {
-            cid: this.getNextIdAndIncrement() + '',
+            clientId: this.getNextIdAndIncrement() + '',
             name: this.props.name || '',
             description: this.props.description || '',
             address: this.props.address,
@@ -23,7 +23,7 @@ var DeviceInfo = React.createClass({
     toJson: function() {
         var s = this.state;
         return {
-            clientId: s.cid,
+            clientId: s.clientId,
             name: s.name,
             description: s.description,
             address: s.address,

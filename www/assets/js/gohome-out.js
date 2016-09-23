@@ -20161,7 +20161,7 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            cid: this.getNextIdAndIncrement() + '',
+	            clientId: this.getNextIdAndIncrement() + '',
 	            name: this.props.name,
 	            description: this.props.description,
 	            address: this.props.address,
@@ -20176,7 +20176,7 @@
 	    toJson: function toJson() {
 	        var s = this.state;
 	        return {
-	            clientId: s.cid,
+	            clientId: s.clientId,
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
@@ -20358,7 +20358,7 @@
 
 	module.exports = {
 	    uid: function uid(field) {
-	        var id = this.state.cid == undefined ? this.state.id : this.state.cid;
+	        var id = this.state.clientId == undefined ? this.state.id : this.state.clientId;
 	        return id + '_' + field;
 	    },
 
@@ -20397,6 +20397,8 @@
 	        var s = {};
 	        s[statePath] = evt.target.value;
 	        s.dirty = true;
+	        s.errors = {};
+	        s.saveStatus = '';
 	        this.setState(s);
 	    },
 
@@ -20867,7 +20869,7 @@
 	    getInitialState: function getInitialState() {
 	        //TODO: need state?
 	        return {
-	            cid: this.getNextIdAndIncrement() + '',
+	            clientId: this.getNextIdAndIncrement() + '',
 	            name: this.props.name || '',
 	            description: this.props.description || '',
 	            address: this.props.address,
@@ -20882,7 +20884,7 @@
 	    toJson: function toJson() {
 	        var s = this.state;
 	        return {
-	            clientId: s.cid,
+	            clientId: s.clientId,
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
@@ -21206,36 +21208,54 @@
 	        var body;
 	        var btns;
 
-	        //TODO: What about loading fail?
-	        //this.props.scenes.loading
+	        var error;
+	        //TODO: loading error
+
+	        var loading;
+	        if (this.props.scenes.loading) {
+	            loading = React.createElement(
+	                'div',
+	                { className: 'spinnerWrapper' },
+	                React.createElement(
+	                    'p',
+	                    null,
+	                    'Loading Scenes ...'
+	                ),
+	                React.createElement('i', { className: 'fa fa-spinner fa-spin' })
+	            );
+	        }
 
 	        var scenes = this.props.scenes.items;
 	        if (this.state.editMode) {
-	            var newScene = this.props.scenes.newSceneInfo;
-
-	            //TODO:Remove
-	            //newScene.saveStatus
-	            //newScene.saveErr
+	            var newSceneInfo = this.props.scenes.newSceneInfo;
 
 	            // If the user is in the process of creating a new scene we append the
 	            // current new scene object to the front of the list
-	            if (newScene) {
+	            if (newSceneInfo) {
 	                // Since we are modifying the array for rendering, shallow copy array
 	                scenes = scenes.slice();
-	                scenes.unshift(newScene.scene);
+	                scenes.unshift(newSceneInfo.scene);
 	            }
 
 	            body = scenes.map(function (scene) {
-	                var createResponse;
+	                var errors;
+
+	                // Check for input validation errors from the server
+	                if (newSceneInfo && newSceneInfo.saveErr && newSceneInfo.scene === scene) {
+	                    errors = newSceneInfo.saveErr.validationErrors;
+	                }
+
+	                //TODO: saveStatus - what about when editing the scene?
 	                return React.createElement(SceneInfo, {
 	                    zones: this.state.zones,
 	                    buttons: this.props.buttons,
 	                    scene: scene,
 	                    readOnlyFields: 'id',
 	                    key: scene.id || scene.clientId,
+	                    errors: errors,
 	                    saveScene: this.props.saveScene,
 	                    deleteScene: this.props.deleteScene,
-	                    saveStatus: (newScene || {}).saveStatus });
+	                    saveStatus: (newSceneInfo || {}).saveStatus });
 	            }.bind(this));
 	            btns = React.createElement(
 	                'div',
@@ -21267,9 +21287,16 @@
 	            );
 	        }
 
+	        if (loading) {
+	            btns = null;
+	            body = null;
+	        }
+
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SceneList' },
+	            error,
+	            loading,
 	            btns,
 	            body
 	        );
@@ -23162,24 +23189,21 @@
 	            name: this.props.scene.name || '',
 	            address: this.props.scene.address || '',
 	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
+	            saveStatus: this.props.saveStatus,
+	            //TODO: Needed?, turn to props
 	            commands: this.props.scene.commands || [],
-	            dirty: (this.props.scene.id || '') === '',
 
-	            //TODO: Needed?
-	            zones: this.props.zones || [],
-	            //TODO: Needed?
-	            scenes: this.props.scenes || []
+	            //TODO: What about when the scene has been edited
+	            dirty: (this.props.scene.id || '') === ''
 	        };
 	    },
 
 	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        //TODO: Needed?
-	        if (nextProps.zones) {
-	            this.setState({ zones: nextProps.zones });
+	        if (nextProps.errors) {
+	            this.setState({ errors: nextProps.errors });
 	        }
-	        //TODO: Pass in state via props or go to store directly?
-	        if (nextProps.scenes) {
-	            this.setState({ scenes: nextProps.scenes });
+	        if (nextProps.saveStatus) {
+	            this.setState({ saveStatus: nextProps.saveStatus });
 	        }
 	    },
 
@@ -23203,29 +23227,7 @@
 
 	        if (this.state.id === '') {
 	            this.props.saveScene(this.toJson());
-	            //SceneActions.create(this.toJson());
-
-	            //TODO: How to handle success/fail responses
-	            //TODO: Need to remove dirty flag on success
-	            /*
-	            $.ajax({
-	                url: '/api/v1/systems/123/scenes',
-	                type: 'POST',
-	                dataType: 'json',
-	                data: JSON.stringify(this.toJson()),
-	                cache: false,
-	                success: function(data) {
-	                    self.setState({
-	                        dirty: false,
-	                        id: data.id
-	                    });
-	                },
-	                error: function(xhr, status, err) {
-	                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
-	                    self.setState({ errors: errors });
-	                    saveBtn.failure();
-	                }
-	            });*/
+	            //TODO: Update state on save, not dirty, has id not clientId
 	        } else {
 	            //TODO: Redux
 	            // Update to existing scene
@@ -23262,7 +23264,6 @@
 	            data: JSON.stringify(cmd),
 	            cache: false,
 	            success: function success(data) {
-	                console.log('saved command');
 	                callback();
 	            },
 	            error: function error(xhr, status, err) {
@@ -23273,6 +23274,7 @@
 	    },
 
 	    deleteCommand: function deleteCommand(cmdIndex, isNewCmd, callback) {
+	        //TODO: redux
 	        var self = this;
 
 	        if (isNewCmd) {
@@ -23365,7 +23367,7 @@
 	                React.createElement(SaveBtn, {
 	                    text: 'Save',
 	                    ref: 'saveBtn',
-	                    status: this.props.saveStatus,
+	                    status: this.state.saveStatus,
 	                    clicked: this.saveScene })
 	            );
 	        }
@@ -23561,7 +23563,7 @@
 	    getInitialState: function getInitialState() {
 	        var attr = this.props.command.attributes;
 	        return {
-	            cid: this.getNextIdAndIncrement() + '',
+	            clientId: this.getNextIdAndIncrement() + '',
 	            level: attr.Level || 0,
 	            r: attr.R || 0,
 	            g: attr.G || 0,
@@ -23574,7 +23576,7 @@
 	    toJson: function toJson() {
 	        return {
 	            type: 'zoneSetLevel',
-	            clientId: this.state.cid,
+	            clientId: this.state.clientId,
 	            //TODO: correctly capitalize json values
 	            attributes: {
 	                Level: parseFloat(this.state.level),
@@ -23742,7 +23744,7 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            cid: this.getNextIdAndIncrement() + '',
+	            clientId: this.getNextIdAndIncrement() + '',
 	            sceneId: this.props.command.attributes.SceneID || '',
 	            errors: null
 	        };
@@ -23757,7 +23759,7 @@
 	    toJson: function toJson() {
 	        return {
 	            type: 'sceneSet',
-	            clientId: this.state.cid,
+	            clientId: this.state.clientId,
 	            attributes: {
 	                SceneID: this.state.sceneId
 	            }
@@ -23864,7 +23866,7 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            cid: this.getNextIdAndIncrement() + '',
+	            clientId: this.getNextIdAndIncrement() + '',
 	            buttonId: this.props.command.attributes.ButtonID || '',
 	            errors: null
 	        };
@@ -23879,7 +23881,7 @@
 	    toJson: function toJson() {
 	        return {
 	            type: 'buttonPress',
-	            clientId: this.state.cid,
+	            clientId: this.state.clientId,
 	            attributes: {
 	                ButtonID: this.state.buttonId
 	            }
@@ -23985,7 +23987,7 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            cid: this.getNextIdAndIncrement() + '',
+	            clientId: this.getNextIdAndIncrement() + '',
 	            buttonId: this.props.command.attributes.ButtonID || '',
 	            errors: null
 	        };
@@ -24000,7 +24002,7 @@
 	    toJson: function toJson() {
 	        return {
 	            type: 'buttonRelease',
-	            clientId: this.state.cid,
+	            clientId: this.state.clientId,
 	            attributes: {
 	                ButtonID: this.state.buttonId
 	            }
@@ -26001,6 +26003,7 @@
 	            break;
 
 	        case Constants.SCENE_CREATE:
+	            newState.newSceneInfo.saveErr = null;
 	            newState.newSceneInfo.saveStatus = 'saving';
 	            break;
 

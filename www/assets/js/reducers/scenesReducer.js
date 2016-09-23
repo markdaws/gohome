@@ -31,6 +31,7 @@ module.exports = function(state, action) {
         break;
 
     case Constants.SCENE_CREATE:
+        newState.newSceneInfo.saveErr = null;
         newState.newSceneInfo.saveStatus = 'saving';
         break;
 

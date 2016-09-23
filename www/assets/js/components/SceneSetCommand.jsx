@@ -7,7 +7,7 @@ var SceneSetCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         return {
-            cid: this.getNextIdAndIncrement() + '',
+            clientId: this.getNextIdAndIncrement() + '',
             sceneId: this.props.command.attributes.SceneID || '',
             errors: null,
         }
@@ -22,7 +22,7 @@ var SceneSetCommand = module.exports = React.createClass({
     toJson: function() {
         return {
             type: 'sceneSet',
-            clientId: this.state.cid,
+            clientId: this.state.clientId,
             attributes: {
                 SceneID: this.state.sceneId
             }

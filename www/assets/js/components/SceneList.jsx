@@ -23,7 +23,7 @@ var SceneList = React.createClass({
             this.setState({ zones: nextProps.zones });
         }
     },
-    
+
     componentDidMount: function() {
         this.props.loadAllScenes();
 
@@ -51,27 +51,41 @@ var SceneList = React.createClass({
         var body;
         var btns;
 
-        //TODO: What about loading fail?
-        //this.props.scenes.loading
+
+        var error;
+        //TODO: loading error
+
+        var loading;
+        if (this.props.scenes.loading) {
+            loading = (
+                <div className="spinnerWrapper">
+                    <p>Loading Scenes ...</p>
+                    <i className="fa fa-spinner fa-spin"></i>
+                </div>
+            );
+        }
 
         var scenes = this.props.scenes.items;
         if (this.state.editMode) {
-            var newScene = this.props.scenes.newSceneInfo;
-
-            //TODO:Remove
-            //newScene.saveStatus
-            //newScene.saveErr
+            var newSceneInfo = this.props.scenes.newSceneInfo;
 
             // If the user is in the process of creating a new scene we append the
             // current new scene object to the front of the list
-            if (newScene) {
+            if (newSceneInfo) {
                 // Since we are modifying the array for rendering, shallow copy array
                 scenes = scenes.slice();
-                scenes.unshift(newScene.scene);
+                scenes.unshift(newSceneInfo.scene);
             }
 
             body = scenes.map(function(scene) {
-                var createResponse;
+                var errors;
+
+                // Check for input validation errors from the server
+                if (newSceneInfo && newSceneInfo.saveErr && newSceneInfo.scene === scene) {
+                    errors = newSceneInfo.saveErr.validationErrors;
+                }
+
+                //TODO: saveStatus - what about when editing the scene?
                 return (
                     <SceneInfo
                         zones={this.state.zones}
@@ -79,9 +93,10 @@ var SceneList = React.createClass({
                         scene={scene}
                         readOnlyFields="id"
                         key={scene.id || scene.clientId}
+                        errors={errors}
                         saveScene={this.props.saveScene}
                         deleteScene={this.props.deleteScene}
-                        saveStatus={(newScene || {}).saveStatus} />
+                        saveStatus={(newSceneInfo || {}).saveStatus} />
                 );
             }.bind(this));
             btns = (
@@ -105,9 +120,16 @@ var SceneList = React.createClass({
                 </div>
             );
         }
-        
+
+        if (loading) {
+            btns = null;
+            body = null;
+        }
+
         return (
             <div className="cmp-SceneList">
+                {error}
+                {loading}
                 {btns}
                 {body}
             </div>

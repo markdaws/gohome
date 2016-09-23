@@ -23,24 +23,21 @@ var SceneInfo = React.createClass({
             name: this.props.scene.name || '',
             address: this.props.scene.address || '',
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
+            saveStatus: this.props.saveStatus,
+            //TODO: Needed?, turn to props
             commands: this.props.scene.commands || [],
-            dirty: (this.props.scene.id || '') === '',
 
-            //TODO: Needed?
-            zones: this.props.zones || [],
-            //TODO: Needed?
-            scenes: this.props.scenes || []
+            //TODO: What about when the scene has been edited
+            dirty: (this.props.scene.id || '') === '',
         };
     },
 
     componentWillReceiveProps: function(nextProps) {
-        //TODO: Needed?
-        if (nextProps.zones) {
-            this.setState({ zones: nextProps.zones });
+        if (nextProps.errors) {
+            this.setState({ errors: nextProps.errors });
         }
-        //TODO: Pass in state via props or go to store directly?
-        if (nextProps.scenes) {
-            this.setState({ scenes: nextProps.scenes });
+        if (nextProps.saveStatus) {
+            this.setState({ saveStatus: nextProps.saveStatus });
         }
     },
 
@@ -64,29 +61,7 @@ var SceneInfo = React.createClass({
 
         if (this.state.id === '') {
             this.props.saveScene(this.toJson());
-            //SceneActions.create(this.toJson());
-
-            //TODO: How to handle success/fail responses
-            //TODO: Need to remove dirty flag on success
-            /*
-            $.ajax({
-                url: '/api/v1/systems/123/scenes',
-                type: 'POST',
-                dataType: 'json',
-                data: JSON.stringify(this.toJson()),
-                cache: false,
-                success: function(data) {
-                    self.setState({
-                        dirty: false,
-                        id: data.id
-                    });
-                },
-                error: function(xhr, status, err) {
-                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
-                    self.setState({ errors: errors });
-                    saveBtn.failure();
-                }
-            });*/
+            //TODO: Update state on save, not dirty, has id not clientId
         } else {
             //TODO: Redux
             // Update to existing scene
@@ -123,7 +98,6 @@ var SceneInfo = React.createClass({
             data: JSON.stringify(cmd),
             cache: false,
             success: function(data) {
-                console.log('saved command');
                 callback();
             },
             error: function(xhr, status, err) {
@@ -134,6 +108,7 @@ var SceneInfo = React.createClass({
     },
 
     deleteCommand: function(cmdIndex, isNewCmd, callback) {
+        //TODO: redux
         var self = this;
         
         if (isNewCmd) {
@@ -218,7 +193,7 @@ var SceneInfo = React.createClass({
                     <SaveBtn
                         text="Save"
                         ref="saveBtn"
-                        status={this.props.saveStatus}
+                        status={this.state.saveStatus}
                         clicked={this.saveScene} />
                 </div>
             );

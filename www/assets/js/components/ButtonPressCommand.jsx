@@ -7,7 +7,7 @@ var ButtonPressCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         return {
-            cid: this.getNextIdAndIncrement() + '',
+            clientId: this.getNextIdAndIncrement() + '',
             buttonId: this.props.command.attributes.ButtonID || '',
             errors: null,
         }
@@ -22,7 +22,7 @@ var ButtonPressCommand = module.exports = React.createClass({
     toJson: function() {
         return {
             type: 'buttonPress',
-            clientId: this.state.cid,
+            clientId: this.state.clientId,
             attributes: {
                 ButtonID: this.state.buttonId
             }

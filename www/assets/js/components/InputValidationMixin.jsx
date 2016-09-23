@@ -1,6 +1,6 @@
 module.exports = {
     uid: function(field) {
-        var id = this.state.cid == undefined ? this.state.id : this.state.cid;
+        var id = this.state.clientId == undefined ? this.state.id : this.state.clientId;
         return id + '_' + field
     },
 
@@ -35,6 +35,8 @@ module.exports = {
         var s = {}
         s[statePath] = evt.target.value;
         s.dirty = true;
+        s.errors = {};
+        s.saveStatus = '';
         this.setState(s);
     },
 
