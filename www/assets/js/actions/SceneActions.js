@@ -2,16 +2,30 @@ var Constants = require('../constants.js');
 var Api = require('../utils/API.js');
 
 var SceneActions = {
-    create: function(scene) {
+    create: function(sceneJson) {
         return function(dispatch) {
             dispatch({ type: Constants.SCENE_CREATE });
 
-            Api.sceneCreate(scene, function(err, data) {
+            Api.sceneCreate(sceneJson, function(err, data) {
                 if (err) {
                     dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err });
                     return;
                 }
                 dispatch({ type: Constants.SCENE_CREATE_RAW, data: data });
+            });
+        };
+    },
+
+    update: function(sceneJson) {
+        return function(dispatch) {
+            dispatch({ type: Constants.SCENE_UPDATE });
+
+            Api.sceneUpdate(sceneJson, function(err, data) {
+                if (err) {
+                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err });
+                    return;
+                }
+                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data });
             });
         };
     },

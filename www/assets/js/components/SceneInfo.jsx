@@ -23,12 +23,14 @@ var SceneInfo = React.createClass({
             name: this.props.scene.name || '',
             address: this.props.scene.address || '',
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
-            saveStatus: this.props.saveStatus,
+            errors: this.props.errors,
             //TODO: Needed?, turn to props
             commands: this.props.scene.commands || [],
 
-            //TODO: What about when the scene has been edited
-            dirty: (this.props.scene.id || '') === '',
+            // true if the object has been modified
+            dirty: false,
+
+            saveButtonStatus: this.saveStatus
         };
     },
 
@@ -37,7 +39,7 @@ var SceneInfo = React.createClass({
             this.setState({ errors: nextProps.errors });
         }
         if (nextProps.saveStatus) {
-            this.setState({ saveStatus: nextProps.saveStatus });
+            this.setState({ saveButtonStatus: nextProps.saveStatus });
         }
     },
 
@@ -53,33 +55,15 @@ var SceneInfo = React.createClass({
     },
 
     saveScene: function() {
-        //saveBtn = this.refs.saveBtn;
-        //saveBtn.saving();
-
         this.setState({ errors: null });
         var self = this;
 
         if (this.state.id === '') {
-            this.props.saveScene(this.toJson());
             //TODO: Update state on save, not dirty, has id not clientId
+            this.props.saveScene(this.toJson());
         } else {
-            //TODO: Redux
-            // Update to existing scene
-            $.ajax({
-                url: '/api/v1/systems/123/scenes/' + this.state.id,
-                type: 'PUT',
-                dataType: 'json',
-                data: JSON.stringify(this.toJson()),
-                cache: false,
-                success: function(data) {
-                    self.setState({ dirty: false });
-                },
-                error: function(xhr, status, err) {
-                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
-                    self.setState({ errors: errors });
-                    saveBtn.failure();
-                }
-            });
+            //TODO: Verify state correct after successfully updated
+            this.props.updateScene(this.toJson());
         }
     },
 
@@ -142,6 +126,13 @@ var SceneInfo = React.createClass({
         this.setState({ commands: cmds });
     },
 
+    _inputChanged: function(evt) {
+        this.setState({ saveButtonStatus: ''});
+
+        // Lives in InputValidationMixin
+        this.changed(evt);
+    },
+
     render: function() {
         var commands
 
@@ -192,8 +183,7 @@ var SceneInfo = React.createClass({
                 <div className="pull-right">
                     <SaveBtn
                         text="Save"
-                        ref="saveBtn"
-                        status={this.state.saveStatus}
+                        status={this.state.saveButtonStatus}
                         clicked={this.saveScene} />
                 </div>
             );
@@ -208,7 +198,7 @@ var SceneInfo = React.createClass({
                 <input
                   value={this.state.name}
                   data-statepath="name"
-                  onChange={this.changed}
+                  onChange={this._inputChanged}
                   className="name form-control"
                   type="text"
                   id={this.uid("name")}/>
@@ -220,7 +210,7 @@ var SceneInfo = React.createClass({
                   value={this.state.id}
                   readOnly={this.isReadOnly("id")}
                   data-statepath="id"
-                  onChange={this.changed}
+                  onChange={this._inputChanged}
                   className="id form-control"
                   type="text"
                   id={this.uid("id")}/>
@@ -231,7 +221,7 @@ var SceneInfo = React.createClass({
                 <input
                   value={this.state.address}
                   data-statepath="address"
-                  onChange={this.changed}
+                  onChange={this._inputChanged}
                   className="address form-control"
                   type="text"
                   id={this.uid("address")}/>

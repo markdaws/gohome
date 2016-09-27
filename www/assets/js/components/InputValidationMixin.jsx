@@ -35,8 +35,10 @@ module.exports = {
         var s = {}
         s[statePath] = evt.target.value;
         s.dirty = true;
-        s.errors = {};
-        s.saveStatus = '';
+
+        var errors = this.state['errors'] || {};
+        delete errors[this.uid(statePath)];
+        s.errors = errors;
         this.setState(s);
     },
 

@@ -20397,8 +20397,10 @@
 	        var s = {};
 	        s[statePath] = evt.target.value;
 	        s.dirty = true;
-	        s.errors = {};
-	        s.saveStatus = '';
+
+	        var errors = this.state['errors'] || {};
+	        delete errors[this.uid(statePath)];
+	        s.errors = errors;
 	        this.setState(s);
 	    },
 
@@ -21241,11 +21243,10 @@
 	                var errors;
 
 	                // Check for input validation errors from the server
-	                if (newSceneInfo && newSceneInfo.saveErr && newSceneInfo.scene === scene) {
-	                    errors = newSceneInfo.saveErr.validationErrors;
+	                if (newSceneInfo && newSceneInfo.scene === scene && this.props.scenes.saveErr) {
+	                    errors = this.props.scenes.saveErr.validationErrors;
 	                }
 
-	                //TODO: saveStatus - what about when editing the scene?
 	                return React.createElement(SceneInfo, {
 	                    zones: this.state.zones,
 	                    buttons: this.props.buttons,
@@ -21254,8 +21255,9 @@
 	                    key: scene.id || scene.clientId,
 	                    errors: errors,
 	                    saveScene: this.props.saveScene,
+	                    updateScene: this.props.updateScene,
 	                    deleteScene: this.props.deleteScene,
-	                    saveStatus: (newSceneInfo || {}).saveStatus });
+	                    saveStatus: this.props.scenes.saveStatus });
 	            }.bind(this));
 	            btns = React.createElement(
 	                'div',
@@ -21317,8 +21319,11 @@
 	        loadAllScenes: function loadAllScenes() {
 	            dispatch(SceneActions.loadAll());
 	        },
-	        saveScene: function saveScene(scene) {
-	            dispatch(SceneActions.create(scene));
+	        saveScene: function saveScene(sceneJson) {
+	            dispatch(SceneActions.create(sceneJson));
+	        },
+	        updateScene: function updateScene(sceneJson) {
+	            dispatch(SceneActions.update(sceneJson));
 	        },
 	        deleteScene: function deleteScene(id) {
 	            if (id === "") {
@@ -23189,12 +23194,14 @@
 	            name: this.props.scene.name || '',
 	            address: this.props.scene.address || '',
 	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
-	            saveStatus: this.props.saveStatus,
+	            errors: this.props.errors,
 	            //TODO: Needed?, turn to props
 	            commands: this.props.scene.commands || [],
 
-	            //TODO: What about when the scene has been edited
-	            dirty: (this.props.scene.id || '') === ''
+	            // true if the object has been modified
+	            dirty: false,
+
+	            saveButtonStatus: this.saveStatus
 	        };
 	    },
 
@@ -23203,7 +23210,7 @@
 	            this.setState({ errors: nextProps.errors });
 	        }
 	        if (nextProps.saveStatus) {
-	            this.setState({ saveStatus: nextProps.saveStatus });
+	            this.setState({ saveButtonStatus: nextProps.saveStatus });
 	        }
 	    },
 
@@ -23219,33 +23226,15 @@
 	    },
 
 	    saveScene: function saveScene() {
-	        //saveBtn = this.refs.saveBtn;
-	        //saveBtn.saving();
-
 	        this.setState({ errors: null });
 	        var self = this;
 
 	        if (this.state.id === '') {
-	            this.props.saveScene(this.toJson());
 	            //TODO: Update state on save, not dirty, has id not clientId
+	            this.props.saveScene(this.toJson());
 	        } else {
-	            //TODO: Redux
-	            // Update to existing scene
-	            $.ajax({
-	                url: '/api/v1/systems/123/scenes/' + this.state.id,
-	                type: 'PUT',
-	                dataType: 'json',
-	                data: JSON.stringify(this.toJson()),
-	                cache: false,
-	                success: function success(data) {
-	                    self.setState({ dirty: false });
-	                },
-	                error: function error(xhr, status, err) {
-	                    var errors = (JSON.parse(xhr.responseText) || {}).errors;
-	                    self.setState({ errors: errors });
-	                    saveBtn.failure();
-	                }
-	            });
+	            //TODO: Verify state correct after successfully updated
+	            this.props.updateScene(this.toJson());
 	        }
 	    },
 
@@ -23308,6 +23297,13 @@
 	        this.setState({ commands: cmds });
 	    },
 
+	    _inputChanged: function _inputChanged(evt) {
+	        this.setState({ saveButtonStatus: '' });
+
+	        // Lives in InputValidationMixin
+	        this.changed(evt);
+	    },
+
 	    render: function render() {
 	        var commands;
 
@@ -23366,8 +23362,7 @@
 	                { className: 'pull-right' },
 	                React.createElement(SaveBtn, {
 	                    text: 'Save',
-	                    ref: 'saveBtn',
-	                    status: this.state.saveStatus,
+	                    status: this.state.saveButtonStatus,
 	                    clicked: this.saveScene })
 	            );
 	        }
@@ -23390,7 +23385,7 @@
 	                React.createElement('input', {
 	                    value: this.state.name,
 	                    'data-statepath': 'name',
-	                    onChange: this.changed,
+	                    onChange: this._inputChanged,
 	                    className: 'name form-control',
 	                    type: 'text',
 	                    id: this.uid("name") }),
@@ -23408,7 +23403,7 @@
 	                    value: this.state.id,
 	                    readOnly: this.isReadOnly("id"),
 	                    'data-statepath': 'id',
-	                    onChange: this.changed,
+	                    onChange: this._inputChanged,
 	                    className: 'id form-control',
 	                    type: 'text',
 	                    id: this.uid("id") }),
@@ -23425,7 +23420,7 @@
 	                React.createElement('input', {
 	                    value: this.state.address,
 	                    'data-statepath': 'address',
-	                    onChange: this.changed,
+	                    onChange: this._inputChanged,
 	                    className: 'address form-control',
 	                    type: 'text',
 	                    id: this.uid("address") }),
@@ -24114,16 +24109,30 @@
 	var Api = __webpack_require__(218);
 
 	var SceneActions = {
-	    create: function create(scene) {
+	    create: function create(sceneJson) {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.SCENE_CREATE });
 
-	            Api.sceneCreate(scene, function (err, data) {
+	            Api.sceneCreate(sceneJson, function (err, data) {
 	                if (err) {
 	                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err });
 	                    return;
 	                }
 	                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data });
+	            });
+	        };
+	    },
+
+	    update: function update(sceneJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_UPDATE });
+
+	            Api.sceneUpdate(sceneJson, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data });
 	            });
 	        };
 	    },
@@ -24329,6 +24338,29 @@
 	                    xhr: xhr,
 	                    validationErrors: errors,
 	                    clientId: scene.clientId
+	                });
+	            }
+	        });
+	    },
+
+	    // sceneUpdate updates fields of an existing scene
+	    sceneUpdate: function sceneUpdate(scene, callback) {
+	        $.ajax({
+	            url: '/api/v1/systems/123/scenes/' + scene.id,
+	            type: 'PUT',
+	            dataType: 'json',
+	            data: JSON.stringify(scene),
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    validationErrors: errors,
+	                    sceneId: scene.id
 	                });
 	            }
 	        });
@@ -25944,9 +25976,18 @@
 	            // true if currently loading the scene list
 	            loading: false,
 
+	            //TODO: loadingErr
+
 	            // if the user is creating a new scene on the client, this value
-	            // will be populated as on object with fields scene/saveErr
+	            // will be populated as on object with fields 'scene'
 	            newSceneInfo: null,
+
+	            // Save status, 'saving|success|error', can be saving of a new scene
+	            // or saving of an update to an existing scene
+	            saveStatus: null,
+
+	            // Detailed object with more description on the save error
+	            saveErr: null,
 
 	            // array of scene objects
 	            items: []
@@ -25995,26 +26036,39 @@
 
 	        case Constants.SCENE_NEW_CLIENT:
 	            newState.newSceneInfo = {
-	                scene: { clientId: 'scene_cid_' + clientId + '' },
-	                saveErr: null,
-	                saveStatus: null
+	                scene: { clientId: 'scene_cid_' + clientId + '' }
 	            };
+	            newState.saveStatus = '';
+	            newState.saveErr = null;
 	            ++clientId;
 	            break;
 
 	        case Constants.SCENE_CREATE:
-	            newState.newSceneInfo.saveErr = null;
-	            newState.newSceneInfo.saveStatus = 'saving';
+	            newState.saveErr = null;
+	            newState.saveStatus = 'saving';
 	            break;
 
 	        case Constants.SCENE_CREATE_RAW:
-	            newState.newSceneInfo.saveStatus = 'success';
-	            // TODO: Refetch all scenes
+	            newState.saveStatus = 'success';
+	            newState.items.unshift(action.data);
+	            newState.newSceneInfo = null;
 	            break;
 
 	        case Constants.SCENE_CREATE_FAIL:
-	            newState.newSceneInfo.saveStatus = 'error';
-	            newState.newSceneInfo.saveErr = action.err;
+	            newState.saveStatus = 'error';
+	            newState.saveErr = action.err;
+	            break;
+
+	        case Constants.SCENE_UPDATE:
+	            newState.saveErr = null;
+	            newState.saveStatus = 'saving';
+	            break;
+	        case Constants.SCENE_UPDATE_RAW:
+	            newState.saveStatus = 'success';
+	            break;
+	        case Constants.SCENE_UPDATE_FAIL:
+	            newState.saveStatus = 'error';
+	            newState.saveErr = action.err;
 	            break;
 
 	        case Constants.SCENE_DESTROY:

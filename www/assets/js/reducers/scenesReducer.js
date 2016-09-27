@@ -23,26 +23,39 @@ module.exports = function(state, action) {
 
     case Constants.SCENE_NEW_CLIENT:
         newState.newSceneInfo = {
-            scene: { clientId: 'scene_cid_' + clientId + '' },
-            saveErr: null,
-            saveStatus: null
+            scene: { clientId: 'scene_cid_' + clientId + '' }
         };
+        newState.saveStatus = '';
+        newState.saveErr = null;
         ++clientId;
         break;
 
     case Constants.SCENE_CREATE:
-        newState.newSceneInfo.saveErr = null;
-        newState.newSceneInfo.saveStatus = 'saving';
+        newState.saveErr = null;
+        newState.saveStatus = 'saving';
         break;
 
     case Constants.SCENE_CREATE_RAW:
-        newState.newSceneInfo.saveStatus = 'success';
-        // TODO: Refetch all scenes
+        newState.saveStatus = 'success';
+        newState.items.unshift(action.data);
+        newState.newSceneInfo = null;
         break;
 
     case Constants.SCENE_CREATE_FAIL:
-        newState.newSceneInfo.saveStatus = 'error';
-        newState.newSceneInfo.saveErr = action.err;
+        newState.saveStatus = 'error';
+        newState.saveErr = action.err;
+        break;
+
+    case Constants.SCENE_UPDATE:
+        newState.saveErr = null;
+        newState.saveStatus = 'saving';
+        break;
+    case Constants.SCENE_UPDATE_RAW:
+        newState.saveStatus = 'success';
+        break;
+    case Constants.SCENE_UPDATE_FAIL:
+        newState.saveStatus = 'error';
+        newState.saveErr = action.err;
         break;
 
     case Constants.SCENE_DESTROY:

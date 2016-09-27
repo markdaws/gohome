@@ -49,6 +49,29 @@ var API = {
         });
     },
 
+    // sceneUpdate updates fields of an existing scene
+    sceneUpdate: function(scene, callback) {
+        $.ajax({
+            url: '/api/v1/systems/123/scenes/' + scene.id,
+            type: 'PUT',
+            dataType: 'json',
+            data: JSON.stringify(scene),
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    validationErrors: errors,
+                    sceneId: scene.id
+                });
+            }
+        });
+    },
+
     // sceneDestroy deletes the scene with the specified ID from the backing store
     sceneDestroy: function(id, callback) {
         $.ajax({

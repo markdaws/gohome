@@ -81,11 +81,10 @@ var SceneList = React.createClass({
                 var errors;
 
                 // Check for input validation errors from the server
-                if (newSceneInfo && newSceneInfo.saveErr && newSceneInfo.scene === scene) {
-                    errors = newSceneInfo.saveErr.validationErrors;
+                if (newSceneInfo && (newSceneInfo.scene === scene) && this.props.scenes.saveErr) {
+                    errors = this.props.scenes.saveErr.validationErrors;
                 }
 
-                //TODO: saveStatus - what about when editing the scene?
                 return (
                     <SceneInfo
                         zones={this.state.zones}
@@ -95,8 +94,9 @@ var SceneList = React.createClass({
                         key={scene.id || scene.clientId}
                         errors={errors}
                         saveScene={this.props.saveScene}
+                        updateScene={this.props.updateScene}
                         deleteScene={this.props.deleteScene}
-                        saveStatus={(newSceneInfo || {}).saveStatus} />
+                        saveStatus={this.props.scenes.saveStatus} />
                 );
             }.bind(this));
             btns = (
@@ -151,8 +151,11 @@ function mapDispatchToProps(dispatch) {
         loadAllScenes: function() {
             dispatch(SceneActions.loadAll());
         },
-        saveScene: function(scene) {
-            dispatch(SceneActions.create(scene));
+        saveScene: function(sceneJson) {
+            dispatch(SceneActions.create(sceneJson));
+        },
+        updateScene: function(sceneJson) {
+            dispatch(SceneActions.update(sceneJson));
         },
         deleteScene: function(id) {
             if (id === "") {
