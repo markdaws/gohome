@@ -8,12 +8,14 @@ var ButtonReleaseCommand = require('./ButtonReleaseCommand.jsx');
 var CommandInfo = React.createClass({
     getInitialState: function() {
         return {
+            //TODO: remove
             command: this.props.command,
             isNew: this.props.isNew
         }
     },
 
     deleteCommand: function() {
+        //TODO: Redux
         this.props.onDelete(this.props.index, this.state.isNew, function(err) {
             console.log('I was deleted: ' + err);
             // TODO: If there is an error then the delete button should
@@ -22,11 +24,9 @@ var CommandInfo = React.createClass({
     },
 
     save: function() {
-        var saveBtn = this.refs.saveBtn;
-        saveBtn.saving();
-
         var cmd = this.refs.cmd;
         var self = this;
+        //TODO: Redux
         this.props.onSave(cmd.toJson(), function(errors) {
             if (errors) {
                 cmd.setErrors(errors);
@@ -37,39 +37,60 @@ var CommandInfo = React.createClass({
             }
         });
     },
-    
+
     render: function() {
         var self = this;
         var command = this.state.command;
         var saveBtn
         if (this.state.isNew) {
-            saveBtn = <SaveBtn text="Save" ref="saveBtn" clicked={this.save}/>
+            saveBtn = (
+                <SaveBtn
+                    text="Save"
+                    status=""
+                    clicked={this.save} />
+            );
         }
-        
+
         var uiCmd;
         switch (command.type) {
-        case 'buttonPress':
-            uiCmd = <ButtonPressCommand ref="cmd" buttons={this.props.buttons} command={command}/>;
-            break;
-        case 'buttonRelease':
-            uiCmd = <ButtonReleaseCommand ref="cmd" buttons={this.props.buttons} command={command}/>;
-            break;
-        case 'zoneSetLevel':
-            uiCmd = <ZoneSetLevelCommand ref="cmd" zones={this.props.zones} command={command} />;
-            break;
-        case 'sceneSet':
-            uiCmd = <SceneSetCommand ref="cmd" scenes={this.props.scenes} command={command} />;
-            break;
-        default:
-            console.error('unknown command type: ' + command.type);
+            case 'buttonPress':
+                uiCmd = (<ButtonPressCommand
+                             ref="cmd"
+                             buttons={this.props.buttons}
+                             command={command}/>
+                );
+                break;
+            case 'buttonRelease':
+                uiCmd = (<ButtonReleaseCommand
+                             ref="cmd"
+                             buttons={this.props.buttons}
+                             command={command}/>
+                );
+                break;
+            case 'zoneSetLevel':
+                uiCmd = (<ZoneSetLevelCommand
+                    ref="cmd"
+                    zones={this.props.zones}
+                    command={command} />
+                )
+                break;
+            case 'sceneSet':
+                uiCmd = (<SceneSetCommand
+                    ref="cmd"
+                    scenes={this.props.scenes}
+                    command={command} />
+                )
+                break;
+            default:
+                console.error('unknown command type: ' + command.type);
         }
         return (
             <div className="cmp-CommandInfo well well-sm clearfix">
-              <button className="btn btn-link btnDelete pull-right" onClick={this.deleteCommand}>
-                <i className="glyphicon glyphicon-trash"></i>
-              </button>
-              {uiCmd}
-              {saveBtn}
+                <button className="btn btn-link btnDelete pull-right" onClick={this.deleteCommand}>
+                    <i className="glyphicon glyphicon-trash"></i>
+                </button>
+                {uiCmd}
+                {saveBtn}
             </div>
         );
     }

@@ -13,15 +13,10 @@ var SceneList = React.createClass({
     getInitialState: function() {
         return {
             editMode: false,
-            //TODO: remove
-            zones: []
         };
     },
 
     componentWillReceiveProps: function(nextProps) {
-        if (nextProps.zones) {
-            this.setState({ zones: nextProps.zones });
-        }
     },
 
     componentDidMount: function() {
@@ -51,7 +46,6 @@ var SceneList = React.createClass({
         var body;
         var btns;
 
-
         var error;
         //TODO: loading error
 
@@ -67,36 +61,25 @@ var SceneList = React.createClass({
 
         var scenes = this.props.scenes.items;
         if (this.state.editMode) {
-            var newSceneInfo = this.props.scenes.newSceneInfo;
-
-            // If the user is in the process of creating a new scene we append the
-            // current new scene object to the front of the list
-            if (newSceneInfo) {
-                // Since we are modifying the array for rendering, shallow copy array
-                scenes = scenes.slice();
-                scenes.unshift(newSceneInfo.scene);
-            }
-
             body = scenes.map(function(scene) {
-                var errors;
+                var saveState;
 
                 // Check for input validation errors from the server
-                if (newSceneInfo && (newSceneInfo.scene === scene) && this.props.scenes.saveErr) {
-                    errors = this.props.scenes.saveErr.validationErrors;
-                }
+                saveState = (this.props.scenes.saveState[scene.clientId || scene.id] || {});
 
                 return (
                     <SceneInfo
-                        zones={this.state.zones}
+                        zones={this.props.zones}
                         buttons={this.props.buttons}
                         scene={scene}
                         readOnlyFields="id"
                         key={scene.id || scene.clientId}
-                        errors={errors}
+                        errors={(saveState.err || {}).validationErrors}
                         saveScene={this.props.saveScene}
                         updateScene={this.props.updateScene}
                         deleteScene={this.props.deleteScene}
-                        saveStatus={this.props.scenes.saveStatus} />
+                        addCommand={this.props.addCommand}
+                        saveStatus={saveState.status} />
                 );
             }.bind(this));
             btns = (
@@ -157,12 +140,19 @@ function mapDispatchToProps(dispatch) {
         updateScene: function(sceneJson) {
             dispatch(SceneActions.update(sceneJson));
         },
-        deleteScene: function(id) {
-            if (id === "") {
-                dispatch(SceneActions.destroyClient());
+        deleteScene: function(clientId, id) {
+            if (clientId) {
+                dispatch(SceneActions.destroyClient(clientId));
             } else {
                 dispatch(SceneActions.destroy(id));
             }
+        },
+        addCommand: function(sceneId, cmdType) {
+            dispatch(SceneActions.addCommand(sceneId, cmdType));
+        },
+        saveCommand: function(sceneId, cmd) {
+            //TODO:
+            dispatch(SceneActions.addCommand(sceneId, cmd));
         }
     }
 }

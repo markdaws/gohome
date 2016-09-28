@@ -6,11 +6,7 @@ module.exports = function() {
 
             //TODO: loadingErr
 
-            // if the user is creating a new scene on the client, this value
-            // will be populated as on object with fields 'scene'
-            newSceneInfo: null,
-
-            // Save status, 'saving|success|error', can be saving of a new scene
+            // Save status, '""|"saving"|"success"|"error"', can be saving of a new scene
             // or saving of an update to an existing scene
             saveStatus: null,
 
@@ -18,7 +14,10 @@ module.exports = function() {
             saveErr: null,
 
             // array of scene objects
-            items: []
+            items: [],
+
+            // Save state of the different scenes, will be keyed by id, or  client id if no id
+            saveState: { }
         },
         zones: {
             // true if currently loading the zone list

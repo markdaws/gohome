@@ -21172,17 +21172,11 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            editMode: false,
-	            //TODO: remove
-	            zones: []
+	            editMode: false
 	        };
 	    },
 
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        if (nextProps.zones) {
-	            this.setState({ zones: nextProps.zones });
-	        }
-	    },
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {},
 
 	    componentDidMount: function componentDidMount() {
 	        this.props.loadAllScenes();
@@ -21229,35 +21223,24 @@
 
 	        var scenes = this.props.scenes.items;
 	        if (this.state.editMode) {
-	            var newSceneInfo = this.props.scenes.newSceneInfo;
-
-	            // If the user is in the process of creating a new scene we append the
-	            // current new scene object to the front of the list
-	            if (newSceneInfo) {
-	                // Since we are modifying the array for rendering, shallow copy array
-	                scenes = scenes.slice();
-	                scenes.unshift(newSceneInfo.scene);
-	            }
-
 	            body = scenes.map(function (scene) {
-	                var errors;
+	                var saveState;
 
 	                // Check for input validation errors from the server
-	                if (newSceneInfo && newSceneInfo.scene === scene && this.props.scenes.saveErr) {
-	                    errors = this.props.scenes.saveErr.validationErrors;
-	                }
+	                saveState = this.props.scenes.saveState[scene.clientId || scene.id] || {};
 
 	                return React.createElement(SceneInfo, {
-	                    zones: this.state.zones,
+	                    zones: this.props.zones,
 	                    buttons: this.props.buttons,
 	                    scene: scene,
 	                    readOnlyFields: 'id',
 	                    key: scene.id || scene.clientId,
-	                    errors: errors,
+	                    errors: (saveState.err || {}).validationErrors,
 	                    saveScene: this.props.saveScene,
 	                    updateScene: this.props.updateScene,
 	                    deleteScene: this.props.deleteScene,
-	                    saveStatus: this.props.scenes.saveStatus });
+	                    addCommand: this.props.addCommand,
+	                    saveStatus: saveState.status });
 	            }.bind(this));
 	            btns = React.createElement(
 	                'div',
@@ -21325,12 +21308,19 @@
 	        updateScene: function updateScene(sceneJson) {
 	            dispatch(SceneActions.update(sceneJson));
 	        },
-	        deleteScene: function deleteScene(id) {
-	            if (id === "") {
-	                dispatch(SceneActions.destroyClient());
+	        deleteScene: function deleteScene(clientId, id) {
+	            if (clientId) {
+	                dispatch(SceneActions.destroyClient(clientId));
 	            } else {
 	                dispatch(SceneActions.destroy(id));
 	            }
+	        },
+	        addCommand: function addCommand(sceneId, cmdType) {
+	            dispatch(SceneActions.addCommand(sceneId, cmdType));
+	        },
+	        saveCommand: function saveCommand(sceneId, cmd) {
+	            //TODO:
+	            dispatch(SceneActions.addCommand(sceneId, cmd));
 	        }
 	    };
 	}
@@ -23239,27 +23229,29 @@
 	    },
 
 	    deleteScene: function deleteScene() {
-	        this.props.deleteScene(this.state.id);
-	        // TODO: How to handle errors
+	        this.props.deleteScene(this.state.clientId, this.state.id);
 	    },
 
 	    saveCommand: function saveCommand(cmd, callback) {
-	        //TODO: Cleanup API + redux
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands',
-	            type: 'POST',
-	            dataType: 'json',
-	            data: JSON.stringify(cmd),
-	            cache: false,
-	            success: function success(data) {
-	                callback();
-	            },
-	            error: function error(xhr, status, err) {
-	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
-	                callback(errors);
-	            }
-	        });
+	        this.props.addCommand(this.state.id, cmd);
+	        //TODO: remove
+
+	        /*
+	           var self = this;
+	           $.ajax({
+	           url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands',
+	           type: 'POST',
+	           dataType: 'json',
+	           data: JSON.stringify(cmd),
+	           cache: false,
+	           success: function(data) {
+	           callback();
+	           },
+	           error: function(xhr, status, err) {
+	           var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	           callback(errors);
+	           }
+	           });*/
 	    },
 
 	    deleteCommand: function deleteCommand(cmdIndex, isNewCmd, callback) {
@@ -23292,9 +23284,7 @@
 	    },
 
 	    commandTypeChanged: function commandTypeChanged(cmdType) {
-	        var cmds = this.state.commands;
-	        cmds.push({ isNew: true, type: cmdType, attributes: {} });
-	        this.setState({ commands: cmds });
+	        this.props.addCommand(this.state.id, cmdType);
 	    },
 
 	    _inputChanged: function _inputChanged(evt) {
@@ -23305,7 +23295,7 @@
 	    },
 
 	    render: function render() {
-	        var commands;
+	        var commandNodes;
 
 	        //TODO: remove
 	        this.state.managed = true;
@@ -23314,16 +23304,15 @@
 	            var cmdIndex = 0;
 
 	            if (this.state.id === '') {
-	                commands = React.createElement(
+	                commandNodes = React.createElement(
 	                    'p',
 	                    null,
 	                    'To add commands, first save the scene.'
 	                );
 	            } else {
-	                commands = this.state.commands.map(function (command) {
-	                    // This isn't a great idea for react, but we don't have anything
-	                    // that can be used as a key since commands don't have ids, will take
-	                    // the perf hit for now
+	                var commands = this.props.scene.commands || [];
+	                commandNodes = commands.map(function (command) {
+	                    //TODO: We need to give commands an ID on the server so we can have a proper index
 	                    var key = Math.random();
 	                    var info = React.createElement(CommandInfo, {
 	                        isNew: command.isNew,
@@ -23338,16 +23327,16 @@
 	                    cmdIndex++;
 	                    return info;
 	                });
-	                commands = React.createElement(
+	                commandNodes = React.createElement(
 	                    'div',
 	                    null,
-	                    commands,
+	                    commandNodes,
 	                    'Add Command: ',
 	                    React.createElement(CommandTypePicker, { changed: this.commandTypeChanged })
 	                );
 	            }
 	        } else {
-	            commands = React.createElement(
+	            commandNodes = React.createElement(
 	                'p',
 	                null,
 	                'This is an unmanaged scene. The scene is controlled by a 3rd party device so we can\'t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.'
@@ -23432,7 +23421,7 @@
 	                React.createElement(
 	                    'a',
 	                    { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
-	                    'Toggle Info',
+	                    'Edit Commands',
 	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
 	                ),
 	                saveBtn
@@ -23445,7 +23434,7 @@
 	                    null,
 	                    'Commands'
 	                ),
-	                commands
+	                commandNodes
 	            )
 	        );
 	    }
@@ -23470,12 +23459,14 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
+	            //TODO: remove
 	            command: this.props.command,
 	            isNew: this.props.isNew
 	        };
 	    },
 
 	    deleteCommand: function deleteCommand() {
+	        //TODO: Redux
 	        this.props.onDelete(this.props.index, this.state.isNew, function (err) {
 	            console.log('I was deleted: ' + err);
 	            // TODO: If there is an error then the delete button should
@@ -23484,11 +23475,9 @@
 	    },
 
 	    save: function save() {
-	        var saveBtn = this.refs.saveBtn;
-	        saveBtn.saving();
-
 	        var cmd = this.refs.cmd;
 	        var self = this;
+	        //TODO: Redux
 	        this.props.onSave(cmd.toJson(), function (errors) {
 	            if (errors) {
 	                cmd.setErrors(errors);
@@ -23505,22 +23494,37 @@
 	        var command = this.state.command;
 	        var saveBtn;
 	        if (this.state.isNew) {
-	            saveBtn = React.createElement(SaveBtn, { text: 'Save', ref: 'saveBtn', clicked: this.save });
+	            saveBtn = React.createElement(SaveBtn, {
+	                text: 'Save',
+	                status: '',
+	                clicked: this.save });
 	        }
 
 	        var uiCmd;
 	        switch (command.type) {
 	            case 'buttonPress':
-	                uiCmd = React.createElement(ButtonPressCommand, { ref: 'cmd', buttons: this.props.buttons, command: command });
+	                uiCmd = React.createElement(ButtonPressCommand, {
+	                    ref: 'cmd',
+	                    buttons: this.props.buttons,
+	                    command: command });
 	                break;
 	            case 'buttonRelease':
-	                uiCmd = React.createElement(ButtonReleaseCommand, { ref: 'cmd', buttons: this.props.buttons, command: command });
+	                uiCmd = React.createElement(ButtonReleaseCommand, {
+	                    ref: 'cmd',
+	                    buttons: this.props.buttons,
+	                    command: command });
 	                break;
 	            case 'zoneSetLevel':
-	                uiCmd = React.createElement(ZoneSetLevelCommand, { ref: 'cmd', zones: this.props.zones, command: command });
+	                uiCmd = React.createElement(ZoneSetLevelCommand, {
+	                    ref: 'cmd',
+	                    zones: this.props.zones,
+	                    command: command });
 	                break;
 	            case 'sceneSet':
-	                uiCmd = React.createElement(SceneSetCommand, { ref: 'cmd', scenes: this.props.scenes, command: command });
+	                uiCmd = React.createElement(SceneSetCommand, {
+	                    ref: 'cmd',
+	                    scenes: this.props.scenes,
+	                    command: command });
 	                break;
 	            default:
 	                console.error('unknown command type: ' + command.type);
@@ -24111,36 +24115,36 @@
 	var SceneActions = {
 	    create: function create(sceneJson) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_CREATE });
+	            dispatch({ type: Constants.SCENE_CREATE, clientId: sceneJson.clientId });
 
 	            Api.sceneCreate(sceneJson, function (err, data) {
 	                if (err) {
-	                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err });
+	                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, clientId: sceneJson.clientId });
 	                    return;
 	                }
-	                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data });
+	                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, clientId: sceneJson.clientId });
 	            });
 	        };
 	    },
 
 	    update: function update(sceneJson) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_UPDATE });
+	            dispatch({ type: Constants.SCENE_UPDATE, id: sceneJson.id });
 
 	            Api.sceneUpdate(sceneJson, function (err, data) {
 	                if (err) {
-	                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err });
+	                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err, id: sceneJson.id });
 	                    return;
 	                }
-	                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data });
+	                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data, id: sceneJson.id, sceneJson: sceneJson });
 	            });
 	        };
 	    },
 
-	    destroyClient: function destroyClient() {
+	    destroyClient: function destroyClient(clientId) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_DESTROY, id: "" });
-	            dispatch({ type: Constants.SCENE_DESTROY_RAW, id: "" });
+	            dispatch({ type: Constants.SCENE_DESTROY, clientId: clientId });
+	            dispatch({ type: Constants.SCENE_DESTROY_RAW, clientId: clientId });
 	        };
 	    },
 
@@ -24157,6 +24161,15 @@
 	            });
 	        };
 	    },
+
+	    addCommand: function addCommand(sceneId, cmdType) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_COMMAND_ADD, sceneId: sceneId, cmdType: cmdType });
+	        };
+	    },
+
+	    //TODO: Save command
+	    //TODO: Delete command (client only + server)
 
 	    loadAll: function loadAll() {
 	        return function (dispatch) {
@@ -24220,6 +24233,21 @@
 	    SCENE_DESTROY: null,
 	    SCENE_DESTROY_RAW: null,
 	    SCENE_DESTROY_FAIL: null,
+
+	    // Add a command to a scene, not saved to the server, just on the client
+	    SCENE_COMMAND_ADD: null,
+	    SCENE_COMMAND_ADD_RAW: null,
+	    SCENE_COMMAND_ADD_FAIL: null,
+
+	    // Saves a command associated to a scene on the server
+	    SCENE_COMMAND_SAVE: null,
+	    SCENE_COMMAND_SAVE_RAW: null,
+	    SCENE_COMMAND_SAVE_FAIL: null,
+
+	    // Remove a command from a scene
+	    SCENE_COMMAND_DELETE: null,
+	    SCENE_COMMAND_DELETE_RAW: null,
+	    SCENE_COMMAND_DELETE_FAIL: null,
 
 	    // Load all of the zones from the server
 	    ZONE_LOAD_ALL: null,
@@ -24383,6 +24411,31 @@
 	                });
 	            }
 	        });
+	    },
+
+	    sceneAddCommand: function sceneAddCommand(sceneId, cmd, callback) {
+	        $.ajax({
+	            url: '/api/v1/systems/123/scenes/' + sceneId + '/commands',
+	            type: 'POST',
+	            dataType: 'json',
+	            data: JSON.stringify(cmd),
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    validationErrors: errors
+	                });
+	            }
+	        });
+	    },
+
+	    sceneDeleteCommand: function sceneDeleteCommand() {
+	        //TODO: implement
 	    },
 
 	    // zoneLoadAll loads all of the zones from the backing store
@@ -25978,11 +26031,7 @@
 
 	            //TODO: loadingErr
 
-	            // if the user is creating a new scene on the client, this value
-	            // will be populated as on object with fields 'scene'
-	            newSceneInfo: null,
-
-	            // Save status, 'saving|success|error', can be saving of a new scene
+	            // Save status, '""|"saving"|"success"|"error"', can be saving of a new scene
 	            // or saving of an update to an existing scene
 	            saveStatus: null,
 
@@ -25990,7 +26039,10 @@
 	            saveErr: null,
 
 	            // array of scene objects
-	            items: []
+	            items: [],
+
+	            // Save state of the different scenes, will be keyed by id, or  client id if no id
+	            saveState: {}
 	        },
 	        zones: {
 	            // true if currently loading the zone list
@@ -26014,7 +26066,7 @@
 	var Constants = __webpack_require__(216);
 	var initialState = __webpack_require__(241);
 
-	var clientId = 1;
+	var _clientId = 1;
 
 	module.exports = function (state, action) {
 	    var newState = Object.assign({}, state);
@@ -26035,54 +26087,78 @@
 	            break;
 
 	        case Constants.SCENE_NEW_CLIENT:
-	            newState.newSceneInfo = {
-	                scene: { clientId: 'scene_cid_' + clientId + '' }
-	            };
-	            newState.saveStatus = '';
-	            newState.saveErr = null;
-	            ++clientId;
+	            newState.items.unshift({
+	                clientId: 'scene_cid_' + _clientId + ''
+	            });
+	            ++_clientId;
 	            break;
 
 	        case Constants.SCENE_CREATE:
-	            newState.saveErr = null;
-	            newState.saveStatus = 'saving';
+	            newState.saveState[action.clientId] = {
+	                err: null,
+	                status: 'saving'
+	            };
 	            break;
 
 	        case Constants.SCENE_CREATE_RAW:
-	            newState.saveStatus = 'success';
-	            newState.items.unshift(action.data);
-	            newState.newSceneInfo = null;
+	            newState.saveState[action.clientId].status = 'success';
+
+	            newState.items = newState.items.map(function (scene) {
+	                // Replace with actual scene from the server
+	                if (scene.clientId === action.clientId) {
+	                    return action.data;
+	                }
+	                return scene;
+	            });
 	            break;
 
 	        case Constants.SCENE_CREATE_FAIL:
-	            newState.saveStatus = 'error';
-	            newState.saveErr = action.err;
+	            newState.saveState[action.clientId] = {
+	                status: 'error',
+	                err: action.err
+	            };
 	            break;
 
 	        case Constants.SCENE_UPDATE:
-	            newState.saveErr = null;
-	            newState.saveStatus = 'saving';
+	            newState.saveState[action.id] = {
+	                status: 'saving',
+	                err: null
+	            };
 	            break;
+
 	        case Constants.SCENE_UPDATE_RAW:
-	            newState.saveStatus = 'success';
+	            newState.saveState[action.id].status = 'success';
+	            newState.items = newState.items.map(function (scene) {
+	                // Replace with actual scene from the server
+	                if (scene.id === action.id) {
+	                    return action.sceneJson;
+	                }
+	                return scene;
+	            });
+
 	            break;
 	        case Constants.SCENE_UPDATE_FAIL:
-	            newState.saveStatus = 'error';
-	            newState.saveErr = action.err;
+	            newState.saveState[action.id] = {
+	                status: 'error',
+	                err: action.err
+	            };
 	            break;
 
 	        case Constants.SCENE_DESTROY:
 	            break;
 	        case Constants.SCENE_DESTROY_RAW:
 	            // This is a client scene, before it was sent to the server
-	            if (action.id === "") {
-	                newState.newSceneInfo = null;
-	            } else {
-	                for (var i = 0; i < newState.items.length; ++i) {
-	                    if (newState.items[i].id === action.id) {
-	                        newState.items.splice(i, 1);
-	                        break;
-	                    }
+	            for (var i = 0; i < newState.items.length; ++i) {
+	                var found = false;
+	                if (action.clientId) {
+	                    found = newState.items[i].clientId === action.clientId;
+	                } else {
+	                    found = newState.items[i].id === action.id;
+	                }
+
+	                if (found) {
+	                    newState.items.splice(i, 1);
+	                    break;
 	                }
 	            }
 	            break;
@@ -26090,6 +26166,23 @@
 	            //TODO:
 	            break;
 
+	        case Constants.SCENE_COMMAND_ADD:
+	            var scenes = newState.items;
+	            for (var i = 0; i < scenes.length; ++i) {
+	                if (scenes[i].id === action.sceneId) {
+	                    scenes[i].commands.push({
+	                        isNew: true,
+	                        type: action.cmdType,
+	                        attributes: {}
+	                    });
+	                    break;
+	                }
+	            }
+	            break;
+	        case Constants.SCENE_COMMAND_ADD_RAW:
+	            break;
+	        case Constants.SCENE_COMMAND_ADD_FAIL:
+	            break;
 	        default:
 	            newState = state || initialState().scenes;
 	    }

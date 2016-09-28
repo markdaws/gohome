@@ -36,7 +36,7 @@ var ButtonPressCommand = module.exports = React.createClass({
     buttonPickerChanged: function(buttonId) {
         this.setState({ buttonId: buttonId });
     },
-    
+
     render: function() {
         return (
             <div className="cmp-ButtonPressCommand">

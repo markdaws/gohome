@@ -32,6 +32,21 @@ module.exports = keyMirror({
     SCENE_DESTROY_RAW: null,
     SCENE_DESTROY_FAIL: null,
 
+    // Add a command to a scene, not saved to the server, just on the client
+    SCENE_COMMAND_ADD: null,
+    SCENE_COMMAND_ADD_RAW: null,
+    SCENE_COMMAND_ADD_FAIL: null,
+
+    // Saves a command associated to a scene on the server
+    SCENE_COMMAND_SAVE: null,
+    SCENE_COMMAND_SAVE_RAW: null,
+    SCENE_COMMAND_SAVE_FAIL: null,
+
+    // Remove a command from a scene
+    SCENE_COMMAND_DELETE: null,
+    SCENE_COMMAND_DELETE_RAW: null,
+    SCENE_COMMAND_DELETE_FAIL: null,
+
     // Load all of the zones from the server
     ZONE_LOAD_ALL: null,
     ZONE_LOAD_ALL_RAW: null,

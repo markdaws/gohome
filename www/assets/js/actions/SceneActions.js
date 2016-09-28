@@ -4,36 +4,36 @@ var Api = require('../utils/API.js');
 var SceneActions = {
     create: function(sceneJson) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_CREATE });
+            dispatch({ type: Constants.SCENE_CREATE, clientId: sceneJson.clientId });
 
             Api.sceneCreate(sceneJson, function(err, data) {
                 if (err) {
-                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err });
+                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, clientId: sceneJson.clientId });
                     return;
                 }
-                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data });
+                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, clientId: sceneJson.clientId });
             });
         };
     },
 
     update: function(sceneJson) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_UPDATE });
+            dispatch({ type: Constants.SCENE_UPDATE, id: sceneJson.id });
 
             Api.sceneUpdate(sceneJson, function(err, data) {
                 if (err) {
-                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err });
+                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err, id: sceneJson.id });
                     return;
                 }
-                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data });
+                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data, id: sceneJson.id, sceneJson: sceneJson });
             });
         };
     },
 
-    destroyClient: function() {
+    destroyClient: function(clientId) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_DESTROY, id: "" });
-            dispatch({ type: Constants.SCENE_DESTROY_RAW, id: "" });
+            dispatch({ type: Constants.SCENE_DESTROY, clientId: clientId });
+            dispatch({ type: Constants.SCENE_DESTROY_RAW, clientId: clientId });
         };
     },
 
@@ -50,6 +50,15 @@ var SceneActions = {
             });
         };
     },
+
+    addCommand: function(sceneId, cmdType) {
+        return function(dispatch) {
+            dispatch({ type: Constants.SCENE_COMMAND_ADD, sceneId: sceneId, cmdType: cmdType });
+        };
+    },
+
+    //TODO: Save command
+    //TODO: Delete command (client only + server)
 
     loadAll: function() {
         return function(dispatch) {

@@ -91,6 +91,31 @@ var API = {
         });
     },
 
+    sceneAddCommand: function(sceneId, cmd, callback) {
+        $.ajax({
+            url: '/api/v1/systems/123/scenes/' + sceneId + '/commands',
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify(cmd),
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    validationErrors: errors
+                });
+            }
+        });
+    },
+
+    sceneDeleteCommand: function() {
+        //TODO: implement
+    },
+
     // zoneLoadAll loads all of the zones from the backing store
     zoneLoadAll: function(callback) {
         $.ajax({
