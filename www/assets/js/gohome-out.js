@@ -26065,6 +26065,7 @@
 
 	var Constants = __webpack_require__(216);
 	var initialState = __webpack_require__(241);
+	var CommandsReducer = __webpack_require__(244);
 
 	var _clientId = 1;
 
@@ -26087,13 +26088,14 @@
 	            break;
 
 	        case Constants.SCENE_NEW_CLIENT:
-	            newState.items.unshift({
+	            newState.items = [{
 	                clientId: 'scene_cid_' + _clientId + ''
-	            });
+	            }].concat(newState.items);
 	            ++_clientId;
 	            break;
 
 	        case Constants.SCENE_CREATE:
+	            newState.saveState = Object.assign({}, newState.saveState);
 	            newState.saveState[action.clientId] = {
 	                err: null,
 	                status: 'saving'
@@ -26101,6 +26103,7 @@
 	            break;
 
 	        case Constants.SCENE_CREATE_RAW:
+	            newState.saveState = Object.assign({}, newState.saveState);
 	            newState.saveState[action.clientId].status = 'success';
 
 	            newState.items = newState.items.map(function (scene) {
@@ -26113,6 +26116,7 @@
 	            break;
 
 	        case Constants.SCENE_CREATE_FAIL:
+	            newState.saveState = Object.assign({}, newState.saveState);
 	            newState.saveState[action.clientId] = {
 	                status: 'error',
 	                err: action.err
@@ -26120,6 +26124,7 @@
 	            break;
 
 	        case Constants.SCENE_UPDATE:
+	            newState.saveState = Object.assign({}, newState.saveState);
 	            newState.saveState[action.id] = {
 	                status: 'saving',
 	                err: null
@@ -26127,6 +26132,7 @@
 	            break;
 
 	        case Constants.SCENE_UPDATE_RAW:
+	            newState.saveState = Object.assign({}, newState.saveState);
 	            newState.saveState[action.id].status = 'success';
 	            newState.items = newState.items.map(function (scene) {
 	                // Replace with actual scene from the server
@@ -26138,6 +26144,7 @@
 
 	            break;
 	        case Constants.SCENE_UPDATE_FAIL:
+	            newState.saveState = Object.assign({}, newState.saveState);
 	            newState.saveState[action.id] = {
 	                status: 'error',
 	                err: action.err
@@ -26157,6 +26164,7 @@
 	                }
 
 	                if (found) {
+	                    newState.items = newState.items.slice();
 	                    newState.items.splice(i, 1);
 	                    break;
 	                }
@@ -26167,8 +26175,10 @@
 	            break;
 
 	        case Constants.SCENE_COMMAND_ADD:
+
+	            /*
 	            var scenes = newState.items;
-	            for (var i = 0; i < scenes.length; ++i) {
+	            for (var i=0;i<scenes.length; ++i) {
 	                if (scenes[i].id === action.sceneId) {
 	                    scenes[i].commands.push({
 	                        isNew: true,
@@ -26177,7 +26187,7 @@
 	                    });
 	                    break;
 	                }
-	            }
+	            }*/
 	            break;
 	        case Constants.SCENE_COMMAND_ADD_RAW:
 	            break;
@@ -26221,6 +26231,46 @@
 	            newState = state || initialState();
 	    }
 
+	    return newState;
+	};
+
+/***/ },
+/* 244 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(216);
+
+	module.exports = function (state, action) {
+	    var newState;
+
+	    switch (action.type) {
+	        case Constants.SCENE_COMMAND_ADD:
+	            debugger;
+	            var scenes = newState.items;
+	            for (var i = 0; i < scenes.length; ++i) {
+	                if (scenes[i].id === action.sceneId) {
+	                    scenes[i].commands.push({
+	                        isNew: true,
+	                        type: action.cmdType,
+	                        attributes: {}
+	                    });
+	                    break;
+	                }
+	            }
+	            break;
+
+	        case Constants.SCENE_COMMAND_ADD_RAW:
+	            break;
+
+	        case Constants.SCENE_COMMAND_ADD_FAIL:
+	            break;
+
+	        default:
+	            newState = state || [];
+	            break;
+	    }
 	    return newState;
 	};
 

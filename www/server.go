@@ -819,6 +819,7 @@ func apiSceneHandlerCreate(system *gohome.System, recipeManager *gohome.RecipeMa
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 		scene.ID = newScene.ID
+		scene.ClientID = ""
 		json.NewEncoder(w).Encode(scene)
 	}
 }
