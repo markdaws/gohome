@@ -20,7 +20,13 @@ var SystemActions = {
         return function(dispatch) {
             dispatch({ type: Constants.BUTTON_LOAD_ALL });
 
-            Api
+            Api.buttonLoadAll(function(err, data) {
+                if (err) {
+                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
+                    return;
+                }
+                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
+            });
         };
     }
 };
