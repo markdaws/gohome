@@ -23198,7 +23198,7 @@
 	        this.props.deleteScene(this.state.clientId, this.state.id);
 	    },
 
-	    saveCommand: function saveCommand(cmd, callback) {
+	    addCommand: function addCommand(cmd, callback) {
 	        this.props.addCommand(this.state.id, cmd);
 	        //TODO: remove
 
@@ -23284,7 +23284,7 @@
 	                        isNew: command.isNew,
 	                        key: key,
 	                        index: cmdIndex,
-	                        onSave: self.saveCommand,
+	                        onSave: self.addCommand,
 	                        onDelete: self.deleteCommand,
 	                        scenes: self.props.scenes,
 	                        zones: self.props.zones,
@@ -24067,8 +24067,6 @@
 	});
 	module.exports = CommandTypePicker;
 
-	//TODO: turnOn/turnOff
-
 /***/ },
 /* 215 */
 /***/ function(module, exports, __webpack_require__) {
@@ -24212,8 +24210,6 @@
 
 	    // Add a command to a scene, not saved to the server, just on the client
 	    SCENE_COMMAND_ADD: null,
-	    SCENE_COMMAND_ADD_RAW: null,
-	    SCENE_COMMAND_ADD_FAIL: null,
 
 	    // Saves a command associated to a scene on the server
 	    SCENE_COMMAND_SAVE: null,
@@ -26142,24 +26138,18 @@
 	            break;
 
 	        case Constants.SCENE_COMMAND_ADD:
-
-	            /*
+	            //TODO: Where does state come from that gets passed in here
+	            debugger;
 	            var scenes = newState.items;
-	            for (var i=0;i<scenes.length; ++i) {
+	            for (var i = 0; i < scenes.length; ++i) {
 	                if (scenes[i].id === action.sceneId) {
-	                    scenes[i].commands.push({
-	                        isNew: true,
-	                        type: action.cmdType,
-	                        attributes: {}
-	                    });
+	                    newState.items = newState.items.slice();
+	                    newState.items[i].commands = CommandsReducer(scenes[i].commands, action);
 	                    break;
 	                }
-	            }*/
+	            }
 	            break;
-	        case Constants.SCENE_COMMAND_ADD_RAW:
-	            break;
-	        case Constants.SCENE_COMMAND_ADD_FAIL:
-	            break;
+
 	        default:
 	            newState = state || initialState().scenes;
 	    }
@@ -26206,28 +26196,16 @@
 	var Constants = __webpack_require__(216);
 
 	module.exports = function (state, action) {
-	    var newState;
+	    var newState = state;
 
 	    switch (action.type) {
 	        case Constants.SCENE_COMMAND_ADD:
 	            debugger;
-	            var scenes = newState.items;
-	            for (var i = 0; i < scenes.length; ++i) {
-	                if (scenes[i].id === action.sceneId) {
-	                    scenes[i].commands.push({
-	                        isNew: true,
-	                        type: action.cmdType,
-	                        attributes: {}
-	                    });
-	                    break;
-	                }
-	            }
-	            break;
-
-	        case Constants.SCENE_COMMAND_ADD_RAW:
-	            break;
-
-	        case Constants.SCENE_COMMAND_ADD_FAIL:
+	            newState = [{
+	                isNew: true,
+	                type: action.cmdType,
+	                attributes: {}
+	            }].concat(newState);
 	            break;
 
 	        default:

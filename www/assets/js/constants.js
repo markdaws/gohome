@@ -44,8 +44,6 @@ module.exports = keyMirror({
 
     // Add a command to a scene, not saved to the server, just on the client
     SCENE_COMMAND_ADD: null,
-    SCENE_COMMAND_ADD_RAW: null,
-    SCENE_COMMAND_ADD_FAIL: null,
 
     // Saves a command associated to a scene on the server
     SCENE_COMMAND_SAVE: null,

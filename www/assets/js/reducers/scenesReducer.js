@@ -109,26 +109,19 @@ module.exports = function(state, action) {
         //TODO:
         break;
 
-
     case Constants.SCENE_COMMAND_ADD:
-        
-        /*
+        //TODO: Where does state come from that gets passed in here
+        debugger;
         var scenes = newState.items;
         for (var i=0;i<scenes.length; ++i) {
             if (scenes[i].id === action.sceneId) {
-                scenes[i].commands.push({
-                    isNew: true,
-                    type: action.cmdType,
-                    attributes: {}
-                });
+                newState.items = newState.items.slice();
+                newState.items[i].commands = CommandsReducer(scenes[i].commands, action);
                 break;
             }
-        }*/
+        }
         break;
-    case Constants.SCENE_COMMAND_ADD_RAW:
-        break;
-    case Constants.SCENE_COMMAND_ADD_FAIL:
-        break;
+
     default:
         newState = state || initialState().scenes;
     }

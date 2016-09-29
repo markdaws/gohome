@@ -11,7 +11,7 @@ var CommandTypePicker = React.createClass({
         this.setState({ value: '' });
         this.props.changed && this.props.changed(evt.target.value);
     },
-    
+
     render: function() {
         return (
             <div className="cmp-CommandTypePicker">
@@ -27,5 +27,3 @@ var CommandTypePicker = React.createClass({
     }
 });
 module.exports = CommandTypePicker;
-
-//TODO: turnOn/turnOff

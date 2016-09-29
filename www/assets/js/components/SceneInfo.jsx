@@ -71,7 +71,7 @@ var SceneInfo = React.createClass({
         this.props.deleteScene(this.state.clientId, this.state.id);
     },
 
-    saveCommand: function(cmd, callback) {
+    addCommand: function(cmd, callback) {
         this.props.addCommand(this.state.id, cmd);
         //TODO: remove
 
@@ -154,7 +154,7 @@ var SceneInfo = React.createClass({
                             isNew={command.isNew}
                             key={key}
                             index={cmdIndex}
-                            onSave={self.saveCommand}
+                            onSave={self.addCommand}
                             onDelete={self.deleteCommand}
                             scenes={self.props.scenes}
                             zones={self.props.zones}
