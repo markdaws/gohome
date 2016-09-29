@@ -133,6 +133,42 @@ var API = {
                 });
             }
         });
+    },
+
+    deviceLoadAll: function(callback) {
+        $.ajax({
+            url: '/api/v1/systems/123/devices',
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    status: status
+                });
+            }
+        });
+    },
+
+    buttonLoadAll: function(callback) {
+        $.ajax({
+            url: '/api/v1/systems/123/buttons',
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            }.bind(this),
+            error: function(xhr, status, err) {
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    status: status
+                });
+            }.bind(this)
+        });
     }
 };
 module.exports = API;

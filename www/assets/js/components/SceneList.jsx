@@ -16,20 +16,6 @@ var SceneList = React.createClass({
         };
     },
 
-    componentWillReceiveProps: function(nextProps) {
-    },
-
-    componentDidMount: function() {
-        this.props.loadAllScenes();
-
-        //TODO: Enable as part of a mode
-        //var el = ReactDOM.findDOMNode(this).getElementsByClassName('sceneList')[0];
-        //Sortable.create(el);
-    },
-
-    componentWillUnmount: function() {
-    },
-
     _onChange: function() {
         this.forceUpdate();
     },
@@ -45,19 +31,6 @@ var SceneList = React.createClass({
     render: function() {
         var body;
         var btns;
-
-        var error;
-        //TODO: loading error
-
-        var loading;
-        if (this.props.scenes.loading) {
-            loading = (
-                <div className="spinnerWrapper">
-                    <p>Loading Scenes ...</p>
-                    <i className="fa fa-spinner fa-spin"></i>
-                </div>
-            );
-        }
 
         var scenes = this.props.scenes.items;
         if (this.state.editMode) {
@@ -104,15 +77,8 @@ var SceneList = React.createClass({
             );
         }
 
-        if (loading) {
-            btns = null;
-            body = null;
-        }
-
         return (
             <div className="cmp-SceneList">
-                {error}
-                {loading}
                 {btns}
                 {body}
             </div>
@@ -121,18 +87,13 @@ var SceneList = React.createClass({
 });
 
 function mapStateToProps(state) {
-    return {
-        scenes: state.scenes
-    }
+    return { }
 }
 
 function mapDispatchToProps(dispatch) {
     return {
         newClientScene: function() {
             dispatch(SceneActions.newClient());
-        },
-        loadAllScenes: function() {
-            dispatch(SceneActions.loadAll());
         },
         saveScene: function(sceneJson) {
             dispatch(SceneActions.create(sceneJson));

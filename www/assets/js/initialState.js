@@ -1,11 +1,15 @@
 module.exports = function() {
     return {
+        // TODO:
+        // True if the app has loaded all the data on app load and is ready to use
+        //dataLoaded: false,
+
+        system: {
+            // Array of devices in the system
+            devices: []
+        },
+
         scenes: {
-            // true if currently loading the scene list
-            loading: false,
-
-            //TODO: loadingErr
-
             // Save status, '""|"saving"|"success"|"error"', can be saving of a new scene
             // or saving of an update to an existing scene
             saveStatus: null,
@@ -19,15 +23,11 @@ module.exports = function() {
             // Save state of the different scenes, will be keyed by id, or  client id if no id
             saveState: { }
         },
-        zones: {
-            // true if currently loading the zone list
-            loading: false,
 
-            // contains the error object if the zones failed to load
-            loadingErr: null,
+        // An array of the zone items
+        zones: [],
 
-            // array of zone objects
-            items: []
-        }
+        // An array of all the button items
+        buttons: []
     };
 };

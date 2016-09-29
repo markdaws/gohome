@@ -1,30 +1,31 @@
 var React = require('react');
+var ReactRedux = require('react-redux');
 var System = require('./System.jsx');
 var SceneList = require('./SceneList.jsx');
 var ZoneList = require('./ZoneList.jsx');
 var Logging = require('./Logging.jsx');
 var RecipeApp = require('./RecipeApp.jsx');
 var Constants = require('../constants.js');
+var SceneActions = require('../actions/SceneActions.js');
+var SystemActions = require('../actions/SystemActions.js');
+var ZoneActions = require('../actions/ZoneActions.js');
 
 var ControlApp = React.createClass({
-    getInitialState: function() {
-        return { devices: [], buttons: [] };
+    getDefaultProps: function() {
+        return {
+            buttons: [],
+            devices: [],
+            zones: [],
+            scenes: {}
+        };
     },
 
     componentDidMount: function() {
-        //TODO: remove, scenes can fetch buttons
-        $.ajax({
-            url: '/api/v1/systems/123/buttons',
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                this.setState({buttons: data});
-            }.bind(this),
-            error: function(xhr, status, err) {
-                console.error(err.toString());
-            }.bind(this)
-        });
-        
+        //TODO: Have a loading screen until all of these have loaded
+        this.props.loadAllDevices();
+        this.props.loadAllZones();
+        this.props.loadAllScenes();
+        this.props.loadAllButtons();
     },
 
     render: function() {
@@ -53,13 +54,14 @@ var ControlApp = React.createClass({
                 <div className="tab-content">
                     <div role="tabpanel" className="tab-pane active" id="scenes">
                         <SceneList
-                            buttons={this.state.buttons} />
+                            scenes={this.props.scenes}
+                            buttons={this.props.buttons} />
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="zones">
-                        <ZoneList />
+                        <ZoneList zones={this.props.zones}/>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="system">
-                        <System />
+                        <System devices={this.props.devices}/>
                     </div>
                     {/*
                     <div role="tabpanel" className="tab-pane fade" id="logging">
@@ -74,4 +76,31 @@ var ControlApp = React.createClass({
         );
     }
 });
-module.exports = ControlApp;
+
+function mapStateToProps(state) {
+    return {
+        devices: state.system.devices,
+        zones: state.zones,
+        scenes: state.scenes,
+        buttons: state.buttons
+    };
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        loadAllButtons: function() {
+            dispatch(SystemActions.loadAllButtons());
+        },
+        loadAllDevices: function() {
+            dispatch(SystemActions.loadAllDevices());
+        },
+        loadAllScenes: function() {
+            dispatch(SceneActions.loadAll());
+        },
+        loadAllZones: function() {
+            dispatch(ZoneActions.loadAll());
+        }
+    }
+}
+
+module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ControlApp);

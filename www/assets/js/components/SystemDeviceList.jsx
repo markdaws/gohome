@@ -2,27 +2,10 @@ var React = require('react');
 var DeviceInfo = require('./DeviceInfo.jsx');
 
 var SystemDeviceList = React.createClass({
-    getInitialState: function() {
+    getDefaultProps: function() {
         return {
-            loading: true,
-            devices: [],
-            addingNew: false
-        };
-    },
-
-    componentDidMount: function() {
-        var self = this;
-        $.ajax({
-            url: '/api/v1/systems/123/devices',
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                self.setState({devices: data, loading: false});
-            },
-            error: function(xhr, status, err) {
-                console.error(err.toString());
-            }
-        });
+            devices: []
+        }
     },
 
     newClicked: function() {
@@ -30,7 +13,7 @@ var SystemDeviceList = React.createClass({
     },
 
     render: function() {
-        var deviceNodes = this.state.devices.map(function(device) {
+        var deviceNodes = this.props.devices.map(function(device) {
             return (
                 <DeviceInfo
                   name={device.name}
@@ -43,18 +26,14 @@ var SystemDeviceList = React.createClass({
                 />
             );
         })
-        
-        var body = this.state.loading
-        ? <div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>
-        : deviceNodes;
 
         return (
             <div className="cmp-DeviceList">
               <div className="header clearfix">
                 <button className="btn btn-primary pull-right" onClick={this.newClicked}>New Device</button>
               </div>
-              <h3 className={this.state.devices.length > 0 ? "" : " hidden"}>Devices</h3>
-              {body}
+              <h3 className={this.props.devices.length > 0 ? "" : " hidden"}>Devices</h3>
+              {deviceNodes}
             </div>
         );
     }

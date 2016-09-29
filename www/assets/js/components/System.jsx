@@ -16,14 +16,14 @@ var System = React.createClass({
     cancelImport: function() {
         this.setState({ importing: false });
     },
-    
+
     render: function() {
         var body, importBtn
         if (this.state.importing) {
             body = <Import/>
             importBtn = <button className="btn btn-danger pull-right btnExitImport" onClick={this.cancelImport}>Exit Import</button>
         } else {
-            body = <SystemDeviceList/>
+            body = <SystemDeviceList devices={this.props.devices}/>
             importBtn = <button className="btn btn-primary" onClick={this.importProduct}>Import</button>
         }
         return (

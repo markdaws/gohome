@@ -19759,33 +19759,35 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(190);
 	var System = __webpack_require__(160);
 	var SceneList = __webpack_require__(174);
 	var ZoneList = __webpack_require__(219);
 	var Logging = __webpack_require__(224);
 	var RecipeApp = __webpack_require__(226);
 	var Constants = __webpack_require__(216);
+	var SceneActions = __webpack_require__(215);
+	var SystemActions = __webpack_require__(246);
+	var ZoneActions = __webpack_require__(223);
 
 	var ControlApp = React.createClass({
 	    displayName: 'ControlApp',
 
-	    getInitialState: function getInitialState() {
-	        return { devices: [], buttons: [] };
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            buttons: [],
+	            devices: [],
+	            zones: [],
+	            scenes: {}
+	        };
 	    },
 
 	    componentDidMount: function componentDidMount() {
-	        //TODO: remove, scenes can fetch buttons
-	        $.ajax({
-	            url: '/api/v1/systems/123/buttons',
-	            dataType: 'json',
-	            cache: false,
-	            success: function (data) {
-	                this.setState({ buttons: data });
-	            }.bind(this),
-	            error: function (xhr, status, err) {
-	                console.error(err.toString());
-	            }.bind(this)
-	        });
+	        //TODO: Have a loading screen until all of these have loaded
+	        this.props.loadAllDevices();
+	        this.props.loadAllZones();
+	        this.props.loadAllScenes();
+	        this.props.loadAllButtons();
 	    },
 
 	    render: function render() {
@@ -19830,23 +19832,51 @@
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane active', id: 'scenes' },
 	                    React.createElement(SceneList, {
-	                        buttons: this.state.buttons })
+	                        scenes: this.props.scenes,
+	                        buttons: this.props.buttons })
 	                ),
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'zones' },
-	                    React.createElement(ZoneList, null)
+	                    React.createElement(ZoneList, { zones: this.props.zones })
 	                ),
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'system' },
-	                    React.createElement(System, null)
+	                    React.createElement(System, { devices: this.props.devices })
 	                )
 	            )
 	        );
 	    }
 	});
-	module.exports = ControlApp;
+
+	function mapStateToProps(state) {
+	    return {
+	        devices: state.system.devices,
+	        zones: state.zones,
+	        scenes: state.scenes,
+	        buttons: state.buttons
+	    };
+	}
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        loadAllButtons: function loadAllButtons() {
+	            dispatch(SystemActions.loadAllButtons());
+	        },
+	        loadAllDevices: function loadAllDevices() {
+	            dispatch(SystemActions.loadAllDevices());
+	        },
+	        loadAllScenes: function loadAllScenes() {
+	            dispatch(SceneActions.loadAll());
+	        },
+	        loadAllZones: function loadAllZones() {
+	            dispatch(ZoneActions.loadAll());
+	        }
+	    };
+	}
+
+	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ControlApp);
 
 /***/ },
 /* 160 */
@@ -19885,7 +19915,7 @@
 	                'Exit Import'
 	            );
 	        } else {
-	            body = React.createElement(SystemDeviceList, null);
+	            body = React.createElement(SystemDeviceList, { devices: this.props.devices });
 	            importBtn = React.createElement(
 	                'button',
 	                { className: 'btn btn-primary', onClick: this.importProduct },
@@ -21081,27 +21111,10 @@
 	var SystemDeviceList = React.createClass({
 	    displayName: 'SystemDeviceList',
 
-	    getInitialState: function getInitialState() {
+	    getDefaultProps: function getDefaultProps() {
 	        return {
-	            loading: true,
-	            devices: [],
-	            addingNew: false
+	            devices: []
 	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/systems/123/devices',
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                self.setState({ devices: data, loading: false });
-	            },
-	            error: function error(xhr, status, err) {
-	                console.error(err.toString());
-	            }
-	        });
 	    },
 
 	    newClicked: function newClicked() {
@@ -21109,7 +21122,7 @@
 	    },
 
 	    render: function render() {
-	        var deviceNodes = this.state.devices.map(function (device) {
+	        var deviceNodes = this.props.devices.map(function (device) {
 	            return React.createElement(DeviceInfo, {
 	                name: device.name,
 	                description: device.description,
@@ -21120,12 +21133,6 @@
 	                key: device.id
 	            });
 	        });
-
-	        var body = this.state.loading ? React.createElement(
-	            'div',
-	            { className: 'text-center' },
-	            React.createElement('i', { className: 'fa fa-spinner fa-spin' })
-	        ) : deviceNodes;
 
 	        return React.createElement(
 	            'div',
@@ -21141,10 +21148,10 @@
 	            ),
 	            React.createElement(
 	                'h3',
-	                { className: this.state.devices.length > 0 ? "" : " hidden" },
+	                { className: this.props.devices.length > 0 ? "" : " hidden" },
 	                'Devices'
 	            ),
-	            body
+	            deviceNodes
 	        );
 	    }
 	});
@@ -21176,18 +21183,6 @@
 	        };
 	    },
 
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {},
-
-	    componentDidMount: function componentDidMount() {
-	        this.props.loadAllScenes();
-
-	        //TODO: Enable as part of a mode
-	        //var el = ReactDOM.findDOMNode(this).getElementsByClassName('sceneList')[0];
-	        //Sortable.create(el);
-	    },
-
-	    componentWillUnmount: function componentWillUnmount() {},
-
 	    _onChange: function _onChange() {
 	        this.forceUpdate();
 	    },
@@ -21203,23 +21198,6 @@
 	    render: function render() {
 	        var body;
 	        var btns;
-
-	        var error;
-	        //TODO: loading error
-
-	        var loading;
-	        if (this.props.scenes.loading) {
-	            loading = React.createElement(
-	                'div',
-	                { className: 'spinnerWrapper' },
-	                React.createElement(
-	                    'p',
-	                    null,
-	                    'Loading Scenes ...'
-	                ),
-	                React.createElement('i', { className: 'fa fa-spinner fa-spin' })
-	            );
-	        }
 
 	        var scenes = this.props.scenes.items;
 	        if (this.state.editMode) {
@@ -21272,16 +21250,9 @@
 	            );
 	        }
 
-	        if (loading) {
-	            btns = null;
-	            body = null;
-	        }
-
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SceneList' },
-	            error,
-	            loading,
 	            btns,
 	            body
 	        );
@@ -21289,18 +21260,13 @@
 	});
 
 	function mapStateToProps(state) {
-	    return {
-	        scenes: state.scenes
-	    };
+	    return {};
 	}
 
 	function mapDispatchToProps(dispatch) {
 	    return {
 	        newClientScene: function newClientScene() {
 	            dispatch(SceneActions.newClient());
-	        },
-	        loadAllScenes: function loadAllScenes() {
-	            dispatch(SceneActions.loadAll());
 	        },
 	        saveScene: function saveScene(sceneJson) {
 	            dispatch(SceneActions.create(sceneJson));
@@ -24211,6 +24177,16 @@
 
 	module.exports = keyMirror({
 
+	    // Load all of the devices from the server
+	    DEVICE_LOAD_ALL: null,
+	    DEVICE_LOAD_ALL_RAW: null,
+	    DEVICE_LOAD_ALL_FAIL: null,
+
+	    // Load all of the buttons from the server
+	    BUTTON_LOAD_ALL: null,
+	    BUTTON_LOAD_ALL_RAW: null,
+	    BUTTON_LOAD_ALL_FAIL: null,
+
 	    // Load all of the scenes from the server
 	    SCENE_LOAD_ALL: null,
 	    SCENE_LOAD_ALL_RAW: null,
@@ -24455,6 +24431,42 @@
 	                });
 	            }
 	        });
+	    },
+
+	    deviceLoadAll: function deviceLoadAll(callback) {
+	        $.ajax({
+	            url: '/api/v1/systems/123/devices',
+	            dataType: 'json',
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    status: status
+	                });
+	            }
+	        });
+	    },
+
+	    buttonLoadAll: function buttonLoadAll(callback) {
+	        $.ajax({
+	            url: '/api/v1/systems/123/buttons',
+	            dataType: 'json',
+	            cache: false,
+	            success: function (data) {
+	                callback(null, data);
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    status: status
+	                });
+	            }.bind(this)
+	        });
 	    }
 	};
 	module.exports = API;
@@ -24474,15 +24486,11 @@
 	var ZoneList = React.createClass({
 	    displayName: 'ZoneList',
 
-	    componentDidMount: function componentDidMount() {
-	        this.props.loadAllZones();
-	    },
-
 	    render: function render() {
 	        var lightZones = [];
 	        var shadeZones = [];
 	        var otherZones = [];
-	        this.props.zones.items.forEach(function (zone) {
+	        this.props.zones.forEach(function (zone) {
 	            var cmpZone = React.createElement(Zone, { id: zone.id, name: zone.name, type: zone.type, output: zone.output, key: zone.id });
 
 	            switch (zone.type) {
@@ -24499,76 +24507,31 @@
 	            }
 	        });
 
-	        var loading;
-	        if (this.props.zones.loading) {
-	            loading = React.createElement(
-	                'div',
-	                { className: 'spinnerWrapper' },
-	                React.createElement(
-	                    'p',
-	                    null,
-	                    'Loading Zones ...'
-	                ),
-	                React.createElement('i', { className: 'fa fa-spinner fa-spin' })
-	            );
-	        }
-
-	        var error;
-	        if (this.props.zones.loadingErr) {
-	            error = React.createElement(
-	                'div',
-	                null,
-	                'There was an error loading your zones. Please refresh the page.'
-	            );
-	        }
-
-	        var classNames = ClassNames({
-	            'cmp-ZoneList': true,
-	            'row': !this.props.zones.loadingErr
-	        });
 	        return React.createElement(
 	            'div',
-	            { className: classNames },
-	            error,
-	            loading,
+	            { className: 'cmp-ZoneList row' },
 	            React.createElement(
 	                'h2',
-	                { className: ClassNames({ 'hidden': lightZones.length === 0 || loading }) },
+	                { className: ClassNames({ 'hidden': lightZones.length === 0 }) },
 	                'Lights'
 	            ),
 	            lightZones,
 	            React.createElement(
 	                'h2',
-	                { className: ClassNames({ 'hidden': shadeZones.length === 0 || loading }) },
+	                { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
 	                'Shades'
 	            ),
 	            shadeZones,
 	            React.createElement(
 	                'h2',
-	                { className: ClassNames({ 'hidden': otherZones.length === 0 || loading }) },
+	                { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
 	                'Other Zones'
 	            ),
 	            otherZones
 	        );
 	    }
 	});
-
-	function mapStateToProps(state) {
-	    return {
-	        zones: state.zones
-	    };
-	}
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        loadAllZones: function loadAllZones() {
-	            dispatch(ZoneActions.loadAll());
-	        }
-	    };
-	}
-
-	var ZoneListContainer = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ZoneList);
-	module.exports = ZoneListContainer;
+	module.exports = ZoneList;
 
 /***/ },
 /* 220 */
@@ -25979,12 +25942,16 @@
 	var Redux = __webpack_require__(175);
 	var thunk = __webpack_require__(240).default;
 	var initialState = __webpack_require__(241);
+	var buttonReducer = __webpack_require__(247);
+	var systemReducer = __webpack_require__(245);
 	var scenesReducer = __webpack_require__(242);
 	var zonesReducer = __webpack_require__(243);
 
 	var rootReducer = Redux.combineReducers({
+	    system: systemReducer,
 	    scenes: scenesReducer,
-	    zones: zonesReducer
+	    zones: zonesReducer,
+	    buttons: buttonReducer
 	});
 
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
@@ -26025,12 +25992,16 @@
 
 	module.exports = function () {
 	    return {
+	        // TODO:
+	        // True if the app has loaded all the data on app load and is ready to use
+	        //dataLoaded: false,
+
+	        system: {
+	            // Array of devices in the system
+	            devices: []
+	        },
+
 	        scenes: {
-	            // true if currently loading the scene list
-	            loading: false,
-
-	            //TODO: loadingErr
-
 	            // Save status, '""|"saving"|"success"|"error"', can be saving of a new scene
 	            // or saving of an update to an existing scene
 	            saveStatus: null,
@@ -26044,16 +26015,12 @@
 	            // Save state of the different scenes, will be keyed by id, or  client id if no id
 	            saveState: {}
 	        },
-	        zones: {
-	            // true if currently loading the zone list
-	            loading: false,
 
-	            // contains the error object if the zones failed to load
-	            loadingErr: null,
+	        // An array of the zone items
+	        zones: [],
 
-	            // array of zone objects
-	            items: []
-	        }
+	        // An array of all the button items
+	        buttons: []
 	    };
 	};
 
@@ -26210,25 +26177,21 @@
 	var initialState = __webpack_require__(241);
 
 	module.exports = function (state, action) {
-	    var newState = Object.assign({}, state);
+	    var newState = [];
 
 	    switch (action.type) {
 	        case Constants.ZONE_LOAD_ALL:
-	            newState.loading = true;
 	            break;
 
 	        case Constants.ZONE_LOAD_ALL_FAIL:
-	            newState.loading = false;
-	            newState.loadingErr = action.err;
 	            break;
 
 	        case Constants.ZONE_LOAD_ALL_RAW:
-	            newState.loading = false;
-	            newState.items = action.data;
+	            newState = action.data;
 	            break;
 
 	        default:
-	            newState = state || initialState();
+	            newState = state || initialState().zones;
 	    }
 
 	    return newState;
@@ -26271,6 +26234,102 @@
 	            newState = state || [];
 	            break;
 	    }
+	    return newState;
+	};
+
+/***/ },
+/* 245 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(216);
+	var initialState = __webpack_require__(241);
+
+	module.exports = function (state, action) {
+	    var newState = Object.assign({}, state);
+
+	    switch (action.type) {
+	        case Constants.DEVICE_LOAD_ALL:
+	            break;
+
+	        case Constants.DEVICE_LOAD_ALL_RAW:
+	            newState.devices = action.data;
+	            break;
+
+	        case Constants.DEVICE_LOAD_ALL_FAIL:
+	            //TODO: Loading error
+	            break;
+
+	        default:
+	            newState = state || initialState().system;
+	    }
+
+	    return newState;
+	};
+
+/***/ },
+/* 246 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(216);
+	var Api = __webpack_require__(218);
+
+	var SystemActions = {
+	    loadAllDevices: function loadAllDevices() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
+
+	            Api.deviceLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.DEVICE_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.DEVICE_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    },
+
+	    loadAllButtons: function loadAllButtons() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.BUTTON_LOAD_ALL });
+
+	            Api;
+	        };
+	    }
+	};
+	module.exports = SystemActions;
+
+/***/ },
+/* 247 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(216);
+	var initialState = __webpack_require__(241);
+
+	module.exports = function (state, action) {
+	    var newState = [];
+
+	    switch (action.type) {
+	        case Constants.BUTTON_LOAD_ALL:
+	            break;
+
+	        case Constants.BUTTON_LOAD_ALL_RAW:
+	            newState = action.data;
+	            break;
+
+	        case Constants.BUTTON_LOAD_ALL_FAIL:
+	            //TODO: Loading error
+	            break;
+
+	        default:
+	            newState = state || initialState().buttons;
+	    }
+
 	    return newState;
 	};
 

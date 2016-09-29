@@ -5,18 +5,19 @@ module.exports = function(state, action) {
     var newState = [];
 
     switch(action.type) {
-    case Constants.ZONE_LOAD_ALL:
+    case Constants.BUTTON_LOAD_ALL:
         break;
 
-    case Constants.ZONE_LOAD_ALL_FAIL:
-        break;
-
-    case Constants.ZONE_LOAD_ALL_RAW:
+    case Constants.BUTTON_LOAD_ALL_RAW:
         newState = action.data;
         break;
 
+    case Constants.BUTTON_LOAD_ALL_FAIL:
+        //TODO: Loading error
+        break;
+
     default:
-        newState = state || initialState().zones;
+        newState = state || initialState().buttons;
     }
 
     return newState;

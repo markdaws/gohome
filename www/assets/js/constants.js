@@ -9,6 +9,16 @@ var keyMirror = require('keyMirror');
 
 module.exports = keyMirror({
 
+    // Load all of the devices from the server
+    DEVICE_LOAD_ALL: null,
+    DEVICE_LOAD_ALL_RAW: null,
+    DEVICE_LOAD_ALL_FAIL: null,
+
+    // Load all of the buttons from the server
+    BUTTON_LOAD_ALL: null,
+    BUTTON_LOAD_ALL_RAW: null,
+    BUTTON_LOAD_ALL_FAIL: null,
+
     // Load all of the scenes from the server
     SCENE_LOAD_ALL: null,
     SCENE_LOAD_ALL_RAW: null,
