@@ -1,53 +1,45 @@
 var React = require('react');
+var ReactRedux = require('react-redux');
 var ZoneSetLevelCommand = require('./ZoneSetLevelCommand.jsx');
 var SceneSetCommand = require('./SceneSetCommand.jsx');
 var SaveBtn = require('./SaveBtn.jsx');
 var ButtonPressCommand = require('./ButtonPressCommand.jsx');
 var ButtonReleaseCommand = require('./ButtonReleaseCommand.jsx');
+var Api = require('../utils/API.js');
+var Constants = require('../constants.js');
+var SceneActions = require('../actions/SceneActions.js');
 
 var CommandInfo = React.createClass({
-    getInitialState: function() {
-        return {
-            //TODO: remove
-            command: this.props.command,
-            isNew: this.props.isNew
-        }
-    },
-
     deleteCommand: function() {
-        //TODO: Redux
-        this.props.onDelete(this.props.index, this.state.isNew, function(err) {
-            console.log('I was deleted: ' + err);
-            // TODO: If there is an error then the delete button should
-            // show an error state ... 
-        });
+        //TODO: Show error in UI
+        //TODO: Normalize middleware to handle showing error from API, standardize responses
+        this.props.deleteCommand(this.props.scene.id, this.props.index, this.props.command.isNew);
     },
 
-    save: function() {
+    saveCommand: function() {
         var cmd = this.refs.cmd;
-        var self = this;
-        //TODO: Redux
-        this.props.onSave(cmd.toJson(), function(errors) {
-            if (errors) {
-                cmd.setErrors(errors);
-                saveBtn.failure();
-            } else {
-                cmd.setErrors(null);
-                self.setState({ isNew: false });
+        this.setState({ errors: [] });
+
+        var cmdJson = cmd.toJson();
+        Api.sceneSaveCommand(this.props.scene.id, cmdJson, function(err, data) {
+            if (err) {
+                cmd.setErrors(err.validationErrors);
+                return;
             }
-        });
+
+            this.props.savedCommand(cmdJson, this.props.scene.id, this.props.index);
+        }.bind(this));
     },
 
     render: function() {
-        var self = this;
-        var command = this.state.command;
+        var command = this.props.command;
         var saveBtn
-        if (this.state.isNew) {
+        if (this.props.command.isNew) {
             saveBtn = (
                 <SaveBtn
                     text="Save"
                     status=""
-                    clicked={this.save} />
+                    clicked={this.saveCommand} />
             );
         }
 
@@ -56,6 +48,7 @@ var CommandInfo = React.createClass({
             case 'buttonPress':
                 uiCmd = (<ButtonPressCommand
                              ref="cmd"
+                             errors={(command.errors || {}).validationErrors}
                              buttons={this.props.buttons}
                              command={command}/>
                 );
@@ -63,6 +56,7 @@ var CommandInfo = React.createClass({
             case 'buttonRelease':
                 uiCmd = (<ButtonReleaseCommand
                              ref="cmd"
+                             errors={(command.errors || {}).validationErrors}
                              buttons={this.props.buttons}
                              command={command}/>
                 );
@@ -70,6 +64,7 @@ var CommandInfo = React.createClass({
             case 'zoneSetLevel':
                 uiCmd = (<ZoneSetLevelCommand
                     ref="cmd"
+                    errors={(command.errors || {}).validationErrors}
                     zones={this.props.zones}
                     command={command} />
                 )
@@ -77,6 +72,7 @@ var CommandInfo = React.createClass({
             case 'sceneSet':
                 uiCmd = (<SceneSetCommand
                     ref="cmd"
+                    errors={(command.errors || {}).validationErrors}
                     scenes={this.props.scenes}
                     command={command} />
                 )
@@ -95,4 +91,19 @@ var CommandInfo = React.createClass({
         );
     }
 });
-module.exports = CommandInfo;
+
+function mapDispatchToProps(dispatch) {
+    return {
+        savedCommand: function(cmdData, sceneId, cmdIndex) {
+            dispatch({
+                type: Constants.SCENE_COMMAND_SAVE_RAW,
+                data: cmdData,
+                sceneId: sceneId,
+                cmdIndex: cmdIndex });
+        },
+        deleteCommand: function(sceneId, cmdIndex, isNew) {
+            dispatch(SceneActions.deleteCommand(sceneId, cmdIndex, isNew));
+        }
+    }
+}
+module.exports = ReactRedux.connect(null, mapDispatchToProps)(CommandInfo);

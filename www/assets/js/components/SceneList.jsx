@@ -44,6 +44,7 @@ var SceneList = React.createClass({
                     <SceneInfo
                         zones={this.props.zones}
                         buttons={this.props.buttons}
+                        scenes={this.props.scenes.items}
                         scene={scene}
                         readOnlyFields="id"
                         key={scene.id || scene.clientId}
@@ -110,13 +111,9 @@ function mapDispatchToProps(dispatch) {
         },
         addCommand: function(sceneId, cmdType) {
             dispatch(SceneActions.addCommand(sceneId, cmdType));
-        },
-        saveCommand: function(sceneId, cmd) {
-            //TODO:
-            dispatch(SceneActions.addCommand(sceneId, cmd));
         }
     }
 }
 
-var SceneListContainer = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
-module.exports = SceneListContainer;
+//TODO: Connect must have some logic that stops updating the app
+module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);

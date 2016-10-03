@@ -5,6 +5,7 @@ var ButtonPicker = require('./ButtonPicker.jsx');
 
 var ButtonPressCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
+
     getInitialState: function() {
         return {
             clientId: this.getNextIdAndIncrement() + '',

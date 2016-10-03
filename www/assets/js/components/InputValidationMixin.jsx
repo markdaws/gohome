@@ -1,14 +1,15 @@
 module.exports = {
     uid: function(field) {
-        var id = this.state.clientId == undefined ? this.state.id : this.state.clientId;
+        var id = (!this.state.clientId) ? this.state.id : this.state.clientId;
         return id + '_' + field
     },
 
     getErr: function(field) {
-        if (!this.state.errors) {
+        var errors = this.state.errors;
+        if (!errors) {
             return null;
         }
-        return this.state.errors[this.uid(field)];
+        return errors[this.uid(field)];
     },
 
     hasErr: function(field) {

@@ -4,7 +4,8 @@ var keyMirror = require('keyMirror');
  The pattern here is that you have a actionType e.g. SCENE_DESTROY, responses from the
  server are then either <ACTION_TYPE>_RAW which indicates success and the payload will
  contain any raw data returned from the server, or <ACTION_TYPE>_FAIL which indicates
- failure
+ failure. If the errors are handled localy inside a component, there may not be a corresponding
+ _FAIL message
  */
 
 module.exports = keyMirror({
@@ -48,7 +49,6 @@ module.exports = keyMirror({
     // Saves a command associated to a scene on the server
     SCENE_COMMAND_SAVE: null,
     SCENE_COMMAND_SAVE_RAW: null,
-    SCENE_COMMAND_SAVE_FAIL: null,
 
     // Remove a command from a scene
     SCENE_COMMAND_DELETE: null,

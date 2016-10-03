@@ -2,6 +2,22 @@ var Constants = require('../constants.js');
 var Api = require('../utils/API.js');
 
 var SceneActions = {
+
+    loadAll: function() {
+        return function(dispatch) {
+            dispatch({ type: Constants.SCENE_LOAD_ALL });
+
+            Api.sceneLoadAll(function(err, data) {
+                if (err) {
+                    dispatch({ type: Constants.SCENE_LOAD_ALL_FAIL, err: err });
+                    return;
+                }
+
+                dispatch({ type: Constants.SCENE_LOAD_ALL_RAW, data: data });
+            });
+        };
+    },
+
     create: function(sceneJson) {
         return function(dispatch) {
             dispatch({ type: Constants.SCENE_CREATE, clientId: sceneJson.clientId });
@@ -57,20 +73,32 @@ var SceneActions = {
         };
     },
 
-    //TODO: Save command
-    //TODO: Delete command (client only + server)
-
-    loadAll: function() {
+    deleteCommand: function(sceneId, cmdIndex, isNew) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_LOAD_ALL });
+            dispatch({ type: Constants.SCENE_COMMAND_DELETE, cmdIndex: cmdIndex, sceneId: sceneId });
 
-            Api.sceneLoadAll(function(err, data) {
+            if (isNew) {
+                // Client only
+                dispatch({
+                    type: Constants.SCENE_COMMAND_DELETE_RAW,
+                    sceneId: sceneId,
+                    cmdIndex: cmdIndex });
+                return;
+            }
+
+            Api.sceneDeleteCommand(sceneId, cmdIndex, function(err, data) {
                 if (err) {
-                    dispatch({ type: Constants.SCENE_LOAD_ALL_FAIL, err: err });
+                    dispatch({
+                        type: Constants.SCENE_COMMAND_DELETE_FAIL,
+                        sceneId: sceneId,
+                        cmdIndex: cmdIndex,
+                        err: err });
                     return;
                 }
-
-                dispatch({ type: Constants.SCENE_LOAD_ALL_RAW, data: data });
+                dispatch({
+                    type: Constants.SCENE_COMMAND_DELETE_RAW,
+                    sceneId: sceneId,
+                    cmdIndex: cmdIndex });
             });
         };
     },

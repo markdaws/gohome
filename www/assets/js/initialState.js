@@ -10,16 +10,10 @@ module.exports = function() {
         },
 
         scenes: {
-            // Save status, '""|"saving"|"success"|"error"', can be saving of a new scene
-            // or saving of an update to an existing scene
-            saveStatus: null,
-
-            // Detailed object with more description on the save error
-            saveErr: null,
-
             // array of scene objects
             items: [],
 
+            // TODO: Rethink
             // Save state of the different scenes, will be keyed by id, or  client id if no id
             saveState: { }
         },

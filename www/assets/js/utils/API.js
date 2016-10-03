@@ -66,7 +66,7 @@ var API = {
                     err: err,
                     xhr: xhr,
                     validationErrors: errors,
-                    sceneId: scene.id
+                    id: scene.id
                 });
             }
         });
@@ -91,7 +91,7 @@ var API = {
         });
     },
 
-    sceneAddCommand: function(sceneId, cmd, callback) {
+    sceneSaveCommand: function(sceneId, cmd, callback) {
         $.ajax({
             url: '/api/v1/systems/123/scenes/' + sceneId + '/commands',
             type: 'POST',
@@ -112,8 +112,25 @@ var API = {
         });
     },
 
-    sceneDeleteCommand: function() {
-        //TODO: implement
+    sceneDeleteCommand: function(sceneId, cmdIndex, callback) {
+        $.ajax({
+            url: '/api/v1/systems/123/scenes/' + sceneId + '/commands/' + cmdIndex,
+            type: 'DELETE',
+            dataType: 'json',
+            data: {},
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    validationErrors: errors
+                });
+            }
+        });
     },
 
     // zoneLoadAll loads all of the zones from the backing store

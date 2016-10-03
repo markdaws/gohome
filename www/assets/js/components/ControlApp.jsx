@@ -55,7 +55,8 @@ var ControlApp = React.createClass({
                     <div role="tabpanel" className="tab-pane active" id="scenes">
                         <SceneList
                             scenes={this.props.scenes}
-                            buttons={this.props.buttons} />
+                            buttons={this.props.buttons}
+                            zones={this.props.zones} />
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="zones">
                         <ZoneList zones={this.props.zones}/>

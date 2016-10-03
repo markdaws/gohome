@@ -9,16 +9,13 @@ module.exports = function(state, action) {
 
     switch(action.type) {
     case Constants.SCENE_LOAD_ALL:
-        newState.loading = true;
         break;
 
     case Constants.SCENE_LOAD_ALL_FAIL:
-        newState.loading = false;
         //TODO: Log fail in the UI
         break;
 
     case Constants.SCENE_LOAD_ALL_RAW:
-        newState.loading = false;
         newState.items = action.data;
         break;
 
@@ -68,7 +65,7 @@ module.exports = function(state, action) {
 
     case Constants.SCENE_UPDATE_RAW:
         newState.saveState = Object.assign({}, newState.saveState);
-        newState.saveState[action.id].status = 'success';
+        newState.saveState[action.id] = { status: 'success' };
         newState.items = newState.items.map(function(scene) {
             // Replace with actual scene from the server
             if (scene.id === action.id) {
@@ -76,8 +73,8 @@ module.exports = function(state, action) {
             }
             return scene;
         });
-
         break;
+
     case Constants.SCENE_UPDATE_FAIL:
         newState.saveState = Object.assign({}, newState.saveState);
         newState.saveState[action.id] = {
@@ -88,6 +85,7 @@ module.exports = function(state, action) {
 
     case Constants.SCENE_DESTROY:
         break;
+
     case Constants.SCENE_DESTROY_RAW:
         // This is a client scene, before it was sent to the server
         for (var i=0; i<newState.items.length; ++i) {
@@ -110,13 +108,15 @@ module.exports = function(state, action) {
         break;
 
     case Constants.SCENE_COMMAND_ADD:
-        //TODO: Where does state come from that gets passed in here
-        debugger;
+    case Constants.SCENE_COMMAND_SAVE:
+    case Constants.SCENE_COMMAND_SAVE_RAW:
+    case Constants.SCENE_COMMAND_SAVE_FAIL:
+    case Constants.SCENE_COMMAND_DELETE_RAW:
         var scenes = newState.items;
         for (var i=0;i<scenes.length; ++i) {
             if (scenes[i].id === action.sceneId) {
                 newState.items = newState.items.slice();
-                newState.items[i].commands = CommandsReducer(scenes[i].commands, action);
+                newState.items[i].commands = CommandsReducer(scenes[i].commands || [], action);
                 break;
             }
         }

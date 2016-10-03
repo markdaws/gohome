@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactRedux = require('react-redux');
 var SaveBtn = require('./SaveBtn.jsx');
 var InputValidationMixin = require('./InputValidationMixin.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
@@ -24,8 +25,6 @@ var SceneInfo = React.createClass({
             address: this.props.scene.address || '',
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
             errors: this.props.errors,
-            //TODO: Needed?, turn to props
-            commands: this.props.scene.commands || [],
 
             // true if the object has been modified
             dirty: false,
@@ -71,57 +70,6 @@ var SceneInfo = React.createClass({
         this.props.deleteScene(this.state.clientId, this.state.id);
     },
 
-    addCommand: function(cmd, callback) {
-        this.props.addCommand(this.state.id, cmd);
-        //TODO: remove
-
-        /*
-           var self = this;
-           $.ajax({
-           url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands',
-           type: 'POST',
-           dataType: 'json',
-           data: JSON.stringify(cmd),
-           cache: false,
-           success: function(data) {
-           callback();
-           },
-           error: function(xhr, status, err) {
-           var errors = (JSON.parse(xhr.responseText) || {}).errors;
-           callback(errors);
-           }
-           });*/
-    },
-
-    deleteCommand: function(cmdIndex, isNewCmd, callback) {
-        //TODO: redux
-        var self = this;
-        
-        if (isNewCmd) {
-            var commands = self.state.commands.filter(function(cmd, index) {
-                return index != cmdIndex;
-            });
-            self.setState({ commands: commands });
-            return;
-        }
-
-        $.ajax({
-            url: '/api/v1/systems/123/scenes/' + this.state.id + '/commands/' + cmdIndex,
-            type: 'DELETE',
-            cache: false,
-            success: function(data) {
-                var commands = self.state.commands.filter(function(cmd, index) {
-                    return index != cmdIndex;
-                });
-                self.setState({ commands: commands });
-            }.bind(this),
-            error: function(xhr, status, err) {
-                console.error(err);
-                callback(err);
-            }.bind(this)
-        });
-    },
-
     commandTypeChanged: function(cmdType) {
         this.props.addCommand(this.state.id, cmdType);
     },
@@ -152,10 +100,9 @@ var SceneInfo = React.createClass({
                     var info = (
                         <CommandInfo
                             isNew={command.isNew}
+                            scene={self.props.scene}
                             key={key}
                             index={cmdIndex}
-                            onSave={self.addCommand}
-                            onDelete={self.deleteCommand}
                             scenes={self.props.scenes}
                             zones={self.props.zones}
                             buttons={self.props.buttons}
@@ -241,4 +188,5 @@ var SceneInfo = React.createClass({
         );
     }
 });
+
 module.exports = SceneInfo;
