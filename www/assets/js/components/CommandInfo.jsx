@@ -72,6 +72,7 @@ var CommandInfo = React.createClass({
             case 'sceneSet':
                 uiCmd = (<SceneSetCommand
                     ref="cmd"
+                    parentSceneId={this.props.scene.id}
                     errors={(command.errors || {}).validationErrors}
                     scenes={this.props.scenes}
                     command={command} />

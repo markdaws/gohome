@@ -115,5 +115,4 @@ function mapDispatchToProps(dispatch) {
     }
 }
 
-//TODO: Connect must have some logic that stops updating the app
 module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);

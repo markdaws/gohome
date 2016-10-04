@@ -119,7 +119,7 @@ var SceneInfo = React.createClass({
                 );
             }
         } else {
-            commandNodes = <p>This is an unmanaged scene. The scene is controlled by a 3rd party device so we can&apos;t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.</p>
+            commandNodes = <p>The scene is controlled by a 3rd party device so we can&apos;t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.</p>
         }
 
         var saveBtn;

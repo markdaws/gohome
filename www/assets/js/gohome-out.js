@@ -23074,7 +23074,6 @@
 	    };
 	}
 
-	//TODO: Connect must have some logic that stops updating the app
 	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
 
 /***/ },
@@ -23262,7 +23261,7 @@
 	            commandNodes = React.createElement(
 	                'p',
 	                null,
-	                'This is an unmanaged scene. The scene is controlled by a 3rd party device so we can\'t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.'
+	                'The scene is controlled by a 3rd party device so we can\'t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.'
 	            );
 	        }
 
@@ -23442,6 +23441,7 @@
 	            case 'sceneSet':
 	                uiCmd = React.createElement(SceneSetCommand, {
 	                    ref: 'cmd',
+	                    parentSceneId: this.props.scene.id,
 	                    errors: (command.errors || {}).validationErrors,
 	                    scenes: this.props.scenes,
 	                    command: command });
@@ -26211,7 +26211,11 @@
 	                    { className: 'control-label', htmlFor: this.uid("attributes_SceneID") },
 	                    'Scene*'
 	                ),
-	                React.createElement(ScenePicker, { changed: this.scenePickerChanged, scenes: this.props.scenes, sceneId: this.state.sceneId }),
+	                React.createElement(ScenePicker, {
+	                    changed: this.scenePickerChanged,
+	                    scenes: this.props.scenes,
+	                    sceneId: this.state.sceneId,
+	                    parentSceneId: this.props.parentSceneId }),
 	                this.errMsg("attributes_SceneID")
 	            )
 	        );
@@ -26244,12 +26248,23 @@
 	    render: function render() {
 	        var options = [];
 	        this.props.scenes.forEach(function (scene) {
+	            if (!scene.id) {
+	                // If this scene has not been saved it can't be used
+	                return;
+	            }
+
+	            // Can't set itself
+	            console.log(scene.id + ' : ' + this.props.sceneId);
+	            if (scene.id === this.props.parentSceneId) {
+	                return;
+	            }
+
 	            options.push(React.createElement(
 	                'option',
 	                { key: scene.id, value: scene.id },
 	                scene.name
 	            ));
-	        });
+	        }.bind(this));
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ScenePicker' },
