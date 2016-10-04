@@ -23950,6 +23950,30 @@
 	        });
 	    },
 
+	    // zoneSetLevel sets the level of a zone.
+	    // cmd -> 'turnOn | turnOff | setLevel
+	    zoneSetLevel: function zoneSetLevel(zoneId, cmd, value, r, g, b, callback) {
+	        $.ajax({
+	            url: '/api/v1/systems/1/zones/' + zoneId,
+	            type: 'PUT',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify({
+	                cmd: cmd,
+	                value: value,
+	                r: r,
+	                g: g,
+	                b: b
+	            }),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback(err);
+	            }
+	        });
+	    },
+
 	    deviceLoadAll: function deviceLoadAll(callback) {
 	        $.ajax({
 	            url: '/api/v1/systems/123/devices',
@@ -24114,6 +24138,7 @@
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
 	var CssMixin = __webpack_require__(215);
+	var Api = __webpack_require__(211);
 
 	var Zone = React.createClass({
 	    displayName: 'Zone',
@@ -24226,18 +24251,8 @@
 	    },
 
 	    send: function send(data, callback) {
-	        $.ajax({
-	            url: '/api/v1/systems/1/zones/' + this.props.id,
-	            type: 'PUT',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify(data),
-	            success: function success(data) {
-	                callback();
-	            },
-	            error: function error(xhr, status, err) {
-	                callback(err);
-	            }
+	        Api.zoneSetLevel(this.props.id, data.cmd, data.value, data.r, data.g, data.b, function (err, data) {
+	            callback(err, data);
 	        });
 	    },
 
@@ -25978,6 +25993,7 @@
 	var InputValidationMixin = __webpack_require__(194);
 	var UniqueIdMixin = __webpack_require__(193);
 	var ZonePicker = __webpack_require__(243);
+	var Api = __webpack_require__(211);
 
 	var ZoneSetLevelCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -26019,6 +26035,16 @@
 	        this.setState({ zoneId: zoneId });
 	    },
 
+	    testLevel: function testLevel() {
+	        if (!this.state.zoneId) {
+	            return;
+	        }
+
+	        Api.zoneSetLevel(this.state.zoneId, 'setLevel', parseFloat(this.state.level), parseInt(this.state.r, 10), parseInt(this.state.g, 10), parseInt(this.state.b, 10), function (err, data) {
+	            //TODO: error
+	        });
+	    },
+
 	    render: function render() {
 	        //TODO: Only show RGB if this is an OTRGB
 	        //TODO: Insert RGB Picker in UI as well
@@ -26054,19 +26080,32 @@
 	                    { className: 'control-label', htmlFor: this.uid("attributes_Level") },
 	                    'Level [0-100]'
 	                ),
-	                React.createElement('input', {
-	                    disabled: this.props.disabled,
-	                    value: this.state.level,
-	                    'data-statepath': 'level',
-	                    onChange: this.changed,
-	                    className: 'level form-control',
-	                    type: 'text',
-	                    id: this.uid("attributes_Level") }),
-	                this.errMsg("attributes_Level")
+	                React.createElement(
+	                    'div',
+	                    { className: 'input-group' },
+	                    React.createElement('input', {
+	                        disabled: this.props.disabled,
+	                        value: this.state.level,
+	                        'data-statepath': 'level',
+	                        onChange: this.changed,
+	                        className: 'level form-control',
+	                        type: 'number',
+	                        id: this.uid("attributes_Level") }),
+	                    React.createElement(
+	                        'span',
+	                        { className: 'input-group-btn' },
+	                        React.createElement(
+	                            'button',
+	                            { className: 'btn btn-primary', onClick: this.testLevel },
+	                            'Test Level'
+	                        )
+	                    ),
+	                    this.errMsg("attributes_Level")
+	                )
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: 'clearfix' },
+	                { className: 'clearfix rgbExpander' },
 	                React.createElement(
 	                    'a',
 	                    { 'data-toggle': 'collapse', href: "#" + this.uid("rgbExpand") },
@@ -26101,7 +26140,7 @@
 	                        'data-statepath': 'r',
 	                        onChange: this.changed,
 	                        className: 'r form-control',
-	                        type: 'text',
+	                        type: 'number',
 	                        id: this.uid("attributes_R") }),
 	                    this.errMsg("attributes_R")
 	                ),
@@ -26119,7 +26158,7 @@
 	                        'data-statepath': 'g',
 	                        onChange: this.changed,
 	                        className: 'g form-control',
-	                        type: 'text',
+	                        type: 'number',
 	                        id: this.uid("attributes_G") }),
 	                    this.errMsg("attributes_G")
 	                ),
@@ -26137,7 +26176,7 @@
 	                        'data-statepath': 'b',
 	                        onChange: this.changed,
 	                        className: 'b form-control',
-	                        type: 'text',
+	                        type: 'number',
 	                        id: this.uid("attributes_B") }),
 	                    this.errMsg("attributes_B")
 	                )

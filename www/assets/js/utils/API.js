@@ -152,6 +152,30 @@ var API = {
         });
     },
 
+    // zoneSetLevel sets the level of a zone.
+    // cmd -> 'turnOn | turnOff | setLevel
+    zoneSetLevel: function(zoneId, cmd, value, r, g, b, callback) {
+        $.ajax({
+            url: '/api/v1/systems/1/zones/' + zoneId,
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({
+                cmd: cmd,
+                value: value,
+                r: r,
+                g: g,
+                b: b
+            }),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback(err);
+            }
+        });
+    },
+
     deviceLoadAll: function(callback) {
         $.ajax({
             url: '/api/v1/systems/123/devices',

@@ -151,6 +151,9 @@ button.disabled {
     font-size: 12px;
     font-weight: normal;
 }
+.cmp-ZoneSetLevelCommand .rgbExpander {
+    margin-bottom: 8px;
+}
 
 .cmp-System .btnExitImport {
     margin-bottom: 12px;

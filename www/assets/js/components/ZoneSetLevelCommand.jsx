@@ -2,6 +2,7 @@ var React = require('react');
 var InputValidationMixin = require('./InputValidationMixin.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var ZonePicker = require('./ZonePicker.jsx');
+var Api = require('../utils/API.js');
 
 var ZoneSetLevelCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
@@ -40,7 +41,24 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
     zonePickerChanged: function(zoneId) {
         this.setState({ zoneId: zoneId });
     },
-    
+
+    testLevel: function() {
+        if (!this.state.zoneId) {
+            return;
+        }
+
+        Api.zoneSetLevel(
+            this.state.zoneId,
+            'setLevel',
+            parseFloat(this.state.level),
+            parseInt(this.state.r, 10),
+            parseInt(this.state.g, 10),
+            parseInt(this.state.b, 10),
+            function(err, data) {
+                //TODO: error
+            });
+    },
+
     render: function() {
         //TODO: Only show RGB if this is an OTRGB
         //TODO: Insert RGB Picker in UI as well
@@ -59,21 +77,28 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
                 </div>
                 <div className={this.addErr("form-group", "attributes_Level")}>
                     <label className="control-label" htmlFor={this.uid("attributes_Level")}>Level [0-100]</label>
-                    <input
-                        disabled={this.props.disabled}
-                        value={this.state.level}
-                        data-statepath="level"
-                        onChange={this.changed}
-                        className="level form-control"
-                        type="text"
-                        id={this.uid("attributes_Level")}/>
-                    {this.errMsg("attributes_Level")}
+                    <div className="input-group">
+                        <input
+                            disabled={this.props.disabled}
+                            value={this.state.level}
+                            data-statepath="level"
+                            onChange={this.changed}
+                            className="level form-control"
+                            type="number"
+                            id={this.uid("attributes_Level")}/>
+                        <span className="input-group-btn">
+                            <button className="btn btn-primary" onClick={this.testLevel}>
+                                Test Level
+                            </button>
+                        </span>
+                        {this.errMsg("attributes_Level")}
+                    </div>
                 </div>
-                <div className="clearfix">
-                <a data-toggle="collapse" href={"#" + this.uid("rgbExpand")}>
-                    RGB
-                    <i className="glyphicon glyphicon-menu-down"></i>
-                </a>
+                <div className="clearfix rgbExpander">
+                    <a data-toggle="collapse" href={"#" + this.uid("rgbExpand")}>
+                        RGB
+                        <i className="glyphicon glyphicon-menu-down"></i>
+                    </a>
                 </div>
                 <div className="collapse rbgExpand" id={this.uid("rgbExpand")}>
                     <p><strong>NOTE:</strong> To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (Value/100)</p>
@@ -85,7 +110,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
                             data-statepath="r"
                             onChange={this.changed}
                             className="r form-control"
-                            type="text"
+                            type="number"
                             id={this.uid("attributes_R")}/>
                         {this.errMsg("attributes_R")}
                     </div>
@@ -97,7 +122,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
                             data-statepath="g"
                             onChange={this.changed}
                             className="g form-control"
-                            type="text"
+                            type="number"
                             id={this.uid("attributes_G")}/>
                         {this.errMsg("attributes_G")}
                     </div>
@@ -109,7 +134,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
                             data-statepath="b"
                             onChange={this.changed}
                             className="b form-control"
-                            type="text"
+                            type="number"
                             id={this.uid("attributes_B")}/>
                         {this.errMsg("attributes_B")}
                     </div>

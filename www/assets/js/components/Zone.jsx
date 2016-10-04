@@ -2,6 +2,7 @@ var ClassNames = require('classnames');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var CssMixin = require('./CssMixin.jsx');
+var Api = require('../utils/API.js');
 
 var Zone = React.createClass({
     mixins: [CssMixin],
@@ -119,19 +120,16 @@ var Zone = React.createClass({
     },
 
     send: function(data, callback) {
-        $.ajax({
-            url: '/api/v1/systems/1/zones/' + this.props.id,
-            type: 'PUT',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data),
-            success: function(data) {
-                callback();
-            },
-            error: function(xhr, status, err) {
-                callback(err);
-            }
-        });
+        Api.zoneSetLevel(
+            this.props.id,
+            data.cmd,
+            data.value,
+            data.r,
+            data.g,
+            data.b,
+            function(err, data) {
+                callback(err, data);
+            });
     },
 
     render: function() {
