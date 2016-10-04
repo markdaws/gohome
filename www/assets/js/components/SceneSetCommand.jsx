@@ -45,6 +45,7 @@ var SceneSetCommand = module.exports = React.createClass({
               <div className={this.addErr("form-group", "attributes_SceneID")}>
                 <label className="control-label" htmlFor={this.uid("attributes_SceneID")}>Scene*</label>
                 <ScenePicker
+                    disabled={this.props.disabled}
                     changed={this.scenePickerChanged}
                     scenes={this.props.scenes}
                     sceneId={this.state.sceneId}

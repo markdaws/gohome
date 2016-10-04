@@ -23420,6 +23420,7 @@
 	            case 'buttonPress':
 	                uiCmd = React.createElement(ButtonPressCommand, {
 	                    ref: 'cmd',
+	                    disabled: !this.props.command.isNew,
 	                    errors: (command.errors || {}).validationErrors,
 	                    buttons: this.props.buttons,
 	                    command: command });
@@ -23427,6 +23428,7 @@
 	            case 'buttonRelease':
 	                uiCmd = React.createElement(ButtonReleaseCommand, {
 	                    ref: 'cmd',
+	                    disabled: !this.props.command.isNew,
 	                    errors: (command.errors || {}).validationErrors,
 	                    buttons: this.props.buttons,
 	                    command: command });
@@ -23434,6 +23436,7 @@
 	            case 'zoneSetLevel':
 	                uiCmd = React.createElement(ZoneSetLevelCommand, {
 	                    ref: 'cmd',
+	                    disabled: !this.props.command.isNew,
 	                    errors: (command.errors || {}).validationErrors,
 	                    zones: this.props.zones,
 	                    command: command });
@@ -23441,6 +23444,7 @@
 	            case 'sceneSet':
 	                uiCmd = React.createElement(SceneSetCommand, {
 	                    ref: 'cmd',
+	                    disabled: !this.props.command.isNew,
 	                    parentSceneId: this.props.scene.id,
 	                    errors: (command.errors || {}).validationErrors,
 	                    scenes: this.props.scenes,
@@ -26035,7 +26039,11 @@
 	                    { className: 'control-label', htmlFor: this.uid("attributes_ZoneID") },
 	                    'Zone*'
 	                ),
-	                React.createElement(ZonePicker, { changed: this.zonePickerChanged, zones: this.props.zones, zoneId: this.state.zoneId }),
+	                React.createElement(ZonePicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.zonePickerChanged,
+	                    zones: this.props.zones,
+	                    zoneId: this.state.zoneId }),
 	                this.errMsg("attributes_ZoneID")
 	            ),
 	            React.createElement(
@@ -26046,51 +26054,93 @@
 	                    { className: 'control-label', htmlFor: this.uid("attributes_Level") },
 	                    'Level [0-100]'
 	                ),
-	                React.createElement('input', { value: this.state.level, 'data-statepath': 'level', onChange: this.changed, className: 'level form-control', type: 'text', id: this.uid("attributes_Level") }),
+	                React.createElement('input', {
+	                    disabled: this.props.disabled,
+	                    value: this.state.level,
+	                    'data-statepath': 'level',
+	                    onChange: this.changed,
+	                    className: 'level form-control',
+	                    type: 'text',
+	                    id: this.uid("attributes_Level") }),
 	                this.errMsg("attributes_Level")
 	            ),
 	            React.createElement(
-	                'p',
-	                null,
+	                'div',
+	                { className: 'clearfix' },
 	                React.createElement(
-	                    'strong',
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("rgbExpand") },
+	                    'RGB',
+	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse rbgExpand', id: this.uid("rgbExpand") },
+	                React.createElement(
+	                    'p',
 	                    null,
-	                    'NOTE:'
+	                    React.createElement(
+	                        'strong',
+	                        null,
+	                        'NOTE:'
+	                    ),
+	                    ' To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (Value/100)'
 	                ),
-	                ' To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (Value/100)'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_R") },
 	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_R") },
-	                    'Level - Red [0-255]'
+	                    'div',
+	                    { className: this.addErr("form-group", "attributes_R") },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("attributes_R") },
+	                        'Level - Red [0-255]'
+	                    ),
+	                    React.createElement('input', {
+	                        disabled: this.props.disabled,
+	                        value: this.state.r,
+	                        'data-statepath': 'r',
+	                        onChange: this.changed,
+	                        className: 'r form-control',
+	                        type: 'text',
+	                        id: this.uid("attributes_R") }),
+	                    this.errMsg("attributes_R")
 	                ),
-	                React.createElement('input', { value: this.state.r, 'data-statepath': 'r', onChange: this.changed, className: 'r form-control', type: 'text', id: this.uid("attributes_R") }),
-	                this.errMsg("attributes_R")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_G") },
 	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_G") },
-	                    'Level - Green [0-255]'
+	                    'div',
+	                    { className: this.addErr("form-group", "attributes_G") },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("attributes_G") },
+	                        'Level - Green [0-255]'
+	                    ),
+	                    React.createElement('input', {
+	                        disabled: this.props.disabled,
+	                        value: this.state.g,
+	                        'data-statepath': 'g',
+	                        onChange: this.changed,
+	                        className: 'g form-control',
+	                        type: 'text',
+	                        id: this.uid("attributes_G") }),
+	                    this.errMsg("attributes_G")
 	                ),
-	                React.createElement('input', { value: this.state.g, 'data-statepath': 'g', onChange: this.changed, className: 'g form-control', type: 'text', id: this.uid("attributes_G") }),
-	                this.errMsg("attributes_G")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_B") },
 	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_B") },
-	                    'Level - Blue [0-255]'
-	                ),
-	                React.createElement('input', { value: this.state.b, 'data-statepath': 'b', onChange: this.changed, className: 'b form-control', type: 'text', id: this.uid("attributes_B") }),
-	                this.errMsg("attributes_B")
+	                    'div',
+	                    { className: this.addErr("form-group", "attributes_B") },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("attributes_B") },
+	                        'Level - Blue [0-255]'
+	                    ),
+	                    React.createElement('input', {
+	                        disabled: this.props.disabled,
+	                        value: this.state.b,
+	                        'data-statepath': 'b',
+	                        onChange: this.changed,
+	                        className: 'b form-control',
+	                        type: 'text',
+	                        id: this.uid("attributes_B") }),
+	                    this.errMsg("attributes_B")
+	                )
 	            )
 	        );
 	    }
@@ -26133,7 +26183,12 @@
 	            { className: 'cmp-ZonePicker' },
 	            React.createElement(
 	                'select',
-	                { className: 'form-control', defaultValue: this.props.zoneId, onChange: this.selected, value: this.state.value },
+	                {
+	                    disabled: this.props.disabled,
+	                    className: 'form-control',
+	                    defaultValue: this.props.zoneId,
+	                    onChange: this.selected,
+	                    value: this.state.value },
 	                React.createElement(
 	                    'option',
 	                    { value: '' },
@@ -26212,6 +26267,7 @@
 	                    'Scene*'
 	                ),
 	                React.createElement(ScenePicker, {
+	                    disabled: this.props.disabled,
 	                    changed: this.scenePickerChanged,
 	                    scenes: this.props.scenes,
 	                    sceneId: this.state.sceneId,
@@ -26254,7 +26310,6 @@
 	            }
 
 	            // Can't set itself
-	            console.log(scene.id + ' : ' + this.props.sceneId);
 	            if (scene.id === this.props.parentSceneId) {
 	                return;
 	            }
@@ -26265,12 +26320,18 @@
 	                scene.name
 	            ));
 	        }.bind(this));
+
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ScenePicker' },
 	            React.createElement(
 	                'select',
-	                { className: 'form-control', defaultValue: this.props.sceneId, onChange: this.selected, value: this.state.value },
+	                {
+	                    className: 'form-control',
+	                    disabled: this.props.disabled,
+	                    defaultValue: this.props.sceneId,
+	                    onChange: this.selected,
+	                    value: this.state.value },
 	                React.createElement(
 	                    'option',
 	                    { value: '' },
@@ -26348,7 +26409,11 @@
 	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
 	                    'Button*'
 	                ),
-	                React.createElement(ButtonPicker, { changed: this.buttonPickerChanged, buttons: this.props.buttons, buttonId: this.state.buttonId }),
+	                React.createElement(ButtonPicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.buttonPickerChanged,
+	                    buttons: this.props.buttons,
+	                    buttonId: this.state.buttonId }),
 	                this.errMsg("attributes_ButtonID")
 	            )
 	        );
@@ -26392,7 +26457,12 @@
 	            { className: 'cmp-ButtonPicker' },
 	            React.createElement(
 	                'select',
-	                { className: 'form-control', defaultValue: this.props.buttonId, onChange: this.selected, value: this.state.value },
+	                {
+	                    disabled: this.props.disabled,
+	                    className: 'form-control',
+	                    defaultValue: this.props.buttonId,
+	                    onChange: this.selected,
+	                    value: this.state.value },
 	                React.createElement(
 	                    'option',
 	                    { value: '' },
@@ -26469,7 +26539,11 @@
 	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
 	                    'Button*'
 	                ),
-	                React.createElement(ButtonPicker, { changed: this.buttonPickerChanged, buttons: this.props.buttons, buttonId: this.state.buttonId }),
+	                React.createElement(ButtonPicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.buttonPickerChanged,
+	                    buttons: this.props.buttons,
+	                    buttonId: this.state.buttonId }),
 	                this.errMsg("attributes_ButtonID")
 	            )
 	        );

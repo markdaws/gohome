@@ -40,12 +40,16 @@ var ButtonReleaseCommand = module.exports = React.createClass({
     render: function() {
         return (
             <div className="cmp-ButtonReleaseCommand">
-              <h4>Button Release</h4>
-              <div className={this.addErr("form-group", "attributes_ButtonID")}>
-                <label className="control-label" htmlFor={this.uid("attributes_ButtonID")}>Button*</label>
-                <ButtonPicker changed={this.buttonPickerChanged} buttons={this.props.buttons} buttonId={this.state.buttonId} />
-                {this.errMsg("attributes_ButtonID")}
-              </div>
+                <h4>Button Release</h4>
+                <div className={this.addErr("form-group", "attributes_ButtonID")}>
+                    <label className="control-label" htmlFor={this.uid("attributes_ButtonID")}>Button*</label>
+                    <ButtonPicker
+                        disabled={this.props.disabled}
+                        changed={this.buttonPickerChanged}
+                        buttons={this.props.buttons}
+                        buttonId={this.state.buttonId} />
+                    {this.errMsg("attributes_ButtonID")}
+                </div>
             </div>
         );
     }

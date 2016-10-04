@@ -44,7 +44,11 @@ var ButtonPressCommand = module.exports = React.createClass({
               <h4>Button Press</h4>
               <div className={this.addErr("form-group", "attributes_ButtonID")}>
                 <label className="control-label" htmlFor={this.uid("attributes_ButtonID")}>Button*</label>
-                <ButtonPicker changed={this.buttonPickerChanged} buttons={this.props.buttons} buttonId={this.state.buttonId} />
+                <ButtonPicker
+                    disabled={this.props.disabled}
+                    changed={this.buttonPickerChanged}
+                    buttons={this.props.buttons}
+                    buttonId={this.state.buttonId} />
                 {this.errMsg("attributes_ButtonID")}
               </div>
             </div>

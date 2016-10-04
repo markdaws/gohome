@@ -48,6 +48,7 @@ var CommandInfo = React.createClass({
             case 'buttonPress':
                 uiCmd = (<ButtonPressCommand
                              ref="cmd"
+                             disabled={!this.props.command.isNew}
                              errors={(command.errors || {}).validationErrors}
                              buttons={this.props.buttons}
                              command={command}/>
@@ -56,6 +57,7 @@ var CommandInfo = React.createClass({
             case 'buttonRelease':
                 uiCmd = (<ButtonReleaseCommand
                              ref="cmd"
+                             disabled={!this.props.command.isNew}
                              errors={(command.errors || {}).validationErrors}
                              buttons={this.props.buttons}
                              command={command}/>
@@ -64,6 +66,7 @@ var CommandInfo = React.createClass({
             case 'zoneSetLevel':
                 uiCmd = (<ZoneSetLevelCommand
                     ref="cmd"
+                    disabled={!this.props.command.isNew}
                     errors={(command.errors || {}).validationErrors}
                     zones={this.props.zones}
                     command={command} />
@@ -72,6 +75,7 @@ var CommandInfo = React.createClass({
             case 'sceneSet':
                 uiCmd = (<SceneSetCommand
                     ref="cmd"
+                    disabled={!this.props.command.isNew}
                     parentSceneId={this.props.scene.id}
                     errors={(command.errors || {}).validationErrors}
                     scenes={this.props.scenes}

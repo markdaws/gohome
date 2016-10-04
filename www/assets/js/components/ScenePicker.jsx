@@ -21,16 +21,21 @@ var ScenePicker = React.createClass({
             }
 
             // Can't set itself
-            console.log(scene.id + ' : ' + this.props.sceneId);
             if (scene.id === this.props.parentSceneId) {
                 return;
             }
 
             options.push(<option key={scene.id} value={scene.id}>{scene.name}</option>);
         }.bind(this));
+
         return (
             <div className="cmp-ScenePicker">
-              <select className="form-control" defaultValue={this.props.sceneId} onChange={this.selected} value={this.state.value}>
+                <select
+                    className="form-control"
+                    disabled={this.props.disabled}
+                    defaultValue={this.props.sceneId}
+                    onChange={this.selected}
+                    value={this.state.value}>
                 <option value="">Select a Scene...</option>
                 {options}
               </select>

@@ -19,10 +19,15 @@ var ButtonPicker = React.createClass({
         });
         return (
             <div className="cmp-ButtonPicker">
-              <select className="form-control" defaultValue={this.props.buttonId} onChange={this.selected} value={this.state.value}>
-                <option value="">Select a Button...</option>
-                {options}
-              </select>
+                <select
+                    disabled={this.props.disabled}
+                    className="form-control"
+                    defaultValue={this.props.buttonId}
+                    onChange={this.selected}
+                    value={this.state.value}>
+                    <option value="">Select a Button...</option>
+                    {options}
+                </select>
             </div>
         );
     }
