@@ -42,16 +42,19 @@ type device struct {
 	name        string
 	description string
 	system      *System
-	hub         Device
-	//TODO: delete
+	//TODO: needed?
+	hub Device
+	//TODO: delete?
 	producesEvents bool
 	auth           *comm.Auth
 	buttons        map[string]*Button
 	devices        map[string]Device
 	zones          map[string]*zone.Zone
-	stream         bool
-	evpDone        chan bool
-	evpFire        chan event.Event
+
+	//TODO: Needed? Clean up
+	stream  bool
+	evpDone chan bool
+	evpFire chan event.Event
 }
 
 //TODO: Remove ID from parameters, assign within the function

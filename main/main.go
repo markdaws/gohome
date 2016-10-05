@@ -48,7 +48,6 @@ func main() {
 	}
 
 	sys, err := gohome.LoadSystem(config.StartupConfigPath, rm, cp)
-	fmt.Println(err)
 	sys.SavePath = config.StartupConfigPath
 	if err != nil {
 		panic("Failed to load system: " + err.Error())

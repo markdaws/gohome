@@ -19810,7 +19810,7 @@
 	                { className: 'nav nav-tabs', role: 'tablist' },
 	                React.createElement(
 	                    'li',
-	                    { role: 'presentation', className: 'active' },
+	                    { role: 'presentation', className: '' },
 	                    React.createElement(
 	                        'a',
 	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
@@ -19828,7 +19828,7 @@
 	                ),
 	                React.createElement(
 	                    'li',
-	                    { role: 'presentation', className: '' },
+	                    { role: 'presentation', className: 'active' },
 	                    React.createElement(
 	                        'a',
 	                        { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
@@ -19841,7 +19841,7 @@
 	                { className: 'tab-content' },
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane active', id: 'scenes' },
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
 	                    React.createElement(SceneList, {
 	                        scenes: this.props.scenes,
 	                        buttons: this.props.buttons,
@@ -19854,7 +19854,7 @@
 	                ),
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'system' },
+	                    { role: 'tabpanel', className: 'tab-pane active', id: 'system' },
 	                    React.createElement(System, { devices: this.props.devices })
 	                )
 	            )
@@ -22679,6 +22679,7 @@
 	var UniqueIdMixin = __webpack_require__(193);
 	var InputValidationMixin = __webpack_require__(194);
 	var SaveBtn = __webpack_require__(195);
+	var Api = __webpack_require__(211);
 
 	var DeviceInfo = React.createClass({
 	    displayName: 'DeviceInfo',
@@ -22687,22 +22688,23 @@
 	    getInitialState: function getInitialState() {
 	        //TODO: need state?
 	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
 	            name: this.props.name || '',
 	            description: this.props.description || '',
 	            address: this.props.address,
 	            id: this.props.id,
+	            clientId: this.props.clientId,
 	            modelNumber: this.props.modelNumber || '',
 	            token: this.props.token,
 	            showToken: false,
-	            errors: null
+	            errors: null,
+	            saveButtonStatus: ''
 	        };
 	    },
 
 	    toJson: function toJson() {
 	        var s = this.state;
 	        return {
-	            clientId: s.clientId,
+	            clientId: this.props.clientId,
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
@@ -22726,6 +22728,12 @@
 	        if (nextProps.token != "") {
 	            this.setState({ token: nextProps.token });
 	        }
+	        if (nextProps.id != "") {
+	            this.setState({ id: nextProps.id });
+	        }
+	        if (nextProps.clientId != "") {
+	            this.setState({ clientId: nextProps.clientId });
+	        }
 	    },
 
 	    testConnection: function testConnection() {
@@ -22733,29 +22741,35 @@
 	    },
 
 	    save: function save() {
-	        var saveBtn = this.refs.saveBtn;
-	        saveBtn.saving();
 	        this.setState({ errors: null });
 
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/systems/1/devices',
-	            type: 'POST',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify(this.toJson()),
-	            success: function success(data) {
-	                saveBtn.success();
-	            },
-	            error: function error(xhr, status, err) {
-	                self.setState({ errors: JSON.parse(xhr.responseText || '{}').errors });
-	                saveBtn.failure();
+	        Api.deviceCreate(this.toJson(), function (err, data) {
+	            if (err) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validationErrors
+	                });
+	                return;
 	            }
-	        });
+
+	            //TODO: Update list of devices with response from server, via redux
+	            this.setState({ saveButtonStatus: 'success' });
+
+	            //TODO: Update list of devices with saved device information
+	            //this.props.savedDevice(data);
+	        }.bind(this));
+	    },
+
+	    deleteDevice: function deleteDevice() {
+	        this.props.deviceDelete(this.state.id, this.state.clientId);
+	    },
+
+	    _changed: function _changed(evt) {
+	        this.setState({ saveButtonStatus: '' });
+	        this.changed(evt);
 	    },
 
 	    render: function render() {
-	        //TODO:need unique name for id and htmlFor
 	        var device = this.state.device;
 
 	        var token;
@@ -22771,7 +22785,7 @@
 	                React.createElement('input', {
 	                    value: this.state.token,
 	                    'data-statepath': 'token',
-	                    onChange: this.changed,
+	                    onChange: this._changed,
 	                    className: 'token form-control',
 	                    type: 'text',
 	                    id: this.uid("token") }),
@@ -22783,17 +22797,22 @@
 	            'div',
 	            { className: 'cmp-DeviceInfo well' },
 	            React.createElement(
+	                'button',
+	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteDevice },
+	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
+	            ),
+	            React.createElement(
 	                'div',
 	                { className: this.addErr("form-group", "name") },
 	                React.createElement(
 	                    'label',
 	                    { className: 'control-label', htmlFor: this.uid("name") },
-	                    'Name'
+	                    'Name*'
 	                ),
 	                React.createElement('input', {
 	                    value: this.state.name,
 	                    'data-statepath': 'name',
-	                    onChange: this.changed,
+	                    onChange: this._changed,
 	                    className: 'name form-control',
 	                    type: 'text',
 	                    id: this.uid("name") }),
@@ -22811,11 +22830,11 @@
 	                    value: this.state.id,
 	                    readOnly: this.isReadOnly("id"),
 	                    'data-statepath': 'id',
-	                    onChange: this.changed,
+	                    onChange: this._changed,
 	                    className: 'id form-control',
 	                    type: 'text',
 	                    id: this.uid("id") }),
-	                this.errMsg("name")
+	                this.errMsg("id")
 	            ),
 	            React.createElement(
 	                'div',
@@ -22828,7 +22847,7 @@
 	                React.createElement('input', {
 	                    value: this.state.description,
 	                    'data-statepath': 'description',
-	                    onChange: this.changed,
+	                    onChange: this._changed,
 	                    className: 'description form-control',
 	                    type: 'text',
 	                    id: this.uid("description") }),
@@ -22846,7 +22865,7 @@
 	                    value: this.state.modelNumber,
 	                    readOnly: this.isReadOnly("modelNumber"),
 	                    'data-statepath': 'modelNumber',
-	                    onChange: this.changed,
+	                    onChange: this._changed,
 	                    className: 'modelNumber form-control',
 	                    type: 'text',
 	                    id: this.uid("modelNumber") }),
@@ -22863,7 +22882,7 @@
 	                React.createElement('input', {
 	                    value: this.state.address,
 	                    'data-statepath': 'address',
-	                    onChange: this.changed,
+	                    onChange: this._changed,
 	                    className: 'address form-control',
 	                    type: 'text',
 	                    id: this.uid("address") }),
@@ -22878,7 +22897,10 @@
 	            React.createElement(
 	                'div',
 	                { className: 'pull-right' },
-	                React.createElement(SaveBtn, { ref: 'saveBtn', clicked: this.save, text: 'Import' })
+	                React.createElement(SaveBtn, {
+	                    clicked: this.save,
+	                    text: 'Save',
+	                    status: this.state.saveButtonStatus })
 	            )
 	        );
 	    }
@@ -22892,7 +22914,9 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(160);
 	var DeviceInfo = __webpack_require__(201);
+	var SystemActions = __webpack_require__(232);
 
 	var SystemDeviceList = React.createClass({
 	    displayName: 'SystemDeviceList',
@@ -22904,7 +22928,7 @@
 	    },
 
 	    newClicked: function newClicked() {
-	        //TODO: Show new device UI
+	        this.props.deviceNew();
 	    },
 
 	    render: function render() {
@@ -22915,10 +22939,11 @@
 	                address: device.address,
 	                modelNumber: device.modelNumber,
 	                id: device.id,
+	                clientId: device.clientId,
 	                readOnlyFields: 'id',
-	                key: device.id
-	            });
-	        });
+	                key: device.id || device.clientId,
+	                deviceDelete: this.props.deviceDelete });
+	        }.bind(this));
 
 	        return React.createElement(
 	            'div',
@@ -22941,7 +22966,21 @@
 	        );
 	    }
 	});
-	module.exports = SystemDeviceList;
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        deviceNew: function deviceNew() {
+	            dispatch(SystemActions.deviceNew());
+	        },
+	        deviceDelete: function deviceDelete(id, clientId) {
+	            dispatch(SystemActions.deviceDelete(id, clientId));
+	        },
+	        savedDevice: function savedDevice(data) {
+	            dispatch(SystemActions.savedDevice());
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(SystemDeviceList);
 
 /***/ },
 /* 203 */
@@ -23685,6 +23724,19 @@
 	    DEVICE_LOAD_ALL_RAW: null,
 	    DEVICE_LOAD_ALL_FAIL: null,
 
+	    // Adds a new device on the client
+	    DEVICE_NEW_CLIENT: null,
+
+	    // Creates a new device on the server
+	    DEVICE_CREATE: null,
+	    DEVICE_CREATE_RAW: null,
+	    DEVICE_CREATE_FAIL: null,
+
+	    // Deletes a device
+	    DEVICE_DESTROY: null,
+	    DEVICE_DESTROY_RAW: null,
+	    DEVICE_DESTROY_FAIL: null,
+
 	    // Load all of the buttons from the server
 	    BUTTON_LOAD_ALL: null,
 	    BUTTON_LOAD_ALL_RAW: null,
@@ -23954,7 +24006,7 @@
 	    // cmd -> 'turnOn | turnOff | setLevel
 	    zoneSetLevel: function zoneSetLevel(zoneId, cmd, value, r, g, b, callback) {
 	        $.ajax({
-	            url: '/api/v1/systems/1/zones/' + zoneId,
+	            url: '/api/v1/systems/123/zones/' + zoneId,
 	            type: 'PUT',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -23987,6 +24039,46 @@
 	                    err: err,
 	                    xhr: xhr,
 	                    status: status
+	                });
+	            }
+	        });
+	    },
+
+	    deviceCreate: function deviceCreate(deviceJson, callback) {
+	        $.ajax({
+	            url: '/api/v1/systems/123/devices',
+	            type: 'POST',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify(deviceJson),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                var errors = JSON.parse(xhr.responseText || '{}').errors;
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    validationErrors: errors
+	                });
+	            }
+	        });
+	    },
+
+	    // Deletes a device on the server
+	    deviceDestroy: function deviceDestroy(id, callback) {
+	        $.ajax({
+	            url: '/api/v1/systems/123/devices/' + id,
+	            type: 'DELETE',
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback({
+	                    err: err,
+	                    status: status,
+	                    xhr: xhr
 	                });
 	            }
 	        });
@@ -25475,6 +25567,30 @@
 	var Api = __webpack_require__(211);
 
 	var SystemActions = {
+	    deviceNew: function deviceNew() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_NEW_CLIENT });
+	        };
+	    },
+
+	    deviceDelete: function deviceDelete(id, clientId) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_DESTROY });
+	            if (!id) {
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, clientId: clientId });
+	                return;
+	            }
+
+	            Api.deviceDestroy(id, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, clientId: clientId, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, clientId: clientId, data: data });
+	            });
+	        };
+	    },
+
 	    loadAllDevices: function loadAllDevices() {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
@@ -25630,6 +25746,7 @@
 	var Constants = __webpack_require__(209);
 	var initialState = __webpack_require__(235);
 
+	var _clientId = 1;
 	module.exports = function (state, action) {
 	    var newState = Object.assign({}, state);
 
@@ -25643,6 +25760,46 @@
 
 	        case Constants.DEVICE_LOAD_ALL_FAIL:
 	            //TODO: Loading error
+	            break;
+
+	        case Constants.DEVICE_NEW_CLIENT:
+	            newState.devices = [{
+	                clientId: 'device_cid_' + _clientId
+	            }].concat(newState.devices);
+	            ++_clientId;
+	            break;
+
+	        case Constants.DEVICE_CREATE:
+	            break;
+	        case Constants.DEVICE_CREATE_RAW:
+	            break;
+	        case Constants.DEVICE_CREATE_FAIL:
+	            break;
+
+	        case Constants.DEVICE_DESTROY:
+	            break;
+
+	        case Constants.DEVICE_DESTROY_RAW:
+	            debugger;
+	            // This is a client device, before it was sent to the server
+	            for (var i = 0; i < newState.devices.length; ++i) {
+	                var found = false;
+	                if (action.id) {
+	                    found = newState.devices[i].id === action.id;
+	                } else {
+	                    found = newState.devices[i].clientId === action.clientId;
+	                }
+
+	                if (found) {
+	                    newState.devices = newState.devices.slice();
+	                    newState.devices.splice(i, 1);
+	                    break;
+	                }
+	            }
+	            break;
+
+	        case Constants.DEVICE_DESTROY_FAIL:
+	            //TODO:
 	            break;
 
 	        default:

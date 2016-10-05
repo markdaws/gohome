@@ -2,6 +2,30 @@ var Constants = require('../constants.js');
 var Api = require('../utils/API.js');
 
 var SystemActions = {
+    deviceNew: function() {
+        return function(dispatch) {
+            dispatch({ type: Constants.DEVICE_NEW_CLIENT });
+        };
+    },
+
+    deviceDelete: function(id, clientId) {
+        return function(dispatch) {
+            dispatch({ type: Constants.DEVICE_DESTROY });
+            if (!id) {
+                dispatch({ type: Constants.DEVICE_DESTROY_RAW, clientId: clientId });
+                return;
+            }
+
+            Api.deviceDestroy(id, function(err, data) {
+                if (err) {
+                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, clientId: clientId, err: err });
+                    return;
+                }
+                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, clientId: clientId, data: data });
+            });
+        };
+    },
+
     loadAllDevices: function() {
         return function(dispatch) {
             dispatch({ type: Constants.DEVICE_LOAD_ALL });

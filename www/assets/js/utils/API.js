@@ -156,7 +156,7 @@ var API = {
     // cmd -> 'turnOn | turnOff | setLevel
     zoneSetLevel: function(zoneId, cmd, value, r, g, b, callback) {
         $.ajax({
-            url: '/api/v1/systems/1/zones/' + zoneId,
+            url: '/api/v1/systems/123/zones/' + zoneId,
             type: 'PUT',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
@@ -189,6 +189,46 @@ var API = {
                     err: err,
                     xhr: xhr,
                     status: status
+                });
+            }
+        });
+    },
+
+    deviceCreate: function(deviceJson, callback) {
+        $.ajax({
+            url: '/api/v1/systems/123/devices',
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(deviceJson),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = JSON.parse(xhr.responseText || '{}').errors;
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    validationErrors: errors
+                });
+            }
+        });
+    },
+
+    // Deletes a device on the server
+    deviceDestroy: function(id, callback) {
+        $.ajax({
+            url: '/api/v1/systems/123/devices/' + id,
+            type: 'DELETE',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err,
+                    status: status,
+                    xhr: xhr
                 });
             }
         });

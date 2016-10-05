@@ -32,13 +32,13 @@ var ControlApp = React.createClass({
         return (
             <div className="cmp-ControlApp">
                 <ul className="nav nav-tabs" role="tablist">
-                    <li role="presentation" className="active">
+                    <li role="presentation" className="">
                         <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">Scenes</a>
                     </li>
                     <li role="presentation" className="">
                         <a href="#zones" role="tab" aria-controls="zones" data-toggle="tab">Zones</a>
                     </li>
-                    <li role="presentation" className="">
+                    <li role="presentation" className="active">
                         <a href="#system" role="tab" aria-controls="system" data-toggle="tab">System</a>
                     </li>
                     {/*
@@ -52,7 +52,7 @@ var ControlApp = React.createClass({
                     */}
                 </ul>
                 <div className="tab-content">
-                    <div role="tabpanel" className="tab-pane active" id="scenes">
+                    <div role="tabpanel" className="tab-pane fade" id="scenes">
                         <SceneList
                             scenes={this.props.scenes}
                             buttons={this.props.buttons}
@@ -61,7 +61,7 @@ var ControlApp = React.createClass({
                     <div role="tabpanel" className="tab-pane fade" id="zones">
                         <ZoneList zones={this.props.zones}/>
                     </div>
-                    <div role="tabpanel" className="tab-pane fade" id="system">
+                    <div role="tabpanel" className="tab-pane active" id="system">
                         <System devices={this.props.devices}/>
                     </div>
                     {/*

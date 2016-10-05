@@ -77,6 +77,7 @@ func (s *wwwServer) listenAndServe(port string) error {
 
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiAddDeviceHandler(s.system)).Methods("POST")
+	r.HandleFunc("/api/v1/systems/{systemId}/devices/{id}", apiDeviceHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
 
 	// Discover devices and capabilities on the network
 	r.HandleFunc("/api/v1/discovery/{modelNumber}", apiDiscoveryHandler(s.system)).Methods("GET")
@@ -933,6 +934,28 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		if err := json.NewEncoder(w).Encode(devices); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+	}
+}
+
+func apiDeviceHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		deviceID := mux.Vars(r)["id"]
+		device, ok := system.Devices[deviceID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		system.DeleteDevice(device)
+		err := system.Save(recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(struct{}{})
 	}
 }
 

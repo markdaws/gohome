@@ -15,6 +15,19 @@ module.exports = keyMirror({
     DEVICE_LOAD_ALL_RAW: null,
     DEVICE_LOAD_ALL_FAIL: null,
 
+    // Adds a new device on the client
+    DEVICE_NEW_CLIENT: null,
+
+    // Creates a new device on the server
+    DEVICE_CREATE: null,
+    DEVICE_CREATE_RAW: null,
+    DEVICE_CREATE_FAIL: null,
+
+    // Deletes a device
+    DEVICE_DESTROY: null,
+    DEVICE_DESTROY_RAW: null,
+    DEVICE_DESTROY_FAIL: null,
+
     // Load all of the buttons from the server
     BUTTON_LOAD_ALL: null,
     BUTTON_LOAD_ALL_RAW: null,

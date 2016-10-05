@@ -203,6 +203,9 @@ button.disabled {
     font-size: 12px;
     font-weight: normal;
 }
+.cmp-DeviceInfo .btnDelete {
+    padding: 0;
+}
 
 .cmp-ControlApp .nav-tabs a {
     font-size: 18px;

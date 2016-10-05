@@ -49,6 +49,7 @@ func (s *System) NextGlobalID() string {
 }
 
 func (s *System) AddButton(b *Button) {
+	//TODO: Validate button
 	s.Buttons[b.ID] = b
 }
 
@@ -106,6 +107,11 @@ func (s *System) AddScene(scn *Scene) error {
 
 func (s *System) DeleteScene(scn *Scene) {
 	delete(s.Scenes, scn.ID)
+}
+
+func (s *System) DeleteDevice(d Device) {
+	delete(s.Devices, d.ID())
+	//TODO: Need to stop all services, recipes, networking etc to this device
 }
 
 func (s *System) AddRecipe(r *Recipe) {
