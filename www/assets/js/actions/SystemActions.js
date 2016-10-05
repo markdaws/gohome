@@ -26,6 +26,12 @@ var SystemActions = {
         };
     },
 
+    savedDevice: function(clientId, deviceJson) {
+        return function(dispatch) {
+            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+        };
+    },
+
     loadAllDevices: function() {
         return function(dispatch) {
             dispatch({ type: Constants.DEVICE_LOAD_ALL });

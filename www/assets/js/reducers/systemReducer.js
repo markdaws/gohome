@@ -27,6 +27,12 @@ module.exports = function(state, action) {
     case Constants.DEVICE_CREATE:
         break;
     case Constants.DEVICE_CREATE_RAW:
+        newState.devices = newState.devices.map(function(device) {
+            if (device.clientId === action.clientId) {
+                return action.data;
+            }
+            return device;
+        });
         break;
     case Constants.DEVICE_CREATE_FAIL:
         break;
@@ -35,7 +41,6 @@ module.exports = function(state, action) {
         break;
 
     case Constants.DEVICE_DESTROY_RAW:
-        debugger;
         // This is a client device, before it was sent to the server
         for (var i=0; i<newState.devices.length; ++i) {
             var found = false;

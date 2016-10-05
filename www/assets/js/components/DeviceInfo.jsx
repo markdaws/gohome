@@ -75,9 +75,7 @@ var DeviceInfo = React.createClass({
             
             //TODO: Update list of devices with response from server, via redux
             this.setState({ saveButtonStatus: 'success' });
-
-            //TODO: Update list of devices with saved device information
-            //this.props.savedDevice(data);
+            this.props.savedDevice(this.state.clientId, data);
         }.bind(this));
     },
 

@@ -1009,7 +1009,9 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(struct{}{})
+		data.ClientID = ""
+		data.ID = d.ID()
+		json.NewEncoder(w).Encode(data)
 	}
 }
 

@@ -18,15 +18,16 @@ var SystemDeviceList = React.createClass({
         var deviceNodes = this.props.devices.map(function(device) {
             return (
                 <DeviceInfo
-                    name={device.name}
-                    description={device.description}
-                    address={device.address}
-                    modelNumber={device.modelNumber}
-                    id={device.id}
-                    clientId={device.clientId}
-                    readOnlyFields="id"
-                    key={device.id || device.clientId}
-                    deviceDelete={this.props.deviceDelete}/>
+                name={device.name}
+                description={device.description}
+                address={device.address}
+                modelNumber={device.modelNumber}
+                id={device.id}
+                clientId={device.clientId}
+                readOnlyFields="id"
+                key={device.id || device.clientId}
+                deviceDelete={this.props.deviceDelete}
+                savedDevice={this.props.savedDevice} />
             );
         }.bind(this));
 
@@ -50,8 +51,8 @@ function mapDispatchToProps(dispatch) {
         deviceDelete: function(id, clientId) {
             dispatch(SystemActions.deviceDelete(id, clientId));
         },
-        savedDevice: function(data) {
-            dispatch(SystemActions.savedDevice());
+        savedDevice: function(clientId, data) {
+            dispatch(SystemActions.savedDevice(clientId, data));
         }
     };
 }

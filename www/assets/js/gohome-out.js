@@ -22754,9 +22754,7 @@
 
 	            //TODO: Update list of devices with response from server, via redux
 	            this.setState({ saveButtonStatus: 'success' });
-
-	            //TODO: Update list of devices with saved device information
-	            //this.props.savedDevice(data);
+	            this.props.savedDevice(this.state.clientId, data);
 	        }.bind(this));
 	    },
 
@@ -22942,7 +22940,8 @@
 	                clientId: device.clientId,
 	                readOnlyFields: 'id',
 	                key: device.id || device.clientId,
-	                deviceDelete: this.props.deviceDelete });
+	                deviceDelete: this.props.deviceDelete,
+	                savedDevice: this.props.savedDevice });
 	        }.bind(this));
 
 	        return React.createElement(
@@ -22975,8 +22974,8 @@
 	        deviceDelete: function deviceDelete(id, clientId) {
 	            dispatch(SystemActions.deviceDelete(id, clientId));
 	        },
-	        savedDevice: function savedDevice(data) {
-	            dispatch(SystemActions.savedDevice());
+	        savedDevice: function savedDevice(clientId, data) {
+	            dispatch(SystemActions.savedDevice(clientId, data));
 	        }
 	    };
 	}
@@ -25591,6 +25590,12 @@
 	        };
 	    },
 
+	    savedDevice: function savedDevice(clientId, deviceJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+	        };
+	    },
+
 	    loadAllDevices: function loadAllDevices() {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
@@ -25772,6 +25777,12 @@
 	        case Constants.DEVICE_CREATE:
 	            break;
 	        case Constants.DEVICE_CREATE_RAW:
+	            newState.devices = newState.devices.map(function (device) {
+	                if (device.clientId === action.clientId) {
+	                    return action.data;
+	                }
+	                return device;
+	            });
 	            break;
 	        case Constants.DEVICE_CREATE_FAIL:
 	            break;
@@ -25780,7 +25791,6 @@
 	            break;
 
 	        case Constants.DEVICE_DESTROY_RAW:
-	            debugger;
 	            // This is a client device, before it was sent to the server
 	            for (var i = 0; i < newState.devices.length; ++i) {
 	                var found = false;
