@@ -5,69 +5,26 @@ goHOME is an open source home automation client + server, aimed at allowing home
 
 Note - still in alpha development, do not use just yet :)
 
-#Project Aims
+##Project Aims
 Web/iOS/Android/Apple Watch
 
-#Supported Hardware
+##Supported Hardware
 ###Lutron Caseta Wireless Smart Bridge
 ###Flux WIFI Bulbs
 ###ConnectedByTCP Bulbs
 ###Belkin WeMo Insight Switch
-Ideally we would support as many different types of hardware as possible, if you want to see support for a piece of hardware submit an issue.
 
-#Core Concepts
+##Documentation
+###Buttons
+###Commands
+###Devices
+###Recipes
+###[Scenes](docs/scene.md)
+###[Zones](docs/zone.md)
+###[HTTP API](docs/api.md)
 
-##Devices
-##Zones
-A Zone is a controllable output. For example a zone could be a piece of wire with several bulbs attached to it, or it could be a shade, or an outlet. It's something that you can control.  In the case of lights, generally a Zone will be the wire with light attached to it that then connects to a switch or dimmer. Currently there are several types of Zones:
- - Light
- - Shade
- - Outlet
 
-The type lets the UI know what controls to show for a particular Zone.  Along with the Type a Zone has an Output value which can be:
- - Continuous: Something that can be set between 0 and 100 e.g. a dimmable bulb
- - Binary: Something that can be set on or off e.g. an outlet
- - RGB: A Zone that doesn't have just one value, but can display different colors e.g. Flux WIFI bulb
-
-##Buttons
-##Commands
-###Supported Commands
-#####ZoneSetLevel
-#####SceneSet
-#####ButtonPress
-#####ButtonRelease
-##Scenes
-A Scene is simply a group of commands that will be executed when you activate the Scene. Examples of Scenes could be:
-- "All On" -> sets all of the lights in your house to 100%
-- "Movie Time" -> turns off all the lights in your living room, closes all of your shades
-
-Since a scene is just a group of commands you can mak a scene do literally anything.  A Scene can activate other scenes, control lights, control shades, anything that goHome has command support for.  See the Commands section for more information on the list of supported commands.
-
-###Recipes/Actions/Triggers
-
-##API Support
-###Scenes
- - GET /api/v1/scenes
- - GET /api/v1/scenes/&lt;ID&gt;
- - DELETE /api/v1/scenes/&lt;ID&gt;
- - PUT /api/v1/scenes/&lt;ID&gt;
- - POST /api/v1/scenes
- - POST /api/v1/scenes/active
- - POST /api/v1/scenes/&lt;ID&gt;/commands
- - DELETE /api/v1/scenes/&lt;ID&gt;/commands/&lt;INDEX&gt;
-
-###Zones
- - GET /api/v1/zones
- - POST /api/v1/zones
- - PUT /api/v1/zones/&lt;ID&gt;
-
-###Discovery
- - GET /api/v1/discovery/&lt;MODEL_NUMBER&gt;
- - GET /api/v1/discovery/&lt;MODEL_NUMBER&gt;/token
- - GET /api/v1/discovery/&lt;MODEL_NUMBER&gt;/access
- - GET /api/v1/discovery/&lt;MODEL_NUMBER&gt;/zones
-
-###Events
+##Events
  /api/v1/events/ws
 
 ##Development
