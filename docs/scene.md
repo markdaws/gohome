@@ -23,3 +23,9 @@ Sets the specified scene
 
 ###Zone Set Level
 Sets the level on the specified zone
+
+###Zone Turn On
+Turns the zone on to full intensity
+
+###Zone Turn Off
+Turns the zone off. Note some devices can use set level == 0 to turn off, others require an explicit off command.
