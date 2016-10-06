@@ -1,7 +1,9 @@
-# gohome
-golang powered home automation server
+<p align="center">
+<img src="logo.png" />
+</p>
+goHOME is an open source home automation client + server, aimed at allowing home owners to have full control over their home automation hardware.
 
-Note - this is not ready for production yet, it's running all the lights in my house but I am still working on getting a v1 that supports saving/loading and setup via the UI vs. hacking JSON files.  Should be ready for use in the next few weeks (mid October), if you try to run any of this code before then, you're going to have a bad time.
+Note - still in alpha development, do not use just yet :)
 
 #Project Aims
 Web/iOS/Android/Apple Watch
