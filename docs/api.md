@@ -9,7 +9,8 @@ Returns an array containing all of the scenes in the system
 
 #### Example Response
  ```json
- {
+ [
+   {
     "address": "2",
     "id": "215",
     "name": "All Off",
