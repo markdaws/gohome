@@ -167,6 +167,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
 		if deviceID == smartBridgeProID {
 
+			//TODO: Don't hard code address
 			sbp = makeDevice("L-BDGPRO2-WH", "Smart Bridge - Hub", "192.168.0.10:23", device, nil, system, true, &comm.Auth{
 				Login:    "lutron",
 				Password: "integration",

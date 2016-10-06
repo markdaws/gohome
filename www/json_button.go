@@ -8,7 +8,7 @@ type jsonButton struct {
 	// ClientID is an ID assigned on the client to the zone if the zone
 	// hasn't been created yet but still needs to be referenced uniquely
 	// by the client.
-	ClientID string `json:"clientId"`
+	ClientID string `json:"clientId,omitempty"`
 }
 type buttons []jsonButton
 

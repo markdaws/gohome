@@ -5,6 +5,7 @@ import (
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/event"
+	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/www"
 )
 
@@ -65,6 +66,7 @@ func main() {
 	}
 
 	//Start all the recipes
+	log.V("Starting recipes...")
 	for _, recipe := range sys.Recipes {
 		rm.RegisterAndStart(recipe)
 	}
@@ -76,6 +78,7 @@ func main() {
 	// Start www server
 	done := make(chan bool)
 	go func() {
+		log.V("WWW Server starting, listening on port %s", config.WWWPort)
 		err := www.ListenAndServe("./www", config.WWWPort, sys, rm, wsLogger)
 		if err != nil {
 			fmt.Println("error with server")

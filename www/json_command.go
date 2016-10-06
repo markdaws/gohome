@@ -5,7 +5,7 @@ type jsonCommand struct {
 
 	// ClientID is an ID assigned on the client, if this is a new command that
 	// does not exist on the server.
-	ClientID string `json:"clientId"`
+	ClientID string `json:"clientId,omitempty"`
 
 	Attributes map[string]interface{} `json:"attributes"`
 }

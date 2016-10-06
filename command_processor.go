@@ -37,9 +37,9 @@ func (cp *commandProcessor) Process() {
 	for c := range cp.commands {
 		err := c.Func()
 		if err != nil {
-			log.E("cmdProcessor:execute error:%s", err)
+			log.E("cmdProcessor:execute error: %s", err)
 		} else {
-			log.V("cmdProcessor:executed:%s", c)
+			log.V("cmdProcessor:executed: %s", c)
 		}
 	}
 }

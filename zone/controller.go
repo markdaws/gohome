@@ -1,5 +1,8 @@
 package zone
 
+// TODO: This should not be a type - want to eventually be able to add new
+// device support without having to modify any code.  New devices should
+// be configurable via some JSON format
 type Controller string
 
 const (

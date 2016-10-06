@@ -72,8 +72,7 @@ var DeviceInfo = React.createClass({
                 });
                 return;
             }
-            
-            //TODO: Update list of devices with response from server, via redux
+
             this.setState({ saveButtonStatus: 'success' });
             this.props.savedDevice(this.state.clientId, data);
         }.bind(this));
@@ -109,7 +108,7 @@ var DeviceInfo = React.createClass({
         }
         
         return (
-            <div className="cmp-DeviceInfo well">
+            <div className="cmp-DeviceInfo well well-sm">
                 <button className="btn btn-link btnDelete pull-right" onClick={this.deleteDevice}>
                     <i className="glyphicon glyphicon-trash"></i>
                 </button>

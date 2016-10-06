@@ -22752,7 +22752,6 @@
 	                return;
 	            }
 
-	            //TODO: Update list of devices with response from server, via redux
 	            this.setState({ saveButtonStatus: 'success' });
 	            this.props.savedDevice(this.state.clientId, data);
 	        }.bind(this));
@@ -22793,7 +22792,7 @@
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-DeviceInfo well' },
+	            { className: 'cmp-DeviceInfo well well-sm' },
 	            React.createElement(
 	                'button',
 	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteDevice },
