@@ -31,6 +31,7 @@ type Device interface {
 	AddZone(*zone.Zone) error
 	AddDevice(Device) error
 	Validate() *validation.Errors
+
 	comm.Authenticator
 	event.Producer
 	fmt.Stringer
@@ -58,7 +59,15 @@ type device struct {
 }
 
 //TODO: Remove ID from parameters, assign within the function
-func NewDevice(modelNumber, address, ID, name, description string, hub Device, stream bool, auth *comm.Auth) Device {
+func NewDevice(
+	modelNumber,
+	address,
+	ID,
+	name,
+	description string,
+	hub Device,
+	stream bool,
+	auth *comm.Auth) Device {
 	device := device{
 		address:     address,
 		id:          ID,

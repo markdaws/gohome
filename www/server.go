@@ -43,15 +43,18 @@ func ListenAndServe(
 	return server.listenAndServe(port)
 }
 
+//TODO: Clean all these up and unify naming
+//TODO: Remove systems/123 from API URLs
+
 func (s *wwwServer) listenAndServe(port string) error {
 
 	r := mux.NewRouter()
 
-	//TODO: Break up into multiple files
 	mime.AddExtensionType(".jsx", "text/jsx")
 	mime.AddExtensionType(".woff", "application/font-woff")
 	mime.AddExtensionType(".woff2", "application/font-woff2")
 	mime.AddExtensionType(".eot", "application/vnd.ms-fontobject")
+
 	cssHandler := http.FileServer(http.Dir(s.rootPath + "/assets/css/"))
 	jsHandler := http.FileServer(http.Dir(s.rootPath + "/assets/js/"))
 	fontHandler := http.FileServer(http.Dir(s.rootPath + "/assets/fonts/"))
@@ -61,41 +64,62 @@ func (s *wwwServer) listenAndServe(port string) error {
 	// Websocket handler
 	r.HandleFunc("/api/v1/events/ws", s.eventLogger.HTTPHandler())
 
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiScenesHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}", apiSceneHandlerUpdate(s.system, s.recipeManager)).Methods("PUT")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes", apiSceneHandlerCreate(s.system, s.recipeManager)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands/{index}", apiSceneHandlerCommandDelete(s.system, s.recipeManager)).Methods("DELETE")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands", apiSceneHandlerCommandAdd(s.system, s.recipeManager)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}", apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/active", apiActiveScenesHandler(s.system)).Methods("POST")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes",
+		apiScenesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}",
+		apiSceneHandlerUpdate(s.system, s.recipeManager)).Methods("PUT")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes",
+		apiSceneHandlerCreate(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands/{index}",
+		apiSceneHandlerCommandDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands",
+		apiSceneHandlerCommandAdd(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}",
+		apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/systems/{systemId}/scenes/active",
+		apiActiveScenesHandler(s.system)).Methods("POST")
 
-	r.HandleFunc("/api/v1/systems/{systemId}/buttons", apiButtonsHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/buttons",
+		apiButtonsHandler(s.system)).Methods("GET")
 
-	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiZonesHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/systems/{systemId}/zones", apiAddZoneHandler(s.system)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}", apiZoneHandler(s.system)).Methods("PUT")
+	r.HandleFunc("/api/v1/systems/{systemId}/zones",
+		apiZonesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/zones",
+		apiAddZoneHandler(s.system)).Methods("POST")
+	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}",
+		apiZoneHandler(s.system)).Methods("PUT")
 
-	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiDevicesHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/systems/{systemId}/devices", apiAddDeviceHandler(s.system)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/devices/{id}", apiDeviceHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/systems/{systemId}/devices",
+		apiDevicesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/systems/{systemId}/devices",
+		apiAddDeviceHandler(s.system)).Methods("POST")
+	r.HandleFunc("/api/v1/systems/{systemId}/devices/{id}",
+		apiDeviceHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
 
-	// Discover devices and capabilities on the network
-	r.HandleFunc("/api/v1/discovery/{modelNumber}", apiDiscoveryHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/discovery/{modelNumber}/token", apiDiscoveryTokenHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/discovery/{modelNumber}/access", apiDiscoveryAccessHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/discovery/{modelNumber}/zones", apiDiscoveryZoneHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}",
+		apiDiscoveryHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}/token",
+		apiDiscoveryTokenHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}/access",
+		apiDiscoveryAccessHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}/zones",
+		apiDiscoveryZoneHandler(s.system)).Methods("GET")
 
-	r.HandleFunc("/api/v1/cookbooks", apiCookBooksHandler(s.recipeManager.CookBooks)).Methods("GET")
-	r.HandleFunc("/api/v1/cookbooks/{id}", apiCookBookHandler(s.recipeManager.CookBooks)).Methods("GET")
+	r.HandleFunc("/api/v1/cookbooks",
+		apiCookBooksHandler(s.recipeManager.CookBooks)).Methods("GET")
+	r.HandleFunc("/api/v1/cookbooks/{id}",
+		apiCookBookHandler(s.recipeManager.CookBooks)).Methods("GET")
 
-	//TODO: Need System in the api path?
-	r.HandleFunc("/api/v1/recipes", apiRecipesHandlerPost(s.system, s.recipeManager)).Methods("POST")
-	r.HandleFunc("/api/v1/recipes/{id}", apiRecipeHandler(s.system, s.recipeManager)).Methods("POST")
-	r.HandleFunc("/api/v1/recipes/{id}", apiRecipeHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
-	r.HandleFunc("/api/v1/recipes", apiRecipesHandlerGet(s.system, s.recipeManager)).Methods("GET")
+	r.HandleFunc("/api/v1/recipes",
+		apiRecipesHandlerPost(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/recipes/{id}",
+		apiRecipeHandler(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/recipes/{id}",
+		apiRecipeHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/recipes",
+		apiRecipesHandlerGet(s.system, s.recipeManager)).Methods("GET")
 
 	sub := r.PathPrefix("/assets").Subrouter()
-	//sub.Methods("GET")
 	sub.Handle("/css/{filename}", http.StripPrefix("/assets/css/", cssHandler))
 	sub.Handle("/js/{filename}", http.StripPrefix("/assets/js/", jsHandler))
 	sub.Handle("/fonts/{filename}", http.StripPrefix("/assets/fonts/", fontHandler))
