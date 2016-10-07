@@ -1,4 +1,5 @@
 // Package belkin provides support for Belkin devices, such as the WeMo Switch
+// TODO: Move in to an integration package
 package belkin
 
 import (
@@ -15,8 +16,6 @@ import (
 
 // CREDIT: All the knowledge of how to control this product came from:
 // https://github.com/timonreinhard/wemo-client
-
-//TODO: Support setting up wifi network
 
 // DeviceType represents an identifier for the type of Belkin device you want to
 // scan the network for
@@ -101,6 +100,131 @@ func Scan(dt DeviceType, waitTimeSeconds int) ([]ScanResponse, error) {
 
 // LoadDevice fetches all of the device specific information
 func LoadDevice(scanResponse ScanResponse) (*Device, error) {
+	// Example response
+	/*
+		Response from querying the location address of the insight device
+		<?xml version="1.0"?>
+		<root xmlns="urn:Belkin:device-1-0">
+		  <specVersion>
+		    <major>1</major>
+		    <minor>0</minor>
+		  </specVersion>
+		  <device>
+		    <deviceType>urn:Belkin:device:insight:1</deviceType>
+		    <friendlyName>WeMo Insight</friendlyName>
+		    <manufacturer>Belkin International Inc.</manufacturer>
+		    <manufacturerURL>http://www.belkin.com</manufacturerURL>
+		    <modelDescription>Belkin Insight 1.0</modelDescription>
+		    <modelName>Insight</modelName>
+		    <modelNumber>1.0</modelNumber>
+		    <modelURL>http://www.belkin.com/plugin/</modelURL>
+		    <serialNumber>231550K1200093</serialNumber>
+		    <UDN>uuid:Insight-1_0-231550K1200093</UDN>
+		    <UPC>123456789</UPC>
+		    <macAddress>94103ECFA7FA</macAddress>
+		    <firmwareVersion>WeMo_WW_2.00.9213.PVT-OWRT-InsightV2</firmwareVersion>
+		    <iconVersion>0|49152</iconVersion>
+		    <binaryState>0</binaryState>
+		    <iconList>
+		      <icon>
+		        <mimetype>jpg</mimetype>
+		        <width>100</width>
+		        <height>100</height>
+		        <depth>100</depth>
+		         <url>icon.jpg</url>
+		      </icon>
+		    </iconList>
+		    <serviceList>
+		      <service>
+		        <serviceType>urn:Belkin:service:WiFiSetup:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:WiFiSetup1</serviceId>
+		        <controlURL>/upnp/control/WiFiSetup1</controlURL>
+		        <eventSubURL>/upnp/event/WiFiSetup1</eventSubURL>
+		        <SCPDURL>/setupservice.xml</SCPDURL>
+		      </service>
+		      <service>
+		        <serviceType>urn:Belkin:service:timesync:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:timesync1</serviceId>
+		        <controlURL>/upnp/control/timesync1</controlURL>
+		        <eventSubURL>/upnp/event/timesync1</eventSubURL>
+		        <SCPDURL>/timesyncservice.xml</SCPDURL>
+		      </service>
+		      <service>
+		        <serviceType>urn:Belkin:service:basicevent:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:basicevent1</serviceId>
+		        <controlURL>/upnp/control/basicevent1</controlURL>
+		        <eventSubURL>/upnp/event/basicevent1</eventSubURL>
+		        <SCPDURL>/eventservice.xml</SCPDURL>
+		      </service>
+		      <service>
+		        <serviceType>urn:Belkin:service:firmwareupdate:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:firmwareupdate1</serviceId>
+		        <controlURL>/upnp/control/firmwareupdate1</controlURL>
+		        <eventSubURL>/upnp/event/firmwareupdate1</eventSubURL>
+		        <SCPDURL>/firmwareupdate.xml</SCPDURL>
+		      </service>
+		      <service>
+		        <serviceType>urn:Belkin:service:rules:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:rules1</serviceId>
+		        <controlURL>/upnp/control/rules1</controlURL>
+		        <eventSubURL>/upnp/event/rules1</eventSubURL>
+		        <SCPDURL>/rulesservice.xml</SCPDURL>
+		      </service>
+
+		      <service>
+		        <serviceType>urn:Belkin:service:metainfo:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:metainfo1</serviceId>
+		        <controlURL>/upnp/control/metainfo1</controlURL>
+		        <eventSubURL>/upnp/event/metainfo1</eventSubURL>
+		        <SCPDURL>/metainfoservice.xml</SCPDURL>
+		      </service>
+
+		      <service>
+		        <serviceType>urn:Belkin:service:remoteaccess:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:remoteaccess1</serviceId>
+		        <controlURL>/upnp/control/remoteaccess1</controlURL>
+		        <eventSubURL>/upnp/event/remoteaccess1</eventSubURL>
+		        <SCPDURL>/remoteaccess.xml</SCPDURL>
+		      </service>
+
+		      <service>
+		        <serviceType>urn:Belkin:service:deviceinfo:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:deviceinfo1</serviceId>
+		        <controlURL>/upnp/control/deviceinfo1</controlURL>
+		        <eventSubURL>/upnp/event/deviceinfo1</eventSubURL>
+		        <SCPDURL>/deviceinfoservice.xml</SCPDURL>
+		      </service>
+
+		      <service>
+		        <serviceType>urn:Belkin:service:insight:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:insight1</serviceId>
+		        <controlURL>/upnp/control/insight1</controlURL>
+		        <eventSubURL>/upnp/event/insight1</eventSubURL>
+		        <SCPDURL>/insightservice.xml</SCPDURL>
+		      </service>
+
+		      <service>
+		        <serviceType>urn:Belkin:service:smartsetup:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:smartsetup1</serviceId>
+		        <controlURL>/upnp/control/smartsetup1</controlURL>
+		        <eventSubURL>/upnp/event/smartsetup1</eventSubURL>
+		        <SCPDURL>/smartsetup.xml</SCPDURL>
+		      </service>
+
+		      <service>
+		        <serviceType>urn:Belkin:service:manufacture:1</serviceType>
+		        <serviceId>urn:Belkin:serviceId:manufacture1</serviceId>
+		        <controlURL>/upnp/control/manufacture1</controlURL>
+		        <eventSubURL>/upnp/event/manufacture1</eventSubURL>
+		        <SCPDURL>/manufacture.xml</SCPDURL>
+		      </service>
+
+		    </serviceList>
+		   <presentationURL>/pluginpres.html</presentationURL>
+		</device>
+		</root>
+	*/
+
 	client := http.Client{}
 	resp, err := client.Get(scanResponse.Location)
 	if resp != nil {
@@ -220,127 +344,3 @@ func (l belkinListener) Tracef(fmt string, args ...interface{}) {}
 func (l belkinListener) Infof(fmt string, args ...interface{})  {}
 func (l belkinListener) Warnf(fmt string, args ...interface{})  {}
 func (l belkinListener) Errorf(fmt string, args ...interface{}) {}
-
-/*
-Response from querying the location address of the insight device
-<?xml version="1.0"?>
-<root xmlns="urn:Belkin:device-1-0">
-  <specVersion>
-    <major>1</major>
-    <minor>0</minor>
-  </specVersion>
-  <device>
-    <deviceType>urn:Belkin:device:insight:1</deviceType>
-    <friendlyName>WeMo Insight</friendlyName>
-    <manufacturer>Belkin International Inc.</manufacturer>
-    <manufacturerURL>http://www.belkin.com</manufacturerURL>
-    <modelDescription>Belkin Insight 1.0</modelDescription>
-    <modelName>Insight</modelName>
-    <modelNumber>1.0</modelNumber>
-    <modelURL>http://www.belkin.com/plugin/</modelURL>
-    <serialNumber>231550K1200093</serialNumber>
-    <UDN>uuid:Insight-1_0-231550K1200093</UDN>
-    <UPC>123456789</UPC>
-    <macAddress>94103ECFA7FA</macAddress>
-    <firmwareVersion>WeMo_WW_2.00.9213.PVT-OWRT-InsightV2</firmwareVersion>
-    <iconVersion>0|49152</iconVersion>
-    <binaryState>0</binaryState>
-    <iconList>
-      <icon>
-        <mimetype>jpg</mimetype>
-        <width>100</width>
-        <height>100</height>
-        <depth>100</depth>
-         <url>icon.jpg</url>
-      </icon>
-    </iconList>
-    <serviceList>
-      <service>
-        <serviceType>urn:Belkin:service:WiFiSetup:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:WiFiSetup1</serviceId>
-        <controlURL>/upnp/control/WiFiSetup1</controlURL>
-        <eventSubURL>/upnp/event/WiFiSetup1</eventSubURL>
-        <SCPDURL>/setupservice.xml</SCPDURL>
-      </service>
-      <service>
-        <serviceType>urn:Belkin:service:timesync:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:timesync1</serviceId>
-        <controlURL>/upnp/control/timesync1</controlURL>
-        <eventSubURL>/upnp/event/timesync1</eventSubURL>
-        <SCPDURL>/timesyncservice.xml</SCPDURL>
-      </service>
-      <service>
-        <serviceType>urn:Belkin:service:basicevent:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:basicevent1</serviceId>
-        <controlURL>/upnp/control/basicevent1</controlURL>
-        <eventSubURL>/upnp/event/basicevent1</eventSubURL>
-        <SCPDURL>/eventservice.xml</SCPDURL>
-      </service>
-      <service>
-        <serviceType>urn:Belkin:service:firmwareupdate:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:firmwareupdate1</serviceId>
-        <controlURL>/upnp/control/firmwareupdate1</controlURL>
-        <eventSubURL>/upnp/event/firmwareupdate1</eventSubURL>
-        <SCPDURL>/firmwareupdate.xml</SCPDURL>
-      </service>
-      <service>
-        <serviceType>urn:Belkin:service:rules:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:rules1</serviceId>
-        <controlURL>/upnp/control/rules1</controlURL>
-        <eventSubURL>/upnp/event/rules1</eventSubURL>
-        <SCPDURL>/rulesservice.xml</SCPDURL>
-      </service>
-
-      <service>
-        <serviceType>urn:Belkin:service:metainfo:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:metainfo1</serviceId>
-        <controlURL>/upnp/control/metainfo1</controlURL>
-        <eventSubURL>/upnp/event/metainfo1</eventSubURL>
-        <SCPDURL>/metainfoservice.xml</SCPDURL>
-      </service>
-
-      <service>
-        <serviceType>urn:Belkin:service:remoteaccess:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:remoteaccess1</serviceId>
-        <controlURL>/upnp/control/remoteaccess1</controlURL>
-        <eventSubURL>/upnp/event/remoteaccess1</eventSubURL>
-        <SCPDURL>/remoteaccess.xml</SCPDURL>
-      </service>
-
-      <service>
-        <serviceType>urn:Belkin:service:deviceinfo:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:deviceinfo1</serviceId>
-        <controlURL>/upnp/control/deviceinfo1</controlURL>
-        <eventSubURL>/upnp/event/deviceinfo1</eventSubURL>
-        <SCPDURL>/deviceinfoservice.xml</SCPDURL>
-      </service>
-
-      <service>
-        <serviceType>urn:Belkin:service:insight:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:insight1</serviceId>
-        <controlURL>/upnp/control/insight1</controlURL>
-        <eventSubURL>/upnp/event/insight1</eventSubURL>
-        <SCPDURL>/insightservice.xml</SCPDURL>
-      </service>
-
-      <service>
-        <serviceType>urn:Belkin:service:smartsetup:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:smartsetup1</serviceId>
-        <controlURL>/upnp/control/smartsetup1</controlURL>
-        <eventSubURL>/upnp/event/smartsetup1</eventSubURL>
-        <SCPDURL>/smartsetup.xml</SCPDURL>
-      </service>
-
-      <service>
-        <serviceType>urn:Belkin:service:manufacture:1</serviceType>
-        <serviceId>urn:Belkin:serviceId:manufacture1</serviceId>
-        <controlURL>/upnp/control/manufacture1</controlURL>
-        <eventSubURL>/upnp/event/manufacture1</eventSubURL>
-        <SCPDURL>/manufacture.xml</SCPDURL>
-      </service>
-
-    </serviceList>
-   <presentationURL>/pluginpres.html</presentationURL>
-</device>
-</root>
-*/
