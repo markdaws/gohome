@@ -50,19 +50,23 @@ type sceneJSON struct {
 	Commands    []commandJSON `json:"commands"`
 }
 
+type cmdBuilderJSON struct {
+	ID string `json:id`
+}
+
 type deviceJSON struct {
-	Address      string       `json:"address"`
-	ID           string       `json:"id"`
-	Name         string       `json:"name"`
-	Description  string       `json:"description"`
-	ModelNumber  string       `json:"modelNumber"`
-	HubID        string       `json:"hubId"`
-	Buttons      []buttonJSON `json:"buttons"`
-	Zones        []zoneJSON   `json:"zones"`
-	DeviceIDs    []string     `json:"deviceIds"`
-	Auth         *authJSON    `json:"auth"`
-	Stream       bool         `json:"stream"`
-	CmdBuilderID string       `json:"cmdBuilderId"`
+	Address     string          `json:"address"`
+	ID          string          `json:"id"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	ModelNumber string          `json:"modelNumber"`
+	HubID       string          `json:"hubId"`
+	Buttons     []buttonJSON    `json:"buttons"`
+	Zones       []zoneJSON      `json:"zones"`
+	DeviceIDs   []string        `json:"deviceIds"`
+	Auth        *authJSON       `json:"auth"`
+	Stream      bool            `json:"stream"`
+	CmdBuilder  *cmdBuilderJSON `json:"cmdBuilder"`
 }
 
 type authJSON struct {
@@ -111,10 +115,10 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 		log.V("loaded Device: ID:%s, Name:%s, Model:%s, Address:%s", d.ID, d.Name, d.ModelNumber, d.Address)
 		dev := gohome.NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, nil, d.Stream, auth)
 
-		if d.CmdBuilderID != "" {
-			builder, err := intg.CmdBuilderFromID(sys, d.CmdBuilderID)
+		if d.CmdBuilder != nil {
+			builder, err := intg.CmdBuilderFromID(sys, d.CmdBuilder.ID)
 			if err != nil {
-				log.V("unknown command builder id: %s, failed to add device to system", d.CmdBuilderID)
+				log.V("unknown command builder id: %s, failed to add device to system", d.CmdBuilder.ID)
 			}
 			dev.SetBuilder(builder)
 		}
@@ -328,19 +332,21 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			hubID = hub.ID()
 		}
 
-		builderID := ""
+		var builderJson *cmdBuilderJSON
 		if device.Builder() != nil {
-			builderID = device.Builder().ID()
+			builderJson = &cmdBuilderJSON{
+				ID: device.Builder().ID(),
+			}
 		}
 		d := deviceJSON{
-			Address:      device.Address(),
-			ID:           device.ID(),
-			Name:         device.Name(),
-			Description:  device.Description(),
-			HubID:        hubID,
-			ModelNumber:  device.ModelNumber(),
-			Stream:       device.Stream(),
-			CmdBuilderID: builderID,
+			Address:     device.Address(),
+			ID:          device.ID(),
+			Name:        device.Name(),
+			Description: device.Description(),
+			HubID:       hubID,
+			ModelNumber: device.ModelNumber(),
+			Stream:      device.Stream(),
+			CmdBuilder:  builderJson,
 		}
 
 		if device.Auth() != nil {

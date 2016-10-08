@@ -53,3 +53,14 @@ func (b *belkinCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 func (b *belkinCmdBuilder) ID() string {
 	return "belkin-wemo-insight"
 }
+
+type fluxwifiCmdBuilder struct {
+	System *gohome.System
+}
+
+func (b *fluxwifiCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
+	return nil, fmt.Errorf("not implemented: fluxwifiBuilder::Build")
+}
+
+//connectedbytcp
+//lutron
