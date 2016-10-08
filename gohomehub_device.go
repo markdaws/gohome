@@ -3,7 +3,6 @@ package gohome
 import (
 	"fmt"
 
-	"github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
@@ -115,12 +114,6 @@ func (d *GoHomeHubDevice) buildZoneTurnOnCommand(c *cmd.ZoneTurnOn) (*cmd.Func, 
 				return fluxwifi.TurnOn(conn)
 			},
 		}, nil
-	case zone.ZCWeMoInsightSwitch:
-		return &cmd.Func{
-			Func: func() error {
-				return belkin.TurnOn(z.Address)
-			},
-		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported zone controller")
 	}
@@ -150,12 +143,6 @@ func (d *GoHomeHubDevice) buildZoneTurnOffCommand(c *cmd.ZoneTurnOff) (*cmd.Func
 					d.pools[z.ID].Release(conn)
 				}()
 				return fluxwifi.TurnOff(conn)
-			},
-		}, nil
-	case zone.ZCWeMoInsightSwitch:
-		return &cmd.Func{
-			Func: func() error {
-				return belkin.TurnOff(z.Address)
 			},
 		}, nil
 	default:

@@ -263,6 +263,7 @@ func TurnOn(location string) error {
 // TurnOff turns off a binary device. The location string should be the value
 // returned in the ScanResponse.Location field
 func TurnOff(location string) error {
+	location = parseLocation(location)
 	return SendSOAP(
 		location,
 		"urn:Belkin:service:basicevent:1",
@@ -287,7 +288,6 @@ func SendSOAP(location, serviceType, controlURL, action, body string) error {
 	if err != nil {
 		return fmt.Errorf("error reading response: %s", err)
 	}
-	fmt.Println(string(b))
 	if resp.StatusCode != 200 {
 		fmt.Errorf("non 200 response from device: %d, %s", resp.StatusCode, string(b))
 	}

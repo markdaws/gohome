@@ -7,6 +7,8 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
+//TODO: Move in to the cmd package
+
 type CommandProcessor interface {
 	Process()
 	Enqueue(cmd.Command) error
@@ -48,24 +50,25 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 	log.V("cmdProcessor:enqueue:%s", c)
 
 	//TODO: use devicer (defined in this namespace), remove reference to system, move into cmd package
-	switch command := c.(type) {
-	case *cmd.ZoneSetLevel:
-		z, ok := cp.system.Zones[command.ZoneID]
-		if !ok {
-			return fmt.Errorf("unknown zone ID %s", command.ZoneID)
-		}
-		zCmd, err := cp.system.Devices[z.DeviceID].BuildCommand(command)
-		if err != nil {
-			return err
-		}
-		cp.commands <- zCmd
 
+	switch command := c.(type) {
 	case *cmd.ZoneTurnOn:
 		z, ok := cp.system.Zones[command.ZoneID]
 		if !ok {
 			return fmt.Errorf("unknown zone ID %s", command.ZoneID)
 		}
-		zCmd, err := cp.system.Devices[z.DeviceID].BuildCommand(command)
+		d, ok := cp.system.Devices[z.DeviceID]
+		if !ok {
+			return fmt.Errorf("unknown device ID %s", z.DeviceID)
+		}
+
+		var zCmd *cmd.Func
+		var err error
+		if d.Builder() != nil {
+			zCmd, err = d.Builder().Build(command)
+		} else {
+			zCmd, err = d.BuildCommand(command)
+		}
 		if err != nil {
 			return err
 		}
@@ -76,7 +79,40 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 		if !ok {
 			return fmt.Errorf("unknown zone ID %s", command.ZoneID)
 		}
-		zCmd, err := cp.system.Devices[z.DeviceID].BuildCommand(command)
+		d, ok := cp.system.Devices[z.DeviceID]
+		if !ok {
+			return fmt.Errorf("unknown device ID %s", z.DeviceID)
+		}
+
+		var zCmd *cmd.Func
+		var err error
+		if d.Builder() != nil {
+			zCmd, err = d.Builder().Build(command)
+		} else {
+			zCmd, err = d.BuildCommand(command)
+		}
+		if err != nil {
+			return err
+		}
+		cp.commands <- zCmd
+
+	case *cmd.ZoneSetLevel:
+		z, ok := cp.system.Zones[command.ZoneID]
+		if !ok {
+			return fmt.Errorf("unknown zone ID %s", command.ZoneID)
+		}
+		d, ok := cp.system.Devices[z.DeviceID]
+		if !ok {
+			return fmt.Errorf("unknown device ID %s", z.DeviceID)
+		}
+
+		var zCmd *cmd.Func
+		var err error
+		if d.Builder() != nil {
+			zCmd, err = d.Builder().Build(command)
+		} else {
+			zCmd, err = d.BuildCommand(command)
+		}
 		if err != nil {
 			return err
 		}

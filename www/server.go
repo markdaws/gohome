@@ -15,6 +15,8 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/discovery"
+	"github.com/markdaws/gohome/log"
+	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
@@ -167,7 +169,7 @@ func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeMa
 		}
 
 		recipeManager.RegisterAndStart(recipe)
-		err = system.Save(recipeManager)
+		err = store.SaveSystem(system, recipeManager)
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -210,7 +212,7 @@ func apiRecipeHandler(system *gohome.System, recipeManager *gohome.RecipeManager
 			return
 		}
 
-		system.Save(recipeManager)
+		store.SaveSystem(system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -236,7 +238,7 @@ func apiRecipeHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeM
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 
-		system.Save(recipeManager)
+		store.SaveSystem(system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -472,7 +474,7 @@ func apiSceneHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeMa
 			return
 		}
 		system.DeleteScene(scene)
-		err := system.Save(recipeManager)
+		err := store.SaveSystem(system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -505,7 +507,7 @@ func apiSceneHandlerCommandDelete(system *gohome.System, recipeManager *gohome.R
 			return
 		}
 
-		err = system.Save(recipeManager)
+		err = store.SaveSystem(system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -734,7 +736,7 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 			return
 		}
 
-		err = system.Save(recipeManager)
+		err = store.SaveSystem(system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -790,7 +792,7 @@ func apiSceneHandlerUpdate(system *gohome.System, recipeManager *gohome.RecipeMa
 
 		system.Scenes[sceneID] = &updatedScene
 
-		err = system.Save(recipeManager)
+		err = store.SaveSystem(system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -835,7 +837,7 @@ func apiSceneHandlerCreate(system *gohome.System, recipeManager *gohome.RecipeMa
 			return
 		}
 
-		err = system.Save(recipeManager)
+		err = store.SaveSystem(system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -972,7 +974,7 @@ func apiDeviceHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeM
 			return
 		}
 		system.DeleteDevice(device)
-		err := system.Save(recipeManager)
+		err := store.SaveSystem(system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -1097,6 +1099,7 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 		}
 
 		if err != nil {
+			log.E("failed to enqueue ZoneSetLevel command, ", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

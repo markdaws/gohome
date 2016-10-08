@@ -50,6 +50,7 @@ func (d *Tcp600gwbDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
 
 func (d *Tcp600gwbDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Func, error) {
 
+	//TODO: Use connected.go library
 	sendLevel := func(level int32) error {
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

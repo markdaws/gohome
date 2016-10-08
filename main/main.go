@@ -5,7 +5,9 @@ import (
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/event"
+	"github.com/markdaws/gohome/imports"
 	"github.com/markdaws/gohome/log"
+	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/www"
 )
 
@@ -36,24 +38,24 @@ func main() {
 	//TODO: Remove
 	reset := true
 	if reset {
-		system, err := gohome.NewImporter().ImportFromFile("main/ip.json", "L-BDGPRO2-WH", cp)
+		system, err := imports.FromFile("main/ip.json", "L-BDGPRO2-WH", cp)
 		if err != nil {
 			panic("Failed to import: " + err.Error())
 		}
 
 		system.SavePath = config.StartupConfigPath
-		err = system.Save(rm)
+		err = store.SaveSystem(system, rm)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
-	sys, err := gohome.LoadSystem(config.StartupConfigPath, rm, cp)
-	sys.SavePath = config.StartupConfigPath
+	sys, err := store.LoadSystem(config.StartupConfigPath, rm, cp)
 	if err != nil {
 		panic("Failed to load system: " + err.Error())
 		//TODO: New systems, should have a blank system, create if not found
 	}
+	sys.SavePath = config.StartupConfigPath
 
 	cp.SetSystem(sys)
 

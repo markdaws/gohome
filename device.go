@@ -15,6 +15,8 @@ type Device interface {
 	ID() string
 	Name() string
 	Description() string
+
+	// TODO: Really needed, shouldn't use for logic
 	ModelNumber() string
 	Buttons() map[string]*Button
 	Devices() map[string]Device
@@ -35,7 +37,12 @@ type Device interface {
 	comm.Authenticator
 	event.Producer
 	fmt.Stringer
+
+	Builder() cmd.Builder
+	SetBuilder(cmd.Builder)
 }
+
+//TODO: Need a flag for the GoHomeHub virtual device so the user can't delete it
 
 type device struct {
 	address     string
@@ -43,8 +50,7 @@ type device struct {
 	name        string
 	description string
 	system      *System
-	//TODO: needed?
-	hub Device
+	hub         Device
 	//TODO: delete?
 	producesEvents bool
 	auth           *comm.Auth
@@ -56,9 +62,11 @@ type device struct {
 	stream  bool
 	evpDone chan bool
 	evpFire chan event.Event
+
+	builder cmd.Builder
 }
 
-//TODO: Remove ID from parameters, assign within the function
+//TODO: Should return an error for unknown devices
 func NewDevice(
 	modelNumber,
 	address,
@@ -97,6 +105,14 @@ func NewDevice(
 	default:
 		return nil
 	}
+}
+
+func (d *device) Builder() cmd.Builder {
+	return d.builder
+}
+
+func (d *device) SetBuilder(b cmd.Builder) {
+	d.builder = b
 }
 
 func (d *device) Validate() *validation.Errors {

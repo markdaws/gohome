@@ -6,17 +6,14 @@ package zone
 type Controller string
 
 const (
-	ZCDefault           Controller = ""
-	ZCFluxWIFI                     = "FluxWIFI"
-	ZCWeMoInsightSwitch            = "WeMoInsightSwitch"
+	ZCDefault  Controller = ""
+	ZCFluxWIFI            = "FluxWIFI"
 )
 
 func ControllerFromString(c string) Controller {
 	switch c {
 	case "FluxWIFI":
 		return ZCFluxWIFI
-	case "WeMoInsightSwitch":
-		return ZCWeMoInsightSwitch
 	default:
 		return ZCDefault
 	}

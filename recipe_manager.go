@@ -26,7 +26,7 @@ func NewRecipeManager(eb event.Broker) *RecipeManager {
 	return rm
 }
 
-type recipeJSON struct {
+type RecipeJSON struct {
 	ID          string         `json:"id"`
 	Name        string         `json:"name"`
 	Description string         `json:"description"`
@@ -261,8 +261,8 @@ func (rm *RecipeManager) UnmarshalNewRecipe(data map[string]interface{}) (*Recip
 	return recipe, rErr
 }
 
-func (rm *RecipeManager) ToJSON(r *Recipe) recipeJSON {
-	out := recipeJSON{
+func (rm *RecipeManager) ToJSON(r *Recipe) RecipeJSON {
+	out := RecipeJSON{
 		ID:          r.ID,
 		Name:        r.Name,
 		Description: r.Description,
@@ -273,7 +273,7 @@ func (rm *RecipeManager) ToJSON(r *Recipe) recipeJSON {
 	return out
 }
 
-func (rm *RecipeManager) FromJSON(rj recipeJSON) (*Recipe, error) {
+func (rm *RecipeManager) FromJSON(rj RecipeJSON) (*Recipe, error) {
 	recipe := &Recipe{
 		system:      rm.System,
 		ID:          rj.ID,

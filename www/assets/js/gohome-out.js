@@ -24120,17 +24120,25 @@
 	    render: function render() {
 	        var lightZones = [];
 	        var shadeZones = [];
+	        var outletZones = [];
 	        var otherZones = [];
 	        this.props.zones.forEach(function (zone) {
-	            var cmpZone = React.createElement(Zone, { id: zone.id, name: zone.name, type: zone.type, output: zone.output, key: zone.id });
+	            var cmpZone = React.createElement(Zone, {
+	                id: zone.id,
+	                name: zone.name,
+	                type: zone.type,
+	                output: zone.output,
+	                key: zone.id });
 
 	            switch (zone.type) {
-	                //TODO: Put in enum somewhere
 	                case 'light':
 	                    lightZones.push(cmpZone);
 	                    break;
 	                case 'shade':
 	                    shadeZones.push(cmpZone);
+	                    break;
+	                case 'outlet':
+	                    outletZones.push(cmpZone);
 	                    break;
 	                default:
 	                    otherZones.push(cmpZone);
@@ -24142,23 +24150,45 @@
 	            'div',
 	            { className: 'cmp-ZoneList row' },
 	            React.createElement(
-	                'h2',
-	                { className: ClassNames({ 'hidden': lightZones.length === 0 }) },
-	                'Lights'
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'h2',
+	                    { className: ClassNames({ 'hidden': lightZones.length === 0 }) },
+	                    'Lights'
+	                ),
+	                lightZones
 	            ),
-	            lightZones,
 	            React.createElement(
-	                'h2',
-	                { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
-	                'Shades'
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'h2',
+	                    { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
+	                    'Shades'
+	                ),
+	                shadeZones
 	            ),
-	            shadeZones,
 	            React.createElement(
-	                'h2',
-	                { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
-	                'Other Zones'
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'h2',
+	                    { className: ClassNames({ 'hidden': outletZones.length === 0 }) },
+	                    'Outlets'
+	                ),
+	                outletZones
 	            ),
-	            otherZones
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'h2',
+	                    { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
+	                    'Other Zones'
+	                ),
+	                otherZones
+	            )
 	        );
 	    }
 	});

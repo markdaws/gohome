@@ -1,4 +1,4 @@
-package gohome
+package imports
 
 import (
 	"encoding/json"
@@ -9,20 +9,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/zone"
 )
 
-type Importer interface {
-	ImportFromFile(path, importerID string, cmdProcessor CommandProcessor) (*System, error)
-}
-
-type importer struct {
-}
-
-func (i importer) ImportFromFile(path, importerID string, cp CommandProcessor) (*System, error) {
+func FromFile(path, importerID string, cp gohome.CommandProcessor) (*gohome.System, error) {
 	switch importerID {
 	case "L-BDGPRO2-WH":
 		//TODO: "1" should not be hard coded
@@ -32,12 +27,8 @@ func (i importer) ImportFromFile(path, importerID string, cp CommandProcessor) (
 	}
 }
 
-func NewImporter() Importer {
-	return importer{}
-}
-
 // Used for integration reports from Lutron Smart Bridge Pro
-func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProcessor CommandProcessor) (*System, error) {
+func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProcessor gohome.CommandProcessor) (*gohome.System, error) {
 
 	//TODO: Handle non runtime panic
 	bytes, err := ioutil.ReadFile(integrationReportPath)
@@ -50,7 +41,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return nil, err
 	}
 
-	system := NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cmdProcessor)
+	system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cmdProcessor, 1)
 
 	root, ok := configJSON["LIPIdList"].(map[string]interface{})
 	if !ok {
@@ -65,12 +56,12 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	var makeDevice = func(
 		modelNumber, name, address string,
 		deviceMap map[string]interface{},
-		hub Device,
-		sys *System,
+		hub gohome.Device,
+		sys *gohome.System,
 		stream bool,
-		auth *comm.Auth) Device {
+		auth *comm.Auth) gohome.Device {
 
-		device := NewDevice(
+		device := gohome.NewDevice(
 			modelNumber,
 			address,
 			sys.NextGlobalID(),
@@ -91,7 +82,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				btnName = "Button " + btnNumber
 			}
 
-			b := &Button{
+			b := &gohome.Button{
 				Address:     btnNumber,
 				ID:          sys.NextGlobalID(),
 				Name:        btnName,
@@ -105,7 +96,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return device
 	}
 
-	var makeScenes = func(deviceMap map[string]interface{}, sbp Device) error {
+	var makeScenes = func(deviceMap map[string]interface{}, sbp gohome.Device) error {
 		buttons, ok := deviceMap["Buttons"].([]interface{})
 		if !ok {
 			return errors.New("Missing Buttons key, or value not array")
@@ -125,7 +116,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				var buttonName = button["Name"].(string)
 
 				var btn = sbp.Buttons()[buttonID]
-				scene := &Scene{
+				scene := &gohome.Scene{
 					Address:     buttonID,
 					Name:        buttonName,
 					Description: buttonName,
@@ -157,7 +148,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	}
 
 	// First need to find the Smart Bridge Pro since it is needed to make scenes and zones
-	var sbp Device
+	var sbp gohome.Device
 	for _, deviceMap := range devices {
 		device, ok := deviceMap.(map[string]interface{})
 		if !ok {
@@ -174,6 +165,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			})
 			sbp.Auth().Authenticator = sbp
 
+			// TODO: Phantom device still needed?
 			// The smart bridge pro controls scenes by having phantom buttons that can be pressed,
 			// each button activates a different scene. This means it really has two addresses, the
 			// first is the IP address to talk to it, but then it also have the DeviceID which is needed
@@ -269,8 +261,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 }
 
 //TODO: Temp function - import from UI
-func importConnectedByTCP(system *System) {
-	tcp := NewDevice(
+func importConnectedByTCP(system *gohome.System) {
+	tcp := gohome.NewDevice(
 		"TCP600GWB",
 		"https://192.168.0.23",
 		system.NextGlobalID(),
@@ -296,8 +288,9 @@ func importConnectedByTCP(system *System) {
 	system.AddZone(z)
 }
 
-func importGoHomeHub(system *System) Device {
-	ghh := NewDevice(
+//TODO: move
+func importGoHomeHub(system *gohome.System) gohome.Device {
+	ghh := gohome.NewDevice(
 		"GoHomeHub",
 		"gohomehub",
 		system.NextGlobalID(),
@@ -322,10 +315,56 @@ func importGoHomeHub(system *System) Device {
 	return ghh
 }
 
-func importBelkin(ghh Device, system *System) {
-	return
+//TODO: Move
+func importBelkin(ghh gohome.Device, system *gohome.System) {
 	responses, err := belkin.Scan(belkin.DTInsight, 5)
-	fmt.Printf("got responses: %s\n", responses)
+	fmt.Printf("got responses: %#v\n", responses[0])
+	bd, err := belkin.LoadDevice(responses[0])
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("%#v", bd)
+
+	dev := gohome.NewDevice(
+		"", //MODEL_NUMBER
+		strings.Replace(responses[0].Location, "/setup.xml", "", -1),
+		system.NextGlobalID(),
+		bd.FriendlyName+" - Device",
+		"",
+		nil, //ghh, //TODO: Needed?
+		false,
+		nil)
+
+	builder, err := intg.CmdBuilderFromID(system, "belkin-wemo-insight")
+	dev.SetBuilder(builder)
+	system.AddDevice(dev)
+
+	z := &zone.Zone{
+		ID:          "",
+		Address:     "1",
+		Name:        bd.FriendlyName,
+		Description: "",
+		DeviceID:    dev.ID(),
+		Type:        zone.ZTOutlet,
+		Output:      zone.OTBinary,
+	}
+	system.AddZone(z)
+	dev.AddZone(z)
+
+	return
+	/*
+		{
+			MaxAge:86400,
+			SearchType:"urn:Belkin:device:insight:1",
+			DeviceID:"Insight-1_0-231550K1200093",
+			USN:"uuid:Insight-1_0-231550K1200093::urn:Belkin:device:insight:1",
+			Location:"http://10.22.22.1:49152/setup.xml",
+			Server:"Unspecified, UPnP/1.0, Unspecified",
+			URN:"urn:Belkin:device:insight:1"
+		}
+	*/
 	fmt.Println(err)
 
 	belkin.LoadDevice(responses[0])
@@ -336,7 +375,7 @@ func importBelkin(ghh Device, system *System) {
 	return
 	/*
 		z := &zone.Zone{
-			Address:     location,
+			Addressp:     location,
 			Name:        "Belkin Insight Switch",
 			Description: "Belkin",
 			DeviceID:    ghh.ID(),
