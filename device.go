@@ -22,12 +22,18 @@ type Device interface {
 	Devices() map[string]Device
 	Zones() map[string]*zone.Zone
 	Auth() *comm.Auth
+
 	InitConnections()
+
+	Connections() comm.ConnectionPool
+	SetConnections(comm.ConnectionPool)
+
+	//TODO: Remove
 	Connect() (comm.Connection, error)
+	//TODO: Remove
 	ReleaseConnection(comm.Connection)
 	Stream() bool
 	BuildCommand(cmd.Command) (*cmd.Func, error)
-	SupportsController(c zone.Controller) bool
 	Hub() Device
 	SetHub(Device)
 	AddZone(*zone.Zone) error
@@ -41,8 +47,6 @@ type Device interface {
 	Builder() cmd.Builder
 	SetBuilder(cmd.Builder)
 }
-
-//TODO: Need a flag for the GoHomeHub virtual device so the user can't delete it
 
 type device struct {
 	address     string
@@ -63,10 +67,10 @@ type device struct {
 	evpDone chan bool
 	evpFire chan event.Event
 
-	builder cmd.Builder
+	builder     cmd.Builder
+	connections comm.ConnectionPool
 }
 
-//TODO: Should return an error for unknown devices
 func NewDevice(
 	modelNumber,
 	address,
@@ -99,9 +103,6 @@ func NewDevice(
 	case "L-BDGPRO2-WH":
 		device.producesEvents = true
 		return &Lbdgpro2whDevice{device: device}
-	case "GoHomeHub":
-		device.producesEvents = true
-		return &GoHomeHubDevice{device: device}
 	default:
 		return nil
 	}
@@ -113,6 +114,14 @@ func (d *device) Builder() cmd.Builder {
 
 func (d *device) SetBuilder(b cmd.Builder) {
 	d.builder = b
+}
+
+func (d *device) Connections() comm.ConnectionPool {
+	return d.connections
+}
+
+func (d *device) SetConnections(c comm.ConnectionPool) {
+	d.connections = c
 }
 
 func (d *device) Validate() *validation.Errors {

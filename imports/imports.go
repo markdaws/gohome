@@ -253,14 +253,14 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		//sbp.Zones()[newZone.Address] = newZone
 	}
 
-	//TODO: Move
+	//TODO: delete, testing
 	importConnectedByTCP(system)
-	ghh := importGoHomeHub(system)
-	importBelkin(ghh, system)
+	importFluxWIFI(system)
+	importBelkin(system)
 	return system, nil
 }
 
-//TODO: Temp function - import from UI
+//TODO: delete, testing
 func importConnectedByTCP(system *gohome.System) {
 	tcp := gohome.NewDevice(
 		"TCP600GWB",
@@ -288,36 +288,42 @@ func importConnectedByTCP(system *gohome.System) {
 	system.AddZone(z)
 }
 
-//TODO: move
-func importGoHomeHub(system *gohome.System) gohome.Device {
-	ghh := gohome.NewDevice(
-		"GoHomeHub",
-		"gohomehub",
+//TODO: delete, testing
+func importFluxWIFI(system *gohome.System) {
+	dev := gohome.NewDevice(
+		"",
+		"192.168.0.24:5577",
 		system.NextGlobalID(),
-		"GoHome Hub",
-		"GoHome Hub Description",
+		"flux bulb 1 - device",
+		"",
 		nil,
 		false,
-		nil)
-	system.AddDevice(ghh)
+		nil,
+	)
+
+	builder, _ := intg.CmdBuilderFromID(system, "fluxwifi")
+	dev.SetBuilder(builder)
+	dev.SetConnections(builder.Connections(dev.Name(), dev.Address()))
+	system.AddDevice(dev)
 
 	z := &zone.Zone{
-		Address:     "192.168.0.24:5577",
-		Name:        "flux bulb",
-		Description: "flux bulb 1",
-		DeviceID:    ghh.ID(),
+		Address:     "1",
+		Name:        "flux bulb 1",
+		Description: "",
+		DeviceID:    dev.ID(),
 		Type:        zone.ZTLight,
 		Output:      zone.OTRGB,
-		Controller:  zone.ZCFluxWIFI,
 	}
 	system.AddZone(z)
-	ghh.AddZone(z)
-	return ghh
 }
 
-//TODO: Move
-func importBelkin(ghh gohome.Device, system *gohome.System) {
+//TODO: delete, testing
+func importBelkin(system *gohome.System) {
 	responses, err := belkin.Scan(belkin.DTInsight, 5)
+
+	if err != nil || len(responses) == 0 {
+		return
+	}
 	fmt.Printf("got responses: %#v\n", responses[0])
 	bd, err := belkin.LoadDevice(responses[0])
 
@@ -333,7 +339,7 @@ func importBelkin(ghh gohome.Device, system *gohome.System) {
 		system.NextGlobalID(),
 		bd.FriendlyName+" - Device",
 		"",
-		nil, //ghh, //TODO: Needed?
+		nil,
 		false,
 		nil)
 

@@ -12,7 +12,6 @@ import (
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/log"
-	"github.com/markdaws/gohome/zone"
 )
 
 //TODO: make lutron package
@@ -309,8 +308,4 @@ func (d *Lbdgpro2whDevice) parseZoneCommand(command string) cmd.Command {
 	}
 
 	return finalCmd
-}
-
-func (d *Lbdgpro2whDevice) SupportsController(c zone.Controller) bool {
-	return c == zone.ZCDefault
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/validation"
-	"github.com/markdaws/gohome/zone"
 )
 
 type Tcp600gwbDevice struct {
@@ -91,10 +90,6 @@ func (d *Tcp600gwbDevice) buildZoneSetLevelCommand(c *cmd.ZoneSetLevel) (*cmd.Fu
 			}
 		},
 	}, nil
-}
-
-func (d *Tcp600gwbDevice) SupportsController(c zone.Controller) bool {
-	return c == zone.ZCDefault
 }
 
 func (d *Tcp600gwbDevice) Validate() *validation.Errors {

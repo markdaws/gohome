@@ -14,6 +14,7 @@ type ConnectionPool interface {
 	SetNewConnectionCallback(func())
 }
 
+//TODO: Split New and initializing connections
 func NewConnectionPool(name string, count int, newConnectionCb func() Connection) ConnectionPool {
 	p := &connectionPool{
 		name:          name,

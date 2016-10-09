@@ -44,6 +44,8 @@ func DiscoverToken(modelNumber, address string) (string, error) {
 }
 
 func Zones(modelNumber string) ([]zone.Zone, error) {
+	//TODO: Need to also have a device here along with the zone
+	//Shouldn't discover zones, only devices
 	switch modelNumber {
 	case "FluxWIFI":
 		infos, err := fluxwifi.Scan(5)
@@ -59,7 +61,6 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 				Description: "Flux WIFI - " + info.Model,
 				Type:        zone.ZTLight,
 				Output:      zone.OTContinuous,
-				Controller:  zone.ZCFluxWIFI,
 			}
 
 			//TODO: remove
@@ -70,7 +71,6 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 				Description: "Flux WIFI - " + info.Model,
 				Type:        zone.ZTShade,
 				Output:      zone.OTContinuous,
-				Controller:  zone.ZCFluxWIFI,
 			}
 		}
 		return zones, nil

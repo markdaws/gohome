@@ -121,6 +121,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 				log.V("unknown command builder id: %s, failed to add device to system", d.CmdBuilder.ID)
 			}
 			dev.SetBuilder(builder)
+			dev.SetConnections(builder.Connections(dev.Name(), dev.Address()))
 		}
 		if auth != nil {
 			dev.Auth().Authenticator = dev

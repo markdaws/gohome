@@ -6,7 +6,6 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
-	"github.com/markdaws/gohome/zone"
 )
 
 //TODO: export
@@ -38,8 +37,4 @@ func (d *genericDevice) Connect() (comm.Connection, error) {
 }
 
 func (d *genericDevice) ReleaseConnection(c comm.Connection) {
-}
-
-func (d *genericDevice) SupportsController(c zone.Controller) bool {
-	return c == zone.ZCDefault
 }

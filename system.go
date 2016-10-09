@@ -106,6 +106,7 @@ func (s *System) DeleteScene(scn *Scene) {
 
 func (s *System) DeleteDevice(d Device) {
 	delete(s.Devices, d.ID())
+	//TODO: Remove all associated zones + buttons
 	//TODO: Need to stop all services, recipes, networking etc to this device
 }
 
