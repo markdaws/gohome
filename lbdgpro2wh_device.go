@@ -24,21 +24,29 @@ func (d *Lbdgpro2whDevice) ModelNumber() string {
 	return "L-BDGPRO2-WH"
 }
 
+//TODO: Delete
 func (d *Lbdgpro2whDevice) InitConnections() {
-	createConnection := func() comm.Connection {
-		conn := comm.NewTelnetConnection(d.Address(), d.Auth().Authenticator)
-		conn.SetPingCallback(func() error {
-			if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
-				return fmt.Errorf("%s ping failed: %s", d, err)
-			}
-			return nil
-		})
-		return conn
+	//TODO: ERROR: d.Auth().Authenticator -> need to pass this to NewTelnetConnection
+	if d.Connections() != nil {
+		log.V("%s init connections", d)
+		err := d.Connections().Init()
+		if err != nil {
+			log.E("%s failed to init connection pool: %s", d, err)
+		} else {
+			log.V("%s connected", d)
+		}
 	}
-	ps := 2
-	log.V("%s init connections, pool size %d", d, ps)
-	d.pool = comm.NewConnectionPool(d.name, ps, createConnection)
-	log.V("%s connected", d)
+
+	//TODO: Remove
+	/*
+		d.pool = comm.NewConnectionPool(ConnectionPoolConfig{
+			Name: d.name,
+			Size: ps,
+			"telnet",
+			Address: d.Address(),
+			TelnetPingCmd: "#PING\r\n",
+		})
+	*/
 }
 
 func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan event.Event, <-chan bool) {

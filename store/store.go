@@ -54,6 +54,14 @@ type cmdBuilderJSON struct {
 	ID string `json:id`
 }
 
+type connPoolJSON struct {
+	Name           string `json:"name"`
+	PoolSize       int32  `json:"poolSize"`
+	ConnectionType string `json:connectionType`
+	TelnetPingCmd  string `json:"telnetPingCmd"`
+	Address        string `json:"address"`
+}
+
 type deviceJSON struct {
 	Address     string          `json:"address"`
 	ID          string          `json:"id"`
@@ -67,6 +75,7 @@ type deviceJSON struct {
 	Auth        *authJSON       `json:"auth"`
 	Stream      bool            `json:"stream"`
 	CmdBuilder  *cmdBuilderJSON `json:"cmdBuilder"`
+	ConnPool    *connPoolJSON   `json:"connPool"`
 }
 
 type authJSON struct {
@@ -119,10 +128,26 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			builder, err := intg.CmdBuilderFromID(sys, d.CmdBuilder.ID)
 			if err != nil {
 				log.V("unknown command builder id: %s, failed to add device to system", d.CmdBuilder.ID)
+				continue
 			}
-			dev.SetBuilder(builder)
-			dev.SetConnections(builder.Connections(dev.Name(), dev.Address()))
+			dev.SetCmdBuilder(builder)
 		}
+
+		if d.ConnPool != nil {
+			pool, err := comm.NewConnectionPool(comm.ConnectionPoolConfig{
+				Name:           d.ConnPool.Name,
+				Size:           int(d.ConnPool.PoolSize),
+				ConnectionType: d.ConnPool.ConnectionType,
+				Address:        d.ConnPool.Address,
+				TelnetPingCmd:  d.ConnPool.TelnetPingCmd,
+			})
+			if err != nil {
+				log.V("failed to create device connection pool: %s", err)
+				continue
+			}
+			dev.SetConnections(pool)
+		}
+
 		if auth != nil {
 			dev.Auth().Authenticator = dev
 		}
@@ -334,9 +359,21 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 		}
 
 		var builderJson *cmdBuilderJSON
-		if device.Builder() != nil {
+		if device.CmdBuilder() != nil {
 			builderJson = &cmdBuilderJSON{
-				ID: device.Builder().ID(),
+				ID: device.CmdBuilder().ID(),
+			}
+		}
+
+		var connPoolJson *connPoolJSON
+		if device.Connections() != nil {
+			config := device.Connections().Config()
+			connPoolJson = &connPoolJSON{
+				Name:           config.Name,
+				PoolSize:       int32(config.Size),
+				ConnectionType: config.ConnectionType,
+				Address:        config.Address,
+				TelnetPingCmd:  config.TelnetPingCmd,
 			}
 		}
 		d := deviceJSON{
@@ -348,6 +385,7 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			ModelNumber: device.ModelNumber(),
 			Stream:      device.Stream(),
 			CmdBuilder:  builderJson,
+			ConnPool:    connPoolJson,
 		}
 
 		if device.Auth() != nil {

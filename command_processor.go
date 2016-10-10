@@ -64,8 +64,8 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 		var zCmd *cmd.Func
 		var err error
-		if d.Builder() != nil {
-			zCmd, err = d.Builder().Build(command)
+		if d.CmdBuilder() != nil {
+			zCmd, err = d.CmdBuilder().Build(command)
 		} else {
 			zCmd, err = d.BuildCommand(command)
 		}
@@ -86,8 +86,8 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 		var zCmd *cmd.Func
 		var err error
-		if d.Builder() != nil {
-			zCmd, err = d.Builder().Build(command)
+		if d.CmdBuilder() != nil {
+			zCmd, err = d.CmdBuilder().Build(command)
 		} else {
 			zCmd, err = d.BuildCommand(command)
 		}
@@ -108,8 +108,8 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 		var zCmd *cmd.Func
 		var err error
-		if d.Builder() != nil {
-			zCmd, err = d.Builder().Build(command)
+		if d.CmdBuilder() != nil {
+			zCmd, err = d.CmdBuilder().Build(command)
 		} else {
 			zCmd, err = d.BuildCommand(command)
 		}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/fluxwifi"
 )
 
@@ -102,24 +101,6 @@ func (b *fluxwifiCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	default:
 		return nil, fmt.Errorf("unsupported command type")
 	}
-}
-
-func (b *fluxwifiCmdBuilder) Connections(name, address string) comm.ConnectionPool {
-	createConnection := func() comm.Connection {
-		// Add he port number which is 5577 for Flux WIFI bulbs
-		conn := comm.NewTelnetConnection(address, nil)
-
-		//TODO: Need to get some ping mechanism for flux bulbs
-		/*
-			conn.SetPingCallback(func() error {
-				if _, err := conn.Write([]byte("#PING\r\n")); err != nil {
-					return fmt.Errorf("%s ping failed: %s", d, err)
-				}
-				return nil
-			})*/
-		return conn
-	}
-	return comm.NewConnectionPool(name, 2, createConnection)
 }
 
 func (b *fluxwifiCmdBuilder) ID() string {

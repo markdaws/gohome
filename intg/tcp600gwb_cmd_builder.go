@@ -5,7 +5,6 @@ import (
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/connectedbytcp"
 )
 
@@ -49,10 +48,6 @@ func (b *tcp600gwbCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return nil, fmt.Errorf("unsupported command type")
 	}
 	return nil, nil
-}
-
-func (b *tcp600gwbCmdBuilder) Connections(name, address string) comm.ConnectionPool {
-	return nil
 }
 
 func (b *tcp600gwbCmdBuilder) ID() string {

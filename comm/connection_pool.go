@@ -7,30 +7,61 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
+// Contains pool configuration information
+type ConnectionPoolConfig struct {
+	Name           string
+	Size           int
+	ConnectionType string
+	Address        string
+	TelnetPingCmd  string
+
+	//TODO: Authorization
+}
+
 type ConnectionPool interface {
 	Name() string
+	Init() error
 	Get() Connection
 	Release(Connection)
 	SetNewConnectionCallback(func())
+	Config() ConnectionPoolConfig
 }
 
 //TODO: Split New and initializing connections
-func NewConnectionPool(name string, count int, newConnectionCb func() Connection) ConnectionPool {
-	p := &connectionPool{
-		name:          name,
-		pool:          make(map[Connection]bool, count),
-		newConnection: newConnectionCb,
+func NewConnectionPool(config ConnectionPoolConfig) (ConnectionPool, error) {
+
+	var newConnection func() Connection
+	switch config.ConnectionType {
+	case "telnet":
+		newConnection = func() Connection {
+			conn := NewTelnetConnection(config.Address, nil)
+
+			if config.TelnetPingCmd != "" {
+				conn.SetPingCallback(func() error {
+					if _, err := conn.Write([]byte(config.TelnetPingCmd)); err != nil {
+						return fmt.Errorf("%s ping failed: %s", config.Address, err)
+					}
+					return nil
+				})
+			}
+			return conn
+		}
+	default:
+		return nil, fmt.Errorf("unknown connection type: %s", config.ConnectionType)
 	}
 
-	//TODO: Change to connect in parallel even if sync
-	for i := 0; i < count; i++ {
-		retryNewConnection(p, true)
+	p := &connectionPool{
+		name:          config.Name,
+		config:        config,
+		pool:          make(map[Connection]bool, config.Size),
+		newConnection: newConnection,
 	}
-	return p
+	return p, nil
 }
 
 type connectionPool struct {
 	name            string
+	config          ConnectionPoolConfig
 	pool            map[Connection]bool
 	newConnection   func() Connection
 	newConnectionCb func()
@@ -38,6 +69,19 @@ type connectionPool struct {
 
 func (p *connectionPool) Name() string {
 	return p.name
+}
+
+func (p *connectionPool) Config() ConnectionPoolConfig {
+	return p.config
+}
+
+func (p *connectionPool) Init() error {
+	for i := 0; i < p.config.Size; i++ {
+		retryNewConnection(p, true)
+	}
+
+	//TODO: Errors
+	return nil
 }
 
 func (p *connectionPool) Get() Connection {

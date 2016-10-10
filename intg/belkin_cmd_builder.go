@@ -6,7 +6,6 @@ import (
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/comm"
 )
 
 type belkinCmdBuilder struct {
@@ -39,10 +38,6 @@ func (b *belkinCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return nil, fmt.Errorf("unsupported command type")
 	}
 	return nil, nil
-}
-
-func (b *belkinCmdBuilder) Connections(name, address string) comm.ConnectionPool {
-	return nil
 }
 
 func (b *belkinCmdBuilder) ID() string {

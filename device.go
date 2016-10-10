@@ -23,8 +23,6 @@ type Device interface {
 	Zones() map[string]*zone.Zone
 	Auth() *comm.Auth
 
-	InitConnections()
-
 	Connections() comm.ConnectionPool
 	SetConnections(comm.ConnectionPool)
 
@@ -44,8 +42,8 @@ type Device interface {
 	event.Producer
 	fmt.Stringer
 
-	Builder() cmd.Builder
-	SetBuilder(cmd.Builder)
+	CmdBuilder() cmd.Builder
+	SetCmdBuilder(cmd.Builder)
 }
 
 type device struct {
@@ -67,7 +65,7 @@ type device struct {
 	evpDone chan bool
 	evpFire chan event.Event
 
-	builder     cmd.Builder
+	cmdBuilder  cmd.Builder
 	connections comm.ConnectionPool
 }
 
@@ -105,12 +103,12 @@ func NewDevice(
 	}
 }
 
-func (d *device) Builder() cmd.Builder {
-	return d.builder
+func (d *device) CmdBuilder() cmd.Builder {
+	return d.cmdBuilder
 }
 
-func (d *device) SetBuilder(b cmd.Builder) {
-	d.builder = b
+func (d *device) SetCmdBuilder(b cmd.Builder) {
+	d.cmdBuilder = b
 }
 
 func (d *device) Connections() comm.ConnectionPool {

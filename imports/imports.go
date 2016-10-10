@@ -160,11 +160,23 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		if deviceID == smartBridgeProID {
 
 			//TODO: Don't hard code address
-			sbp = makeDevice("L-BDGPRO2-WH", "Smart Bridge - Hub", "192.168.0.10:23", device, nil, system, true, &comm.Auth{
-				Login:    "lutron",
-				Password: "integration",
-			})
+			sbp = makeDevice(
+				"L-BDGPRO2-WH",
+				"Smart Bridge - Hub",
+				"192.168.0.10:23",
+				device,
+				nil,
+				system,
+				true,
+				&comm.Auth{
+					Login:    "lutron",
+					Password: "integration",
+				})
 			sbp.Auth().Authenticator = sbp
+
+			//TODO: Add command builder
+			//TODO: Add connection pool
+			//TODO: Add event parser
 
 			// TODO: Phantom device still needed?
 			// The smart bridge pro controls scenes by having phantom buttons that can be pressed,
@@ -290,7 +302,7 @@ func importConnectedByTCP(system *gohome.System) {
 
 	builder, _ := intg.CmdBuilderFromID(system, "tcp600gwb")
 	fmt.Printf("%v\n", builder)
-	dev.SetBuilder(builder)
+	dev.SetCmdBuilder(builder)
 
 	zoneID := "216438039298518643"
 	z := &zone.Zone{
@@ -307,7 +319,6 @@ func importConnectedByTCP(system *gohome.System) {
 
 //TODO: delete, testing
 func importFluxWIFI(system *gohome.System) {
-	return
 	dev := gohome.NewDevice(
 		"",
 		"192.168.0.24:5577",
@@ -320,8 +331,16 @@ func importFluxWIFI(system *gohome.System) {
 	)
 
 	builder, _ := intg.CmdBuilderFromID(system, "fluxwifi")
-	dev.SetBuilder(builder)
-	dev.SetConnections(builder.Connections(dev.Name(), dev.Address()))
+	dev.SetCmdBuilder(builder)
+
+	pool, _ := comm.NewConnectionPool(comm.ConnectionPoolConfig{
+		Name:           dev.Name(),
+		Size:           2,
+		ConnectionType: "telnet",
+		Address:        dev.Address(),
+		TelnetPingCmd:  "",
+	})
+	dev.SetConnections(pool)
 	system.AddDevice(dev)
 
 	z := &zone.Zone{
@@ -363,7 +382,7 @@ func importBelkin(system *gohome.System) {
 		nil)
 
 	builder, err := intg.CmdBuilderFromID(system, "belkin-wemo-insight")
-	dev.SetBuilder(builder)
+	dev.SetCmdBuilder(builder)
 	system.AddDevice(dev)
 
 	z := &zone.Zone{
