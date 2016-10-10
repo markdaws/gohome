@@ -97,9 +97,6 @@ func NewDevice(
 	case "":
 		device.producesEvents = false
 		return &genericDevice{device: device}
-	case "TCP600GWB":
-		device.producesEvents = false
-		return &Tcp600gwbDevice{device: device}
 	case "L-BDGPRO2-WH":
 		device.producesEvents = true
 		return &Lbdgpro2whDevice{device: device}

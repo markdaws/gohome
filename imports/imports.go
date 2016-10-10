@@ -13,6 +13,7 @@ import (
 	"github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
+	"github.com/markdaws/gohome/connectedbytcp"
 	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/zone"
 )
@@ -262,34 +263,51 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 //TODO: delete, testing
 func importConnectedByTCP(system *gohome.System) {
-	tcp := gohome.NewDevice(
-		"TCP600GWB",
+	responses, err := connectedbytcp.Scan(3)
+	if err != nil {
+		fmt.Printf("ERR SCANNING\n")
+	}
+	fmt.Println(responses)
+	/*
+		token, err := connectedbytcp.GetToken("https://192.168.0.23")
+		if err != nil {
+			fmt.Printf("GETTOKEN failed")
+			fmt.Println(err)
+		}
+		fmt.Println(token)
+	*/
+	dev := gohome.NewDevice(
+		"", //TODO: Need model number
 		"https://192.168.0.23",
 		system.NextGlobalID(),
 		"ConnectedByTcp Hub",
-		"Description",
+		"",
 		nil,
 		false,
 		&comm.Auth{
-			Token: "79tz3vbbop9pu5fcen60p97ix3mbvd3sblhjmz21",
+			Token: "fyhnk5mhvh6rgxe2fgttiznimznaiyin372t1t1l",
 		})
+
+	builder, _ := intg.CmdBuilderFromID(system, "tcp600gwb")
+	fmt.Printf("%v\n", builder)
+	dev.SetBuilder(builder)
 
 	zoneID := "216438039298518643"
 	z := &zone.Zone{
 		Address:     zoneID,
 		Name:        "bulb1",
 		Description: "tcp - bulb1",
-		DeviceID:    tcp.ID(),
+		DeviceID:    dev.ID(),
 		Type:        zone.ZTLight,
 		Output:      zone.OTContinuous,
-		Controller:  "TCP - LED A19 11W",
 	}
-	system.AddDevice(tcp)
+	system.AddDevice(dev)
 	system.AddZone(z)
 }
 
 //TODO: delete, testing
 func importFluxWIFI(system *gohome.System) {
+	return
 	dev := gohome.NewDevice(
 		"",
 		"192.168.0.24:5577",
@@ -319,6 +337,7 @@ func importFluxWIFI(system *gohome.System) {
 
 //TODO: delete, testing
 func importBelkin(system *gohome.System) {
+	return
 	responses, err := belkin.Scan(belkin.DTInsight, 5)
 
 	if err != nil || len(responses) == 0 {

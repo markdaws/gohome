@@ -199,7 +199,59 @@ func VerifyConnection(address, token string) error {
 	return err
 }
 
-//TODO: Set level / turn on & off
+// Turns the bulb on
+func TurnOn(hubAddress, zoneAddress, token string) error {
+	return SetLevel(hubAddress, zoneAddress, token, 1)
+}
+
+// Turns the bulb off
+func TurnOff(hubAddress, zoneAddress, token string) error {
+	return SetLevel(hubAddress, zoneAddress, token, 0)
+}
+
+// Sets the bulb to the specified level
+func SetLevel(hubAddress, zoneAddress, token string, level int32) error {
+	if level == 0 {
+		return setLevel(hubAddress, zoneAddress, token, 0)
+	} else if level == 1 {
+		return setLevel(hubAddress, zoneAddress, token, 1)
+	} else {
+		// 0 -> off, 1 -> on, if the light was set to 0 then you have to set a 1 first
+		// before trying to set any other level
+		err := setLevel(hubAddress, zoneAddress, token, 1)
+		if err != nil {
+			return err
+		}
+		return setLevel(hubAddress, zoneAddress, token, level)
+	}
+}
+
+func setLevel(hubAddress, zoneAddress, token string, level int32) error {
+	var data string
+	if level == 0 || level == 1 {
+		data = "<gip><version>1</version><token>%s</token><did>%s</did><value>%d</value></gip>"
+	} else {
+		data = "<gip><version>1</version><token>%s</token><did>%s</did><value>%d</value><type>level</type></gip>"
+	}
+	data = fmt.Sprintf(data, token, zoneAddress, level)
+	data = fmt.Sprintf("<gwrcmds><gwrcmd><gcmd>DeviceSendCommand</gcmd><gdata>%s</gdata></gwrcmd></gwrcmds>", data)
+
+	resp, err := postData(hubAddress, "GWRBatch", data)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	if err != nil {
+		return fmt.Errorf("failed to send command: %s", err)
+	}
+
+	if resp.StatusCode != 200 {
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("error sending command: %s", string(b))
+		}
+	}
+	return nil
+}
 
 func postData(address, command, data string) (*http.Response, error) {
 	tr := &http.Transport{

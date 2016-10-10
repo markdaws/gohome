@@ -32,7 +32,7 @@ func (b *belkinCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				return belkin.TurnOff(d.Address())
 			},
-			Friendly: "belkinCmdBuilder.ZoneTurnOn",
+			Friendly: "belkinCmdBuilder.ZoneTurnOff",
 		}, nil
 
 	default:
