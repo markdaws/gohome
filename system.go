@@ -60,7 +60,7 @@ func (s *System) AddDevice(d Device) error {
 
 	//TODO: What about address, allow duplicates?
 	//TODO: Add device need to init connections?
-	s.Devices[d.ID()] = d
+	s.Devices[d.ID] = d
 	return nil
 }
 
@@ -105,7 +105,7 @@ func (s *System) DeleteScene(scn *Scene) {
 }
 
 func (s *System) DeleteDevice(d Device) {
-	delete(s.Devices, d.ID())
+	delete(s.Devices, d.ID)
 	//TODO: Remove all associated zones + buttons
 	//TODO: Need to stop all services, recipes, networking etc to this device
 }
@@ -115,6 +115,7 @@ func (s *System) AddRecipe(r *Recipe) {
 }
 
 //TODO: Still needed?
-func (s *System) FromID(ID string) Device {
-	return s.Devices[ID]
+func (s *System) FromID(ID string) *Device {
+	dev := s.Devices[ID]
+	return &dev
 }

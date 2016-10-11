@@ -63,16 +63,16 @@ func main() {
 		d := d
 		go func() {
 			// If the device requires a connection pool, init all of the connections
-			if d.Connections() != nil {
+			if d.Connections != nil {
 				log.V("%s init connections", d)
-				err := d.Connections().Init()
+				err := d.Connections.Init()
 				if err != nil {
 					log.E("%s failed to init connection pool: %s", d, err)
 				} else {
 					log.V("%s connected", d)
 				}
 			}
-			eb.AddProducer(d)
+			eb.AddProducer(&d)
 		}()
 	}
 

@@ -19,7 +19,7 @@ func (b *tcp600gwbCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcp.TurnOn(d.Address(), z.Address, d.Auth().Token)
+				return connectedbytcp.TurnOn(d.Address, z.Address, d.Auth.Token)
 			},
 			Friendly: "tcp600gwbCmdBuilder.ZoneTurnOn",
 		}, nil
@@ -29,7 +29,7 @@ func (b *tcp600gwbCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcp.TurnOff(d.Address(), z.Address, d.Auth().Token)
+				return connectedbytcp.TurnOff(d.Address, z.Address, d.Auth.Token)
 			},
 			Friendly: "tcp600gwbCmdBuilder.ZoneTurnOff",
 		}, nil
@@ -39,7 +39,7 @@ func (b *tcp600gwbCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcp.SetLevel(d.Address(), z.Address, d.Auth().Token, int32(command.Level.Value))
+				return connectedbytcp.SetLevel(d.Address, z.Address, d.Auth.Token, int32(command.Level.Value))
 			},
 			Friendly: "tcp600gwbCmdBuilder.ZoneSetLevel",
 		}, nil

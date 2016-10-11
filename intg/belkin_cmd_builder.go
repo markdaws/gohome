@@ -19,7 +19,7 @@ func (b *belkinCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return belkin.TurnOn(d.Address())
+				return belkin.TurnOn(d.Address)
 			},
 			Friendly: "belkinCmdBuilder.ZoneTurnOn",
 		}, nil
@@ -29,7 +29,7 @@ func (b *belkinCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return belkin.TurnOff(d.Address())
+				return belkin.TurnOff(d.Address)
 			},
 			Friendly: "belkinCmdBuilder.ZoneTurnOff",
 		}, nil

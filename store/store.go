@@ -130,7 +130,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 				log.V("unknown command builder id: %s, failed to add device to system", d.CmdBuilder.ID)
 				continue
 			}
-			dev.SetCmdBuilder(builder)
+			dev.CmdBuilder = builder
 		}
 
 		if d.ConnPool != nil {
@@ -145,11 +145,11 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 				log.V("failed to create device connection pool: %s", err)
 				continue
 			}
-			dev.SetConnections(pool)
+			dev.Connections = pool
 		}
 
 		if auth != nil {
-			dev.Auth().Authenticator = dev
+			dev.Auth.Authenticator = &dev
 		}
 
 		err = sys.AddDevice(dev)
@@ -174,7 +174,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			if !ok {
 				return nil, fmt.Errorf("invalid hub ID: %s", d.HubID)
 			}
-			dev.SetHub(hub)
+			dev.Hub = &hub
 		}
 
 		for _, btn := range d.Buttons {
@@ -187,7 +187,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			}
 
 			//TODO: Add button function
-			dev.Buttons()[b.Address] = b
+			dev.Buttons[b.Address] = b
 			sys.AddButton(b)
 		}
 
@@ -197,7 +197,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 				ID:          zn.ID,
 				Name:        zn.Name,
 				Description: zn.Description,
-				DeviceID:    dev.ID(),
+				DeviceID:    dev.ID,
 				Type:        zone.TypeFromString(zn.Type),
 				Output:      zone.OutputFromString(zn.Output),
 				Controller:  zn.Controller,
@@ -241,18 +241,18 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 				finalCmd = &cmd.ButtonPress{
 					ButtonAddress: btn.Address,
 					ButtonID:      btn.ID,
-					DeviceName:    btn.Device.Name(),
-					DeviceAddress: btn.Device.Address(),
-					DeviceID:      btn.Device.ID(),
+					DeviceName:    btn.Device.Name,
+					DeviceAddress: btn.Device.Address,
+					DeviceID:      btn.Device.ID,
 				}
 			case "buttonRelease":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
 				finalCmd = &cmd.ButtonRelease{
 					ButtonAddress: btn.Address,
 					ButtonID:      btn.ID,
-					DeviceName:    btn.Device.Name(),
-					DeviceAddress: btn.Device.Address(),
-					DeviceID:      btn.Device.ID(),
+					DeviceName:    btn.Device.Name,
+					DeviceAddress: btn.Device.Address,
+					DeviceID:      btn.Device.ID,
 				}
 			case "sceneSet":
 				scn := sys.Scenes[command.Attributes["SceneID"].(string)]
@@ -352,22 +352,22 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 	i = 0
 	out.Devices = make([]deviceJSON, len(s.Devices))
 	for _, device := range s.Devices {
-		hub := device.Hub()
+		hub := device.Hub
 		var hubID = ""
 		if hub != nil {
-			hubID = hub.ID()
+			hubID = hub.ID
 		}
 
 		var builderJson *cmdBuilderJSON
-		if device.CmdBuilder() != nil {
+		if device.CmdBuilder != nil {
 			builderJson = &cmdBuilderJSON{
-				ID: device.CmdBuilder().ID(),
+				ID: device.CmdBuilder.ID(),
 			}
 		}
 
 		var connPoolJson *connPoolJSON
-		if device.Connections() != nil {
-			config := device.Connections().Config()
+		if device.Connections != nil {
+			config := device.Connections.Config()
 			connPoolJson = &connPoolJSON{
 				Name:           config.Name,
 				PoolSize:       int32(config.Size),
@@ -377,19 +377,19 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			}
 		}
 		d := deviceJSON{
-			Address:     device.Address(),
-			ID:          device.ID(),
-			Name:        device.Name(),
-			Description: device.Description(),
+			Address:     device.Address,
+			ID:          device.ID,
+			Name:        device.Name,
+			Description: device.Description,
 			HubID:       hubID,
-			ModelNumber: device.ModelNumber(),
-			Stream:      device.Stream(),
+			ModelNumber: device.ModelNumber,
+			Stream:      device.Stream,
 			CmdBuilder:  builderJson,
 			ConnPool:    connPoolJson,
 		}
 
-		if device.Auth() != nil {
-			auth := device.Auth()
+		if device.Auth != nil {
+			auth := device.Auth
 			d.Auth = &authJSON{
 				Login:    auth.Login,
 				Password: auth.Password,
@@ -397,9 +397,9 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			}
 		}
 
-		d.Buttons = make([]buttonJSON, len(device.Buttons()))
+		d.Buttons = make([]buttonJSON, len(device.Buttons))
 		bi := 0
-		for _, btn := range device.Buttons() {
+		for _, btn := range device.Buttons {
 			d.Buttons[bi] = buttonJSON{
 				Address:     btn.Address,
 				ID:          btn.ID,
@@ -409,15 +409,15 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			bi++
 		}
 
-		d.Zones = make([]zoneJSON, len(device.Zones()))
+		d.Zones = make([]zoneJSON, len(device.Zones))
 		zi := 0
-		for _, z := range device.Zones() {
+		for _, z := range device.Zones {
 			d.Zones[zi] = zoneJSON{
 				Address:     z.Address,
 				ID:          z.ID,
 				Name:        z.Name,
 				Description: z.Description,
-				DeviceID:    device.ID(),
+				DeviceID:    device.ID,
 				Type:        z.Type.ToString(),
 				Output:      z.Output.ToString(),
 				Controller:  z.Controller,
@@ -425,10 +425,10 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			zi++
 		}
 
-		d.DeviceIDs = make([]string, len(device.Devices()))
+		d.DeviceIDs = make([]string, len(device.Devices))
 		di := 0
-		for _, dev := range device.Devices() {
-			d.DeviceIDs[di] = dev.ID()
+		for _, dev := range device.Devices {
+			d.DeviceIDs[di] = dev.ID
 			di++
 		}
 		out.Devices[i] = d

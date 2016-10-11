@@ -19,7 +19,7 @@ func (b *fluxwifiCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				pool := d.Connections()
+				pool := d.Connections
 				if pool == nil {
 					return fmt.Errorf("fluxwifiCmdBuilder - connection pool not ready")
 				}
@@ -41,7 +41,7 @@ func (b *fluxwifiCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				pool := d.Connections()
+				pool := d.Connections
 				if pool == nil {
 					return fmt.Errorf("fluxwifiCmdBuilder - connection pool not ready")
 				}
@@ -81,7 +81,7 @@ func (b *fluxwifiCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 					bV = rV
 				}
 
-				pool := d.Connections()
+				pool := d.Connections
 				if pool == nil {
 					return fmt.Errorf("fluxwifiCmdBuilder - connection pool not ready")
 				}

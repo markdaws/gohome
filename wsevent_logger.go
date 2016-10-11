@@ -79,7 +79,7 @@ func (l *wsEventLogger) StartConsumingEvents() chan<- event.Event {
 						dev := l.devicer.FromID(e.DeviceID)
 						var devName = "unknown"
 						if dev != nil {
-							devName = dev.Name()
+							devName = dev.Name
 						}
 						evt := jsonEvent{
 							ID:              strconv.Itoa(e.ID),

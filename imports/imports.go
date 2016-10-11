@@ -57,7 +57,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	var makeDevice = func(
 		modelNumber, name, address string,
 		deviceMap map[string]interface{},
-		hub gohome.Device,
+		hub *gohome.Device,
 		sys *gohome.System,
 		stream bool,
 		auth *comm.Auth) gohome.Device {
@@ -90,7 +90,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				Description: btnName,
 				Device:      device,
 			}
-			device.Buttons()[btnNumber] = b
+			device.Buttons[btnNumber] = b
 			system.AddButton(b)
 		}
 
@@ -116,7 +116,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				var buttonID string = strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
 				var buttonName = button["Name"].(string)
 
-				var btn = sbp.Buttons()[buttonID]
+				var btn = sbp.Buttons[buttonID]
 				scene := &gohome.Scene{
 					Address:     buttonID,
 					Name:        buttonName,
@@ -125,16 +125,16 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 						&cmd.ButtonPress{
 							ButtonAddress: btn.Address,
 							ButtonID:      btn.ID,
-							DeviceName:    sbp.Name(),
-							DeviceAddress: sbp.Address(),
-							DeviceID:      sbp.ID(),
+							DeviceName:    sbp.Name,
+							DeviceAddress: sbp.Address,
+							DeviceID:      sbp.ID,
 						},
 						&cmd.ButtonRelease{
 							ButtonAddress: btn.Address,
 							ButtonID:      btn.ID,
-							DeviceName:    sbp.Name(),
-							DeviceAddress: sbp.Address(),
-							DeviceID:      sbp.ID(),
+							DeviceName:    sbp.Name,
+							DeviceAddress: sbp.Address,
+							DeviceID:      sbp.ID,
 						},
 					},
 				}
@@ -149,7 +149,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	}
 
 	// First need to find the Smart Bridge Pro since it is needed to make scenes and zones
-	var sbp gohome.Device
+	var sbp *gohome.Device
 	for _, deviceMap := range devices {
 		device, ok := deviceMap.(map[string]interface{})
 		if !ok {
@@ -160,7 +160,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		if deviceID == smartBridgeProID {
 
 			//TODO: Don't hard code address
-			sbp = makeDevice(
+			dev := makeDevice(
 				"L-BDGPRO2-WH",
 				"Smart Bridge - Hub",
 				"192.168.0.10:23",
@@ -172,7 +172,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 					Login:    "lutron",
 					Password: "integration",
 				})
-			sbp.Auth().Authenticator = sbp
+			sbp = &dev
+			sbp.Auth.Authenticator = sbp
 
 			//TODO: Add command builder
 			//TODO: Add connection pool
@@ -196,7 +197,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	if sbp == nil {
 		return nil, errors.New("Did not find Smart Bridge Pro with ID:" + smartBridgeProID)
 	}
-	system.AddDevice(sbp)
+	system.AddDevice(*sbp)
 
 	for _, deviceMap := range devices {
 		device, ok := deviceMap.(map[string]interface{})
@@ -252,7 +253,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			Address:     zoneID,
 			Name:        zoneName,
 			Description: zoneName,
-			DeviceID:    sbp.ID(),
+			DeviceID:    sbp.ID,
 			Type:        zoneTypeFinal,
 			Output:      outputTypeFinal,
 		}
@@ -302,14 +303,14 @@ func importConnectedByTCP(system *gohome.System) {
 
 	builder, _ := intg.CmdBuilderFromID(system, "tcp600gwb")
 	fmt.Printf("%v\n", builder)
-	dev.SetCmdBuilder(builder)
+	dev.CmdBuilder = builder
 
 	zoneID := "216438039298518643"
 	z := &zone.Zone{
 		Address:     zoneID,
 		Name:        "bulb1",
 		Description: "tcp - bulb1",
-		DeviceID:    dev.ID(),
+		DeviceID:    dev.ID,
 		Type:        zone.ZTLight,
 		Output:      zone.OTContinuous,
 	}
@@ -331,23 +332,23 @@ func importFluxWIFI(system *gohome.System) {
 	)
 
 	builder, _ := intg.CmdBuilderFromID(system, "fluxwifi")
-	dev.SetCmdBuilder(builder)
+	dev.CmdBuilder = builder
 
 	pool, _ := comm.NewConnectionPool(comm.ConnectionPoolConfig{
-		Name:           dev.Name(),
+		Name:           dev.Name,
 		Size:           2,
 		ConnectionType: "telnet",
-		Address:        dev.Address(),
+		Address:        dev.Address,
 		TelnetPingCmd:  "",
 	})
-	dev.SetConnections(pool)
+	dev.Connections = pool
 	system.AddDevice(dev)
 
 	z := &zone.Zone{
 		Address:     "1",
 		Name:        "flux bulb 1",
 		Description: "",
-		DeviceID:    dev.ID(),
+		DeviceID:    dev.ID,
 		Type:        zone.ZTLight,
 		Output:      zone.OTRGB,
 	}
@@ -382,7 +383,7 @@ func importBelkin(system *gohome.System) {
 		nil)
 
 	builder, err := intg.CmdBuilderFromID(system, "belkin-wemo-insight")
-	dev.SetCmdBuilder(builder)
+	dev.CmdBuilder = builder
 	system.AddDevice(dev)
 
 	z := &zone.Zone{
@@ -390,7 +391,7 @@ func importBelkin(system *gohome.System) {
 		Address:     "1",
 		Name:        bd.FriendlyName,
 		Description: "",
-		DeviceID:    dev.ID(),
+		DeviceID:    dev.ID,
 		Type:        zone.ZTOutlet,
 		Output:      zone.OTBinary,
 	}

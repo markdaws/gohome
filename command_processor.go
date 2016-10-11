@@ -64,10 +64,8 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 		var zCmd *cmd.Func
 		var err error
-		if d.CmdBuilder() != nil {
-			zCmd, err = d.CmdBuilder().Build(command)
-		} else {
-			zCmd, err = d.BuildCommand(command)
+		if d.CmdBuilder != nil {
+			zCmd, err = d.CmdBuilder.Build(command)
 		}
 		if err != nil {
 			return err
@@ -86,10 +84,8 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 		var zCmd *cmd.Func
 		var err error
-		if d.CmdBuilder() != nil {
-			zCmd, err = d.CmdBuilder().Build(command)
-		} else {
-			zCmd, err = d.BuildCommand(command)
+		if d.CmdBuilder != nil {
+			zCmd, err = d.CmdBuilder.Build(command)
 		}
 		if err != nil {
 			return err
@@ -108,10 +104,8 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 		var zCmd *cmd.Func
 		var err error
-		if d.CmdBuilder() != nil {
-			zCmd, err = d.CmdBuilder().Build(command)
-		} else {
-			zCmd, err = d.BuildCommand(command)
+		if d.CmdBuilder != nil {
+			zCmd, err = d.CmdBuilder.Build(command)
 		}
 		if err != nil {
 			return err
@@ -138,11 +132,17 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 
 		// The hub is the device that is used to talk to the target device. If the device
 		// doesn't have a hub it is assumed to be a hub
-		hub := b.Device.Hub()
+		hub := b.Device.Hub
 		if hub == nil {
-			hub = b.Device
+			hub = &b.Device
 		}
-		bCmd, err := hub.BuildCommand(command)
+
+		//TODO: Remove hub or use it here
+		var err error
+		var bCmd *cmd.Func
+		if b.Device.CmdBuilder != nil {
+			bCmd, err = b.Device.CmdBuilder.Build(command)
+		}
 		if err != nil {
 			return err
 		}
@@ -153,11 +153,17 @@ func (cp *commandProcessor) Enqueue(c cmd.Command) error {
 		if !ok {
 			return fmt.Errorf("unknown button ID %s", command.ButtonID)
 		}
-		hub := b.Device.Hub()
+		hub := b.Device.Hub
 		if hub == nil {
-			hub = b.Device
+			hub = &b.Device
 		}
-		bCmd, err := hub.BuildCommand(command)
+
+		//TODO: remove hub or use it here
+		var err error
+		var bCmd *cmd.Func
+		if b.Device.CmdBuilder != nil {
+			bCmd, err = b.Device.CmdBuilder.Build(command)
+		}
 		if err != nil {
 			return err
 		}

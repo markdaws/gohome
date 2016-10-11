@@ -1,6 +1,7 @@
 // Package fluxwifi provides methods to control flux WIFI bulbs
 package fluxwifi
 
+//TODO: move to go-home-iot org
 import (
 	"fmt"
 	"io"

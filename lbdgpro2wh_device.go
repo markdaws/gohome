@@ -1,5 +1,6 @@
 package gohome
 
+/*
 import (
 	"bufio"
 	"fmt"
@@ -22,31 +23,6 @@ type Lbdgpro2whDevice struct {
 
 func (d *Lbdgpro2whDevice) ModelNumber() string {
 	return "L-BDGPRO2-WH"
-}
-
-//TODO: Delete
-func (d *Lbdgpro2whDevice) InitConnections() {
-	//TODO: ERROR: d.Auth().Authenticator -> need to pass this to NewTelnetConnection
-	if d.Connections() != nil {
-		log.V("%s init connections", d)
-		err := d.Connections().Init()
-		if err != nil {
-			log.E("%s failed to init connection pool: %s", d, err)
-		} else {
-			log.V("%s connected", d)
-		}
-	}
-
-	//TODO: Remove
-	/*
-		d.pool = comm.NewConnectionPool(ConnectionPoolConfig{
-			Name: d.name,
-			Size: ps,
-			"telnet",
-			Address: d.Address(),
-			TelnetPingCmd: "#PING\r\n",
-		})
-	*/
 }
 
 func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan event.Event, <-chan bool) {
@@ -93,69 +69,6 @@ func (d *Lbdgpro2whDevice) Connect() (comm.Connection, error) {
 
 func (d *Lbdgpro2whDevice) ReleaseConnection(c comm.Connection) {
 	d.pool.Release(c)
-}
-
-func (d *Lbdgpro2whDevice) BuildCommand(c cmd.Command) (*cmd.Func, error) {
-	switch command := c.(type) {
-	case *cmd.ZoneSetLevel:
-		return &cmd.Func{
-			Func: func() error {
-				newCmd := &StringCommand{
-					Device: d,
-					Value:  "#OUTPUT," + command.ZoneAddress + ",1,%.2f\r\n",
-					Args:   []interface{}{command.Level.Value},
-				}
-				return newCmd.Execute()
-			},
-		}, nil
-	case *cmd.ZoneTurnOn:
-		return &cmd.Func{
-			Func: func() error {
-				newCmd := &StringCommand{
-					Device: d,
-					Value:  "#OUTPUT," + command.ZoneAddress + ",1,%.2f\r\n",
-					Args:   []interface{}{100.0},
-				}
-				return newCmd.Execute()
-			},
-		}, nil
-	case *cmd.ZoneTurnOff:
-		return &cmd.Func{
-			Func: func() error {
-				newCmd := &StringCommand{
-					Device: d,
-					Value:  "#OUTPUT," + command.ZoneAddress + ",1,%.2f\r\n",
-					Args:   []interface{}{0.0},
-				}
-				return newCmd.Execute()
-			},
-		}, nil
-	case *cmd.ButtonPress:
-		return &cmd.Func{
-			Func: func() error {
-				newCmd := &StringCommand{
-					Device: d,
-					//TODO: This device also has a local id of 1 which we have to send as well as
-					//an actual IP address... fix
-					Value: "#DEVICE," + command.DeviceAddress + "," + command.ButtonAddress + ",3\r\n",
-				}
-				return newCmd.Execute()
-			},
-		}, nil
-	case *cmd.ButtonRelease:
-		return &cmd.Func{
-			Func: func() error {
-				cmd := &StringCommand{
-					Device: d,
-					Value:  "#DEVICE," + command.DeviceAddress + "," + command.ButtonAddress + ",4\r\n",
-				}
-				return cmd.Execute()
-			},
-		}, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported command type")
-	}
 }
 
 func (d *Lbdgpro2whDevice) startStreaming() {
@@ -218,12 +131,10 @@ func (d *Lbdgpro2whDevice) stream() error {
 	}
 	return nil
 
-	/*
-		//TODO: When?
-		if d.evpDone != nil {
-			close(d.evpDone)
-		}
-	*/
+	//TODO: When?
+	//if d.evpDone != nil {
+	//close(d.evpDone)
+	//}
 }
 
 func (d *Lbdgpro2whDevice) parseCommandString(cmd string) cmd.Command {
@@ -317,3 +228,4 @@ func (d *Lbdgpro2whDevice) parseZoneCommand(command string) cmd.Command {
 
 	return finalCmd
 }
+*/

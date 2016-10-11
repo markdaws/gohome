@@ -16,6 +16,8 @@ func CmdBuilderFromID(system *gohome.System, ID string) (cmd.Builder, error) {
 		return &fluxwifiCmdBuilder{system}, nil
 	case "tcp600gwb":
 		return &tcp600gwbCmdBuilder{system}, nil
+	case "l-bdgpro2-wh":
+		return &lbdgpro2whCmdBuilder{system}, nil
 	default:
 		return nil, fmt.Errorf("unsupported command builder ID %s", ID)
 	}

@@ -679,17 +679,17 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 				finalCmd = &cmd.ButtonPress{
 					ButtonAddress: button.Address,
 					ButtonID:      button.ID,
-					DeviceName:    button.Device.Name(),
-					DeviceAddress: button.Device.Address(),
-					DeviceID:      button.Device.ID(),
+					DeviceName:    button.Device.Name,
+					DeviceAddress: button.Device.Address,
+					DeviceID:      button.Device.ID,
 				}
 			} else {
 				finalCmd = &cmd.ButtonRelease{
 					ButtonAddress: button.Address,
 					ButtonID:      button.ID,
-					DeviceName:    button.Device.Name(),
-					DeviceAddress: button.Device.Address(),
-					DeviceID:      button.Device.ID(),
+					DeviceName:    button.Device.Name,
+					DeviceAddress: button.Device.Address,
+					DeviceID:      button.Device.ID,
 				}
 			}
 
@@ -860,7 +860,7 @@ func apiButtonsHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 			buttons[i] = jsonButton{
 				ID:       button.ID,
 				Name:     button.Name,
-				FullName: button.Device.Name() + " / " + button.Name,
+				FullName: button.Device.Name + " / " + button.Name,
 			}
 			i++
 		}
@@ -948,11 +948,11 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		var i int32
 		for _, device := range system.Devices {
 			devices[i] = jsonDevice{
-				Address:     device.Address(),
-				ID:          device.ID(),
-				Name:        device.Name(),
-				Description: device.Description(),
-				ModelNumber: device.ModelNumber(),
+				Address:     device.Address,
+				ID:          device.ID,
+				Name:        device.Name,
+				Description: device.Description,
+				ModelNumber: device.ModelNumber,
 			}
 			i++
 		}
@@ -1036,7 +1036,7 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		data.ClientID = ""
-		data.ID = d.ID()
+		data.ID = d.ID
 		json.NewEncoder(w).Encode(data)
 	}
 }

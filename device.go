@@ -10,6 +10,10 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+//TODO: Search all refs to gohome.Device or Device see if should be pointers
+/*
+
+//TODO: change to struct once lutron device refactored
 type Device interface {
 	Address() string
 	ID() string
@@ -21,6 +25,8 @@ type Device interface {
 	Buttons() map[string]*Button
 	Devices() map[string]Device
 	Zones() map[string]*zone.Zone
+
+	//TODO: Remove
 	Auth() *comm.Auth
 
 	Connections() comm.ConnectionPool
@@ -30,8 +36,9 @@ type Device interface {
 	Connect() (comm.Connection, error)
 	//TODO: Remove
 	ReleaseConnection(comm.Connection)
+
 	Stream() bool
-	BuildCommand(cmd.Command) (*cmd.Func, error)
+
 	Hub() Device
 	SetHub(Device)
 	AddZone(*zone.Zone) error
@@ -45,28 +52,31 @@ type Device interface {
 	CmdBuilder() cmd.Builder
 	SetCmdBuilder(cmd.Builder)
 }
+*/
 
-type device struct {
-	address     string
-	id          string
-	name        string
-	description string
-	system      *System
-	hub         Device
+type Device struct {
+	Address     string
+	ID          string
+	Name        string
+	Description string
+	ModelNumber string
+	System      *System
+	Hub         *Device
+
 	//TODO: delete?
 	producesEvents bool
-	auth           *comm.Auth
-	buttons        map[string]*Button
-	devices        map[string]Device
-	zones          map[string]*zone.Zone
+	Auth           *comm.Auth
+	Buttons        map[string]*Button
+	Devices        map[string]Device
+	Zones          map[string]*zone.Zone
 
 	//TODO: Needed? Clean up
-	stream  bool
+	Stream  bool
 	evpDone chan bool
 	evpFire chan event.Event
 
-	cmdBuilder  cmd.Builder
-	connections comm.ConnectionPool
+	CmdBuilder  cmd.Builder
+	Connections comm.ConnectionPool
 }
 
 func NewDevice(
@@ -75,54 +85,52 @@ func NewDevice(
 	ID,
 	name,
 	description string,
-	hub Device,
+	hub *Device,
 	stream bool,
 	auth *comm.Auth) Device {
-	device := device{
-		address:     address,
-		id:          ID,
-		name:        name,
-		description: description,
-		hub:         hub,
-		stream:      stream,
-		buttons:     make(map[string]*Button),
-		devices:     make(map[string]Device),
-		zones:       make(map[string]*zone.Zone),
-		auth:        auth,
+	device := Device{
+		Address:     address,
+		ID:          ID,
+		Name:        name,
+		Description: description,
+		Hub:         hub,
+		Buttons:     make(map[string]*Button),
+		Devices:     make(map[string]Device),
+		Zones:       make(map[string]*zone.Zone),
+		Stream:      stream,
+		Auth:        auth,
 	}
 
-	switch modelNumber {
-	case "":
-		device.producesEvents = false
-		return &genericDevice{device: device}
-	case "L-BDGPRO2-WH":
-		device.producesEvents = true
-		return &Lbdgpro2whDevice{device: device}
-	default:
-		return nil
-	}
+	return device
+	/*
+		switch modelNumber {
+		case "":
+			device.producesEvents = false
+			return &genericDevice{device: device}
+
+				//TODO: Remove
+					case "L-BDGPRO2-WH":
+						device.producesEvents = true
+						return &Lbdgpro2whDevice{device: device}
+		default:
+			return nil
+		}*/
 }
 
-func (d *device) CmdBuilder() cmd.Builder {
-	return d.cmdBuilder
+//TODO: Delete
+func (d *Device) Authenticate(comm.Connection) error {
+	return nil
 }
 
-func (d *device) SetCmdBuilder(b cmd.Builder) {
-	d.cmdBuilder = b
+//TODO: Delete
+func (d *Device) StartProducingEvents() (<-chan event.Event, <-chan bool) {
+	return nil, nil
 }
 
-func (d *device) Connections() comm.ConnectionPool {
-	return d.connections
-}
-
-func (d *device) SetConnections(c comm.ConnectionPool) {
-	d.connections = c
-}
-
-func (d *device) Validate() *validation.Errors {
+func (d *Device) Validate() *validation.Errors {
 	errors := &validation.Errors{}
 
-	if d.name == "" {
+	if d.Name == "" {
 		errors.Add("required field", "Name")
 	}
 
@@ -132,70 +140,26 @@ func (d *device) Validate() *validation.Errors {
 	return nil
 }
 
-func (d *device) Address() string {
-	return d.address
-}
-
-func (d *device) ID() string {
-	return d.id
-}
-
-func (d *device) Name() string {
-	return d.name
-}
-
-func (d *device) Description() string {
-	return d.description
-}
-
-func (d *device) Auth() *comm.Auth {
-	return d.auth
-}
-
-func (d *device) Buttons() map[string]*Button {
-	return d.buttons
-}
-
-func (d *device) Devices() map[string]Device {
-	return d.devices
-}
-
-func (d *device) Zones() map[string]*zone.Zone {
-	return d.zones
-}
-
-func (d *device) Stream() bool {
-	return d.stream
-}
-
-func (d *device) ProducesEvents() bool {
+func (d *Device) ProducesEvents() bool {
 	return d.producesEvents
 }
 
-func (d *device) String() string {
-	return fmt.Sprintf("Device[%s]", d.Name())
+func (d *Device) String() string {
+	return fmt.Sprintf("Device[%s]", d.Name)
 }
 
-func (d *device) Hub() Device {
-	return d.hub
-}
-
-func (d *device) SetHub(h Device) {
-	d.hub = h
-}
-
-func (d *device) AddZone(z *zone.Zone) error {
+func (d *Device) AddZone(z *zone.Zone) error {
 	errs := &validation.Errors{}
 
 	// Make sure zone doesn't have same address as any other zone
-	for _, cz := range d.zones {
+	for _, cz := range d.Zones {
 		if cz.Address == z.Address {
 			errs.Add(fmt.Sprintf("device already has a zone with the same address [%s], must be unique", z.Address), "Address")
 			return errs
 		}
 	}
 
-	d.zones[z.Address] = z
+	d.Zones[z.Address] = z
 	//TODO
 	/*
 		// Verify controller is supported by the device
@@ -207,11 +171,11 @@ func (d *device) AddZone(z *zone.Zone) error {
 	return nil
 }
 
-func (d *device) AddDevice(cd Device) error {
-	if _, ok := d.devices[cd.Address()]; ok {
-		return fmt.Errorf("device with address: %s already added to parent device", cd.Address())
+func (d *Device) AddDevice(cd Device) error {
+	if _, ok := d.Devices[cd.Address]; ok {
+		return fmt.Errorf("device with address: %s already added to parent device", cd.Address)
 	}
 
-	d.devices[cd.Address()] = cd
+	d.Devices[cd.Address] = cd
 	return nil
 }
