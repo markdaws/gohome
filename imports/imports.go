@@ -173,10 +173,21 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 					Password: "integration",
 				})
 			sbp = &dev
-			sbp.Auth.Authenticator = sbp
 
-			//TODO: Add command builder
-			//TODO: Add connection pool
+			builder, _ := intg.CmdBuilderFromID(system, "l-bdgpro2-wh")
+			//TODO: Err
+			sbp.CmdBuilder = builder
+
+			pool, _ := comm.NewConnectionPool(comm.ConnectionPoolConfig{
+				Name:           sbp.Name,
+				Size:           2,
+				ConnectionType: "telnet",
+				Address:        sbp.Address,
+				TelnetPingCmd:  "",
+				TelnetAuth:     &comm.TelnetAuthenticator{*sbp.Auth},
+			})
+			sbp.Connections = pool
+
 			//TODO: Add event parser
 
 			// TODO: Phantom device still needed?

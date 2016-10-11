@@ -10,50 +10,6 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
-//TODO: Search all refs to gohome.Device or Device see if should be pointers
-/*
-
-//TODO: change to struct once lutron device refactored
-type Device interface {
-	Address() string
-	ID() string
-	Name() string
-	Description() string
-
-	// TODO: Really needed, shouldn't use for logic
-	ModelNumber() string
-	Buttons() map[string]*Button
-	Devices() map[string]Device
-	Zones() map[string]*zone.Zone
-
-	//TODO: Remove
-	Auth() *comm.Auth
-
-	Connections() comm.ConnectionPool
-	SetConnections(comm.ConnectionPool)
-
-	//TODO: Remove
-	Connect() (comm.Connection, error)
-	//TODO: Remove
-	ReleaseConnection(comm.Connection)
-
-	Stream() bool
-
-	Hub() Device
-	SetHub(Device)
-	AddZone(*zone.Zone) error
-	AddDevice(Device) error
-	Validate() *validation.Errors
-
-	comm.Authenticator
-	event.Producer
-	fmt.Stringer
-
-	CmdBuilder() cmd.Builder
-	SetCmdBuilder(cmd.Builder)
-}
-*/
-
 type Device struct {
 	Address     string
 	ID          string
@@ -61,22 +17,21 @@ type Device struct {
 	Description string
 	ModelNumber string
 	System      *System
-	Hub         *Device
+	Buttons     map[string]*Button
+	Devices     map[string]Device
+	Zones       map[string]*zone.Zone
+	CmdBuilder  cmd.Builder
+	Connections comm.ConnectionPool
+	Auth        *comm.Auth
 
 	//TODO: delete?
 	producesEvents bool
-	Auth           *comm.Auth
-	Buttons        map[string]*Button
-	Devices        map[string]Device
-	Zones          map[string]*zone.Zone
+	Hub            *Device
 
 	//TODO: Needed? Clean up
 	Stream  bool
 	evpDone chan bool
 	evpFire chan event.Event
-
-	CmdBuilder  cmd.Builder
-	Connections comm.ConnectionPool
 }
 
 func NewDevice(
@@ -102,24 +57,6 @@ func NewDevice(
 	}
 
 	return device
-	/*
-		switch modelNumber {
-		case "":
-			device.producesEvents = false
-			return &genericDevice{device: device}
-
-				//TODO: Remove
-					case "L-BDGPRO2-WH":
-						device.producesEvents = true
-						return &Lbdgpro2whDevice{device: device}
-		default:
-			return nil
-		}*/
-}
-
-//TODO: Delete
-func (d *Device) Authenticate(comm.Connection) error {
-	return nil
 }
 
 //TODO: Delete

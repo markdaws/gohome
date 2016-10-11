@@ -56,7 +56,6 @@ func main() {
 		//TODO: New systems, should have a blank system, create if not found
 	}
 	sys.SavePath = config.StartupConfigPath
-
 	cp.SetSystem(sys)
 
 	for _, d := range sys.Devices {
@@ -76,7 +75,6 @@ func main() {
 		}()
 	}
 
-	//Start all the recipes
 	log.V("Starting recipes...")
 	for _, recipe := range sys.Recipes {
 		rm.RegisterAndStart(recipe)
@@ -86,7 +84,6 @@ func main() {
 	wsLogger := gohome.NewWSEventLogger(sys)
 	eb.AddConsumer(wsLogger)
 
-	// Start www server
 	done := make(chan bool)
 	go func() {
 		log.V("WWW Server starting, listening on port %s", config.WWWPort)

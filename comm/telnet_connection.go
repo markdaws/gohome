@@ -14,12 +14,12 @@ type TelnetConnection struct {
 	status       ConnectionStatus
 	id           int
 	addr         string
-	auth         Authenticator
+	auth         *TelnetAuthenticator
 }
 
 var id = 1
 
-func NewTelnetConnection(addr string, auth Authenticator) *TelnetConnection {
+func NewTelnetConnection(addr string, auth *TelnetAuthenticator) *TelnetConnection {
 	c := TelnetConnection{
 		status: CSNew,
 		addr:   addr,

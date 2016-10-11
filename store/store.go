@@ -134,22 +134,23 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 		}
 
 		if d.ConnPool != nil {
+			var authenticator *comm.TelnetAuthenticator
+			if d.ConnPool.ConnectionType == "telnet" && auth != nil {
+				authenticator = &comm.TelnetAuthenticator{*auth}
+			}
 			pool, err := comm.NewConnectionPool(comm.ConnectionPoolConfig{
 				Name:           d.ConnPool.Name,
 				Size:           int(d.ConnPool.PoolSize),
 				ConnectionType: d.ConnPool.ConnectionType,
 				Address:        d.ConnPool.Address,
 				TelnetPingCmd:  d.ConnPool.TelnetPingCmd,
+				TelnetAuth:     authenticator,
 			})
 			if err != nil {
 				log.V("failed to create device connection pool: %s", err)
 				continue
 			}
 			dev.Connections = pool
-		}
-
-		if auth != nil {
-			dev.Auth.Authenticator = &dev
 		}
 
 		err = sys.AddDevice(dev)

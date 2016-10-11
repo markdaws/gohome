@@ -14,8 +14,7 @@ type ConnectionPoolConfig struct {
 	ConnectionType string
 	Address        string
 	TelnetPingCmd  string
-
-	//TODO: Authorization
+	TelnetAuth     *TelnetAuthenticator
 }
 
 type ConnectionPool interface {
@@ -34,7 +33,7 @@ func NewConnectionPool(config ConnectionPoolConfig) (ConnectionPool, error) {
 	switch config.ConnectionType {
 	case "telnet":
 		newConnection = func() Connection {
-			conn := NewTelnetConnection(config.Address, nil)
+			conn := NewTelnetConnection(config.Address, config.TelnetAuth)
 
 			if config.TelnetPingCmd != "" {
 				conn.SetPingCallback(func() error {
