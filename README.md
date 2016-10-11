@@ -56,7 +56,7 @@ The goHome server is developed using golang (http://golang.org) In order to deve
 The web UI is developed using the React framework: https://facebook.github.io/react/ In order to develop the web UI:
  1. Setup the goHome Server, following the above instructions
  2. Install node.js: https://nodejs.org
- 3. Change to the root gohome directory
+ 3. Change to the gohome/www directory
  4. Run:
  
  ```bash
