@@ -66,36 +66,36 @@ func (s *wwwServer) listenAndServe(port string) error {
 	// Websocket handler
 	r.HandleFunc("/api/v1/events/ws", s.eventLogger.HTTPHandler())
 
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes",
+	r.HandleFunc("/api/v1/scenes",
 		apiScenesHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}",
+	r.HandleFunc("/api/v1/scenes/{id}",
 		apiSceneHandlerUpdate(s.system, s.recipeManager)).Methods("PUT")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes",
+	r.HandleFunc("/api/v1/scenes",
 		apiSceneHandlerCreate(s.system, s.recipeManager)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands/{index}",
+	r.HandleFunc("/api/v1/scenes/{sceneId}/commands/{index}",
 		apiSceneHandlerCommandDelete(s.system, s.recipeManager)).Methods("DELETE")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{sceneId}/commands",
+	r.HandleFunc("/api/v1/scenes/{sceneId}/commands",
 		apiSceneHandlerCommandAdd(s.system, s.recipeManager)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/{id}",
+	r.HandleFunc("/api/v1/scenes/{id}",
 		apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
-	r.HandleFunc("/api/v1/systems/{systemId}/scenes/active",
+	r.HandleFunc("/api/v1/scenes/active",
 		apiActiveScenesHandler(s.system)).Methods("POST")
 
-	r.HandleFunc("/api/v1/systems/{systemId}/buttons",
+	r.HandleFunc("/api/v1/buttons",
 		apiButtonsHandler(s.system)).Methods("GET")
 
-	r.HandleFunc("/api/v1/systems/{systemId}/zones",
+	r.HandleFunc("/api/v1/zones",
 		apiZonesHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/systems/{systemId}/zones",
+	r.HandleFunc("/api/v1/zones",
 		apiAddZoneHandler(s.system)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/zones/{id}",
+	r.HandleFunc("/api/v1/zones/{id}",
 		apiZoneHandler(s.system)).Methods("PUT")
 
-	r.HandleFunc("/api/v1/systems/{systemId}/devices",
+	r.HandleFunc("/api/v1/devices",
 		apiDevicesHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/systems/{systemId}/devices",
+	r.HandleFunc("/api/v1/devices",
 		apiAddDeviceHandler(s.system)).Methods("POST")
-	r.HandleFunc("/api/v1/systems/{systemId}/devices/{id}",
+	r.HandleFunc("/api/v1/devices/{id}",
 		apiDeviceHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
 
 	r.HandleFunc("/api/v1/discovery/{modelNumber}",
