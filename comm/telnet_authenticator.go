@@ -10,6 +10,8 @@ type TelnetAuthenticator struct {
 }
 
 func (a *TelnetAuthenticator) Authenticate(c Connection) error {
+	//TODO: Make more generic, lutron specific right now
+	//have loing string, password string to read for certain chars
 	r := bufio.NewReader(c)
 	_, err := r.ReadString(':')
 	if err != nil {

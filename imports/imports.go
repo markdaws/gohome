@@ -103,8 +103,6 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			return errors.New("Missing Buttons key, or value not array")
 		}
 
-		//TODO: remove
-		//var deviceID string = strconv.FormatFloat(deviceMap["ID"].(float64), 'f', 0, 64)
 		for _, buttonMap := range buttons {
 			button, ok := buttonMap.(map[string]interface{})
 			if !ok {

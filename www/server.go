@@ -1008,6 +1008,7 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 				Token: data.Token,
 			}
 		}
+
 		//TODO: Don't pass in ID
 		d := gohome.NewDevice(
 			data.ModelNumber,

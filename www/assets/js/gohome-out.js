@@ -50,9 +50,9 @@
 	var ReactDOM = __webpack_require__(158);
 	var ControlApp = __webpack_require__(159);
 	var Provider = __webpack_require__(160).Provider;
-	var store = __webpack_require__(233);
+	var store = __webpack_require__(240);
 
-	var Testr = __webpack_require__(241);
+	var Testr = __webpack_require__(248);
 
 	//TODO: Remove - testing
 	/*
@@ -19772,14 +19772,14 @@
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(160);
 	var System = __webpack_require__(189);
-	var SceneList = __webpack_require__(203);
-	var ZoneList = __webpack_require__(212);
-	var Logging = __webpack_require__(217);
-	var RecipeApp = __webpack_require__(219);
-	var Constants = __webpack_require__(209);
-	var SceneActions = __webpack_require__(208);
-	var SystemActions = __webpack_require__(232);
-	var ZoneActions = __webpack_require__(216);
+	var SceneList = __webpack_require__(207);
+	var ZoneList = __webpack_require__(220);
+	var Logging = __webpack_require__(225);
+	var RecipeApp = __webpack_require__(227);
+	var Constants = __webpack_require__(203);
+	var SceneActions = __webpack_require__(218);
+	var SystemActions = __webpack_require__(206);
+	var ZoneActions = __webpack_require__(224);
 
 	var ControlApp = React.createClass({
 	    displayName: 'ControlApp',
@@ -21671,7 +21671,7 @@
 
 	var React = __webpack_require__(1);
 	var Import = __webpack_require__(190);
-	var SystemDeviceList = __webpack_require__(202);
+	var SystemDeviceList = __webpack_require__(205);
 
 	var System = React.createClass({
 	    displayName: 'System',
@@ -22679,7 +22679,7 @@
 	var UniqueIdMixin = __webpack_require__(193);
 	var InputValidationMixin = __webpack_require__(194);
 	var SaveBtn = __webpack_require__(195);
-	var Api = __webpack_require__(211);
+	var Api = __webpack_require__(202);
 
 	var DeviceInfo = React.createClass({
 	    displayName: 'DeviceInfo',
@@ -22910,943 +22910,7 @@
 
 	'use strict';
 
-	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(160);
-	var DeviceInfo = __webpack_require__(201);
-	var SystemActions = __webpack_require__(232);
-
-	var SystemDeviceList = React.createClass({
-	    displayName: 'SystemDeviceList',
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            devices: []
-	        };
-	    },
-
-	    newClicked: function newClicked() {
-	        this.props.deviceNew();
-	    },
-
-	    render: function render() {
-	        var deviceNodes = this.props.devices.map(function (device) {
-	            return React.createElement(DeviceInfo, {
-	                name: device.name,
-	                description: device.description,
-	                address: device.address,
-	                modelNumber: device.modelNumber,
-	                id: device.id,
-	                clientId: device.clientId,
-	                readOnlyFields: 'id',
-	                key: device.id || device.clientId,
-	                deviceDelete: this.props.deviceDelete,
-	                savedDevice: this.props.savedDevice });
-	        }.bind(this));
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-DeviceList' },
-	            React.createElement(
-	                'div',
-	                { className: 'header clearfix' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-primary pull-right', onClick: this.newClicked },
-	                    'New Device'
-	                )
-	            ),
-	            React.createElement(
-	                'h3',
-	                { className: this.props.devices.length > 0 ? "" : " hidden" },
-	                'Devices'
-	            ),
-	            deviceNodes
-	        );
-	    }
-	});
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        deviceNew: function deviceNew() {
-	            dispatch(SystemActions.deviceNew());
-	        },
-	        deviceDelete: function deviceDelete(id, clientId) {
-	            dispatch(SystemActions.deviceDelete(id, clientId));
-	        },
-	        savedDevice: function savedDevice(clientId, data) {
-	            dispatch(SystemActions.savedDevice(clientId, data));
-	        }
-	    };
-	}
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(SystemDeviceList);
-
-/***/ },
-/* 203 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(158);
-	var Redux = __webpack_require__(167);
-	var ReactRedux = __webpack_require__(160);
-	var Scene = __webpack_require__(204);
-	var SceneInfo = __webpack_require__(205);
-	var UniqueIdMixin = __webpack_require__(193);
-	var SceneActions = __webpack_require__(208);
-
-	var SceneList = React.createClass({
-	    displayName: 'SceneList',
-
-	    mixins: [UniqueIdMixin],
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            editMode: false
-	        };
-	    },
-
-	    _onChange: function _onChange() {
-	        this.forceUpdate();
-	    },
-
-	    edit: function edit() {
-	        this.setState({ editMode: true });
-	    },
-
-	    endEdit: function endEdit() {
-	        this.setState({ editMode: false });
-	    },
-
-	    render: function render() {
-	        var body;
-	        var btns;
-
-	        var scenes = this.props.scenes.items;
-	        if (this.state.editMode) {
-	            body = scenes.map(function (scene) {
-	                var saveState;
-
-	                // Check for input validation errors from the server
-	                saveState = this.props.scenes.saveState[scene.clientId || scene.id] || {};
-
-	                return React.createElement(SceneInfo, {
-	                    zones: this.props.zones,
-	                    buttons: this.props.buttons,
-	                    scenes: this.props.scenes.items,
-	                    scene: scene,
-	                    readOnlyFields: 'id',
-	                    key: scene.id || scene.clientId,
-	                    errors: (saveState.err || {}).validationErrors,
-	                    saveScene: this.props.saveScene,
-	                    updateScene: this.props.updateScene,
-	                    deleteScene: this.props.deleteScene,
-	                    addCommand: this.props.addCommand,
-	                    saveStatus: saveState.status });
-	            }.bind(this));
-	            btns = React.createElement(
-	                'div',
-	                { className: 'clearfix buttonWrapper' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-primary btnNew pull-left', onClick: this.props.newClientScene },
-	                    'New Scene'
-	                ),
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
-	                    'Done'
-	                )
-	            );
-	        } else {
-
-	            body = scenes.map(function (scene) {
-	                return React.createElement(Scene, { scene: scene, key: scene.id || scene.clientId });
-	            });
-	            btns = React.createElement(
-	                'div',
-	                { className: 'clearfix buttonWrapper' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-default btnEdit pull-right', onClick: this.edit },
-	                    React.createElement('i', { className: 'fa fa-cog', 'aria-hidden': 'true' })
-	                )
-	            );
-	        }
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-SceneList' },
-	            btns,
-	            body
-	        );
-	    }
-	});
-
-	function mapStateToProps(state) {
-	    return {};
-	}
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        newClientScene: function newClientScene() {
-	            dispatch(SceneActions.newClient());
-	        },
-	        saveScene: function saveScene(sceneJson) {
-	            dispatch(SceneActions.create(sceneJson));
-	        },
-	        updateScene: function updateScene(sceneJson) {
-	            dispatch(SceneActions.update(sceneJson));
-	        },
-	        deleteScene: function deleteScene(clientId, id) {
-	            if (clientId) {
-	                dispatch(SceneActions.destroyClient(clientId));
-	            } else {
-	                dispatch(SceneActions.destroy(id));
-	            }
-	        },
-	        addCommand: function addCommand(sceneId, cmdType) {
-	            dispatch(SceneActions.addCommand(sceneId, cmdType));
-	        }
-	    };
-	}
-
-	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
-
-/***/ },
-/* 204 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var Scene = React.createClass({
-	    displayName: 'Scene',
-
-	    handleClick: function handleClick(event) {
-	        $.ajax({
-	            url: '/api/v1/systems/1/scenes/active',
-	            type: 'POST',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify({ id: this.props.scene.id }),
-	            success: function (data) {
-	                //TODO: Common way in UI to display success/error
-	            }.bind(this),
-	            error: function (xhr, status, err) {
-	                console.error(err.toString());
-	            }.bind(this)
-	        });
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-Scene col-xs-6 col-sm-3 col-md-3 col-lg-3' },
-	            React.createElement(
-	                'a',
-	                { role: 'button', className: 'btn btn-primary scene', onClick: this.handleClick },
-	                React.createElement(
-	                    'div',
-	                    null,
-	                    React.createElement('i', { className: 'fa fa-sliders' })
-	                ),
-	                React.createElement(
-	                    'span',
-	                    { className: 'name' },
-	                    this.props.scene.name
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = Scene;
-
-/***/ },
-/* 205 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(160);
-	var SaveBtn = __webpack_require__(195);
-	var InputValidationMixin = __webpack_require__(194);
-	var UniqueIdMixin = __webpack_require__(193);
-	var CommandInfo = __webpack_require__(206);
-	var CommandTypePicker = __webpack_require__(207);
-	var SceneActions = __webpack_require__(208);
-
-	var SceneInfo = React.createClass({
-	    displayName: 'SceneInfo',
-
-	    mixins: [InputValidationMixin, UniqueIdMixin],
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            //TODO: remove
-	            buttons: []
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            id: this.props.scene.id || '',
-	            clientId: this.props.scene.clientId,
-	            name: this.props.scene.name || '',
-	            address: this.props.scene.address || '',
-	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
-	            errors: this.props.errors,
-
-	            // true if the object has been modified
-	            dirty: false,
-
-	            saveButtonStatus: this.saveStatus
-	        };
-	    },
-
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        if (nextProps.errors) {
-	            this.setState({ errors: nextProps.errors });
-	        }
-	        if (nextProps.saveStatus) {
-	            this.setState({ saveButtonStatus: nextProps.saveStatus });
-	        }
-	    },
-
-	    toJson: function toJson() {
-	        var s = this.state;
-	        return {
-	            id: this.state.id,
-	            name: this.state.name,
-	            address: this.state.address,
-	            managed: this.state.managed,
-	            clientId: this.state.clientId
-	        };
-	    },
-
-	    saveScene: function saveScene() {
-	        this.setState({ errors: null });
-	        var self = this;
-
-	        if (this.state.id === '') {
-	            //TODO: Update state on save, not dirty, has id not clientId
-	            this.props.saveScene(this.toJson());
-	        } else {
-	            //TODO: Verify state correct after successfully updated
-	            this.props.updateScene(this.toJson());
-	        }
-	    },
-
-	    deleteScene: function deleteScene() {
-	        this.props.deleteScene(this.state.clientId, this.state.id);
-	    },
-
-	    commandTypeChanged: function commandTypeChanged(cmdType) {
-	        this.props.addCommand(this.state.id, cmdType);
-	    },
-
-	    _inputChanged: function _inputChanged(evt) {
-	        this.setState({ saveButtonStatus: '' });
-
-	        // Lives in InputValidationMixin
-	        this.changed(evt);
-	    },
-
-	    render: function render() {
-	        var commandNodes;
-
-	        //TODO: remove
-	        this.state.managed = true;
-	        var self = this;
-	        if (this.state.managed) {
-	            var cmdIndex = 0;
-
-	            if (this.state.id === '') {
-	                commandNodes = React.createElement(
-	                    'p',
-	                    null,
-	                    'To add commands, first save the scene.'
-	                );
-	            } else {
-	                var commands = this.props.scene.commands || [];
-	                commandNodes = commands.map(function (command) {
-	                    //TODO: We need to give commands an ID on the server so we can have a proper index
-	                    var key = Math.random();
-	                    var info = React.createElement(CommandInfo, {
-	                        isNew: command.isNew,
-	                        scene: self.props.scene,
-	                        key: key,
-	                        index: cmdIndex,
-	                        scenes: self.props.scenes,
-	                        zones: self.props.zones,
-	                        buttons: self.props.buttons,
-	                        command: command });
-	                    cmdIndex++;
-	                    return info;
-	                });
-	                commandNodes = React.createElement(
-	                    'div',
-	                    null,
-	                    commandNodes,
-	                    'Add Command: ',
-	                    React.createElement(CommandTypePicker, { changed: this.commandTypeChanged })
-	                );
-	            }
-	        } else {
-	            commandNodes = React.createElement(
-	                'p',
-	                null,
-	                'The scene is controlled by a 3rd party device so we can\'t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.'
-	            );
-	        }
-
-	        var saveBtn;
-	        if (this.state.dirty) {
-	            var saveResult;
-	            saveBtn = React.createElement(
-	                'div',
-	                { className: 'pull-right' },
-	                React.createElement(SaveBtn, {
-	                    text: 'Save',
-	                    status: this.state.saveButtonStatus,
-	                    clicked: this.saveScene })
-	            );
-	        }
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-SceneInfo well well-sm' },
-	            React.createElement(
-	                'button',
-	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteScene },
-	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "name") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("name") },
-	                    'Name*'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.name,
-	                    'data-statepath': 'name',
-	                    onChange: this._inputChanged,
-	                    className: 'name form-control',
-	                    type: 'text',
-	                    id: this.uid("name") }),
-	                this.errMsg("name")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "id") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("id") },
-	                    'ID'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.id,
-	                    readOnly: this.isReadOnly("id"),
-	                    'data-statepath': 'id',
-	                    onChange: this._inputChanged,
-	                    className: 'id form-control',
-	                    type: 'text',
-	                    id: this.uid("id") }),
-	                this.errMsg("id")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "address") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("address") },
-	                    'Address'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.address,
-	                    'data-statepath': 'address',
-	                    onChange: this._inputChanged,
-	                    className: 'address form-control',
-	                    type: 'text',
-	                    id: this.uid("address") }),
-	                this.errMsg("address")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
-	                    'Edit Commands',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
-	                ),
-	                saveBtn
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse commands', id: this.uid("commands") },
-	                React.createElement(
-	                    'h3',
-	                    null,
-	                    'Commands'
-	                ),
-	                commandNodes
-	            )
-	        );
-	    }
-	});
-
-	module.exports = SceneInfo;
-
-/***/ },
-/* 206 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(160);
-	var ZoneSetLevelCommand = __webpack_require__(242);
-	var SceneSetCommand = __webpack_require__(244);
-	var SaveBtn = __webpack_require__(195);
-	var ButtonPressCommand = __webpack_require__(246);
-	var ButtonReleaseCommand = __webpack_require__(248);
-	var Api = __webpack_require__(211);
-	var Constants = __webpack_require__(209);
-	var SceneActions = __webpack_require__(208);
-
-	var CommandInfo = React.createClass({
-	    displayName: 'CommandInfo',
-
-	    deleteCommand: function deleteCommand() {
-	        //TODO: Show error in UI
-	        //TODO: Normalize middleware to handle showing error from API, standardize responses
-	        this.props.deleteCommand(this.props.scene.id, this.props.index, this.props.command.isNew);
-	    },
-
-	    saveCommand: function saveCommand() {
-	        var cmd = this.refs.cmd;
-	        this.setState({ errors: [] });
-
-	        var cmdJson = cmd.toJson();
-	        Api.sceneSaveCommand(this.props.scene.id, cmdJson, function (err, data) {
-	            if (err) {
-	                cmd.setErrors(err.validationErrors);
-	                return;
-	            }
-
-	            this.props.savedCommand(cmdJson, this.props.scene.id, this.props.index);
-	        }.bind(this));
-	    },
-
-	    render: function render() {
-	        var command = this.props.command;
-	        var saveBtn;
-	        if (this.props.command.isNew) {
-	            saveBtn = React.createElement(SaveBtn, {
-	                text: 'Save',
-	                status: '',
-	                clicked: this.saveCommand });
-	        }
-
-	        var uiCmd;
-	        switch (command.type) {
-	            case 'buttonPress':
-	                uiCmd = React.createElement(ButtonPressCommand, {
-	                    ref: 'cmd',
-	                    disabled: !this.props.command.isNew,
-	                    errors: (command.errors || {}).validationErrors,
-	                    buttons: this.props.buttons,
-	                    command: command });
-	                break;
-	            case 'buttonRelease':
-	                uiCmd = React.createElement(ButtonReleaseCommand, {
-	                    ref: 'cmd',
-	                    disabled: !this.props.command.isNew,
-	                    errors: (command.errors || {}).validationErrors,
-	                    buttons: this.props.buttons,
-	                    command: command });
-	                break;
-	            case 'zoneSetLevel':
-	                uiCmd = React.createElement(ZoneSetLevelCommand, {
-	                    ref: 'cmd',
-	                    disabled: !this.props.command.isNew,
-	                    errors: (command.errors || {}).validationErrors,
-	                    zones: this.props.zones,
-	                    command: command });
-	                break;
-	            case 'sceneSet':
-	                uiCmd = React.createElement(SceneSetCommand, {
-	                    ref: 'cmd',
-	                    disabled: !this.props.command.isNew,
-	                    parentSceneId: this.props.scene.id,
-	                    errors: (command.errors || {}).validationErrors,
-	                    scenes: this.props.scenes,
-	                    command: command });
-	                break;
-	            default:
-	                console.error('unknown command type: ' + command.type);
-	        }
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-CommandInfo well well-sm clearfix' },
-	            React.createElement(
-	                'button',
-	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteCommand },
-	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
-	            ),
-	            uiCmd,
-	            saveBtn
-	        );
-	    }
-	});
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        savedCommand: function savedCommand(cmdData, sceneId, cmdIndex) {
-	            dispatch({
-	                type: Constants.SCENE_COMMAND_SAVE_RAW,
-	                data: cmdData,
-	                sceneId: sceneId,
-	                cmdIndex: cmdIndex });
-	        },
-	        deleteCommand: function deleteCommand(sceneId, cmdIndex, isNew) {
-	            dispatch(SceneActions.deleteCommand(sceneId, cmdIndex, isNew));
-	        }
-	    };
-	}
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(CommandInfo);
-
-/***/ },
-/* 207 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var CommandTypePicker = React.createClass({
-	    displayName: 'CommandTypePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: '' });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-CommandTypePicker' },
-	            React.createElement(
-	                'select',
-	                { className: 'form-control', onChange: this.selected, value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select...'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'buttonPress' },
-	                    'Button Press'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'buttonRelease' },
-	                    'Button Release'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'sceneSet' },
-	                    'Scene Set'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'zoneSetLevel' },
-	                    'Zone Set Level'
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = CommandTypePicker;
-
-/***/ },
-/* 208 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(211);
-
-	var SceneActions = {
-
-	    loadAll: function loadAll() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_LOAD_ALL });
-
-	            Api.sceneLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-
-	                dispatch({ type: Constants.SCENE_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    },
-
-	    create: function create(sceneJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_CREATE, clientId: sceneJson.clientId });
-
-	            Api.sceneCreate(sceneJson, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, clientId: sceneJson.clientId });
-	                    return;
-	                }
-	                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, clientId: sceneJson.clientId });
-	            });
-	        };
-	    },
-
-	    update: function update(sceneJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_UPDATE, id: sceneJson.id });
-
-	            Api.sceneUpdate(sceneJson, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err, id: sceneJson.id });
-	                    return;
-	                }
-	                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data, id: sceneJson.id, sceneJson: sceneJson });
-	            });
-	        };
-	    },
-
-	    destroyClient: function destroyClient(clientId) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_DESTROY, clientId: clientId });
-	            dispatch({ type: Constants.SCENE_DESTROY_RAW, clientId: clientId });
-	        };
-	    },
-
-	    destroy: function destroy(id) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_DESTROY, id: id });
-
-	            Api.sceneDestroy(id, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_DESTROY_FAIL, err: err, id: id });
-	                    return;
-	                }
-	                dispatch({ type: Constants.SCENE_DESTROY_RAW, data: data, id: id });
-	            });
-	        };
-	    },
-
-	    addCommand: function addCommand(sceneId, cmdType) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_COMMAND_ADD, sceneId: sceneId, cmdType: cmdType });
-	        };
-	    },
-
-	    deleteCommand: function deleteCommand(sceneId, cmdIndex, isNew) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_COMMAND_DELETE, cmdIndex: cmdIndex, sceneId: sceneId });
-
-	            if (isNew) {
-	                // Client only
-	                dispatch({
-	                    type: Constants.SCENE_COMMAND_DELETE_RAW,
-	                    sceneId: sceneId,
-	                    cmdIndex: cmdIndex });
-	                return;
-	            }
-
-	            Api.sceneDeleteCommand(sceneId, cmdIndex, function (err, data) {
-	                if (err) {
-	                    dispatch({
-	                        type: Constants.SCENE_COMMAND_DELETE_FAIL,
-	                        sceneId: sceneId,
-	                        cmdIndex: cmdIndex,
-	                        err: err });
-	                    return;
-	                }
-	                dispatch({
-	                    type: Constants.SCENE_COMMAND_DELETE_RAW,
-	                    sceneId: sceneId,
-	                    cmdIndex: cmdIndex });
-	            });
-	        };
-	    },
-
-	    newClient: function newClient() {
-	        return {
-	            type: Constants.SCENE_NEW_CLIENT
-	        };
-	    }
-	};
-	module.exports = SceneActions;
-
-/***/ },
-/* 209 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var keyMirror = __webpack_require__(210);
-
-	/*
-	 The pattern here is that you have a actionType e.g. SCENE_DESTROY, responses from the
-	 server are then either <ACTION_TYPE>_RAW which indicates success and the payload will
-	 contain any raw data returned from the server, or <ACTION_TYPE>_FAIL which indicates
-	 failure. If the errors are handled localy inside a component, there may not be a corresponding
-	 _FAIL message
-	 */
-
-	module.exports = keyMirror({
-
-	    // Load all of the devices from the server
-	    DEVICE_LOAD_ALL: null,
-	    DEVICE_LOAD_ALL_RAW: null,
-	    DEVICE_LOAD_ALL_FAIL: null,
-
-	    // Adds a new device on the client
-	    DEVICE_NEW_CLIENT: null,
-
-	    // Creates a new device on the server
-	    DEVICE_CREATE: null,
-	    DEVICE_CREATE_RAW: null,
-	    DEVICE_CREATE_FAIL: null,
-
-	    // Deletes a device
-	    DEVICE_DESTROY: null,
-	    DEVICE_DESTROY_RAW: null,
-	    DEVICE_DESTROY_FAIL: null,
-
-	    // Load all of the buttons from the server
-	    BUTTON_LOAD_ALL: null,
-	    BUTTON_LOAD_ALL_RAW: null,
-	    BUTTON_LOAD_ALL_FAIL: null,
-
-	    // Load all of the scenes from the server
-	    SCENE_LOAD_ALL: null,
-	    SCENE_LOAD_ALL_RAW: null,
-	    SCENE_LOAD_ALL_FAIL: null,
-
-	    // Create a new scene on the client
-	    SCENE_NEW_CLIENT: null,
-
-	    // Creates a new scene on the server
-	    SCENE_CREATE: null,
-	    SCENE_CREATE_RAW: null,
-	    SCENE_CREATE_FAIL: null,
-
-	    // Update the attribute of a scene
-	    SCENE_UPDATE: null,
-	    SCENE_UPDATE_RAW: null,
-	    SCENE_UPDATE_FAIL: null,
-
-	    // Delete a scene
-	    SCENE_DESTROY: null,
-	    SCENE_DESTROY_RAW: null,
-	    SCENE_DESTROY_FAIL: null,
-
-	    // Add a command to a scene, not saved to the server, just on the client
-	    SCENE_COMMAND_ADD: null,
-
-	    // Saves a command associated to a scene on the server
-	    SCENE_COMMAND_SAVE: null,
-	    SCENE_COMMAND_SAVE_RAW: null,
-
-	    // Remove a command from a scene
-	    SCENE_COMMAND_DELETE: null,
-	    SCENE_COMMAND_DELETE_RAW: null,
-	    SCENE_COMMAND_DELETE_FAIL: null,
-
-	    // Load all of the zones from the server
-	    ZONE_LOAD_ALL: null,
-	    ZONE_LOAD_ALL_RAW: null,
-	    ZONE_LOAD_ALL_FAIL: null
-	});
-
-/***/ },
-/* 210 */
-/***/ function(module, exports) {
-
-	/**
-	 * Copyright 2013-2014 Facebook, Inc.
-	 *
-	 * Licensed under the Apache License, Version 2.0 (the "License");
-	 * you may not use this file except in compliance with the License.
-	 * You may obtain a copy of the License at
-	 *
-	 * http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS,
-	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 * See the License for the specific language governing permissions and
-	 * limitations under the License.
-	 *
-	 */
-
-	"use strict";
-
-	/**
-	 * Constructs an enumeration with keys equal to their value.
-	 *
-	 * For example:
-	 *
-	 *   var COLORS = keyMirror({blue: null, red: null});
-	 *   var myColor = COLORS.blue;
-	 *   var isColorValid = !!COLORS[myColor];
-	 *
-	 * The last line could not be performed if the values of the generated enum were
-	 * not equal to their keys.
-	 *
-	 *   Input:  {key1: val1, key2: val2}
-	 *   Output: {key1: key1, key2: key2}
-	 *
-	 * @param {object} obj
-	 * @return {object}
-	 */
-	var keyMirror = function(obj) {
-	  var ret = {};
-	  var key;
-	  if (!(obj instanceof Object && !Array.isArray(obj))) {
-	    throw new Error('keyMirror(...): Argument must be an object.');
-	  }
-	  for (key in obj) {
-	    if (!obj.hasOwnProperty(key)) {
-	      continue;
-	    }
-	    ret[key] = key;
-	  }
-	  return ret;
-	};
-
-	module.exports = keyMirror;
-
-
-/***/ },
-/* 211 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(203);
 
 	/*
 	 API provides helper methods to access all of the gohome REST APIs
@@ -24103,16 +23167,1629 @@
 	module.exports = API;
 
 /***/ },
+/* 203 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var keyMirror = __webpack_require__(204);
+
+	/*
+	 The pattern here is that you have a actionType e.g. SCENE_DESTROY, responses from the
+	 server are then either <ACTION_TYPE>_RAW which indicates success and the payload will
+	 contain any raw data returned from the server, or <ACTION_TYPE>_FAIL which indicates
+	 failure. If the errors are handled localy inside a component, there may not be a corresponding
+	 _FAIL message
+	 */
+
+	module.exports = keyMirror({
+
+	    // Load all of the devices from the server
+	    DEVICE_LOAD_ALL: null,
+	    DEVICE_LOAD_ALL_RAW: null,
+	    DEVICE_LOAD_ALL_FAIL: null,
+
+	    // Adds a new device on the client
+	    DEVICE_NEW_CLIENT: null,
+
+	    // Creates a new device on the server
+	    DEVICE_CREATE: null,
+	    DEVICE_CREATE_RAW: null,
+	    DEVICE_CREATE_FAIL: null,
+
+	    // Deletes a device
+	    DEVICE_DESTROY: null,
+	    DEVICE_DESTROY_RAW: null,
+	    DEVICE_DESTROY_FAIL: null,
+
+	    // Load all of the buttons from the server
+	    BUTTON_LOAD_ALL: null,
+	    BUTTON_LOAD_ALL_RAW: null,
+	    BUTTON_LOAD_ALL_FAIL: null,
+
+	    // Load all of the scenes from the server
+	    SCENE_LOAD_ALL: null,
+	    SCENE_LOAD_ALL_RAW: null,
+	    SCENE_LOAD_ALL_FAIL: null,
+
+	    // Create a new scene on the client
+	    SCENE_NEW_CLIENT: null,
+
+	    // Creates a new scene on the server
+	    SCENE_CREATE: null,
+	    SCENE_CREATE_RAW: null,
+	    SCENE_CREATE_FAIL: null,
+
+	    // Update the attribute of a scene
+	    SCENE_UPDATE: null,
+	    SCENE_UPDATE_RAW: null,
+	    SCENE_UPDATE_FAIL: null,
+
+	    // Delete a scene
+	    SCENE_DESTROY: null,
+	    SCENE_DESTROY_RAW: null,
+	    SCENE_DESTROY_FAIL: null,
+
+	    // Add a command to a scene, not saved to the server, just on the client
+	    SCENE_COMMAND_ADD: null,
+
+	    // Saves a command associated to a scene on the server
+	    SCENE_COMMAND_SAVE: null,
+	    SCENE_COMMAND_SAVE_RAW: null,
+
+	    // Remove a command from a scene
+	    SCENE_COMMAND_DELETE: null,
+	    SCENE_COMMAND_DELETE_RAW: null,
+	    SCENE_COMMAND_DELETE_FAIL: null,
+
+	    // Load all of the zones from the server
+	    ZONE_LOAD_ALL: null,
+	    ZONE_LOAD_ALL_RAW: null,
+	    ZONE_LOAD_ALL_FAIL: null
+	});
+
+/***/ },
+/* 204 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2013-2014 Facebook, Inc.
+	 *
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 * http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 *
+	 */
+
+	"use strict";
+
+	/**
+	 * Constructs an enumeration with keys equal to their value.
+	 *
+	 * For example:
+	 *
+	 *   var COLORS = keyMirror({blue: null, red: null});
+	 *   var myColor = COLORS.blue;
+	 *   var isColorValid = !!COLORS[myColor];
+	 *
+	 * The last line could not be performed if the values of the generated enum were
+	 * not equal to their keys.
+	 *
+	 *   Input:  {key1: val1, key2: val2}
+	 *   Output: {key1: key1, key2: key2}
+	 *
+	 * @param {object} obj
+	 * @return {object}
+	 */
+	var keyMirror = function(obj) {
+	  var ret = {};
+	  var key;
+	  if (!(obj instanceof Object && !Array.isArray(obj))) {
+	    throw new Error('keyMirror(...): Argument must be an object.');
+	  }
+	  for (key in obj) {
+	    if (!obj.hasOwnProperty(key)) {
+	      continue;
+	    }
+	    ret[key] = key;
+	  }
+	  return ret;
+	};
+
+	module.exports = keyMirror;
+
+
+/***/ },
+/* 205 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(160);
+	var DeviceInfo = __webpack_require__(201);
+	var SystemActions = __webpack_require__(206);
+
+	var SystemDeviceList = React.createClass({
+	    displayName: 'SystemDeviceList',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            devices: []
+	        };
+	    },
+
+	    newClicked: function newClicked() {
+	        this.props.deviceNew();
+	    },
+
+	    render: function render() {
+	        var deviceNodes = this.props.devices.map(function (device) {
+	            return React.createElement(DeviceInfo, {
+	                name: device.name,
+	                description: device.description,
+	                address: device.address,
+	                modelNumber: device.modelNumber,
+	                id: device.id,
+	                clientId: device.clientId,
+	                readOnlyFields: 'id',
+	                key: device.id || device.clientId,
+	                deviceDelete: this.props.deviceDelete,
+	                savedDevice: this.props.savedDevice });
+	        }.bind(this));
+
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-DeviceList' },
+	            React.createElement(
+	                'div',
+	                { className: 'header clearfix' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-primary pull-right', onClick: this.newClicked },
+	                    'New Device'
+	                )
+	            ),
+	            React.createElement(
+	                'h3',
+	                { className: this.props.devices.length > 0 ? "" : " hidden" },
+	                'Devices'
+	            ),
+	            deviceNodes
+	        );
+	    }
+	});
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        deviceNew: function deviceNew() {
+	            dispatch(SystemActions.deviceNew());
+	        },
+	        deviceDelete: function deviceDelete(id, clientId) {
+	            dispatch(SystemActions.deviceDelete(id, clientId));
+	        },
+	        savedDevice: function savedDevice(clientId, data) {
+	            dispatch(SystemActions.savedDevice(clientId, data));
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(SystemDeviceList);
+
+/***/ },
+/* 206 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(203);
+	var Api = __webpack_require__(202);
+
+	var SystemActions = {
+	    deviceNew: function deviceNew() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_NEW_CLIENT });
+	        };
+	    },
+
+	    deviceDelete: function deviceDelete(id, clientId) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_DESTROY });
+	            if (!id) {
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, clientId: clientId });
+	                return;
+	            }
+
+	            Api.deviceDestroy(id, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, clientId: clientId, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, clientId: clientId, data: data });
+	            });
+	        };
+	    },
+
+	    savedDevice: function savedDevice(clientId, deviceJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+	        };
+	    },
+
+	    loadAllDevices: function loadAllDevices() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
+
+	            Api.deviceLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.DEVICE_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.DEVICE_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    },
+
+	    loadAllButtons: function loadAllButtons() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.BUTTON_LOAD_ALL });
+
+	            Api.buttonLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    }
+	};
+	module.exports = SystemActions;
+
+/***/ },
+/* 207 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(158);
+	var Redux = __webpack_require__(167);
+	var ReactRedux = __webpack_require__(160);
+	var Scene = __webpack_require__(208);
+	var SceneInfo = __webpack_require__(209);
+	var UniqueIdMixin = __webpack_require__(193);
+	var SceneActions = __webpack_require__(218);
+
+	var SceneList = React.createClass({
+	    displayName: 'SceneList',
+
+	    mixins: [UniqueIdMixin],
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            editMode: false
+	        };
+	    },
+
+	    _onChange: function _onChange() {
+	        this.forceUpdate();
+	    },
+
+	    edit: function edit() {
+	        this.setState({ editMode: true });
+	    },
+
+	    endEdit: function endEdit() {
+	        this.setState({ editMode: false });
+	    },
+
+	    render: function render() {
+	        var body;
+	        var btns;
+
+	        var scenes = this.props.scenes.items;
+	        if (this.state.editMode) {
+	            body = scenes.map(function (scene) {
+	                var saveState;
+
+	                // Check for input validation errors from the server
+	                saveState = this.props.scenes.saveState[scene.clientId || scene.id] || {};
+
+	                return React.createElement(SceneInfo, {
+	                    zones: this.props.zones,
+	                    buttons: this.props.buttons,
+	                    scenes: this.props.scenes.items,
+	                    scene: scene,
+	                    readOnlyFields: 'id',
+	                    key: scene.id || scene.clientId,
+	                    errors: (saveState.err || {}).validationErrors,
+	                    saveScene: this.props.saveScene,
+	                    updateScene: this.props.updateScene,
+	                    deleteScene: this.props.deleteScene,
+	                    addCommand: this.props.addCommand,
+	                    saveStatus: saveState.status });
+	            }.bind(this));
+	            btns = React.createElement(
+	                'div',
+	                { className: 'clearfix buttonWrapper' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-primary btnNew pull-left', onClick: this.props.newClientScene },
+	                    'New Scene'
+	                ),
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
+	                    'Done'
+	                )
+	            );
+	        } else {
+
+	            body = scenes.map(function (scene) {
+	                return React.createElement(Scene, { scene: scene, key: scene.id || scene.clientId });
+	            });
+	            btns = React.createElement(
+	                'div',
+	                { className: 'clearfix buttonWrapper' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-default btnEdit pull-right', onClick: this.edit },
+	                    React.createElement('i', { className: 'fa fa-cog', 'aria-hidden': 'true' })
+	                )
+	            );
+	        }
+
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SceneList' },
+	            btns,
+	            body
+	        );
+	    }
+	});
+
+	function mapStateToProps(state) {
+	    return {};
+	}
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        newClientScene: function newClientScene() {
+	            dispatch(SceneActions.newClient());
+	        },
+	        saveScene: function saveScene(sceneJson) {
+	            dispatch(SceneActions.create(sceneJson));
+	        },
+	        updateScene: function updateScene(sceneJson) {
+	            dispatch(SceneActions.update(sceneJson));
+	        },
+	        deleteScene: function deleteScene(clientId, id) {
+	            if (clientId) {
+	                dispatch(SceneActions.destroyClient(clientId));
+	            } else {
+	                dispatch(SceneActions.destroy(id));
+	            }
+	        },
+	        addCommand: function addCommand(sceneId, cmdType) {
+	            dispatch(SceneActions.addCommand(sceneId, cmdType));
+	        }
+	    };
+	}
+
+	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
+
+/***/ },
+/* 208 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var Scene = React.createClass({
+	    displayName: 'Scene',
+
+	    handleClick: function handleClick(event) {
+	        $.ajax({
+	            url: '/api/v1/systems/1/scenes/active',
+	            type: 'POST',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify({ id: this.props.scene.id }),
+	            success: function (data) {
+	                //TODO: Common way in UI to display success/error
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                console.error(err.toString());
+	            }.bind(this)
+	        });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-Scene col-xs-6 col-sm-3 col-md-3 col-lg-3' },
+	            React.createElement(
+	                'a',
+	                { role: 'button', className: 'btn btn-primary scene', onClick: this.handleClick },
+	                React.createElement(
+	                    'div',
+	                    null,
+	                    React.createElement('i', { className: 'fa fa-sliders' })
+	                ),
+	                React.createElement(
+	                    'span',
+	                    { className: 'name' },
+	                    this.props.scene.name
+	                )
+	            )
+	        );
+	    }
+	});
+	module.exports = Scene;
+
+/***/ },
+/* 209 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(160);
+	var SaveBtn = __webpack_require__(195);
+	var InputValidationMixin = __webpack_require__(194);
+	var UniqueIdMixin = __webpack_require__(193);
+	var CommandInfo = __webpack_require__(210);
+	var CommandTypePicker = __webpack_require__(219);
+	var SceneActions = __webpack_require__(218);
+
+	var SceneInfo = React.createClass({
+	    displayName: 'SceneInfo',
+
+	    mixins: [InputValidationMixin, UniqueIdMixin],
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            //TODO: remove
+	            buttons: []
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            id: this.props.scene.id || '',
+	            clientId: this.props.scene.clientId,
+	            name: this.props.scene.name || '',
+	            address: this.props.scene.address || '',
+	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
+	            errors: this.props.errors,
+
+	            // true if the object has been modified
+	            dirty: false,
+
+	            saveButtonStatus: this.saveStatus
+	        };
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.errors) {
+	            this.setState({ errors: nextProps.errors });
+	        }
+	        if (nextProps.saveStatus) {
+	            this.setState({ saveButtonStatus: nextProps.saveStatus });
+	        }
+	    },
+
+	    toJson: function toJson() {
+	        var s = this.state;
+	        return {
+	            id: this.state.id,
+	            name: this.state.name,
+	            address: this.state.address,
+	            managed: this.state.managed,
+	            clientId: this.state.clientId
+	        };
+	    },
+
+	    saveScene: function saveScene() {
+	        this.setState({ errors: null });
+	        var self = this;
+
+	        if (this.state.id === '') {
+	            //TODO: Update state on save, not dirty, has id not clientId
+	            this.props.saveScene(this.toJson());
+	        } else {
+	            //TODO: Verify state correct after successfully updated
+	            this.props.updateScene(this.toJson());
+	        }
+	    },
+
+	    deleteScene: function deleteScene() {
+	        this.props.deleteScene(this.state.clientId, this.state.id);
+	    },
+
+	    commandTypeChanged: function commandTypeChanged(cmdType) {
+	        this.props.addCommand(this.state.id, cmdType);
+	    },
+
+	    _inputChanged: function _inputChanged(evt) {
+	        this.setState({ saveButtonStatus: '' });
+
+	        // Lives in InputValidationMixin
+	        this.changed(evt);
+	    },
+
+	    render: function render() {
+	        var commandNodes;
+
+	        //TODO: remove
+	        this.state.managed = true;
+	        var self = this;
+	        if (this.state.managed) {
+	            var cmdIndex = 0;
+
+	            if (this.state.id === '') {
+	                commandNodes = React.createElement(
+	                    'p',
+	                    null,
+	                    'To add commands, first save the scene.'
+	                );
+	            } else {
+	                var commands = this.props.scene.commands || [];
+	                commandNodes = commands.map(function (command) {
+	                    //TODO: We need to give commands an ID on the server so we can have a proper index
+	                    var key = Math.random();
+	                    var info = React.createElement(CommandInfo, {
+	                        isNew: command.isNew,
+	                        scene: self.props.scene,
+	                        key: key,
+	                        index: cmdIndex,
+	                        scenes: self.props.scenes,
+	                        zones: self.props.zones,
+	                        buttons: self.props.buttons,
+	                        command: command });
+	                    cmdIndex++;
+	                    return info;
+	                });
+	                commandNodes = React.createElement(
+	                    'div',
+	                    null,
+	                    commandNodes,
+	                    'Add Command: ',
+	                    React.createElement(CommandTypePicker, { changed: this.commandTypeChanged })
+	                );
+	            }
+	        } else {
+	            commandNodes = React.createElement(
+	                'p',
+	                null,
+	                'The scene is controlled by a 3rd party device so we can\'t show the individual commands it will execute. To modify the scene you will need to use the app provided with the 3rd party device.'
+	            );
+	        }
+
+	        var saveBtn;
+	        if (this.state.dirty) {
+	            var saveResult;
+	            saveBtn = React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                React.createElement(SaveBtn, {
+	                    text: 'Save',
+	                    status: this.state.saveButtonStatus,
+	                    clicked: this.saveScene })
+	            );
+	        }
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SceneInfo well well-sm' },
+	            React.createElement(
+	                'button',
+	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteScene },
+	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "name") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("name") },
+	                    'Name*'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this._inputChanged,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid("name") }),
+	                this.errMsg("name")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "id") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("id") },
+	                    'ID'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.id,
+	                    readOnly: this.isReadOnly("id"),
+	                    'data-statepath': 'id',
+	                    onChange: this._inputChanged,
+	                    className: 'id form-control',
+	                    type: 'text',
+	                    id: this.uid("id") }),
+	                this.errMsg("id")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "address") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("address") },
+	                    'Address'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this._inputChanged,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
+	                this.errMsg("address")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
+	                    'Edit Commands',
+	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                ),
+	                saveBtn
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse commands', id: this.uid("commands") },
+	                React.createElement(
+	                    'h3',
+	                    null,
+	                    'Commands'
+	                ),
+	                commandNodes
+	            )
+	        );
+	    }
+	});
+
+	module.exports = SceneInfo;
+
+/***/ },
+/* 210 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(160);
+	var ZoneSetLevelCommand = __webpack_require__(211);
+	var SceneSetCommand = __webpack_require__(213);
+	var SaveBtn = __webpack_require__(195);
+	var ButtonPressCommand = __webpack_require__(215);
+	var ButtonReleaseCommand = __webpack_require__(217);
+	var Api = __webpack_require__(202);
+	var Constants = __webpack_require__(203);
+	var SceneActions = __webpack_require__(218);
+
+	var CommandInfo = React.createClass({
+	    displayName: 'CommandInfo',
+
+	    deleteCommand: function deleteCommand() {
+	        //TODO: Show error in UI
+	        //TODO: Normalize middleware to handle showing error from API, standardize responses
+	        this.props.deleteCommand(this.props.scene.id, this.props.index, this.props.command.isNew);
+	    },
+
+	    saveCommand: function saveCommand() {
+	        var cmd = this.refs.cmd;
+	        this.setState({ errors: [] });
+
+	        var cmdJson = cmd.toJson();
+	        Api.sceneSaveCommand(this.props.scene.id, cmdJson, function (err, data) {
+	            if (err) {
+	                cmd.setErrors(err.validationErrors);
+	                return;
+	            }
+
+	            this.props.savedCommand(cmdJson, this.props.scene.id, this.props.index);
+	        }.bind(this));
+	    },
+
+	    render: function render() {
+	        var command = this.props.command;
+	        var saveBtn;
+	        if (this.props.command.isNew) {
+	            saveBtn = React.createElement(SaveBtn, {
+	                text: 'Save',
+	                status: '',
+	                clicked: this.saveCommand });
+	        }
+
+	        var uiCmd;
+	        switch (command.type) {
+	            case 'buttonPress':
+	                uiCmd = React.createElement(ButtonPressCommand, {
+	                    ref: 'cmd',
+	                    disabled: !this.props.command.isNew,
+	                    errors: (command.errors || {}).validationErrors,
+	                    buttons: this.props.buttons,
+	                    command: command });
+	                break;
+	            case 'buttonRelease':
+	                uiCmd = React.createElement(ButtonReleaseCommand, {
+	                    ref: 'cmd',
+	                    disabled: !this.props.command.isNew,
+	                    errors: (command.errors || {}).validationErrors,
+	                    buttons: this.props.buttons,
+	                    command: command });
+	                break;
+	            case 'zoneSetLevel':
+	                uiCmd = React.createElement(ZoneSetLevelCommand, {
+	                    ref: 'cmd',
+	                    disabled: !this.props.command.isNew,
+	                    errors: (command.errors || {}).validationErrors,
+	                    zones: this.props.zones,
+	                    command: command });
+	                break;
+	            case 'sceneSet':
+	                uiCmd = React.createElement(SceneSetCommand, {
+	                    ref: 'cmd',
+	                    disabled: !this.props.command.isNew,
+	                    parentSceneId: this.props.scene.id,
+	                    errors: (command.errors || {}).validationErrors,
+	                    scenes: this.props.scenes,
+	                    command: command });
+	                break;
+	            default:
+	                console.error('unknown command type: ' + command.type);
+	        }
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-CommandInfo well well-sm clearfix' },
+	            React.createElement(
+	                'button',
+	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteCommand },
+	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
+	            ),
+	            uiCmd,
+	            saveBtn
+	        );
+	    }
+	});
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        savedCommand: function savedCommand(cmdData, sceneId, cmdIndex) {
+	            dispatch({
+	                type: Constants.SCENE_COMMAND_SAVE_RAW,
+	                data: cmdData,
+	                sceneId: sceneId,
+	                cmdIndex: cmdIndex });
+	        },
+	        deleteCommand: function deleteCommand(sceneId, cmdIndex, isNew) {
+	            dispatch(SceneActions.deleteCommand(sceneId, cmdIndex, isNew));
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(CommandInfo);
+
+/***/ },
+/* 211 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(194);
+	var UniqueIdMixin = __webpack_require__(193);
+	var ZonePicker = __webpack_require__(212);
+	var Api = __webpack_require__(202);
+
+	var ZoneSetLevelCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        var attr = this.props.command.attributes;
+	        return {
+	            clientId: this.getNextIdAndIncrement() + '',
+	            level: attr.Level || 0,
+	            r: attr.R || 0,
+	            g: attr.G || 0,
+	            b: attr.B || 0,
+	            zoneId: this.props.command.attributes.ZoneID || '',
+	            errors: null
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'zoneSetLevel',
+	            clientId: this.state.clientId,
+	            //TODO: correctly capitalize json values
+	            attributes: {
+	                Level: parseFloat(this.state.level),
+	                R: parseInt(this.state.r, 10),
+	                G: parseInt(this.state.g, 10),
+	                B: parseInt(this.state.b, 10),
+	                ZoneID: this.state.zoneId
+	            }
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    zonePickerChanged: function zonePickerChanged(zoneId) {
+	        this.setState({ zoneId: zoneId });
+	    },
+
+	    testLevel: function testLevel() {
+	        if (!this.state.zoneId) {
+	            return;
+	        }
+
+	        Api.zoneSetLevel(this.state.zoneId, 'setLevel', parseFloat(this.state.level), parseInt(this.state.r, 10), parseInt(this.state.g, 10), parseInt(this.state.b, 10), function (err, data) {
+	            //TODO: error
+	        });
+	    },
+
+	    render: function render() {
+	        //TODO: Only show RGB if this is an OTRGB
+	        //TODO: Insert RGB Picker in UI as well
+	        //TODO: For binary outputs should have a picker on/off not 0-100
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZoneSetLevelCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Zone Set Level'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_ZoneID") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_ZoneID") },
+	                    'Zone*'
+	                ),
+	                React.createElement(ZonePicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.zonePickerChanged,
+	                    zones: this.props.zones,
+	                    zoneId: this.state.zoneId }),
+	                this.errMsg("attributes_ZoneID")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_Level") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_Level") },
+	                    'Level [0-100]'
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: 'input-group' },
+	                    React.createElement('input', {
+	                        disabled: this.props.disabled,
+	                        value: this.state.level,
+	                        'data-statepath': 'level',
+	                        onChange: this.changed,
+	                        className: 'level form-control',
+	                        type: 'number',
+	                        id: this.uid("attributes_Level") }),
+	                    React.createElement(
+	                        'span',
+	                        { className: 'input-group-btn' },
+	                        React.createElement(
+	                            'button',
+	                            { className: 'btn btn-primary', onClick: this.testLevel },
+	                            'Test Level'
+	                        )
+	                    ),
+	                    this.errMsg("attributes_Level")
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix rgbExpander' },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("rgbExpand") },
+	                    'RGB',
+	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse rbgExpand', id: this.uid("rgbExpand") },
+	                React.createElement(
+	                    'p',
+	                    null,
+	                    React.createElement(
+	                        'strong',
+	                        null,
+	                        'NOTE:'
+	                    ),
+	                    ' To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (Value/100)'
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", "attributes_R") },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("attributes_R") },
+	                        'Level - Red [0-255]'
+	                    ),
+	                    React.createElement('input', {
+	                        disabled: this.props.disabled,
+	                        value: this.state.r,
+	                        'data-statepath': 'r',
+	                        onChange: this.changed,
+	                        className: 'r form-control',
+	                        type: 'number',
+	                        id: this.uid("attributes_R") }),
+	                    this.errMsg("attributes_R")
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", "attributes_G") },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("attributes_G") },
+	                        'Level - Green [0-255]'
+	                    ),
+	                    React.createElement('input', {
+	                        disabled: this.props.disabled,
+	                        value: this.state.g,
+	                        'data-statepath': 'g',
+	                        onChange: this.changed,
+	                        className: 'g form-control',
+	                        type: 'number',
+	                        id: this.uid("attributes_G") }),
+	                    this.errMsg("attributes_G")
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", "attributes_B") },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("attributes_B") },
+	                        'Level - Blue [0-255]'
+	                    ),
+	                    React.createElement('input', {
+	                        disabled: this.props.disabled,
+	                        value: this.state.b,
+	                        'data-statepath': 'b',
+	                        onChange: this.changed,
+	                        className: 'b form-control',
+	                        type: 'number',
+	                        id: this.uid("attributes_B") }),
+	                    this.errMsg("attributes_B")
+	                )
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneSetLevelCommand;
+
+/***/ },
 /* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var ClassNames = __webpack_require__(213);
+	var React = __webpack_require__(1);
+
+	var ZonePicker = React.createClass({
+	    displayName: 'ZonePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.zoneId || ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.zones.forEach(function (zone) {
+	            options.push(React.createElement(
+	                'option',
+	                { key: zone.id, value: zone.id },
+	                zone.name
+	            ));
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZonePicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    disabled: this.props.disabled,
+	                    className: 'form-control',
+	                    defaultValue: this.props.zoneId,
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select a Zone...'
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = ZonePicker;
+
+/***/ },
+/* 213 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(194);
+	var UniqueIdMixin = __webpack_require__(193);
+	var ScenePicker = __webpack_require__(214);
+
+	var SceneSetCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            clientId: this.getNextIdAndIncrement() + '',
+	            sceneId: this.props.command.attributes.SceneID || '',
+	            errors: null
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            scenes: []
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'sceneSet',
+	            clientId: this.state.clientId,
+	            attributes: {
+	                SceneID: this.state.sceneId
+	            }
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    scenePickerChanged: function scenePickerChanged(sceneId) {
+	        this.setState({ sceneId: sceneId });
+	    },
+
+	    render: function render() {
+	        //TODO: Filter out the parent scene from the scenes list so it can't call itself
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SceneSetCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Scene Set'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_SceneID") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_SceneID") },
+	                    'Scene*'
+	                ),
+	                React.createElement(ScenePicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.scenePickerChanged,
+	                    scenes: this.props.scenes,
+	                    sceneId: this.state.sceneId,
+	                    parentSceneId: this.props.parentSceneId }),
+	                this.errMsg("attributes_SceneID")
+	            )
+	        );
+	    }
+	});
+	module.exports = SceneSetCommand;
+
+/***/ },
+/* 214 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ScenePicker = React.createClass({
+	    displayName: 'ScenePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.sceneId || ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.scenes.forEach(function (scene) {
+	            if (!scene.id) {
+	                // If this scene has not been saved it can't be used
+	                return;
+	            }
+
+	            // Can't set itself
+	            if (scene.id === this.props.parentSceneId) {
+	                return;
+	            }
+
+	            options.push(React.createElement(
+	                'option',
+	                { key: scene.id, value: scene.id },
+	                scene.name
+	            ));
+	        }.bind(this));
+
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ScenePicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    disabled: this.props.disabled,
+	                    defaultValue: this.props.sceneId,
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select a Scene...'
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = ScenePicker;
+
+/***/ },
+/* 215 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(194);
+	var UniqueIdMixin = __webpack_require__(193);
+	var ButtonPicker = __webpack_require__(216);
+
+	var ButtonPressCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            clientId: this.getNextIdAndIncrement() + '',
+	            buttonId: this.props.command.attributes.ButtonID || '',
+	            errors: null
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            buttons: []
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'buttonPress',
+	            clientId: this.state.clientId,
+	            attributes: {
+	                ButtonID: this.state.buttonId
+	            }
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    buttonPickerChanged: function buttonPickerChanged(buttonId) {
+	        this.setState({ buttonId: buttonId });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ButtonPressCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Button Press'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_ButtonID") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
+	                    'Button*'
+	                ),
+	                React.createElement(ButtonPicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.buttonPickerChanged,
+	                    buttons: this.props.buttons,
+	                    buttonId: this.state.buttonId }),
+	                this.errMsg("attributes_ButtonID")
+	            )
+	        );
+	    }
+	});
+	module.exports = ButtonPressCommand;
+
+/***/ },
+/* 216 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ButtonPicker = React.createClass({
+	    displayName: 'ButtonPicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.buttonId || ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.buttons.forEach(function (button) {
+	            options.push(React.createElement(
+	                'option',
+	                { key: button.id, value: button.id },
+	                button.fullName
+	            ));
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ButtonPicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    disabled: this.props.disabled,
+	                    className: 'form-control',
+	                    defaultValue: this.props.buttonId,
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select a Button...'
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = ButtonPicker;
+
+/***/ },
+/* 217 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(194);
+	var UniqueIdMixin = __webpack_require__(193);
+	var ButtonPicker = __webpack_require__(216);
+
+	var ButtonReleaseCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            clientId: this.getNextIdAndIncrement() + '',
+	            buttonId: this.props.command.attributes.ButtonID || '',
+	            errors: null
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            buttons: []
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'buttonRelease',
+	            clientId: this.state.clientId,
+	            attributes: {
+	                ButtonID: this.state.buttonId
+	            }
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    buttonPickerChanged: function buttonPickerChanged(buttonId) {
+	        this.setState({ buttonId: buttonId });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ButtonReleaseCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Button Release'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_ButtonID") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
+	                    'Button*'
+	                ),
+	                React.createElement(ButtonPicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.buttonPickerChanged,
+	                    buttons: this.props.buttons,
+	                    buttonId: this.state.buttonId }),
+	                this.errMsg("attributes_ButtonID")
+	            )
+	        );
+	    }
+	});
+	module.exports = ButtonReleaseCommand;
+
+/***/ },
+/* 218 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(203);
+	var Api = __webpack_require__(202);
+
+	var SceneActions = {
+
+	    loadAll: function loadAll() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_LOAD_ALL });
+
+	            Api.sceneLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+
+	                dispatch({ type: Constants.SCENE_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    },
+
+	    create: function create(sceneJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_CREATE, clientId: sceneJson.clientId });
+
+	            Api.sceneCreate(sceneJson, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, clientId: sceneJson.clientId });
+	                    return;
+	                }
+	                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, clientId: sceneJson.clientId });
+	            });
+	        };
+	    },
+
+	    update: function update(sceneJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_UPDATE, id: sceneJson.id });
+
+	            Api.sceneUpdate(sceneJson, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err, id: sceneJson.id });
+	                    return;
+	                }
+	                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data, id: sceneJson.id, sceneJson: sceneJson });
+	            });
+	        };
+	    },
+
+	    destroyClient: function destroyClient(clientId) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_DESTROY, clientId: clientId });
+	            dispatch({ type: Constants.SCENE_DESTROY_RAW, clientId: clientId });
+	        };
+	    },
+
+	    destroy: function destroy(id) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_DESTROY, id: id });
+
+	            Api.sceneDestroy(id, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_DESTROY_FAIL, err: err, id: id });
+	                    return;
+	                }
+	                dispatch({ type: Constants.SCENE_DESTROY_RAW, data: data, id: id });
+	            });
+	        };
+	    },
+
+	    addCommand: function addCommand(sceneId, cmdType) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_COMMAND_ADD, sceneId: sceneId, cmdType: cmdType });
+	        };
+	    },
+
+	    deleteCommand: function deleteCommand(sceneId, cmdIndex, isNew) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_COMMAND_DELETE, cmdIndex: cmdIndex, sceneId: sceneId });
+
+	            if (isNew) {
+	                // Client only
+	                dispatch({
+	                    type: Constants.SCENE_COMMAND_DELETE_RAW,
+	                    sceneId: sceneId,
+	                    cmdIndex: cmdIndex });
+	                return;
+	            }
+
+	            Api.sceneDeleteCommand(sceneId, cmdIndex, function (err, data) {
+	                if (err) {
+	                    dispatch({
+	                        type: Constants.SCENE_COMMAND_DELETE_FAIL,
+	                        sceneId: sceneId,
+	                        cmdIndex: cmdIndex,
+	                        err: err });
+	                    return;
+	                }
+	                dispatch({
+	                    type: Constants.SCENE_COMMAND_DELETE_RAW,
+	                    sceneId: sceneId,
+	                    cmdIndex: cmdIndex });
+	            });
+	        };
+	    },
+
+	    newClient: function newClient() {
+	        return {
+	            type: Constants.SCENE_NEW_CLIENT
+	        };
+	    }
+	};
+	module.exports = SceneActions;
+
+/***/ },
+/* 219 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var CommandTypePicker = React.createClass({
+	    displayName: 'CommandTypePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: '' });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-CommandTypePicker' },
+	            React.createElement(
+	                'select',
+	                { className: 'form-control', onChange: this.selected, value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select...'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'buttonPress' },
+	                    'Button Press'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'buttonRelease' },
+	                    'Button Release'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'sceneSet' },
+	                    'Scene Set'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'zoneSetLevel' },
+	                    'Zone Set Level'
+	                )
+	            )
+	        );
+	    }
+	});
+	module.exports = CommandTypePicker;
+
+/***/ },
+/* 220 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var ClassNames = __webpack_require__(221);
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(160);
-	var Zone = __webpack_require__(214);
-	var ZoneActions = __webpack_require__(216);
+	var Zone = __webpack_require__(222);
+	var ZoneActions = __webpack_require__(224);
 
 	var ZoneList = React.createClass({
 	    displayName: 'ZoneList',
@@ -24195,7 +24872,7 @@
 	module.exports = ZoneList;
 
 /***/ },
-/* 213 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -24249,16 +24926,16 @@
 
 
 /***/ },
-/* 214 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var ClassNames = __webpack_require__(213);
+	var ClassNames = __webpack_require__(221);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
-	var CssMixin = __webpack_require__(215);
-	var Api = __webpack_require__(211);
+	var CssMixin = __webpack_require__(223);
+	var Api = __webpack_require__(202);
 
 	var Zone = React.createClass({
 	    displayName: 'Zone',
@@ -24463,7 +25140,7 @@
 	module.exports = Zone;
 
 /***/ },
-/* 215 */
+/* 223 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -24475,13 +25152,13 @@
 	};
 
 /***/ },
-/* 216 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(211);
+	var Constants = __webpack_require__(203);
+	var Api = __webpack_require__(202);
 
 	var ZoneActions = {
 	    loadAll: function loadAll() {
@@ -24504,14 +25181,14 @@
 	module.exports = ZoneActions;
 
 /***/ },
-/* 217 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
-	var LogLine = __webpack_require__(218);
+	var LogLine = __webpack_require__(226);
 
 	var Logging = React.createClass({
 	    displayName: 'Logging',
@@ -24647,7 +25324,7 @@
 	module.exports = Logging;
 
 /***/ },
-/* 218 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -24692,14 +25369,14 @@
 	module.exports = LogLine;
 
 /***/ },
-/* 219 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var NewRecipe = __webpack_require__(220);
-	var RecipeList = __webpack_require__(230);
+	var NewRecipe = __webpack_require__(228);
+	var RecipeList = __webpack_require__(238);
 
 	var RecipeApp = React.createClass({
 	    displayName: 'RecipeApp',
@@ -24766,16 +25443,16 @@
 	module.exports = RecipeApp;
 
 /***/ },
-/* 220 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var IngredientList = __webpack_require__(221);
-	var TriggerList = __webpack_require__(223);
-	var ActionList = __webpack_require__(225);
-	var CookBookList = __webpack_require__(227);
+	var IngredientList = __webpack_require__(229);
+	var TriggerList = __webpack_require__(231);
+	var ActionList = __webpack_require__(233);
+	var CookBookList = __webpack_require__(235);
 
 	var NewRecipe = React.createClass({
 	    displayName: 'NewRecipe',
@@ -25059,13 +25736,13 @@
 	module.exports = NewRecipe;
 
 /***/ },
-/* 221 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Ingredient = __webpack_require__(222);
+	var Ingredient = __webpack_require__(230);
 
 	var IngredientList = React.createClass({
 	    displayName: 'IngredientList',
@@ -25102,7 +25779,7 @@
 	module.exports = IngredientList;
 
 /***/ },
-/* 222 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25199,13 +25876,13 @@
 	module.exports = Ingredient;
 
 /***/ },
-/* 223 */
+/* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Trigger = __webpack_require__(224);
+	var Trigger = __webpack_require__(232);
 
 	var TriggerList = React.createClass({
 	    displayName: 'TriggerList',
@@ -25230,7 +25907,7 @@
 	module.exports = TriggerList;
 
 /***/ },
-/* 224 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -25270,13 +25947,13 @@
 	module.exports = Trigger;
 
 /***/ },
-/* 225 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Action = __webpack_require__(226);
+	var Action = __webpack_require__(234);
 
 	var ActionList = React.createClass({
 	    displayName: 'ActionList',
@@ -25300,7 +25977,7 @@
 	module.exports = ActionList;
 
 /***/ },
-/* 226 */
+/* 234 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -25340,13 +26017,13 @@
 	module.exports = Action;
 
 /***/ },
-/* 227 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var CookBook = __webpack_require__(228);
+	var CookBook = __webpack_require__(236);
 
 	var CookBookList = React.createClass({
 	    displayName: 'CookBookList',
@@ -25370,13 +26047,13 @@
 	module.exports = CookBookList;
 
 /***/ },
-/* 228 */
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var AssetsMixin = __webpack_require__(229);
+	var AssetsMixin = __webpack_require__(237);
 
 	var CookBook = React.createClass({
 	    displayName: 'CookBook',
@@ -25404,7 +26081,7 @@
 	module.exports = CookBook;
 
 /***/ },
-/* 229 */
+/* 237 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -25416,7 +26093,7 @@
 	};
 
 /***/ },
-/* 230 */
+/* 238 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25424,7 +26101,7 @@
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	var React = __webpack_require__(1);
-	var RecipeInfo = __webpack_require__(231);
+	var RecipeInfo = __webpack_require__(239);
 
 	var RecipeList = React.createClass({
 	    displayName: 'RecipeList',
@@ -25492,7 +26169,7 @@
 	module.exports = RecipeList;
 
 /***/ },
-/* 231 */
+/* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25586,88 +26263,18 @@
 	module.exports = RecipeInfo;
 
 /***/ },
-/* 232 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(211);
-
-	var SystemActions = {
-	    deviceNew: function deviceNew() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_NEW_CLIENT });
-	        };
-	    },
-
-	    deviceDelete: function deviceDelete(id, clientId) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_DESTROY });
-	            if (!id) {
-	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, clientId: clientId });
-	                return;
-	            }
-
-	            Api.deviceDestroy(id, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, clientId: clientId, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, clientId: clientId, data: data });
-	            });
-	        };
-	    },
-
-	    savedDevice: function savedDevice(clientId, deviceJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
-	        };
-	    },
-
-	    loadAllDevices: function loadAllDevices() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
-
-	            Api.deviceLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.DEVICE_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.DEVICE_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    },
-
-	    loadAllButtons: function loadAllButtons() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.BUTTON_LOAD_ALL });
-
-	            Api.buttonLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    }
-	};
-	module.exports = SystemActions;
-
-/***/ },
-/* 233 */
+/* 240 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Redux = __webpack_require__(167);
-	var thunk = __webpack_require__(234).default;
-	var initialState = __webpack_require__(235);
-	var buttonReducer = __webpack_require__(236);
-	var systemReducer = __webpack_require__(237);
-	var scenesReducer = __webpack_require__(238);
-	var zonesReducer = __webpack_require__(240);
+	var thunk = __webpack_require__(241).default;
+	var initialState = __webpack_require__(242);
+	var buttonReducer = __webpack_require__(243);
+	var systemReducer = __webpack_require__(244);
+	var scenesReducer = __webpack_require__(245);
+	var zonesReducer = __webpack_require__(247);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
@@ -25679,7 +26286,7 @@
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
 
 /***/ },
-/* 234 */
+/* 241 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -25707,7 +26314,7 @@
 	exports['default'] = thunk;
 
 /***/ },
-/* 235 */
+/* 242 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -25741,13 +26348,13 @@
 	};
 
 /***/ },
-/* 236 */
+/* 243 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(235);
+	var Constants = __webpack_require__(203);
+	var initialState = __webpack_require__(242);
 
 	module.exports = function (state, action) {
 	    var newState = [];
@@ -25772,13 +26379,13 @@
 	};
 
 /***/ },
-/* 237 */
+/* 244 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(235);
+	var Constants = __webpack_require__(203);
+	var initialState = __webpack_require__(242);
 
 	var _clientId = 1;
 	module.exports = function (state, action) {
@@ -25849,14 +26456,14 @@
 	};
 
 /***/ },
-/* 238 */
+/* 245 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(235);
-	var CommandsReducer = __webpack_require__(239);
+	var Constants = __webpack_require__(203);
+	var initialState = __webpack_require__(242);
+	var CommandsReducer = __webpack_require__(246);
 
 	var _clientId = 1;
 
@@ -25986,12 +26593,12 @@
 	};
 
 /***/ },
-/* 239 */
+/* 246 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(203);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -26024,13 +26631,13 @@
 	};
 
 /***/ },
-/* 240 */
+/* 247 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(235);
+	var Constants = __webpack_require__(203);
+	var initialState = __webpack_require__(242);
 
 	module.exports = function (state, action) {
 	    var newState = [];
@@ -26054,7 +26661,7 @@
 	};
 
 /***/ },
-/* 241 */
+/* 248 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26178,613 +26785,6 @@
 	    }
 	});
 	module.exports = Testr;
-
-/***/ },
-/* 242 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(194);
-	var UniqueIdMixin = __webpack_require__(193);
-	var ZonePicker = __webpack_require__(243);
-	var Api = __webpack_require__(211);
-
-	var ZoneSetLevelCommand = module.exports = React.createClass({
-	    displayName: 'exports',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        var attr = this.props.command.attributes;
-	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
-	            level: attr.Level || 0,
-	            r: attr.R || 0,
-	            g: attr.G || 0,
-	            b: attr.B || 0,
-	            zoneId: this.props.command.attributes.ZoneID || '',
-	            errors: null
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        return {
-	            type: 'zoneSetLevel',
-	            clientId: this.state.clientId,
-	            //TODO: correctly capitalize json values
-	            attributes: {
-	                Level: parseFloat(this.state.level),
-	                R: parseInt(this.state.r, 10),
-	                G: parseInt(this.state.g, 10),
-	                B: parseInt(this.state.b, 10),
-	                ZoneID: this.state.zoneId
-	            }
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    zonePickerChanged: function zonePickerChanged(zoneId) {
-	        this.setState({ zoneId: zoneId });
-	    },
-
-	    testLevel: function testLevel() {
-	        if (!this.state.zoneId) {
-	            return;
-	        }
-
-	        Api.zoneSetLevel(this.state.zoneId, 'setLevel', parseFloat(this.state.level), parseInt(this.state.r, 10), parseInt(this.state.g, 10), parseInt(this.state.b, 10), function (err, data) {
-	            //TODO: error
-	        });
-	    },
-
-	    render: function render() {
-	        //TODO: Only show RGB if this is an OTRGB
-	        //TODO: Insert RGB Picker in UI as well
-	        //TODO: For binary outputs should have a picker on/off not 0-100
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneSetLevelCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Zone Set Level'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_ZoneID") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_ZoneID") },
-	                    'Zone*'
-	                ),
-	                React.createElement(ZonePicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.zonePickerChanged,
-	                    zones: this.props.zones,
-	                    zoneId: this.state.zoneId }),
-	                this.errMsg("attributes_ZoneID")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_Level") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_Level") },
-	                    'Level [0-100]'
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: 'input-group' },
-	                    React.createElement('input', {
-	                        disabled: this.props.disabled,
-	                        value: this.state.level,
-	                        'data-statepath': 'level',
-	                        onChange: this.changed,
-	                        className: 'level form-control',
-	                        type: 'number',
-	                        id: this.uid("attributes_Level") }),
-	                    React.createElement(
-	                        'span',
-	                        { className: 'input-group-btn' },
-	                        React.createElement(
-	                            'button',
-	                            { className: 'btn btn-primary', onClick: this.testLevel },
-	                            'Test Level'
-	                        )
-	                    ),
-	                    this.errMsg("attributes_Level")
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix rgbExpander' },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("rgbExpand") },
-	                    'RGB',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse rbgExpand', id: this.uid("rgbExpand") },
-	                React.createElement(
-	                    'p',
-	                    null,
-	                    React.createElement(
-	                        'strong',
-	                        null,
-	                        'NOTE:'
-	                    ),
-	                    ' To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (Value/100)'
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "attributes_R") },
-	                    React.createElement(
-	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("attributes_R") },
-	                        'Level - Red [0-255]'
-	                    ),
-	                    React.createElement('input', {
-	                        disabled: this.props.disabled,
-	                        value: this.state.r,
-	                        'data-statepath': 'r',
-	                        onChange: this.changed,
-	                        className: 'r form-control',
-	                        type: 'number',
-	                        id: this.uid("attributes_R") }),
-	                    this.errMsg("attributes_R")
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "attributes_G") },
-	                    React.createElement(
-	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("attributes_G") },
-	                        'Level - Green [0-255]'
-	                    ),
-	                    React.createElement('input', {
-	                        disabled: this.props.disabled,
-	                        value: this.state.g,
-	                        'data-statepath': 'g',
-	                        onChange: this.changed,
-	                        className: 'g form-control',
-	                        type: 'number',
-	                        id: this.uid("attributes_G") }),
-	                    this.errMsg("attributes_G")
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "attributes_B") },
-	                    React.createElement(
-	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("attributes_B") },
-	                        'Level - Blue [0-255]'
-	                    ),
-	                    React.createElement('input', {
-	                        disabled: this.props.disabled,
-	                        value: this.state.b,
-	                        'data-statepath': 'b',
-	                        onChange: this.changed,
-	                        className: 'b form-control',
-	                        type: 'number',
-	                        id: this.uid("attributes_B") }),
-	                    this.errMsg("attributes_B")
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneSetLevelCommand;
-
-/***/ },
-/* 243 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ZonePicker = React.createClass({
-	    displayName: 'ZonePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.zoneId || ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.zones.forEach(function (zone) {
-	            options.push(React.createElement(
-	                'option',
-	                { key: zone.id, value: zone.id },
-	                zone.name
-	            ));
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZonePicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    disabled: this.props.disabled,
-	                    className: 'form-control',
-	                    defaultValue: this.props.zoneId,
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select a Zone...'
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = ZonePicker;
-
-/***/ },
-/* 244 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(194);
-	var UniqueIdMixin = __webpack_require__(193);
-	var ScenePicker = __webpack_require__(245);
-
-	var SceneSetCommand = module.exports = React.createClass({
-	    displayName: 'exports',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
-	            sceneId: this.props.command.attributes.SceneID || '',
-	            errors: null
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            scenes: []
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        return {
-	            type: 'sceneSet',
-	            clientId: this.state.clientId,
-	            attributes: {
-	                SceneID: this.state.sceneId
-	            }
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    scenePickerChanged: function scenePickerChanged(sceneId) {
-	        this.setState({ sceneId: sceneId });
-	    },
-
-	    render: function render() {
-	        //TODO: Filter out the parent scene from the scenes list so it can't call itself
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-SceneSetCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Scene Set'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_SceneID") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_SceneID") },
-	                    'Scene*'
-	                ),
-	                React.createElement(ScenePicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.scenePickerChanged,
-	                    scenes: this.props.scenes,
-	                    sceneId: this.state.sceneId,
-	                    parentSceneId: this.props.parentSceneId }),
-	                this.errMsg("attributes_SceneID")
-	            )
-	        );
-	    }
-	});
-	module.exports = SceneSetCommand;
-
-/***/ },
-/* 245 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ScenePicker = React.createClass({
-	    displayName: 'ScenePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.sceneId || ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.scenes.forEach(function (scene) {
-	            if (!scene.id) {
-	                // If this scene has not been saved it can't be used
-	                return;
-	            }
-
-	            // Can't set itself
-	            if (scene.id === this.props.parentSceneId) {
-	                return;
-	            }
-
-	            options.push(React.createElement(
-	                'option',
-	                { key: scene.id, value: scene.id },
-	                scene.name
-	            ));
-	        }.bind(this));
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ScenePicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    disabled: this.props.disabled,
-	                    defaultValue: this.props.sceneId,
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select a Scene...'
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = ScenePicker;
-
-/***/ },
-/* 246 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(194);
-	var UniqueIdMixin = __webpack_require__(193);
-	var ButtonPicker = __webpack_require__(247);
-
-	var ButtonPressCommand = module.exports = React.createClass({
-	    displayName: 'exports',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
-	            buttonId: this.props.command.attributes.ButtonID || '',
-	            errors: null
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            buttons: []
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        return {
-	            type: 'buttonPress',
-	            clientId: this.state.clientId,
-	            attributes: {
-	                ButtonID: this.state.buttonId
-	            }
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    buttonPickerChanged: function buttonPickerChanged(buttonId) {
-	        this.setState({ buttonId: buttonId });
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ButtonPressCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Button Press'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_ButtonID") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
-	                    'Button*'
-	                ),
-	                React.createElement(ButtonPicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.buttonPickerChanged,
-	                    buttons: this.props.buttons,
-	                    buttonId: this.state.buttonId }),
-	                this.errMsg("attributes_ButtonID")
-	            )
-	        );
-	    }
-	});
-	module.exports = ButtonPressCommand;
-
-/***/ },
-/* 247 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ButtonPicker = React.createClass({
-	    displayName: 'ButtonPicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.buttonId || ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.buttons.forEach(function (button) {
-	            options.push(React.createElement(
-	                'option',
-	                { key: button.id, value: button.id },
-	                button.fullName
-	            ));
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ButtonPicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    disabled: this.props.disabled,
-	                    className: 'form-control',
-	                    defaultValue: this.props.buttonId,
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select a Button...'
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = ButtonPicker;
-
-/***/ },
-/* 248 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(194);
-	var UniqueIdMixin = __webpack_require__(193);
-	var ButtonPicker = __webpack_require__(247);
-
-	var ButtonReleaseCommand = module.exports = React.createClass({
-	    displayName: 'exports',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
-	            buttonId: this.props.command.attributes.ButtonID || '',
-	            errors: null
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            buttons: []
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        return {
-	            type: 'buttonRelease',
-	            clientId: this.state.clientId,
-	            attributes: {
-	                ButtonID: this.state.buttonId
-	            }
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    buttonPickerChanged: function buttonPickerChanged(buttonId) {
-	        this.setState({ buttonId: buttonId });
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ButtonReleaseCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Button Release'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_ButtonID") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
-	                    'Button*'
-	                ),
-	                React.createElement(ButtonPicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.buttonPickerChanged,
-	                    buttons: this.props.buttons,
-	                    buttonId: this.state.buttonId }),
-	                this.errMsg("attributes_ButtonID")
-	            )
-	        );
-	    }
-	});
-	module.exports = ButtonReleaseCommand;
 
 /***/ }
 /******/ ]);
