@@ -41,6 +41,7 @@ button.disabled {
     padding: 8px;
     display: block;
     margin-bottom: 12px;
+    box-shadow: 3px 3px 5px #aaa;
 }
 .cmp-Scene .btn.scene .fa {
     font-size: 30px;
@@ -86,6 +87,7 @@ button.disabled {
     padding: 8px;
     display: block;
     margin-bottom: 12px;
+    box-shadow: 3px 3px 5px #aaa;
 }
 .cmp-Zone .zone .name{
     display: block;
@@ -206,6 +208,11 @@ button.disabled {
 .cmp-DeviceInfo .btnDelete {
     padding: 0;
 }
+.cmp-DeviceInfo .glyphicon-menu-down {
+    font-size: 11px;
+    margin-left: 2px;
+    margin-bottom: 20px;
+}
 
 .cmp-ControlApp .nav-tabs a {
     font-size: 18px;
@@ -295,4 +302,49 @@ button.disabled {
 }
 .cmp-LogLine span.rawMessage {
     font-style: italic;
+}
+
+
+
+
+
+.nav-tabs {
+    border-bottom: 2px solid #ff0000;
+    background-color: #ff0000;
+    box-shadow: 0px 2px 4px #bbb;
+}
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover {
+    border-width: 0;
+    background-color: #ff0000;                                                                
+}
+.nav-tabs > li > a {
+    border: none;
+    color: #fff;
+    opacity: 0.6;
+    text-align: center;
+    min-width: 70px;
+}
+.nav-tabs > li.active > a, .nav-tabs > li > a:hover {
+    border: none;
+    color: #fff !important;
+    background: transparent;
+    opacity: 1.0;
+}
+.nav-tabs > li > a::after {
+    content: "";
+    background: #fff;
+    height: 4px;
+    position: absolute;
+    width: 100%;
+    left: 0px;
+    bottom: -1px;
+    transition: all 250ms ease 0s;
+    transform: scale(0);
+}
+.nav-tabs > li.active > a::after, .nav-tabs > li:hover > a::after {
+    transform: scale(1);
+}
+.tab-nav > li > a::after {
+    background: #21527d none repeat scroll 0% 0%;
+    color: #fff;
 }

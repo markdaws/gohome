@@ -33,13 +33,19 @@ var ControlApp = React.createClass({
             <div className="cmp-ControlApp">
                 <ul className="nav nav-tabs" role="tablist">
                     <li role="presentation" className="">
-                        <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">Scenes</a>
+                        <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">
+                            <i className="fa fa-sliders"></i>
+                        </a>
                     </li>
                     <li role="presentation" className="">
-                        <a href="#zones" role="tab" aria-controls="zones" data-toggle="tab">Zones</a>
+                        <a href="#zones" role="tab" aria-controls="zones" data-toggle="tab">
+                            <i className="fa fa-code-fork"></i>
+                        </a>
                     </li>
                     <li role="presentation" className="active">
-                        <a href="#system" role="tab" aria-controls="system" data-toggle="tab">System</a>
+                        <a href="#system" role="tab" aria-controls="system" data-toggle="tab">
+                            <i className="fa fa-tablet"></i>
+                        </a>
                     </li>
                     {/*
                     //TODO: re-enable after v1.0
