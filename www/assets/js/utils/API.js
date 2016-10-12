@@ -4,6 +4,23 @@ var Constants = require('../constants.js');
  API provides helper methods to access all of the gohome REST APIs
 */
 var API = {
+    // scaneActivate actives the specified scene
+    sceneActivate: function(sceneId, callback) {
+        $.ajax({
+            url: '/api/v1/scenes/active',
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ id: sceneId }),
+            success: function(data) {
+                callback(null, data);
+            }.bind(this),
+            error: function(xhr, status, err) {
+                callback({ err: err });
+            }.bind(this)
+        });
+    },
+
     // sceneLoadAll loads all of the scenes from the backing store
     sceneLoadAll: function(callback) {
         $.ajax({
@@ -250,6 +267,25 @@ var API = {
                 });
             }.bind(this)
         });
+    },
+
+    discoverDevice: function(modelNumber, callback) {
+        $.ajax({
+            url: '/api/v1/discovery/' + modelNumber,
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err
+                });
+            }
+        });
+    },
+
+    discoverToken: function(modelNumber, address, callback) {
     }
 };
 module.exports = API;

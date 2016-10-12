@@ -1,19 +1,10 @@
 var React = require('react');
+var Api = require('../utils/API.js')
 
 var Scene = React.createClass({
     handleClick: function(event) {
-        $.ajax({
-            url: '/api/v1/systems/1/scenes/active',
-            type: 'POST',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({ id: this.props.scene.id }),
-            success: function(data) {
-                //TODO: Common way in UI to display success/error
-            }.bind(this),
-            error: function(xhr, status, err) {
-                console.error(err.toString());
-            }.bind(this)
+        Api.sceneActivate(this.props.scene.id, function(err, data) {
+            //TODO: Show error/success
         });
     },
 
