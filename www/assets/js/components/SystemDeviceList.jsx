@@ -33,10 +33,10 @@ var SystemDeviceList = React.createClass({
 
         return (
             <div className="cmp-DeviceList">
+                <h2 className={this.props.devices.length > 0 ? "" : " hidden"}>Devices</h2>
                 <div className="header clearfix">
                     <button className="btn btn-primary pull-right" onClick={this.newClicked}>New Device</button>
                 </div>
-                <h3 className={this.props.devices.length > 0 ? "" : " hidden"}>Devices</h3>
                 {deviceNodes}
             </div>
         );

@@ -4,15 +4,78 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/belkin"
+	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/connectedbytcp"
 	"github.com/markdaws/gohome/fluxwifi"
+	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/zone"
 )
 
 var ErrUnauthorized = errors.New("unauthorized")
 var ErrUnsupported = errors.New("unsupported model number")
 
+func Devices(modelNumber string) ([]gohome.Device, error) {
+	switch modelNumber {
+	case "fluxwifi":
+		infos, err := fluxwifi.Scan(5)
+		if err != nil {
+			return nil, err
+		}
+
+		/*
+			//TODO: Remove, for testing
+			infos := [1]fluxwifi.BulbInfo{fluxwifi.BulbInfo{
+				IP:    "192.168.0.1:1234",
+				ID:    "thisisanid",
+				Model: "modelnumber",
+			}}*/
+
+		devices := make([]gohome.Device, len(infos))
+		for i, info := range infos {
+			dev := gohome.NewDevice(
+				"fluxwifi",
+				info.IP,
+				"",
+				info.ID+": "+info.Model,
+				"",
+				nil,
+				false,
+				nil,
+			)
+
+			builder, _ := intg.CmdBuilderFromID(nil, dev.ModelNumber)
+			dev.CmdBuilder = builder
+
+			pool, _ := comm.NewConnectionPool(comm.ConnectionPoolConfig{
+				Name:           dev.Name,
+				Size:           2,
+				ConnectionType: "telnet",
+				Address:        dev.Address,
+				TelnetPingCmd:  "",
+			})
+			dev.Connections = pool
+
+			z := &zone.Zone{
+				Address:     "",
+				Name:        dev.Name,
+				Description: "",
+				DeviceID:    "",
+				Type:        zone.ZTLight,
+				Output:      zone.OTRGB,
+			}
+			dev.AddZone(z)
+			devices[i] = dev
+		}
+		return devices, nil
+
+	default:
+		return nil, ErrUnsupported
+	}
+}
+
+//TODO: Delete
 func Discover(modelNumber string) (map[string]string, error) {
 	data := make(map[string]string)
 
@@ -62,16 +125,6 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 				Type:        zone.ZTLight,
 				Output:      zone.OTContinuous,
 			}
-
-			//TODO: remove
-
-			zones[i*2+1] = zone.Zone{
-				Address:     info.IP + "xx",
-				Name:        info.ID + " what",
-				Description: "Flux WIFI - " + info.Model,
-				Type:        zone.ZTShade,
-				Output:      zone.OTContinuous,
-			}
 		}
 		return zones, nil
 
@@ -84,6 +137,7 @@ func Zones(modelNumber string) ([]zone.Zone, error) {
 	return nil, ErrUnsupported
 }
 
+//TODO:
 func VerifyConnection(modelNumber, address, token string) error {
 	switch modelNumber {
 	case "TCP600GWB":

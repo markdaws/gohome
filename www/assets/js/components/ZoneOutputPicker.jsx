@@ -27,12 +27,12 @@ var ZoneOutputPicker = React.createClass({
     render: function() {
         return (
             <div className="cmp-ZoneOutputPicker">
-              <select className="form-control" defaultValue={this.props.output} onChange={this.selected} value={this.state.value}>
-                <option value="continuous">Continuous</option>
-                <option value="binary">Binary</option>
-                <option value="rgb">RGB</option>
-                <option value="unknown">Unknown</option>
-              </select>
+                <select className="form-control" defaultValue={this.props.output} onChange={this.selected} value={this.state.value}>
+                    <option value="unknown">Unknown</option>
+                    <option value="continuous">Continuous</option>
+                    <option value="binary">Binary</option>
+                    <option value="rgb">RGB</option>
+                </select>
             </div>
         );
     }

@@ -17,6 +17,13 @@ var ZoneActions = {
                 dispatch({ type: Constants.ZONE_LOAD_ALL_RAW, data: data });
             });
         };
-    }
+    },
+
+    importedZone: function(zoneJson) {
+        return function(dispatch) {
+            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zoneJson });
+        };
+    },
+
 };
 module.exports = ZoneActions;

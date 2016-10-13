@@ -28,15 +28,25 @@ module.exports = function(state, action) {
         break;
     case Constants.DEVICE_CREATE_RAW:
         newState.devices = newState.devices.map(function(device) {
-            if (device.clientId === action.clientId) {
+            if (action.clientId && (device.clientId === action.clientId)) {
                 return action.data;
             }
             return device;
         });
-        break;
+
     case Constants.DEVICE_CREATE_FAIL:
         break;
 
+    case Constants.DEVICE_IMPORT:
+        break;
+    case Constants.DEVICE_IMPORT_RAW:
+        newState.devices = [action.data].concat(newState.devices);
+        break;
+
+        break;
+    case Constants.DEVICE_IMPORT_FAIL:
+        break;
+        
     case Constants.DEVICE_DESTROY:
         break;
 

@@ -26,9 +26,15 @@ var SystemActions = {
         };
     },
 
-    savedDevice: function(clientId, deviceJson) {
+    savedDevice: function(clientId, deviceJson, append) {
         return function(dispatch) {
             dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+        };
+    },
+
+    importedDevice: function(deviceJson) {
+        return function(dispatch) {
+            dispatch({ type: Constants.DEVICE_IMPORT_RAW, data: deviceJson });
         };
     },
 

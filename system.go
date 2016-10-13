@@ -3,6 +3,8 @@ package gohome
 import (
 	"strconv"
 
+	"github.com/markdaws/gohome/event"
+	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
@@ -17,8 +19,9 @@ type System struct {
 	Buttons     map[string]*Button
 	Recipes     map[string]*Recipe
 
-	//TODO: Remove
 	CmdProcessor CommandProcessor
+	EventBroker  event.Broker
+
 	nextGlobalID int
 }
 
@@ -45,6 +48,33 @@ func (s *System) NextGlobalID() string {
 
 func (s *System) PeekNextGlobalID() int {
 	return s.nextGlobalID
+}
+
+func (s *System) InitDevices() {
+	for _, d := range s.Devices {
+		d := d
+		go s.InitDevice(&d)
+	}
+}
+
+func (s *System) InitDevice(d *Device) error {
+	log.V("Init Device: %s", d)
+	// If the device requires a connection pool, init all of the connections
+	if d.Connections != nil {
+		log.V("%s init connections", d)
+		err := d.Connections.Init()
+		if err != nil {
+			log.E("%s failed to init connection pool: %s", d, err)
+			return err
+		} else {
+			log.V("%s connected", d)
+		}
+	}
+
+	if s.EventBroker != nil {
+		s.EventBroker.AddProducer(d)
+	}
+	return nil
 }
 
 func (s *System) AddButton(b *Button) {

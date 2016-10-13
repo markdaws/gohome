@@ -1,8 +1,12 @@
 var React = require('react');
+var ReactRedux = require('react-redux');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 var InputValidationMixin = require('./InputValidationMixin.jsx')
 var SaveBtn = require('./SaveBtn.jsx');
 var Api = require('../utils/API.js');
+var ZoneInfo = require('./ZoneInfo.jsx')
+var Classnames = require('classnames')
+var ZoneActions = require('../actions/ZoneActions.js');
 
 var DeviceInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
@@ -18,8 +22,16 @@ var DeviceInfo = React.createClass({
             token: this.props.token,
             showToken: false,
             errors: null,
-            saveButtonStatus: ''
+            saveButtonStatus: '',
+            dirty: !this.props.id
         }
+    },
+
+    getDefaultProps: function() {
+        return {
+            zones: [],
+            showZones: false
+        };
     },
 
     toJson: function() {
@@ -64,7 +76,7 @@ var DeviceInfo = React.createClass({
     save: function() {
         this.setState({ errors: null });
 
-        Api.deviceCreate(this.toJson(), function(err, data) {
+        Api.deviceCreate(this.toJson(), function(err, deviceData) {
             if (err) {
                 this.setState({
                     saveButtonStatus: 'error',
@@ -73,8 +85,34 @@ var DeviceInfo = React.createClass({
                 return;
             }
 
-            this.setState({ saveButtonStatus: 'success' });
-            this.props.savedDevice(this.state.clientId, data);
+            // Let callers know the device has been saved
+            this.props.savedDevice(this.state.clientId, deviceData);
+            
+            // Now we need to loop through each of the zones and save them
+            function saveZone(index) {
+                if (index >= this.props.zones.length) {
+                    this.setState({ saveButtonStatus: 'success' });
+                    return;
+                }
+
+                // Now the device has an id, we need to bind the zone to it
+                var zoneInfo = this.refs["zoneInfo_" + this.props.zones[index].clientId];
+                var zone = Object.assign({}, zoneInfo.toJson());
+                zone.deviceId = deviceData.id;
+                Api.zoneCreate(zone, function(err, zoneData) {
+                    if (err) {
+                        zoneInfo.setErrors(err.validationErrors);
+                        this.setState({
+                            saveButtonStatus: 'error'
+                        });
+                        return;
+                    }
+
+                    this.props.savedZone(zoneData);
+                    saveZone.bind(this)(index+1);
+                }.bind(this));
+            }
+            saveZone.bind(this)(0);
         }.bind(this));
     },
 
@@ -84,9 +122,16 @@ var DeviceInfo = React.createClass({
 
     _changed: function(evt) {
         this.setState({ saveButtonStatus: '' });
-        this.changed(evt);
+
+        if (evt) {
+            this.changed(evt);
+        }
     },
 
+    _zoneChanged: function() {
+        this._changed();
+    },
+    
     render: function() {
         var device = this.state.device;
 
@@ -106,6 +151,34 @@ var DeviceInfo = React.createClass({
                 </div>
             );
         }
+
+        var saveBtn;
+        if (this.state.dirty) {
+            saveBtn = (
+                <SaveBtn
+                    clicked={this.save}
+                    text="Save"
+                    status={this.state.saveButtonStatus}/>
+            );
+        }
+
+        var zones = this.props.zones.map(function(zone) {
+            return (
+                <ZoneInfo
+                    ref={"zoneInfo_" + zone.clientId}
+                    readOnlyFields="deviceId"
+                    key={zone.id || zone.clientId}
+                    clientId={zone.clientId}
+                    name={zone.name}
+                    description={zone.description}
+                    address={zone.address}
+                    type={zone.type}
+                    output={zone.output}
+                    deviceId={this.state.id || this.state.clientId}
+                    devices={[ this.toJson() ]}
+                    changed={this._zoneChanged} />
+            );
+        }.bind(this));
         
         return (
             <div className="cmp-DeviceInfo well well-sm">
@@ -169,16 +242,33 @@ var DeviceInfo = React.createClass({
                         id={this.uid("address")} />
                     {this.errMsg("address")}
                 </div>
-                {token}
-                <button className="btn btn-primary" onClick={this.testConnection}>Test Connection</button>
-                <div className="pull-right">
-                    <SaveBtn
-                        clicked={this.save}
-                        text="Save"
-                        status={this.state.saveButtonStatus}/>
+                <div className={Classnames({clearfix: true, hidden: !this.props.showZones})}>
+                    <a data-toggle="collapse" href={"#" + this.uid("zones")}>
+                        Zones
+                        <i className="glyphicon glyphicon-menu-down"></i>
+                    </a>
                 </div>
+                <div className="collapse zones" id={this.uid("zones")}>
+                    {zones}
+                </div>
+                {token}
+                {/*
+                <button className="btn btn-primary" onClick={this.testConnection}>Test Connection</button>
+                */}
+                <div className="pull-right">
+                    {saveBtn}
+                </div>
+                <div style={{clear:"both"}}></div>
             </div>
         );
     }
 });
-module.exports = DeviceInfo;
+
+function mapDispatchToProps(dispatch) {
+    return {
+        savedZone: function(zoneJson) {
+            dispatch(ZoneActions.importedZone(zoneJson));
+        }
+    };
+}
+module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceInfo);

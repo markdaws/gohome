@@ -2,6 +2,7 @@
 
 body, html {
     overflow-x: hidden;
+    width: 100%;
 }
 
 .spinnerWrapper {
@@ -31,9 +32,11 @@ button.disabled {
 .cmp-SceneList .buttonWrapper .btnEdit {
     margin-right: 15px;
 }
-
 .cmp-SceneList .cmp-SceneInfo {
     margin-bottom: 50px;
+}
+.cmp-SceneList h2 {
+    margin-top: 0;
 }
 
 .cmp-Scene .btn.scene {
@@ -214,9 +217,46 @@ button.disabled {
     margin-bottom: 20px;
 }
 
-.cmp-ControlApp .nav-tabs a {
-    font-size: 18px;
-    color: #000;
+.cmp-ControlApp .nav-tabs {
+    border-bottom: 2px solid #337ab7;
+    background-color: #337ab7;
+    box-shadow: 0px 2px 4px #bbb;
+}
+.cmp-ControlApp .nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover {
+    border-width: 0;
+    background-color: #337ab7;                                                                
+}
+.cmp-ControlApp .nav-tabs > li > a {
+    border: none;
+    color: #fff;
+    opacity: 0.6;
+    text-align: center;
+    min-width: 70px;
+    font-size: 25px;
+}
+.cmp-ControlApp .nav-tabs > li.active > a, .nav-tabs > li > a:hover {
+    border: none;
+    color: #fff !important;
+    background: transparent;
+    opacity: 1.0;
+}
+.cmp-ControlApp .nav-tabs > li > a::after {
+    content: "";
+    background: #fff;
+    height: 4px;
+    position: absolute;
+    width: 100%;
+    left: 0px;
+    bottom: -1px;
+    transition: all 250ms ease 0s;
+    transform: scale(0);
+}
+.cmp-ControlApp .nav-tabs > li.active > a::after, .nav-tabs > li:hover > a::after {
+    transform: scale(1);
+}
+.cmp-ControlApp .tab-nav > li > a::after {
+    background: #21527d none repeat scroll 0% 0%;
+    color: #fff;
 }
 
 .cmp-RecipeApp h2 {
@@ -302,49 +342,4 @@ button.disabled {
 }
 .cmp-LogLine span.rawMessage {
     font-style: italic;
-}
-
-
-
-
-
-.nav-tabs {
-    border-bottom: 2px solid #ff0000;
-    background-color: #ff0000;
-    box-shadow: 0px 2px 4px #bbb;
-}
-.nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover {
-    border-width: 0;
-    background-color: #ff0000;                                                                
-}
-.nav-tabs > li > a {
-    border: none;
-    color: #fff;
-    opacity: 0.6;
-    text-align: center;
-    min-width: 70px;
-}
-.nav-tabs > li.active > a, .nav-tabs > li > a:hover {
-    border: none;
-    color: #fff !important;
-    background: transparent;
-    opacity: 1.0;
-}
-.nav-tabs > li > a::after {
-    content: "";
-    background: #fff;
-    height: 4px;
-    position: absolute;
-    width: 100%;
-    left: 0px;
-    bottom: -1px;
-    transition: all 250ms ease 0s;
-    transform: scale(0);
-}
-.nav-tabs > li.active > a::after, .nav-tabs > li:hover > a::after {
-    transform: scale(1);
-}
-.tab-nav > li > a::after {
-    background: #21527d none repeat scroll 0% 0%;
-    color: #fff;
 }

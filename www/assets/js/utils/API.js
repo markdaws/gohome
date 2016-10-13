@@ -4,7 +4,68 @@ var Constants = require('../constants.js');
  API provides helper methods to access all of the gohome REST APIs
 */
 var API = {
-    // scaneActivate actives the specified scene
+
+    //TODO: Break this in to separate files for different objects
+
+    deviceLoadAll: function(callback) {
+        $.ajax({
+            url: '/api/v1/devices',
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    status: status
+                });
+            }
+        });
+    },
+
+    deviceCreate: function(deviceJson, callback) {
+        $.ajax({
+            url: '/api/v1/devices',
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(deviceJson),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = (xhr.responseJSON || {}).errors;
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    validationErrors: errors
+                });
+            }
+        });
+    },
+
+    // Deletes a device on the server
+    deviceDestroy: function(id, callback) {
+        $.ajax({
+            url: '/api/v1/devices/' + id,
+            type: 'DELETE',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err,
+                    status: status,
+                    xhr: xhr
+                });
+            }
+        });
+    },
+
+    // sceneActivate actives the specified scene
     sceneActivate: function(sceneId, callback) {
         $.ajax({
             url: '/api/v1/scenes/active',
@@ -55,12 +116,12 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                var errors = (xhr.responseJSON || {}).errors;
                 callback({
                     err: err,
                     xhr: xhr,
                     validationErrors: errors,
-                    clientId: scene.clientId,
+                    clientId: scene.clientId
                 });
             }
         });
@@ -78,7 +139,7 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                var errors = (xhr.responseJSON || {}).errors;
                 callback({
                     err: err,
                     xhr: xhr,
@@ -119,7 +180,7 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+                var errors = (xhr.responseJSON || {}).errors;
                 callback({
                     err: err,
                     xhr: xhr,
@@ -140,11 +201,10 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                var errors = (JSON.parse(xhr.responseText) || {}).errors;
                 callback({
                     err: err,
                     xhr: xhr,
-                    validationErrors: errors
+                    status: status
                 });
             }
         });
@@ -164,6 +224,29 @@ var API = {
                     err: err,
                     status: status,
                     xhr: xhr,
+                });
+            }
+        });
+    },
+
+    // zoneCreate creates a new zone on the server
+    zoneCreate: function(zoneJson, callback) {
+        $.ajax({
+            url: '/api/v1/zones',
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(zoneJson),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                debugger;
+                var errors = (xhr.responseJSON || {}).errors;
+                callback({
+                    err: err,
+                    status: status,
+                    validationErrors: errors
                 });
             }
         });
@@ -189,64 +272,6 @@ var API = {
             },
             error: function(xhr, status, err) {
                 callback(err);
-            }
-        });
-    },
-
-    deviceLoadAll: function(callback) {
-        $.ajax({
-            url: '/api/v1/devices',
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                callback({
-                    err: err,
-                    xhr: xhr,
-                    status: status
-                });
-            }
-        });
-    },
-
-    deviceCreate: function(deviceJson, callback) {
-        $.ajax({
-            url: '/api/v1/devices',
-            type: 'POST',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(deviceJson),
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                var errors = JSON.parse(xhr.responseText || '{}').errors;
-                callback({
-                    err: err,
-                    xhr: xhr,
-                    validationErrors: errors
-                });
-            }
-        });
-    },
-
-    // Deletes a device on the server
-    deviceDestroy: function(id, callback) {
-        $.ajax({
-            url: '/api/v1/devices/' + id,
-            type: 'DELETE',
-            cache: false,
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                callback({
-                    err: err,
-                    status: status,
-                    xhr: xhr
-                });
             }
         });
     },

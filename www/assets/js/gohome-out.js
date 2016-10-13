@@ -19814,7 +19814,7 @@
 	                    React.createElement(
 	                        'a',
 	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
-	                        'Scenes'
+	                        React.createElement('i', { className: 'fa fa-sliders' })
 	                    )
 	                ),
 	                React.createElement(
@@ -19823,7 +19823,7 @@
 	                    React.createElement(
 	                        'a',
 	                        { href: '#zones', role: 'tab', 'aria-controls': 'zones', 'data-toggle': 'tab' },
-	                        'Zones'
+	                        React.createElement('i', { className: 'fa fa-code-fork' })
 	                    )
 	                ),
 	                React.createElement(
@@ -19832,7 +19832,7 @@
 	                    React.createElement(
 	                        'a',
 	                        { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
-	                        'System'
+	                        React.createElement('i', { className: 'fa fa-tablet' })
 	                    )
 	                )
 	            ),
@@ -21800,7 +21800,10 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var ZoneInfo = __webpack_require__(192);
+	var ReactRedux = __webpack_require__(160);
+	var DeviceInfo = __webpack_require__(201);
+	var Api = __webpack_require__(202);
+	var SystemActions = __webpack_require__(206);
 
 	var ImportFluxWIFI = React.createClass({
 	    displayName: 'ImportFluxWIFI',
@@ -21808,152 +21811,87 @@
 	    getInitialState: function getInitialState() {
 	        return {
 	            discovering: false,
-	            zones: [],
-	            loading: true,
 	            devices: []
 	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/systems/123/devices',
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                self.filterDevices(data || []);
-	            },
-	            error: function error(xhr, status, err) {
-	                console.error(err.toString());
-	            }
-	        });
-	    },
-
-	    filterDevices: function filterDevices(devices) {
-	        var filteredDevices = [];
-	        for (var i = 0; i < devices.length; ++i) {
-	            switch (devices[i].modelNumber) {
-	                default:
-	                    //TODO: undo
-	                    //                case 'GoHomeHub':
-	                    filteredDevices.push(devices[i]);
-	                    break;
-	            }
-	        }
-
-	        this.setState({
-	            devices: filteredDevices,
-	            loading: false
-	        });
 	    },
 
 	    discover: function discover() {
 	        this.setState({
 	            discovering: true,
-	            zones: []
+	            devices: []
 	        });
 
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/discovery/FluxWIFI/zones',
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                self.setState({
-	                    discovering: false,
-	                    zones: data
-	                });
-	            },
-	            error: function error(xhr, status, err) {
-	                self.setState({
-	                    discovering: false
-	                });
-	                console.error(err);
-	            }
-	        });
+	        Api.discoverDevice("fluxwifi", function (err, data) {
+	            this.setState({
+	                discovering: false,
+	                devices: data
+	            });
+	        }.bind(this));
 	    },
+
+	    savedDevice: function savedDevice() {},
 
 	    render: function render() {
 
-	        var loading;
-	        if (this.state.loading) {
-	            loading = React.createElement(
-	                'div',
-	                { className: 'spinnerWrapper' },
-	                React.createElement('i', { className: 'fa fa-spinner fa-spin' })
-	            );
-	        }
-
-	        var noDeviceBody;
-	        if (!this.state.loading && this.state.devices.length === 0) {
-	            noDeviceBody = React.createElement(
-	                'div',
-	                null,
-	                React.createElement(
-	                    'h3',
-	                    null,
-	                    'Import failed'
-	                ),
-	                React.createElement(
-	                    'p',
-	                    null,
-	                    'In order to import Flux WIFI bulbs, you must have a device in your system that is capable of controlling them.  Please add one of the following devices to your system first, then come back and try to import again:'
-	                ),
-	                React.createElement(
-	                    'ul',
-	                    null,
-	                    React.createElement(
-	                        'li',
-	                        null,
-	                        'GoHomeHub'
-	                    )
-	                )
-	            );
-	        }
-
-	        var zones;
-	        if (this.state.zones.length > 0) {
-	            var self = this;
-	            zones = this.state.zones.map(function (zone) {
-	                return React.createElement(ZoneInfo, { errors: self.state.errors, ref: "zone" + zone.address, devices: self.state.devices, name: zone.name, description: zone.description, type: 'light', output: 'rgb', controller: 'FluxWIFI', address: zone.address, deviceId: zone.deviceId, key: zone.address });
-	            });
+	        var devices;
+	        if (this.state.devices.length > 0) {
+	            devices = this.state.devices.map(function (device) {
+	                return React.createElement(DeviceInfo, {
+	                    name: device.name,
+	                    description: device.description,
+	                    address: device.address,
+	                    modelNumber: device.modelNumber,
+	                    id: device.id,
+	                    clientId: device.clientId,
+	                    readOnlyFields: 'id, modelNumber',
+	                    key: device.id || device.clientId,
+	                    deviceDelete: null,
+	                    savedDevice: this.props.importedDevice,
+	                    showZones: true,
+	                    zones: device.zones });
+	            }.bind(this));
 	        }
 
 	        var importBody;
-	        if (!this.state.loading && this.state.devices.length > 0) {
-	            importBody = React.createElement(
-	                'div',
-	                null,
-	                React.createElement(
-	                    'button',
-	                    { className: "btn btn-primary" + (this.state.discovering ? " disabled" : ""),
-	                        onClick: this.discover },
-	                    'Discover Zones'
-	                ),
-	                React.createElement('i', { className: "fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden") }),
-	                React.createElement(
-	                    'h3',
-	                    { className: this.state.zones.length > 0 ? "" : " hidden" },
-	                    'Zones'
-	                ),
-	                React.createElement(
-	                    'p',
-	                    { className: this.state.zones.length > 0 ? "" : " hidden" },
-	                    'Click "Import" next to each zone you want to import'
-	                ),
-	                zones
-	            );
-	        }
+	        importBody = React.createElement(
+	            'div',
+	            null,
+	            React.createElement(
+	                'button',
+	                { className: "btn btn-primary" + (this.state.discovering ? " disabled" : ""),
+	                    onClick: this.discover },
+	                'Discover Devices'
+	            ),
+	            React.createElement('i', { className: "fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden") }),
+	            React.createElement(
+	                'h3',
+	                { className: this.state.devices.length > 0 ? "" : " hidden" },
+	                'Devices'
+	            ),
+	            React.createElement(
+	                'p',
+	                { className: this.state.devices.length > 0 ? "" : " hidden" },
+	                'Click "Save" on each device you wish to save.'
+	            ),
+	            devices
+	        );
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ImportFluxWIFI' },
-	            loading,
-	            noDeviceBody,
 	            importBody
 	        );
 	    }
 	});
-	module.exports = ImportFluxWIFI;
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        importedDevice: function importedDevice(clientId, deviceJson) {
+	            dispatch(SystemActions.importedDevice(deviceJson));
+	        }
+	    };
+	}
+
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(ImportFluxWIFI);
 
 /***/ },
 /* 192 */
@@ -21966,7 +21904,6 @@
 	var InputValidationMixin = __webpack_require__(194);
 	var SaveBtn = __webpack_require__(195);
 	var DevicePicker = __webpack_require__(196);
-	var ZoneControllerPicker = __webpack_require__(197);
 	var ZoneOutputPicker = __webpack_require__(198);
 	var ZoneTypePicker = __webpack_require__(199);
 
@@ -21976,14 +21913,13 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
+	            clientId: this.props.clientId,
 	            name: this.props.name,
 	            description: this.props.description,
 	            address: this.props.address,
 	            deviceId: this.props.deviceId,
 	            type: this.props.type,
 	            output: this.props.output,
-	            controller: this.props.controller,
 	            errors: null
 	        };
 	    },
@@ -21997,32 +21933,17 @@
 	            address: s.address,
 	            deviceId: s.deviceId,
 	            type: s.type,
-	            output: s.output,
-	            controller: s.controller
+	            output: s.output
 	        };
 	    },
 
-	    save: function save() {
-	        var saveBtn = this.refs.saveBtn;
-	        saveBtn.saving();
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
 
-	        this.setState({ errors: null });
-
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/systems/1/zones',
-	            type: 'POST',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify(this.toJson()),
-	            success: function success(data) {
-	                saveBtn.success();
-	            },
-	            error: function error(xhr, status, err) {
-	                self.setState({ errors: (JSON.parse(xhr.responseText) || {}).errors });
-	                saveBtn.failure();
-	            }
-	        });
+	    _changed: function _changed(evt) {
+	        this.props.changed && this.props.changed();
+	        this.changed(evt);
 	    },
 
 	    devicePickerChanged: function devicePickerChanged(deviceId) {
@@ -22037,10 +21958,6 @@
 	        this.setState({ output: output });
 	    },
 
-	    controllerChanged: function controllerChanged(controller) {
-	        this.setState({ controller: controller });
-	    },
-
 	    render: function render() {
 	        return React.createElement(
 	            'div',
@@ -22053,7 +21970,13 @@
 	                    { className: 'control-label', htmlFor: this.uid('name') },
 	                    'Name*'
 	                ),
-	                React.createElement('input', { value: this.state.name, 'data-statepath': 'name', onChange: this.changed, className: 'name form-control', type: 'text', id: this.uid('name') }),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this._changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid('name') }),
 	                this.errMsg('name')
 	            ),
 	            React.createElement(
@@ -22064,7 +21987,13 @@
 	                    { className: 'control-label', htmlFor: this.uid("description") },
 	                    'Description'
 	                ),
-	                React.createElement('input', { value: this.state.description, 'data-statepath': 'description', onChange: this.changed, className: 'description form-control', type: 'text', id: this.uid("description") }),
+	                React.createElement('input', {
+	                    value: this.state.description,
+	                    'data-statepath': 'description',
+	                    onChange: this._changed,
+	                    className: 'description form-control',
+	                    type: 'text',
+	                    id: this.uid("description") }),
 	                this.errMsg('description')
 	            ),
 	            React.createElement(
@@ -22073,9 +22002,15 @@
 	                React.createElement(
 	                    'label',
 	                    { className: 'control-label', htmlFor: this.uid("address") },
-	                    'Address*'
+	                    'Address'
 	                ),
-	                React.createElement('input', { value: this.state.address, 'data-statepath': 'address', onChange: this.changed, className: 'address form-control', type: 'text', id: this.uid("address") }),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this._changed,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
 	                this.errMsg('address')
 	            ),
 	            React.createElement(
@@ -22086,7 +22021,11 @@
 	                    { className: 'control-label', htmlFor: this.uid("deviceId") },
 	                    'Device*'
 	                ),
-	                React.createElement(DevicePicker, { devices: this.props.devices, changed: this.devicePickerChanged }),
+	                React.createElement(DevicePicker, {
+	                    disabled: this.isReadOnly("deviceId"),
+	                    defaultId: this.props.deviceId,
+	                    devices: this.props.devices,
+	                    changed: this.devicePickerChanged }),
 	                this.errMsg('deviceId')
 	            ),
 	            React.createElement(
@@ -22110,36 +22049,6 @@
 	                ),
 	                React.createElement(ZoneOutputPicker, { output: this.props.output, changed: this.outputChanged }),
 	                this.errMsg('output')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "controller") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("controller") },
-	                    'Controller*'
-	                ),
-	                React.createElement(ZoneControllerPicker, { controller: this.props.controller, changed: this.controllerChanged }),
-	                this.errMsg('controller')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-primary pull-left', onClick: this.turnOn },
-	                    'Turn On'
-	                ),
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-primary btnOff pull-left', onClick: this.turnOff },
-	                    'Turn Off'
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: 'pull-right' },
-	                    React.createElement(SaveBtn, { ref: 'saveBtn', clicked: this.save, text: 'Import' })
-	                )
 	            )
 	        );
 	    }
@@ -22314,16 +22223,22 @@
 /* 196 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	"use strict";
 
 	var React = __webpack_require__(1);
 
 	var DevicePicker = React.createClass({
-	    displayName: 'DevicePicker',
+	    displayName: "DevicePicker",
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            devices: []
+	        };
+	    },
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            value: ''
+	            value: this.props.defaultId
 	        };
 	    },
 
@@ -22338,22 +22253,27 @@
 	    render: function render() {
 	        var options = [];
 	        this.props.devices.forEach(function (device) {
+	            var id = device.id || device.clientId;
 	            options.push(React.createElement(
-	                'option',
-	                { key: device.id, value: device.id },
+	                "option",
+	                { key: id, value: id },
 	                device.name
 	            ));
 	        });
 	        return React.createElement(
-	            'div',
-	            { className: 'cmp-DevicePicker' },
+	            "div",
+	            { className: "cmp-DevicePicker" },
 	            React.createElement(
-	                'select',
-	                { className: 'form-control', onChange: this.selected, value: this.state.value },
+	                "select",
+	                {
+	                    disabled: this.props.disabled,
+	                    className: "form-control",
+	                    onChange: this.selected,
+	                    value: this.state.value },
 	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select a device...'
+	                    "option",
+	                    { value: "" },
+	                    "Select a device..."
 	                ),
 	                options
 	            )
@@ -22363,51 +22283,7 @@
 	module.exports = DevicePicker;
 
 /***/ },
-/* 197 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ZoneControllerPicker = React.createClass({
-	    displayName: 'ZoneControllerPicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.controller || ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneControllerPicker' },
-	            React.createElement(
-	                'select',
-	                { className: 'form-control', onChange: this.selected, defaultValue: this.props.controller, value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Default'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'FluxWIFI' },
-	                    'Flux WIFI'
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneControllerPicker;
-
-/***/ },
+/* 197 */,
 /* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -22450,6 +22326,11 @@
 	                { className: 'form-control', defaultValue: this.props.output, onChange: this.selected, value: this.state.value },
 	                React.createElement(
 	                    'option',
+	                    { value: 'unknown' },
+	                    'Unknown'
+	                ),
+	                React.createElement(
+	                    'option',
 	                    { value: 'continuous' },
 	                    'Continuous'
 	                ),
@@ -22462,11 +22343,6 @@
 	                    'option',
 	                    { value: 'rgb' },
 	                    'RGB'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'unknown' },
-	                    'Unknown'
 	                )
 	            )
 	        );
@@ -22559,6 +22435,7 @@
 	        var self = this;
 	        this.setState({ discoveryInProgress: true });
 
+	        //TODO: use API
 	        $.ajax({
 	            url: '/api/v1/discovery/TCP600GWB',
 	            dataType: 'json',
@@ -22593,6 +22470,7 @@
 	            return;
 	        }
 
+	        //TODO: Use API
 	        var self = this;
 	        $.ajax({
 	            url: '/api/v1/discovery/TCP600GWB/token?address=' + device.address,
@@ -22676,10 +22554,14 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(160);
 	var UniqueIdMixin = __webpack_require__(193);
 	var InputValidationMixin = __webpack_require__(194);
 	var SaveBtn = __webpack_require__(195);
 	var Api = __webpack_require__(202);
+	var ZoneInfo = __webpack_require__(192);
+	var Classnames = __webpack_require__(221);
+	var ZoneActions = __webpack_require__(224);
 
 	var DeviceInfo = React.createClass({
 	    displayName: 'DeviceInfo',
@@ -22697,7 +22579,15 @@
 	            token: this.props.token,
 	            showToken: false,
 	            errors: null,
-	            saveButtonStatus: ''
+	            saveButtonStatus: '',
+	            dirty: !this.props.id
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            zones: [],
+	            showZones: false
 	        };
 	    },
 
@@ -22743,7 +22633,7 @@
 	    save: function save() {
 	        this.setState({ errors: null });
 
-	        Api.deviceCreate(this.toJson(), function (err, data) {
+	        Api.deviceCreate(this.toJson(), function (err, deviceData) {
 	            if (err) {
 	                this.setState({
 	                    saveButtonStatus: 'error',
@@ -22752,8 +22642,34 @@
 	                return;
 	            }
 
-	            this.setState({ saveButtonStatus: 'success' });
-	            this.props.savedDevice(this.state.clientId, data);
+	            // Let callers know the device has been saved
+	            this.props.savedDevice(this.state.clientId, deviceData);
+
+	            // Now we need to loop through each of the zones and save them
+	            function saveZone(index) {
+	                if (index >= this.props.zones.length) {
+	                    this.setState({ saveButtonStatus: 'success' });
+	                    return;
+	                }
+
+	                // Now the device has an id, we need to bind the zone to it
+	                var zoneInfo = this.refs["zoneInfo_" + this.props.zones[index].clientId];
+	                var zone = Object.assign({}, zoneInfo.toJson());
+	                zone.deviceId = deviceData.id;
+	                Api.zoneCreate(zone, function (err, zoneData) {
+	                    if (err) {
+	                        zoneInfo.setErrors(err.validationErrors);
+	                        this.setState({
+	                            saveButtonStatus: 'error'
+	                        });
+	                        return;
+	                    }
+
+	                    this.props.savedZone(zoneData);
+	                    saveZone.bind(this)(index + 1);
+	                }.bind(this));
+	            }
+	            saveZone.bind(this)(0);
 	        }.bind(this));
 	    },
 
@@ -22763,7 +22679,14 @@
 
 	    _changed: function _changed(evt) {
 	        this.setState({ saveButtonStatus: '' });
-	        this.changed(evt);
+
+	        if (evt) {
+	            this.changed(evt);
+	        }
+	    },
+
+	    _zoneChanged: function _zoneChanged() {
+	        this._changed();
 	    },
 
 	    render: function render() {
@@ -22789,6 +22712,30 @@
 	                this.errMsg('token')
 	            );
 	        }
+
+	        var saveBtn;
+	        if (this.state.dirty) {
+	            saveBtn = React.createElement(SaveBtn, {
+	                clicked: this.save,
+	                text: 'Save',
+	                status: this.state.saveButtonStatus });
+	        }
+
+	        var zones = this.props.zones.map(function (zone) {
+	            return React.createElement(ZoneInfo, {
+	                ref: "zoneInfo_" + zone.clientId,
+	                readOnlyFields: 'deviceId',
+	                key: zone.id || zone.clientId,
+	                clientId: zone.clientId,
+	                name: zone.name,
+	                description: zone.description,
+	                address: zone.address,
+	                type: zone.type,
+	                output: zone.output,
+	                deviceId: this.state.id || this.state.clientId,
+	                devices: [this.toJson()],
+	                changed: this._zoneChanged });
+	        }.bind(this));
 
 	        return React.createElement(
 	            'div',
@@ -22885,24 +22832,40 @@
 	                    id: this.uid("address") }),
 	                this.errMsg("address")
 	            ),
-	            token,
 	            React.createElement(
-	                'button',
-	                { className: 'btn btn-primary', onClick: this.testConnection },
-	                'Test Connection'
+	                'div',
+	                { className: Classnames({ clearfix: true, hidden: !this.props.showZones }) },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("zones") },
+	                    'Zones',
+	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                )
 	            ),
 	            React.createElement(
 	                'div',
+	                { className: 'collapse zones', id: this.uid("zones") },
+	                zones
+	            ),
+	            token,
+	            React.createElement(
+	                'div',
 	                { className: 'pull-right' },
-	                React.createElement(SaveBtn, {
-	                    clicked: this.save,
-	                    text: 'Save',
-	                    status: this.state.saveButtonStatus })
-	            )
+	                saveBtn
+	            ),
+	            React.createElement('div', { style: { clear: "both" } })
 	        );
 	    }
 	});
-	module.exports = DeviceInfo;
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        savedZone: function savedZone(zoneJson) {
+	            dispatch(ZoneActions.importedZone(zoneJson));
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceInfo);
 
 /***/ },
 /* 202 */
@@ -22916,6 +22879,84 @@
 	 API provides helper methods to access all of the gohome REST APIs
 	*/
 	var API = {
+
+	    //TODO: Break this in to separate files for different objects
+
+	    deviceLoadAll: function deviceLoadAll(callback) {
+	        $.ajax({
+	            url: '/api/v1/devices',
+	            dataType: 'json',
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    status: status
+	                });
+	            }
+	        });
+	    },
+
+	    deviceCreate: function deviceCreate(deviceJson, callback) {
+	        $.ajax({
+	            url: '/api/v1/devices',
+	            type: 'POST',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify(deviceJson),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                var errors = (xhr.responseJSON || {}).errors;
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    validationErrors: errors
+	                });
+	            }
+	        });
+	    },
+
+	    // Deletes a device on the server
+	    deviceDestroy: function deviceDestroy(id, callback) {
+	        $.ajax({
+	            url: '/api/v1/devices/' + id,
+	            type: 'DELETE',
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback({
+	                    err: err,
+	                    status: status,
+	                    xhr: xhr
+	                });
+	            }
+	        });
+	    },
+
+	    // sceneActivate actives the specified scene
+	    sceneActivate: function sceneActivate(sceneId, callback) {
+	        $.ajax({
+	            url: '/api/v1/scenes/active',
+	            type: 'POST',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify({ id: sceneId }),
+	            success: function (data) {
+	                callback(null, data);
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                callback({ err: err });
+	            }.bind(this)
+	        });
+	    },
+
 	    // sceneLoadAll loads all of the scenes from the backing store
 	    sceneLoadAll: function sceneLoadAll(callback) {
 	        $.ajax({
@@ -22950,7 +22991,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                var errors = (xhr.responseJSON || {}).errors;
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
@@ -22973,7 +23014,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                var errors = (xhr.responseJSON || {}).errors;
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
@@ -23014,7 +23055,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
+	                var errors = (xhr.responseJSON || {}).errors;
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
@@ -23035,11 +23076,10 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (JSON.parse(xhr.responseText) || {}).errors;
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
-	                    validationErrors: errors
+	                    status: status
 	                });
 	            }
 	        });
@@ -23059,6 +23099,29 @@
 	                    err: err,
 	                    status: status,
 	                    xhr: xhr
+	                });
+	            }
+	        });
+	    },
+
+	    // zoneCreate creates a new zone on the server
+	    zoneCreate: function zoneCreate(zoneJson, callback) {
+	        $.ajax({
+	            url: '/api/v1/zones',
+	            type: 'POST',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify(zoneJson),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                debugger;
+	                var errors = (xhr.responseJSON || {}).errors;
+	                callback({
+	                    err: err,
+	                    status: status,
+	                    validationErrors: errors
 	                });
 	            }
 	        });
@@ -23088,64 +23151,6 @@
 	        });
 	    },
 
-	    deviceLoadAll: function deviceLoadAll(callback) {
-	        $.ajax({
-	            url: '/api/v1/devices',
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function error(xhr, status, err) {
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    status: status
-	                });
-	            }
-	        });
-	    },
-
-	    deviceCreate: function deviceCreate(deviceJson, callback) {
-	        $.ajax({
-	            url: '/api/v1/devices',
-	            type: 'POST',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify(deviceJson),
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function error(xhr, status, err) {
-	                var errors = JSON.parse(xhr.responseText || '{}').errors;
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    validationErrors: errors
-	                });
-	            }
-	        });
-	    },
-
-	    // Deletes a device on the server
-	    deviceDestroy: function deviceDestroy(id, callback) {
-	        $.ajax({
-	            url: '/api/v1/devices/' + id,
-	            type: 'DELETE',
-	            cache: false,
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function error(xhr, status, err) {
-	                callback({
-	                    err: err,
-	                    status: status,
-	                    xhr: xhr
-	                });
-	            }
-	        });
-	    },
-
 	    buttonLoadAll: function buttonLoadAll(callback) {
 	        $.ajax({
 	            url: '/api/v1/buttons',
@@ -23162,7 +23167,25 @@
 	                });
 	            }.bind(this)
 	        });
-	    }
+	    },
+
+	    discoverDevice: function discoverDevice(modelNumber, callback) {
+	        $.ajax({
+	            url: '/api/v1/discovery/' + modelNumber,
+	            dataType: 'json',
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback({
+	                    err: err
+	                });
+	            }
+	        });
+	    },
+
+	    discoverToken: function discoverToken(modelNumber, address, callback) {}
 	};
 	module.exports = API;
 
@@ -23196,6 +23219,11 @@
 	    DEVICE_CREATE: null,
 	    DEVICE_CREATE_RAW: null,
 	    DEVICE_CREATE_FAIL: null,
+
+	    // When we are importing a device
+	    DEVICE_IMPORT: null,
+	    DEVICE_IMPORT_RAW: null,
+	    DEVICE_IMPORT_FAIL: null,
 
 	    // Deletes a device
 	    DEVICE_DESTROY: null,
@@ -23245,7 +23273,17 @@
 	    // Load all of the zones from the server
 	    ZONE_LOAD_ALL: null,
 	    ZONE_LOAD_ALL_RAW: null,
-	    ZONE_LOAD_ALL_FAIL: null
+	    ZONE_LOAD_ALL_FAIL: null,
+
+	    // Saves a zone on the server
+	    ZONE_CREATE: null,
+	    ZONE_CREATE_RAW: null,
+	    ZONE_CREATE_FAIL: null,
+
+	    // When a zone is being impored
+	    ZONE_IMPORT: null,
+	    ZONE_IMPORT_RAW: null,
+	    ZONE_IMPORT_FAIL: null
 	});
 
 /***/ },
@@ -23350,6 +23388,11 @@
 	            'div',
 	            { className: 'cmp-DeviceList' },
 	            React.createElement(
+	                'h2',
+	                { className: this.props.devices.length > 0 ? "" : " hidden" },
+	                'Devices'
+	            ),
+	            React.createElement(
 	                'div',
 	                { className: 'header clearfix' },
 	                React.createElement(
@@ -23357,11 +23400,6 @@
 	                    { className: 'btn btn-primary pull-right', onClick: this.newClicked },
 	                    'New Device'
 	                )
-	            ),
-	            React.createElement(
-	                'h3',
-	                { className: this.props.devices.length > 0 ? "" : " hidden" },
-	                'Devices'
 	            ),
 	            deviceNodes
 	        );
@@ -23417,9 +23455,15 @@
 	        };
 	    },
 
-	    savedDevice: function savedDevice(clientId, deviceJson) {
+	    savedDevice: function savedDevice(clientId, deviceJson, append) {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+	        };
+	    },
+
+	    importedDevice: function importedDevice(deviceJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_IMPORT_RAW, data: deviceJson });
 	        };
 	    },
 
@@ -23550,6 +23594,11 @@
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SceneList' },
+	            React.createElement(
+	                'h2',
+	                null,
+	                'Scenes'
+	            ),
 	            btns,
 	            body
 	        );
@@ -23593,23 +23642,14 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
+	var Api = __webpack_require__(202);
 
 	var Scene = React.createClass({
 	    displayName: 'Scene',
 
 	    handleClick: function handleClick(event) {
-	        $.ajax({
-	            url: '/api/v1/systems/1/scenes/active',
-	            type: 'POST',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify({ id: this.props.scene.id }),
-	            success: function (data) {
-	                //TODO: Common way in UI to display success/error
-	            }.bind(this),
-	            error: function (xhr, status, err) {
-	                console.error(err.toString());
-	            }.bind(this)
+	        Api.sceneActivate(this.props.scene.id, function (err, data) {
+	            //TODO: Show error/success
 	        });
 	    },
 
@@ -25176,7 +25216,14 @@
 	                dispatch({ type: Constants.ZONE_LOAD_ALL_RAW, data: data });
 	            });
 	        };
+	    },
+
+	    importedZone: function importedZone(zoneJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zoneJson });
+	        };
 	    }
+
 	};
 	module.exports = ZoneActions;
 
@@ -26414,13 +26461,23 @@
 	            break;
 	        case Constants.DEVICE_CREATE_RAW:
 	            newState.devices = newState.devices.map(function (device) {
-	                if (device.clientId === action.clientId) {
+	                if (action.clientId && device.clientId === action.clientId) {
 	                    return action.data;
 	                }
 	                return device;
 	            });
-	            break;
+
 	        case Constants.DEVICE_CREATE_FAIL:
+	            break;
+
+	        case Constants.DEVICE_IMPORT:
+	            break;
+	        case Constants.DEVICE_IMPORT_RAW:
+	            newState.devices = [action.data].concat(newState.devices);
+	            break;
+
+	            break;
+	        case Constants.DEVICE_IMPORT_FAIL:
 	            break;
 
 	        case Constants.DEVICE_DESTROY:
@@ -26640,7 +26697,7 @@
 	var initialState = __webpack_require__(242);
 
 	module.exports = function (state, action) {
-	    var newState = [];
+	    var newState = state;
 
 	    switch (action.type) {
 	        case Constants.ZONE_LOAD_ALL:
@@ -26651,6 +26708,21 @@
 
 	        case Constants.ZONE_LOAD_ALL_RAW:
 	            newState = action.data;
+	            break;
+
+	        case Constants.ZONE_CREATE:
+	            break;
+	        case Constants.ZONE_CREATE_RAW:
+	            break;
+	        case Constants.ZONE_CREATE_FAIL:
+	            break;
+
+	        case Constants.ZONE_IMPORT:
+	            break;
+	        case Constants.ZONE_IMPORT_RAW:
+	            newState = [action.data].concat(newState);
+	            break;
+	        case Constants.ZONE_IMPORT_FAIL:
 	            break;
 
 	        default:

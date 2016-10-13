@@ -17,7 +17,8 @@ var ImportTCP600GWB = React.createClass({
     autoDiscover: function() {
         var self = this;
         this.setState({ discoveryInProgress: true });
-        
+
+        //TODO: use API
         $.ajax({
             url: '/api/v1/discovery/TCP600GWB',
             dataType: 'json',
@@ -51,7 +52,8 @@ var ImportTCP600GWB = React.createClass({
             });
             return;
         }
-        
+
+        //TODO: Use API
         var self = this;
         $.ajax({
             url: '/api/v1/discovery/TCP600GWB/token?address=' + device.address,

@@ -23,6 +23,11 @@ module.exports = keyMirror({
     DEVICE_CREATE_RAW: null,
     DEVICE_CREATE_FAIL: null,
 
+    // When we are importing a device
+    DEVICE_IMPORT: null,
+    DEVICE_IMPORT_RAW: null,
+    DEVICE_IMPORT_FAIL: null,
+    
     // Deletes a device
     DEVICE_DESTROY: null,
     DEVICE_DESTROY_RAW: null,
@@ -72,4 +77,14 @@ module.exports = keyMirror({
     ZONE_LOAD_ALL: null,
     ZONE_LOAD_ALL_RAW: null,
     ZONE_LOAD_ALL_FAIL: null,
+
+    // Saves a zone on the server
+    ZONE_CREATE: null,
+    ZONE_CREATE_RAW: null,
+    ZONE_CREATE_FAIL: null,
+
+    // When a zone is being impored
+    ZONE_IMPORT: null,
+    ZONE_IMPORT_RAW: null,
+    ZONE_IMPORT_FAIL: null,
 });

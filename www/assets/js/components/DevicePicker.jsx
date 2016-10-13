@@ -1,9 +1,15 @@
 var React = require('react');
 
 var DevicePicker = React.createClass({
+    getDefaultProps: function() {
+        return {
+            devices: []
+        };
+    },
+    
     getInitialState: function() {
         return {
-            value: ''
+            value: this.props.defaultId
         };
     },
 
@@ -18,14 +24,19 @@ var DevicePicker = React.createClass({
     render: function() {
         var options = [];
         this.props.devices.forEach(function(device) {
-            options.push(<option key={device.id} value={device.id}>{device.name}</option>);
+            var id = device.id || device.clientId;
+            options.push(<option key={id} value={id}>{device.name}</option>);
         });
         return (
             <div className="cmp-DevicePicker">
-              <select className="form-control" onChange={this.selected} value={this.state.value}>
-                <option value="">Select a device...</option>
-                {options}
-              </select>
+                <select
+                    disabled={this.props.disabled}
+                    className="form-control"
+                    onChange={this.selected}
+                    value={this.state.value} >
+                    <option value="">Select a device...</option>
+                    {options}
+                </select>
             </div>
         );
     }

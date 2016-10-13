@@ -80,6 +80,7 @@ var SceneList = React.createClass({
 
         return (
             <div className="cmp-SceneList">
+                <h2>Scenes</h2>
                 {btns}
                 {body}
             </div>

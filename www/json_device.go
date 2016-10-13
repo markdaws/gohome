@@ -1,16 +1,15 @@
 package www
 
 type jsonDevice struct {
-	Address     string `json:"address"`
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	ModelNumber string `json:"modelNumber"`
-	Token       string `json:"token"`
-	ClientID    string `json:"clientId,omitempty"`
-	//TODO: Stream
+	Address     string     `json:"address"`
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	ModelNumber string     `json:"modelNumber"`
+	Token       string     `json:"token"`
+	ClientID    string     `json:"clientId,omitempty"`
+	Zones       []jsonZone `json:"zones"`
 }
-
 type devices []jsonDevice
 
 func (slice devices) Len() int {

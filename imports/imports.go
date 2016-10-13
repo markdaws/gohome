@@ -278,7 +278,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 	//TODO: delete, testing
 	importConnectedByTCP(system)
-	importFluxWIFI(system)
+	//importFluxWIFI(system)
 	importBelkin(system)
 	return system, nil
 }
@@ -327,6 +327,7 @@ func importConnectedByTCP(system *gohome.System) {
 	system.AddZone(z)
 }
 
+/*
 //TODO: delete, testing
 func importFluxWIFI(system *gohome.System) {
 	dev := gohome.NewDevice(
@@ -363,6 +364,7 @@ func importFluxWIFI(system *gohome.System) {
 	}
 	system.AddZone(z)
 }
+*/
 
 //TODO: delete, testing
 func importBelkin(system *gohome.System) {

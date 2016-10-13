@@ -58,22 +58,9 @@ func main() {
 	sys.SavePath = config.StartupConfigPath
 	cp.SetSystem(sys)
 
-	for _, d := range sys.Devices {
-		d := d
-		go func() {
-			// If the device requires a connection pool, init all of the connections
-			if d.Connections != nil {
-				log.V("%s init connections", d)
-				err := d.Connections.Init()
-				if err != nil {
-					log.E("%s failed to init connection pool: %s", d, err)
-				} else {
-					log.V("%s connected", d)
-				}
-			}
-			eb.AddProducer(&d)
-		}()
-	}
+	log.V("Initing devices...")
+	sys.EventBroker = eb
+	sys.InitDevices()
 
 	log.V("Starting recipes...")
 	for _, recipe := range sys.Recipes {

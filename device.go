@@ -45,6 +45,7 @@ func NewDevice(
 	auth *comm.Auth) Device {
 	device := Device{
 		Address:     address,
+		ModelNumber: modelNumber,
 		ID:          ID,
 		Name:        name,
 		Description: description,
@@ -97,14 +98,6 @@ func (d *Device) AddZone(z *zone.Zone) error {
 	}
 
 	d.Zones[z.Address] = z
-	//TODO
-	/*
-		// Verify controller is supported by the device
-		if !interface{}(d).(Device).SupportsController(zone.ControllerFromString(z.Controller)) {
-			errs.Add("the device does not support controlling this kind of zone", "Controller")
-			return errs
-		}*/
-
 	return nil
 }
 

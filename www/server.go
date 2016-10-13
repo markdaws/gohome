@@ -104,8 +104,6 @@ func (s *wwwServer) listenAndServe(port string) error {
 		apiDiscoveryTokenHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/discovery/{modelNumber}/access",
 		apiDiscoveryAccessHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/discovery/{modelNumber}/zones",
-		apiDiscoveryZoneHandler(s.system)).Methods("GET")
 
 	r.HandleFunc("/api/v1/cookbooks",
 		apiCookBooksHandler(s.recipeManager.CookBooks)).Methods("GET")
@@ -884,7 +882,6 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 				Description: zone.Description,
 				Type:        zone.Type.ToString(),
 				Output:      zone.Output.ToString(),
-				Controller:  zone.Controller,
 			}
 			i++
 		}
@@ -918,7 +915,6 @@ func apiAddZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 			DeviceID:    data.DeviceID,
 			Type:        zone.TypeFromString(data.Type),
 			Output:      zone.OutputFromString(data.Output),
-			Controller:  data.Controller,
 		}
 
 		errors := system.AddZone(z)
@@ -935,8 +931,10 @@ func apiAddZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 			return
 		}
 
+		data.ClientID = ""
+		data.ID = z.ID
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(struct{}{})
+		json.NewEncoder(w).Encode(data)
 	}
 }
 
@@ -1154,28 +1152,98 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
+		modelNumber := vars["modelNumber"]
 
-		//This is blocking
-		data, err := discovery.Discover(vars["modelNumber"])
+		//TODO: fix, This is blocking
+		devs, err := discovery.Devices(modelNumber)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
+		jsonDevices := make(devices, len(devs))
+		for i, device := range devs {
+
+			jsonZones := make(zones, len(device.Zones))
+			var j int
+			for _, zn := range device.Zones {
+				jsonZones[j] = jsonZone{
+					Address:     zn.Address,
+					ID:          zn.ID,
+					Name:        zn.Name,
+					Description: zn.Description,
+					DeviceID:    device.ID,
+					Type:        zn.Type.ToString(),
+					Output:      zn.Output.ToString(),
+					ClientID:    modelNumber + "_zone_" + strconv.Itoa(j),
+				}
+				j++
+			}
+			jsonDevices[i] = jsonDevice{
+				ID:          device.ID,
+				Address:     device.Address,
+				Name:        device.Name,
+				Description: device.Description,
+				ModelNumber: device.ModelNumber,
+				Token:       "",
+				ClientID:    modelNumber + "_" + strconv.Itoa(i),
+				Zones:       jsonZones,
+			}
+		}
+
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
+
+		if err := json.NewEncoder(w).Encode(jsonDevices); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		/*TODO: Remove
 		json.NewEncoder(w).Encode(struct {
 			Location string `json:"location"`
 		}{Location: data["location"]})
+		*/
 	}
 }
+
+/*
+func apiDiscoveryZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+
+		//This is blocking, waits 5 seconds
+		zs, err := discovery.Zones(vars["modelNumber"])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		jsonZones := make(zones, len(zs))
+		for i, zone := range zs {
+			jsonZones[i] = jsonZone{
+				Address:     zone.Address,
+				Name:        zone.Name,
+				Description: zone.Description,
+				Type:        zone.Type.ToString(),
+				Output:      zone.Output.ToString(),
+				Controller:  zone.Controller,
+			}
+		}
+		sort.Sort(jsonZones)
+		if err := json.NewEncoder(w).Encode(jsonZones); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+*/
 
 func apiDiscoveryTokenHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
 
-		//This is blocking
+		//TODO: Make non-blocking: this is blocking
 		token, err := discovery.DiscoverToken(vars["modelNumber"], r.URL.Query().Get("address"))
 		if err != nil {
 			if err == discovery.ErrUnauthorized {
@@ -1205,7 +1273,7 @@ func apiDiscoveryAccessHandler(system *gohome.System) func(http.ResponseWriter, 
 
 		vars := mux.Vars(r)
 
-		//This is blocking
+		//TODO: Make non-blocking: this is blocking
 		err := discovery.VerifyConnection(
 			vars["modelNumber"],
 			r.URL.Query().Get("address"),
@@ -1218,36 +1286,5 @@ func apiDiscoveryAccessHandler(system *gohome.System) func(http.ResponseWriter, 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(struct{}{})
-	}
-}
-
-func apiDiscoveryZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		vars := mux.Vars(r)
-
-		//This is blocking, waits 5 seconds
-		zs, err := discovery.Zones(vars["modelNumber"])
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		jsonZones := make(zones, len(zs))
-		for i, zone := range zs {
-			jsonZones[i] = jsonZone{
-				Address:     zone.Address,
-				Name:        zone.Name,
-				Description: zone.Description,
-				Type:        zone.Type.ToString(),
-				Output:      zone.Output.ToString(),
-				Controller:  zone.Controller,
-			}
-			i++
-		}
-		sort.Sort(jsonZones)
-		if err := json.NewEncoder(w).Encode(jsonZones); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
 	}
 }
