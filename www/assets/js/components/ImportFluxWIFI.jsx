@@ -46,7 +46,6 @@ var ImportFluxWIFI = React.createClass({
                 clientId={device.clientId}
                 readOnlyFields="id, modelNumber"
                 key={device.id || device.clientId}
-                deviceDelete={null}
                 savedDevice={this.props.importedDevice}
                 showZones={true}
                 zones={device.zones}/>
@@ -61,7 +60,7 @@ var ImportFluxWIFI = React.createClass({
                 <i className={"fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden")}></i>
                 <h3 className={this.state.devices.length > 0 ? "" : " hidden"}>Devices</h3>
                 <p className={this.state.devices.length > 0 ? "" : " hidden"}>
-                    Click "Save" on each device you wish to save.
+                    Click "Save" on each device you wish to add to your system.
                 </p>
                 {devices}
             </div>

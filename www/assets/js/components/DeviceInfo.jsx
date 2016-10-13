@@ -32,7 +32,7 @@ var DeviceInfo = React.createClass({
     getDefaultProps: function() {
         return {
             zones: [],
-            showZones: false
+            showZones: false,
         };
     },
 
@@ -166,6 +166,15 @@ var DeviceInfo = React.createClass({
             );
         }
 
+        var deleteBtn
+        if (this.props.deleteDevice) {
+            deleteBtn = (
+                <button className="btn btn-link btnDelete pull-right" onClick={this.deleteDevice}>
+                    <i className="glyphicon glyphicon-trash"></i>
+                </button>
+            );
+        }
+
         var zones = this.props.zones.map(function(zone) {
             return (
                 <ZoneInfo
@@ -186,9 +195,7 @@ var DeviceInfo = React.createClass({
         
         return (
             <div className="cmp-DeviceInfo well well-sm">
-                <button className="btn btn-link btnDelete pull-right" onClick={this.deleteDevice}>
-                    <i className="glyphicon glyphicon-trash"></i>
-                </button>
+                {deleteBtn}
                 <div className={this.addErr("form-group", "name")}>
                     <label className="control-label" htmlFor={this.uid("name")}>Name*</label>
                     <input

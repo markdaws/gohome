@@ -21847,7 +21847,6 @@
 	                    clientId: device.clientId,
 	                    readOnlyFields: 'id, modelNumber',
 	                    key: device.id || device.clientId,
-	                    deviceDelete: null,
 	                    savedDevice: this.props.importedDevice,
 	                    showZones: true,
 	                    zones: device.zones });
@@ -21873,7 +21872,7 @@
 	            React.createElement(
 	                'p',
 	                { className: this.state.devices.length > 0 ? "" : " hidden" },
-	                'Click "Save" on each device you wish to save.'
+	                'Click "Save" on each device you wish to add to your system.'
 	            ),
 	            devices
 	        );
@@ -22727,6 +22726,15 @@
 	                status: this.state.saveButtonStatus });
 	        }
 
+	        var deleteBtn;
+	        if (this.props.deleteDevice) {
+	            deleteBtn = React.createElement(
+	                'button',
+	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteDevice },
+	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
+	            );
+	        }
+
 	        var zones = this.props.zones.map(function (zone) {
 	            return React.createElement(ZoneInfo, {
 	                ref: "zoneInfo_" + zone.clientId,
@@ -22746,11 +22754,7 @@
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-DeviceInfo well well-sm' },
-	            React.createElement(
-	                'button',
-	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteDevice },
-	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
-	            ),
+	            deleteBtn,
 	            React.createElement(
 	                'div',
 	                { className: this.addErr("form-group", "name") },
