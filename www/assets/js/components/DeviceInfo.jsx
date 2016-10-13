@@ -23,7 +23,9 @@ var DeviceInfo = React.createClass({
             showToken: false,
             errors: null,
             saveButtonStatus: '',
-            dirty: !this.props.id
+            dirty: !this.props.id,
+            connectionPool: this.props.connectionPool,
+            cmdBuilder: this.props.cmdBuilder
         }
     },
 
@@ -44,6 +46,8 @@ var DeviceInfo = React.createClass({
             modelNumber: s.modelNumber,
             token: s.token,
             id: s.id,
+            connPool: this.props.connectionPool,
+            cmdBuilder: this.props.cmdBuilder
         };
     },
 

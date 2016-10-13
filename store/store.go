@@ -57,7 +57,7 @@ type cmdBuilderJSON struct {
 type connPoolJSON struct {
 	Name           string `json:"name"`
 	PoolSize       int32  `json:"poolSize"`
-	ConnectionType string `json:connectionType`
+	ConnectionType string `json:"connectionType"`
 	TelnetPingCmd  string `json:"telnetPingCmd"`
 	Address        string `json:"address"`
 }

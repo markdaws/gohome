@@ -36,18 +36,20 @@ var ImportFluxWIFI = React.createClass({
         if (this.state.devices.length > 0) {
             devices = this.state.devices.map(function(device) {
                 return <DeviceInfo
-                           name={device.name}
-                           description={device.description}
-                           address={device.address}
-                           modelNumber={device.modelNumber}
-                           id={device.id}
-                           clientId={device.clientId}
-                           readOnlyFields="id, modelNumber"
-                           key={device.id || device.clientId}
-                           deviceDelete={null}
-                           savedDevice={this.props.importedDevice}
-                           showZones={true}
-                           zones={device.zones}/>
+                name={device.name}
+                description={device.description}
+                address={device.address}
+                modelNumber={device.modelNumber}
+                connectionPool={device.connPool}
+                cmdBuilder={device.cmdBuilder}
+                id={device.id}
+                clientId={device.clientId}
+                readOnlyFields="id, modelNumber"
+                key={device.id || device.clientId}
+                deviceDelete={null}
+                savedDevice={this.props.importedDevice}
+                showZones={true}
+                zones={device.zones}/>
             }.bind(this));
         }
 

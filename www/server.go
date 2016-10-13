@@ -15,6 +15,7 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/discovery"
+	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/validation"
@@ -1020,6 +1021,55 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 			auth,
 		)
 
+		//TODO: This should be inside NewDevice
+		if data.CmdBuilder != nil {
+			builder, err := intg.CmdBuilderFromID(system, data.CmdBuilder.ID)
+			if err != nil {
+				log.E("unknown command builder id: %s, failed to add device to system", data.CmdBuilder.ID)
+			} else {
+				d.CmdBuilder = builder
+			}
+		}
+
+		//TODO: This should be inside NewDevice
+		if data.ConnPool != nil {
+			//TODO: Auth
+			var authenticator *comm.TelnetAuthenticator
+			/*
+				if d.ConnPool.ConnectionType == "telnet" && auth != nil {
+					authenticator = &comm.TelnetAuthenticator{*auth}
+				}*/
+			pool, err := comm.NewConnectionPool(comm.ConnectionPoolConfig{
+				Name:           data.ConnPool.Name,
+				Size:           int(data.ConnPool.PoolSize),
+				ConnectionType: data.ConnPool.ConnectionType,
+				Address:        data.ConnPool.Address,
+				TelnetPingCmd:  data.ConnPool.TelnetPingCmd,
+				TelnetAuth:     authenticator,
+			})
+			if err != nil {
+				log.E("failed to create device connection pool: %s", err)
+			}
+			d.Connections = pool
+		}
+
+		//TODO: Connection Pool and command builder
+		/*					var cmdBuilderJson *jsonCmdBuilder
+		if device.CmdBuilder != nil {
+			cmdBuilderJson = &jsonCmdBuilder{ID: device.CmdBuilder.ID()}
+		}
+		var connPoolJson *jsonConnPool
+		if device.Connections != nil {
+			connCfg := device.Connections.Config()
+			connPoolJson = &jsonConnPool{
+				Name:           connCfg.Name,
+				PoolSize:       int32(connCfg.Size),
+				ConnectionType: connCfg.ConnectionType,
+				TelnetPingCmd:  connCfg.TelnetPingCmd,
+				Address:        connCfg.Address,
+			}
+		}
+		*/
 		errors := system.AddDevice(d)
 		if errors != nil {
 			if valErrs, ok := errors.(*validation.Errors); ok {
@@ -1031,6 +1081,11 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 				w.WriteHeader(http.StatusBadRequest)
 			}
 			return
+		}
+
+		err = system.InitDevice(&d)
+		if err != nil {
+			log.E("Failed to init device on add: %s", err)
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -1164,6 +1219,8 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 		jsonDevices := make(devices, len(devs))
 		for i, device := range devs {
 
+			//TODO: This API shouldn't be sending back client ids, the client should
+			//make these values up
 			jsonZones := make(zones, len(device.Zones))
 			var j int
 			for _, zn := range device.Zones {
@@ -1179,6 +1236,22 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 				}
 				j++
 			}
+
+			var cmdBuilderJson *jsonCmdBuilder
+			if device.CmdBuilder != nil {
+				cmdBuilderJson = &jsonCmdBuilder{ID: device.CmdBuilder.ID()}
+			}
+			var connPoolJson *jsonConnPool
+			if device.Connections != nil {
+				connCfg := device.Connections.Config()
+				connPoolJson = &jsonConnPool{
+					Name:           connCfg.Name,
+					PoolSize:       int32(connCfg.Size),
+					ConnectionType: connCfg.ConnectionType,
+					TelnetPingCmd:  connCfg.TelnetPingCmd,
+					Address:        connCfg.Address,
+				}
+			}
 			jsonDevices[i] = jsonDevice{
 				ID:          device.ID,
 				Address:     device.Address,
@@ -1188,6 +1261,8 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 				Token:       "",
 				ClientID:    modelNumber + "_" + strconv.Itoa(i),
 				Zones:       jsonZones,
+				CmdBuilder:  cmdBuilderJson,
+				ConnPool:    connPoolJson,
 			}
 		}
 

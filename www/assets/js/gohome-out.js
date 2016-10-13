@@ -21841,6 +21841,8 @@
 	                    description: device.description,
 	                    address: device.address,
 	                    modelNumber: device.modelNumber,
+	                    connectionPool: device.connPool,
+	                    cmdBuilder: device.cmdBuilder,
 	                    id: device.id,
 	                    clientId: device.clientId,
 	                    readOnlyFields: 'id, modelNumber',
@@ -22580,7 +22582,9 @@
 	            showToken: false,
 	            errors: null,
 	            saveButtonStatus: '',
-	            dirty: !this.props.id
+	            dirty: !this.props.id,
+	            connectionPool: this.props.connectionPool,
+	            cmdBuilder: this.props.cmdBuilder
 	        };
 	    },
 
@@ -22600,7 +22604,9 @@
 	            address: s.address,
 	            modelNumber: s.modelNumber,
 	            token: s.token,
-	            id: s.id
+	            id: s.id,
+	            connPool: this.props.connectionPool,
+	            cmdBuilder: this.props.cmdBuilder
 	        };
 	    },
 
