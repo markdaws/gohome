@@ -13,6 +13,18 @@ func (e *extension) RegisterCmdBuilders(sys *gohome.System, lookupTable map[stri
 	lookupTable[builder.ID()] = builder
 }
 
+func (e *extension) RegisterDiscoverers(sys *gohome.System, lookupTable map[string]gohome.Discoverer) {
+	//TODO: Implement
+
+	/*
+		case "F7C029V2":
+		responses, err := belkin.Scan(belkin.DTInsight, 5)
+		_ = responses
+		_ = err
+		return nil, fmt.Errorf("//TODO:not implemented")
+	*/
+}
+
 func NewExtension() *extension {
 	return &extension{}
 }

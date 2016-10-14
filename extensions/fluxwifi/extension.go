@@ -13,6 +13,11 @@ func (e *extension) RegisterCmdBuilders(sys *gohome.System, lookupTable map[stri
 	lookupTable[builder.ID()] = builder
 }
 
+func (e *extension) RegisterDiscoverers(sys *gohome.System, lookupTable map[string]gohome.Discoverer) {
+	discoverer := &discoverer{System: sys}
+	lookupTable["fluxwifi"] = discoverer
+}
+
 func NewExtension() *extension {
 	return &extension{}
 }

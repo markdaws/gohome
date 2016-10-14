@@ -43,7 +43,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 
 	//TODO: Don't create a new system, add to existing
 	system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cmdProcessor, 1)
-	system.CmdBuilders = intg.RegisterExtensions(system)
+	system.Extensions = gohome.NewExtensions()
+	intg.RegisterExtensions(system)
 
 	root, ok := configJSON["LIPIdList"].(map[string]interface{})
 	if !ok {
@@ -175,7 +176,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				})
 			sbp = &dev
 
-			builder, ok := system.CmdBuilders["l-bdgpro2-wh"]
+			builder, ok := system.Extensions.CmdBuilders["l-bdgpro2-wh"]
 			if !ok {
 				//TODO: Err
 			}

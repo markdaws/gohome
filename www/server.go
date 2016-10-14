@@ -1010,7 +1010,7 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 		var cmdBuilder cmd.Builder
 		if data.CmdBuilder != nil {
 			var ok bool
-			cmdBuilder, ok = system.CmdBuilders[data.CmdBuilder.ID]
+			cmdBuilder, ok = system.Extensions.CmdBuilders[data.CmdBuilder.ID]
 			if !ok {
 				log.E("unknown command builder id: %s, failed to add device to system", data.CmdBuilder.ID)
 				w.WriteHeader(http.StatusBadRequest)

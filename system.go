@@ -3,7 +3,6 @@ package gohome
 import (
 	"strconv"
 
-	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
@@ -20,7 +19,7 @@ type System struct {
 	Buttons     map[string]*Button
 	Recipes     map[string]*Recipe
 
-	CmdBuilders  map[string]cmd.Builder
+	Extensions   *Extensions
 	CmdProcessor CommandProcessor
 	EventBroker  event.Broker
 
@@ -39,6 +38,8 @@ func NewSystem(name, desc string, cmdProcessor CommandProcessor, nextGlobalID in
 		CmdProcessor: cmdProcessor,
 		nextGlobalID: nextGlobalID,
 	}
+
+	s.Extensions = NewExtensions()
 	return s
 }
 

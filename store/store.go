@@ -108,8 +108,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 	sys := gohome.NewSystem(s.Name, s.Description, cmdProcessor, s.NextGlobalID)
 
 	// Register all of the extensions in the system e.g. lutron, flux etc
-	cmdBuilders := intg.RegisterExtensions(sys)
-	sys.CmdBuilders = cmdBuilders
+	intg.RegisterExtensions(sys)
 
 	recipeManager.System = sys
 
@@ -128,7 +127,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 		var cmdBuilder cmd.Builder
 		if d.CmdBuilder != nil {
 			var ok bool
-			cmdBuilder, ok = sys.CmdBuilders[d.CmdBuilder.ID]
+			cmdBuilder, ok = sys.Extensions.CmdBuilders[d.CmdBuilder.ID]
 			if !ok {
 				return nil, fmt.Errorf("unsupported comand builder ID: %s", d.CmdBuilder.ID)
 			}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/connectedbytcp"
 	"github.com/markdaws/gohome/fluxwifi"
@@ -16,6 +15,14 @@ var ErrUnauthorized = errors.New("unauthorized")
 var ErrUnsupported = errors.New("unsupported model number")
 
 func Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
+
+	discoverer, ok := sys.Extensions.Discoverers[modelNumber]
+	if !ok {
+		return nil, fmt.Errorf("unsupported model number: %s, no registered extension", modelNumber)
+	}
+
+	return discoverer.Devices(sys, modelNumber)
+
 	switch modelNumber {
 	case "fluxwifi":
 		infos, err := fluxwifi.Scan(5)
@@ -37,7 +44,7 @@ func Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
 			modelNumber := "fluxwifi"
 			builderID := modelNumber
 
-			cmdBuilder, ok := sys.CmdBuilders[builderID]
+			cmdBuilder, ok := sys.Extensions.CmdBuilders[builderID]
 			if !ok {
 				return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
 			}
@@ -79,25 +86,7 @@ func Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
 	}
 }
 
-//TODO: Delete
-func Discover(modelNumber string) (map[string]string, error) {
-	data := make(map[string]string)
-
-	switch modelNumber {
-	case "TCP600GWB":
-		responses, err := connectedbytcp.Scan(5)
-		if err != nil {
-			return nil, fmt.Errorf("discover failed: %s", err)
-		}
-
-		if len(responses) > 0 {
-			data["location"] = responses[0].Location
-		}
-		return data, nil
-	}
-	return nil, ErrUnsupported
-}
-
+//TODO: Move into discoverer type
 func DiscoverToken(modelNumber, address string) (string, error) {
 	switch modelNumber {
 	case "TCP600GWB":
@@ -108,37 +97,6 @@ func DiscoverToken(modelNumber, address string) (string, error) {
 		return token, err
 	}
 	return "", ErrUnsupported
-}
-
-func Zones(modelNumber string) ([]zone.Zone, error) {
-	//TODO: Need to also have a device here along with the zone
-	//Shouldn't discover zones, only devices
-	switch modelNumber {
-	case "FluxWIFI":
-		infos, err := fluxwifi.Scan(5)
-		if err != nil {
-			return nil, err
-		}
-
-		zones := make([]zone.Zone, len(infos)*2)
-		for i, info := range infos {
-			zones[i*2] = zone.Zone{
-				Address:     info.IP,
-				Name:        info.ID,
-				Description: "Flux WIFI - " + info.Model,
-				Type:        zone.ZTLight,
-				Output:      zone.OTContinuous,
-			}
-		}
-		return zones, nil
-
-	case "F7C029V2":
-		responses, err := belkin.Scan(belkin.DTInsight, 5)
-		_ = responses
-		_ = err
-		return nil, fmt.Errorf("//TODO:not implemented")
-	}
-	return nil, ErrUnsupported
 }
 
 //TODO:
