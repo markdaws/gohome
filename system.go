@@ -40,6 +40,7 @@ func NewSystem(name, desc string, cmdProcessor CommandProcessor, nextGlobalID in
 	}
 
 	s.Extensions = NewExtensions()
+
 	return s
 }
 

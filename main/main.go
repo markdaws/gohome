@@ -40,7 +40,6 @@ func main() {
 	reset := true
 	if reset {
 		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cp, 1)
-		system.Extensions = gohome.NewExtensions()
 		intg.RegisterExtensions(system)
 
 		bytes, err := ioutil.ReadFile("main/ip.json")

@@ -106,8 +106,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 	}
 
 	sys := gohome.NewSystem(s.Name, s.Description, cmdProcessor, s.NextGlobalID)
-
-	// Register all of the extensions in the system e.g. lutron, flux etc
 	intg.RegisterExtensions(sys)
 
 	recipeManager.System = sys

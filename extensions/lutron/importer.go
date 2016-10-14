@@ -22,6 +22,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 	//TODO: Don't hard code, modify lutron integration report JSON on upload to
 	//include this ID
 	var smartBridgeProID string = "1"
+	var smartBridgeProAddress string = "192.168.0.10:23"
 
 	var configJSON map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &configJSON); err != nil {
@@ -144,9 +145,9 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 
 			//TODO: Don't hard code address
 			dev := makeDevice(
-				"L-BDGPRO2-WH",
+				"l-bdgpro2-wh",
 				"Smart Bridge - Hub",
-				"192.168.0.10:23",
+				smartBridgeProAddress,
 				device,
 				nil,
 				system,
