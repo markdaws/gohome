@@ -21724,7 +21724,7 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var ImportFluxWIFI = __webpack_require__(191);
+	var DiscoverDevices = __webpack_require__(249);
 	var ImportTCP600GWB = __webpack_require__(200);
 
 	var Import = React.createClass({
@@ -21739,18 +21739,22 @@
 	    },
 
 	    render: function render() {
+	        //TODO: Should get this list from the server, generate drop down automatically from
+	        //registered extensions
 
 	        var body;
 	        switch (this.state.selectedProduct) {
-	            case 'TCP600GWB':
+	            case 'tcp600gwb':
 	                body = React.createElement(ImportTCP600GWB, null);
 	                break;
-	            case 'FluxWIFI':
-	                body = React.createElement(ImportFluxWIFI, null);
+	            case 'fluxwifi':
+	            case 'f7c029v2':
+	                body = React.createElement(DiscoverDevices, { modelNumber: this.state.selectedProduct });
 	                break;
 	            default:
 	                body = null;
 	        }
+
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-Import' },
@@ -21769,18 +21773,23 @@
 	                ),
 	                React.createElement(
 	                    'option',
-	                    { value: 'LLL' },
+	                    { value: 'f7c029v2' },
+	                    'Belkin WeMo Insight'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'l-bdgpro2-wh' },
 	                    'Lutron'
 	                ),
 	                React.createElement(
 	                    'option',
-	                    { value: 'TCP600GWB' },
+	                    { value: 'tcp600gwb' },
 	                    'Connected By TCP Hub'
 	                ),
 	                React.createElement(
 	                    'option',
-	                    { value: 'FluxWIFI' },
-	                    'Flux Wifi'
+	                    { value: 'fluxwifi' },
+	                    'Flux WIFI Bulb'
 	                )
 	            ),
 	            React.createElement(
@@ -21794,107 +21803,7 @@
 	module.exports = Import;
 
 /***/ },
-/* 191 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(160);
-	var DeviceInfo = __webpack_require__(201);
-	var Api = __webpack_require__(202);
-	var SystemActions = __webpack_require__(206);
-
-	var ImportFluxWIFI = React.createClass({
-	    displayName: 'ImportFluxWIFI',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            discovering: false,
-	            devices: []
-	        };
-	    },
-
-	    discover: function discover() {
-	        this.setState({
-	            discovering: true,
-	            devices: []
-	        });
-
-	        Api.discoverDevice("fluxwifi", function (err, data) {
-	            this.setState({
-	                discovering: false,
-	                devices: data
-	            });
-	        }.bind(this));
-	    },
-
-	    savedDevice: function savedDevice() {},
-
-	    render: function render() {
-
-	        var devices;
-	        if (this.state.devices.length > 0) {
-	            devices = this.state.devices.map(function (device) {
-	                return React.createElement(DeviceInfo, {
-	                    name: device.name,
-	                    description: device.description,
-	                    address: device.address,
-	                    modelNumber: device.modelNumber,
-	                    connectionPool: device.connPool,
-	                    cmdBuilder: device.cmdBuilder,
-	                    id: device.id,
-	                    clientId: device.clientId,
-	                    readOnlyFields: 'id, modelNumber',
-	                    key: device.id || device.clientId,
-	                    savedDevice: this.props.importedDevice,
-	                    showZones: true,
-	                    zones: device.zones });
-	            }.bind(this));
-	        }
-
-	        var importBody;
-	        importBody = React.createElement(
-	            'div',
-	            null,
-	            React.createElement(
-	                'button',
-	                { className: "btn btn-primary" + (this.state.discovering ? " disabled" : ""),
-	                    onClick: this.discover },
-	                'Discover Devices'
-	            ),
-	            React.createElement('i', { className: "fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden") }),
-	            React.createElement(
-	                'h3',
-	                { className: this.state.devices.length > 0 ? "" : " hidden" },
-	                'Devices'
-	            ),
-	            React.createElement(
-	                'p',
-	                { className: this.state.devices.length > 0 ? "" : " hidden" },
-	                'Click "Save" on each device you wish to add to your system.'
-	            ),
-	            devices
-	        );
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ImportFluxWIFI' },
-	            importBody
-	        );
-	    }
-	});
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        importedDevice: function importedDevice(clientId, deviceJson) {
-	            dispatch(SystemActions.importedDevice(deviceJson));
-	        }
-	    };
-	}
-
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(ImportFluxWIFI);
-
-/***/ },
+/* 191 */,
 /* 192 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -22386,7 +22295,7 @@
 	    },
 
 	    render: function render() {
-	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Shade", val: "shade" }];
+	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Outlet", val: "outlet" }, { str: "Shade", val: "shade" }];
 	        var self = this;
 	        var nodes = types.map(function (type) {
 	            return React.createElement(
@@ -26867,6 +26776,105 @@
 	    }
 	});
 	module.exports = Testr;
+
+/***/ },
+/* 249 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(160);
+	var DeviceInfo = __webpack_require__(201);
+	var Api = __webpack_require__(202);
+	var SystemActions = __webpack_require__(206);
+
+	var DiscoverDevices = React.createClass({
+	    displayName: 'DiscoverDevices',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            discovering: false,
+	            devices: null
+	        };
+	    },
+
+	    discover: function discover() {
+	        this.setState({
+	            discovering: true,
+	            devices: null
+	        });
+
+	        Api.discoverDevice(this.props.modelNumber, function (err, data) {
+	            this.setState({
+	                discovering: false,
+	                devices: data || []
+	            });
+	        }.bind(this));
+	    },
+
+	    render: function render() {
+	        var devices;
+	        if (this.state.devices && this.state.devices.length > 0) {
+	            devices = this.state.devices.map(function (device) {
+	                return React.createElement(DeviceInfo, {
+	                    name: device.name,
+	                    description: device.description,
+	                    address: device.address,
+	                    modelNumber: device.modelNumber,
+	                    connectionPool: device.connPool,
+	                    cmdBuilder: device.cmdBuilder,
+	                    id: device.id,
+	                    clientId: device.clientId,
+	                    readOnlyFields: 'id, modelNumber',
+	                    key: device.id || device.clientId,
+	                    savedDevice: this.props.importedDevice,
+	                    showZones: true,
+	                    zones: device.zones });
+	            }.bind(this));
+	        }
+
+	        var importBody;
+	        importBody = React.createElement(
+	            'div',
+	            null,
+	            React.createElement(
+	                'button',
+	                { className: "btn btn-primary" + (this.state.discovering ? " disabled" : ""),
+	                    onClick: this.discover },
+	                'Discover Devices'
+	            ),
+	            React.createElement('i', { className: "fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden") }),
+	            React.createElement(
+	                'h3',
+	                { className: this.state.devices ? "" : " hidden" },
+	                this.state.devices && this.state.devices.length,
+	                ' device(s) found'
+	            ),
+	            React.createElement(
+	                'p',
+	                { className: this.state.devices && this.state.devices.length > 0 ? "" : " hidden" },
+	                'Click "Save" on each device you wish to add to your system.'
+	            ),
+	            devices
+	        );
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-DiscoverDevices' },
+	            importBody
+	        );
+	    }
+	});
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        importedDevice: function importedDevice(clientId, deviceJson) {
+	            dispatch(SystemActions.importedDevice(deviceJson));
+	        }
+	    };
+	}
+
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DiscoverDevices);
 
 /***/ }
 /******/ ]);

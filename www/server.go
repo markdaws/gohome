@@ -1018,6 +1018,17 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 			}
 		}
 
+		var connPoolCfg *comm.ConnectionPoolConfig
+		if data.ConnPool != nil {
+			connPoolCfg = &comm.ConnectionPoolConfig{
+				Name:           data.ConnPool.Name,
+				Size:           int(data.ConnPool.PoolSize),
+				ConnectionType: data.ConnPool.ConnectionType,
+				Address:        data.ConnPool.Address,
+				TelnetPingCmd:  data.ConnPool.TelnetPingCmd,
+			}
+		}
+
 		//TODO: Don't pass in ID
 		d, _ := gohome.NewDevice(
 			data.ModelNumber,
@@ -1029,13 +1040,7 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 			nil,
 			false, //TODO: stream?
 			cmdBuilder,
-			&comm.ConnectionPoolConfig{
-				Name:           data.ConnPool.Name,
-				Size:           int(data.ConnPool.PoolSize),
-				ConnectionType: data.ConnPool.ConnectionType,
-				Address:        data.ConnPool.Address,
-				TelnetPingCmd:  data.ConnPool.TelnetPingCmd,
-			},
+			connPoolCfg,
 			auth,
 		)
 

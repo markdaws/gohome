@@ -41,5 +41,5 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 }
 
 func (b *cmdBuilder) ID() string {
-	return "belkin-wemo-insight"
+	return "f7c029v2"
 }

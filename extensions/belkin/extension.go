@@ -14,15 +14,8 @@ func (e *extension) RegisterCmdBuilders(sys *gohome.System, lookupTable map[stri
 }
 
 func (e *extension) RegisterDiscoverers(sys *gohome.System, lookupTable map[string]gohome.Discoverer) {
-	//TODO: Implement
-
-	/*
-		case "F7C029V2":
-		responses, err := belkin.Scan(belkin.DTInsight, 5)
-		_ = responses
-		_ = err
-		return nil, fmt.Errorf("//TODO:not implemented")
-	*/
+	//Belkin WeMo Insight
+	lookupTable["f7c029v2"] = &discoverer{System: sys}
 }
 
 func (e *extension) RegisterImporters(sys *gohome.System, lookupTable map[string]gohome.Importer) {

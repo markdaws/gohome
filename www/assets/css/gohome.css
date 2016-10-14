@@ -175,10 +175,10 @@ button.disabled {
     width: 145px;
 }
 
-.cmp-ImportFluxWIFI .spinnerWrapper .fa.fa-spinner {
+.cmp-DiscoverDevices .spinnerWrapper .fa.fa-spinner {
     font-size: 35px;
 }
-.cmp-ImportFluxWIFI .discover.fa-spinner {
+.cmp-DiscoverDevices .discover.fa-spinner {
     margin-left: 12px;
 }
 

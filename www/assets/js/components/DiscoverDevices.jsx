@@ -4,51 +4,46 @@ var DeviceInfo = require('./DeviceInfo.jsx');
 var Api = require('../utils/API.js');
 var SystemActions = require('../actions/SystemActions.js');
 
-var ImportFluxWIFI = React.createClass({
+var DiscoverDevices = React.createClass({
     getInitialState: function() {
         return {
             discovering: false,
-            devices: [],
+            devices: null,
         };
     },
 
     discover: function() {
         this.setState({
             discovering: true,
-            devices: []
+            devices: null
         });
 
-        Api.discoverDevice("fluxwifi", function(err, data) {
+        Api.discoverDevice(this.props.modelNumber, function(err, data) {
             this.setState({
                 discovering: false,
-                devices: data
+                devices: data || []
             });
         }.bind(this));
     },
 
-    savedDevice: function() {
-        
-    },
-
     render: function() {
-
         var devices
-        if (this.state.devices.length > 0) {
+        if (this.state.devices && this.state.devices.length > 0) {
             devices = this.state.devices.map(function(device) {
                 return <DeviceInfo
-                name={device.name}
-                description={device.description}
-                address={device.address}
-                modelNumber={device.modelNumber}
-                connectionPool={device.connPool}
-                cmdBuilder={device.cmdBuilder}
-                id={device.id}
-                clientId={device.clientId}
-                readOnlyFields="id, modelNumber"
-                key={device.id || device.clientId}
-                savedDevice={this.props.importedDevice}
-                showZones={true}
-                zones={device.zones}/>
+                           name={device.name}
+                           description={device.description}
+                           address={device.address}
+                           modelNumber={device.modelNumber}
+                           connectionPool={device.connPool}
+                           cmdBuilder={device.cmdBuilder}
+                           id={device.id}
+                           clientId={device.clientId}
+                           readOnlyFields="id, modelNumber"
+                           key={device.id || device.clientId}
+                           savedDevice={this.props.importedDevice}
+                           showZones={true}
+                           zones={device.zones}/>
             }.bind(this));
         }
 
@@ -58,15 +53,17 @@ var ImportFluxWIFI = React.createClass({
                 <button className={"btn btn-primary" + (this.state.discovering ? " disabled" : "")}
                         onClick={this.discover}>Discover Devices</button>
                 <i className={"fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden")}></i>
-                <h3 className={this.state.devices.length > 0 ? "" : " hidden"}>Devices</h3>
-                <p className={this.state.devices.length > 0 ? "" : " hidden"}>
+                <h3 className={this.state.devices ? "" : " hidden"}>
+                    {this.state.devices && this.state.devices.length} device(s) found
+                </h3>
+                <p className={this.state.devices && this.state.devices.length > 0 ? "" : " hidden"}>
                     Click "Save" on each device you wish to add to your system.
                 </p>
                 {devices}
             </div>
         );
         return (
-            <div className="cmp-ImportFluxWIFI">
+            <div className="cmp-DiscoverDevices">
                 {importBody}
             </div>
         );
@@ -81,4 +78,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-module.exports = ReactRedux.connect(null, mapDispatchToProps)(ImportFluxWIFI);
+module.exports = ReactRedux.connect(null, mapDispatchToProps)(DiscoverDevices);
