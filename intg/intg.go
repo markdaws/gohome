@@ -13,9 +13,8 @@ import (
 type Extension interface {
 	RegisterCmdBuilders(*gohome.System, map[string]cmd.Builder)
 	RegisterDiscoverers(*gohome.System, map[string]gohome.Discoverer)
-
-	//TODO: Parse config files into system
-	//TODO: Importing devices
+	RegisterImporters(*gohome.System, map[string]gohome.Importer)
+	
 	//TODO: Import UI, have webpack get necessary files
 }
 
@@ -42,4 +41,5 @@ func RegisterExtensions(sys *gohome.System) error {
 func registerExtension(sys *gohome.System, ext Extension) {
 	ext.RegisterCmdBuilders(sys, sys.Extensions.CmdBuilders)
 	ext.RegisterDiscoverers(sys, sys.Extensions.Discoverers)
+	ext.RegisterImporters(sys, sys.Extensions.Importers)
 }

@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/event"
-	"github.com/markdaws/gohome/imports"
+	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/www"
@@ -35,10 +36,19 @@ func main() {
 	// Handles recipe management
 	rm := gohome.NewRecipeManager(eb)
 
-	//TODO: Remove
+	//TODO: Remove, simulate user importing lutron information on load
 	reset := true
 	if reset {
-		system, err := imports.FromFile("main/ip.json", "L-BDGPRO2-WH", cp)
+		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cp, 1)
+		system.Extensions = gohome.NewExtensions()
+		intg.RegisterExtensions(system)
+
+		bytes, err := ioutil.ReadFile("main/ip.json")
+		if err != nil {
+			panic("Could not read ip.json")
+		}
+
+		err = system.Extensions.Importers["l-bdgpro2-wh"].FromString(system, string(bytes[:]), "l-bdgpro2-wh")
 		if err != nil {
 			panic("Failed to import: " + err.Error())
 		}

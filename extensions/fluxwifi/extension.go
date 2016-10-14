@@ -18,6 +18,9 @@ func (e *extension) RegisterDiscoverers(sys *gohome.System, lookupTable map[stri
 	lookupTable["fluxwifi"] = discoverer
 }
 
+func (e *extension) RegisterImporters(sys *gohome.System, lookupTable map[string]gohome.Importer) {
+}
+
 func NewExtension() *extension {
 	return &extension{}
 }
