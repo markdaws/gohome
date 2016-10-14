@@ -1,25 +1,23 @@
-package intg
+package lutron
 
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/log"
-	"github.com/markdaws/gohome/lutron"
+	lutronExt "github.com/markdaws/gohome/lutron"
 )
 
-type lbdgpro2whCmdBuilder struct {
+type cmdBuilder struct {
 	System *gohome.System
-	device lutron.Device
+	device lutronExt.Device
 }
 
-func (b *lbdgpro2whCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
+func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 
 	if b.device == nil {
-		lDev, err := lutron.DeviceFromModelNumber(b.ID())
+		lDev, err := lutronExt.DeviceFromModelNumber(b.ID())
 		if err != nil {
 			return nil, err
 		}
@@ -83,7 +81,7 @@ func (b *lbdgpro2whCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	return nil, nil
 }
 
-func (b *lbdgpro2whCmdBuilder) ID() string {
+func (b *cmdBuilder) ID() string {
 	return "l-bdgpro2-wh"
 }
 
@@ -100,29 +98,6 @@ func getWriterAndExec(d gohome.Device, f func(io.Writer) error) error {
 	err := f(conn)
 	if err != nil {
 		return fmt.Errorf("Failed to send command %s\n", err)
-	}
-	return nil
-}
-
-func sendStringCommand(d gohome.Device, cmd *cmd.StringCommand) error {
-
-	log.V(
-		"sending command \"%s\"",
-		strings.Replace(strings.Replace(cmd.String(), "\r", "\\r", -1), "\n", "\\n", -1),
-	)
-
-	conn := d.Connections.Get()
-	if conn == nil {
-		return fmt.Errorf("StringCommand - error connecting, pool returned nil")
-	}
-
-	defer func() {
-		d.Connections.Release(conn)
-	}()
-
-	_, err := conn.Write([]byte(cmd.String()))
-	if err != nil {
-		return fmt.Errorf("Failed to send string_command %s\n", err)
 	}
 	return nil
 }

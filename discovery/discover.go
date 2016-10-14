@@ -9,14 +9,13 @@ import (
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/connectedbytcp"
 	"github.com/markdaws/gohome/fluxwifi"
-	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/zone"
 )
 
 var ErrUnauthorized = errors.New("unauthorized")
 var ErrUnsupported = errors.New("unsupported model number")
 
-func Devices(modelNumber string) ([]gohome.Device, error) {
+func Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
 	switch modelNumber {
 	case "fluxwifi":
 		infos, err := fluxwifi.Scan(5)
@@ -36,13 +35,14 @@ func Devices(modelNumber string) ([]gohome.Device, error) {
 		for i, info := range infos {
 			name := info.ID + ": " + info.Model
 			modelNumber := "fluxwifi"
+			builderID := modelNumber
 
-			cmdBuilder, err := intg.CmdBuilderFromID(nil, modelNumber)
-			if err != nil {
-				return nil, err
+			cmdBuilder, ok := sys.CmdBuilders[builderID]
+			if !ok {
+				return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
 			}
 
-			dev, err := gohome.NewDevice(
+			dev, _ := gohome.NewDevice(
 				modelNumber,
 				info.IP,
 				"",

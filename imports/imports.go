@@ -41,7 +41,9 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		return nil, err
 	}
 
+	//TODO: Don't create a new system, add to existing
 	system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cmdProcessor, 1)
+	system.CmdBuilders = intg.RegisterExtensions(system)
 
 	root, ok := configJSON["LIPIdList"].(map[string]interface{})
 	if !ok {
@@ -173,8 +175,10 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				})
 			sbp = &dev
 
-			builder, _ := intg.CmdBuilderFromID(system, "l-bdgpro2-wh")
-			//TODO: Err
+			builder, ok := system.CmdBuilders["l-bdgpro2-wh"]
+			if !ok {
+				//TODO: Err
+			}
 			sbp.CmdBuilder = builder
 
 			pool, _ := comm.NewConnectionPool(comm.ConnectionPoolConfig{
@@ -440,7 +444,6 @@ func importBelkin(system *gohome.System) {
 			DeviceID:    ghh.ID(),
 			Type:        zone.ZTOutlet,
 			Output:      zone.OTBinary,
-			Controller:  zone.ZCWeMoInsightSwitch,
 		}
 		system.AddZone(z)
 		ghh.AddZone(z)

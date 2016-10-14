@@ -11,9 +11,6 @@ type Zone struct {
 	Type        Type
 	Output      Output
 
-	//TODO: remove controller concept
-	Controller string
-
 	//TODO: Describe max, min, step e.g. on/off vs dimmable
 	//TODO: Value presets?
 }

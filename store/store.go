@@ -39,7 +39,6 @@ type zoneJSON struct {
 	DeviceID    string `json:"deviceId"`
 	Type        string `json:"type"`
 	Output      string `json:"output"`
-	Controller  string `json:"controller"`
 }
 
 type sceneJSON struct {
@@ -108,6 +107,10 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 
 	sys := gohome.NewSystem(s.Name, s.Description, cmdProcessor, s.NextGlobalID)
 
+	// Register all of the extensions in the system e.g. lutron, flux etc
+	cmdBuilders := intg.RegisterExtensions(sys)
+	sys.CmdBuilders = cmdBuilders
+
 	recipeManager.System = sys
 
 	// Load all devices into global device list
@@ -124,9 +127,10 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 		log.V("loaded Device: ID:%s, Name:%s, Model:%s, Address:%s", d.ID, d.Name, d.ModelNumber, d.Address)
 		var cmdBuilder cmd.Builder
 		if d.CmdBuilder != nil {
-			cmdBuilder, err = intg.CmdBuilderFromID(sys, d.CmdBuilder.ID)
-			if err != nil {
-				return nil, err
+			var ok bool
+			cmdBuilder, ok = sys.CmdBuilders[d.CmdBuilder.ID]
+			if !ok {
+				return nil, fmt.Errorf("unsupported comand builder ID: %s", d.CmdBuilder.ID)
 			}
 		}
 
@@ -200,7 +204,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 				DeviceID:    dev.ID,
 				Type:        zone.TypeFromString(zn.Type),
 				Output:      zone.OutputFromString(zn.Output),
-				Controller:  zn.Controller,
 			}
 
 			err := sys.AddZone(z)
@@ -209,8 +212,8 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 				return nil, err
 			}
 
-			log.V("loaded Zone: ID:%s, Name:%s, Address:%s, Type:%s, Output:%s, Controller:%s",
-				zn.ID, zn.Name, zn.Address, zn.Type, zn.Output, zn.Controller,
+			log.V("loaded Zone: ID:%s, Name:%s, Address:%s, Type:%s, Output:%s",
+				zn.ID, zn.Name, zn.Address, zn.Type, zn.Output,
 			)
 		}
 	}
@@ -420,7 +423,6 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 				DeviceID:    device.ID,
 				Type:        z.Type.ToString(),
 				Output:      z.Output.ToString(),
-				Controller:  z.Controller,
 			}
 			zi++
 		}

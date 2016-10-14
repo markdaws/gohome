@@ -15,7 +15,6 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/discovery"
-	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/validation"
@@ -1010,8 +1009,9 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 
 		var cmdBuilder cmd.Builder
 		if data.CmdBuilder != nil {
-			cmdBuilder, err = intg.CmdBuilderFromID(system, data.CmdBuilder.ID)
-			if err != nil {
+			var ok bool
+			cmdBuilder, ok = system.CmdBuilders[data.CmdBuilder.ID]
+			if !ok {
 				log.E("unknown command builder id: %s, failed to add device to system", data.CmdBuilder.ID)
 				w.WriteHeader(http.StatusBadRequest)
 				return
@@ -1179,7 +1179,7 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 		modelNumber := vars["modelNumber"]
 
 		//TODO: fix, This is blocking
-		devs, err := discovery.Devices(modelNumber)
+		devs, err := discovery.Devices(system, modelNumber)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -1271,7 +1271,6 @@ func apiDiscoveryZoneHandler(system *gohome.System) func(http.ResponseWriter, *h
 				Description: zone.Description,
 				Type:        zone.Type.ToString(),
 				Output:      zone.Output.ToString(),
-				Controller:  zone.Controller,
 			}
 		}
 		sort.Sort(jsonZones)

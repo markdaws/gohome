@@ -1,4 +1,4 @@
-package intg
+package fluxwifi
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 	"github.com/markdaws/gohome/fluxwifi"
 )
 
-type fluxwifiCmdBuilder struct {
+type cmdBuilder struct {
 	System *gohome.System
 }
 
-func (b *fluxwifiCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
+func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	switch command := c.(type) {
 	case *cmd.ZoneTurnOn:
 		z := b.System.Zones[command.ZoneID]
@@ -103,6 +103,6 @@ func (b *fluxwifiCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	}
 }
 
-func (b *fluxwifiCmdBuilder) ID() string {
+func (b *cmdBuilder) ID() string {
 	return "fluxwifi"
 }

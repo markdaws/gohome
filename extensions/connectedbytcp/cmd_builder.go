@@ -1,27 +1,27 @@
-package intg
+package connectedbytcp
 
 import (
 	"fmt"
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/connectedbytcp"
+	connectedbytcpExt "github.com/markdaws/gohome/connectedbytcp"
 )
 
-type tcp600gwbCmdBuilder struct {
+type cmdBuilder struct {
 	System *gohome.System
 }
 
-func (b *tcp600gwbCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
+func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	switch command := c.(type) {
 	case *cmd.ZoneTurnOn:
 		z := b.System.Zones[command.ZoneID]
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcp.TurnOn(d.Address, z.Address, d.Auth.Token)
+				return connectedbytcpExt.TurnOn(d.Address, z.Address, d.Auth.Token)
 			},
-			Friendly: "tcp600gwbCmdBuilder.ZoneTurnOn",
+			Friendly: "connectedbytcp.cmdBuilder.ZoneTurnOn",
 		}, nil
 
 	case *cmd.ZoneTurnOff:
@@ -29,9 +29,9 @@ func (b *tcp600gwbCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcp.TurnOff(d.Address, z.Address, d.Auth.Token)
+				return connectedbytcpExt.TurnOff(d.Address, z.Address, d.Auth.Token)
 			},
-			Friendly: "tcp600gwbCmdBuilder.ZoneTurnOff",
+			Friendly: "connectedbytcp.cmdBuilder.ZoneTurnOff",
 		}, nil
 
 	case *cmd.ZoneSetLevel:
@@ -39,9 +39,9 @@ func (b *tcp600gwbCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcp.SetLevel(d.Address, z.Address, d.Auth.Token, int32(command.Level.Value))
+				return connectedbytcpExt.SetLevel(d.Address, z.Address, d.Auth.Token, int32(command.Level.Value))
 			},
-			Friendly: "tcp600gwbCmdBuilder.ZoneSetLevel",
+			Friendly: "connectedbytcp.cmdBuilder.ZoneSetLevel",
 		}, nil
 
 	default:
@@ -50,6 +50,6 @@ func (b *tcp600gwbCmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	return nil, nil
 }
 
-func (b *tcp600gwbCmdBuilder) ID() string {
+func (b *cmdBuilder) ID() string {
 	return "tcp600gwb"
 }

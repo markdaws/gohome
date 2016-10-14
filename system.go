@@ -3,6 +3,7 @@ package gohome
 import (
 	"strconv"
 
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
@@ -19,6 +20,7 @@ type System struct {
 	Buttons     map[string]*Button
 	Recipes     map[string]*Recipe
 
+	CmdBuilders  map[string]cmd.Builder
 	CmdProcessor CommandProcessor
 	EventBroker  event.Broker
 
@@ -89,7 +91,6 @@ func (s *System) AddDevice(d Device) error {
 	}
 
 	//TODO: What about address, allow duplicates?
-	//TODO: Add device need to init connections?
 	s.Devices[d.ID] = d
 	return nil
 }
