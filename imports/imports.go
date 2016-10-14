@@ -13,7 +13,6 @@ import (
 	"github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
-	"github.com/markdaws/gohome/connectedbytcp"
 	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/zone"
 )
@@ -62,7 +61,7 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 		stream bool,
 		auth *comm.Auth) gohome.Device {
 
-		device := gohome.NewDevice(
+		device, _ := gohome.NewDevice(
 			modelNumber,
 			address,
 			sys.NextGlobalID(),
@@ -70,6 +69,8 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 			"",
 			hub,
 			stream,
+			nil,
+			nil,
 			auth)
 
 		for _, buttonMap := range deviceMap["Buttons"].([]interface{}) {
@@ -88,13 +89,13 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 				ID:          sys.NextGlobalID(),
 				Name:        btnName,
 				Description: btnName,
-				Device:      device,
+				Device:      *device,
 			}
 			device.Buttons[btnNumber] = b
 			system.AddButton(b)
 		}
 
-		return device
+		return *device
 	}
 
 	var makeScenes = func(deviceMap map[string]interface{}, sbp gohome.Device) error {
@@ -277,12 +278,13 @@ func importL_BDGPRO2_WH(integrationReportPath, smartBridgeProID string, cmdProce
 	}
 
 	//TODO: delete, testing
-	importConnectedByTCP(system)
+	//importConnectedByTCP(system)
 	//importFluxWIFI(system)
-	importBelkin(system)
+	//importBelkin(system)
 	return system, nil
 }
 
+/*
 //TODO: delete, testing
 func importConnectedByTCP(system *gohome.System) {
 	responses, err := connectedbytcp.Scan(3)
@@ -290,14 +292,14 @@ func importConnectedByTCP(system *gohome.System) {
 		fmt.Printf("ERR SCANNING\n")
 	}
 	fmt.Println(responses)
-	/*
-		token, err := connectedbytcp.GetToken("https://192.168.0.23")
-		if err != nil {
-			fmt.Printf("GETTOKEN failed")
-			fmt.Println(err)
-		}
-		fmt.Println(token)
-	*/
+
+	//	token, err := connectedbytcp.GetToken("https://192.168.0.23")
+	//	if err != nil {
+	//		fmt.Printf("GETTOKEN failed")
+	//		fmt.Println(err)
+	//	}
+	//	fmt.Println(token)
+
 	dev := gohome.NewDevice(
 		"", //TODO: Need model number
 		"https://192.168.0.23",
@@ -326,7 +328,7 @@ func importConnectedByTCP(system *gohome.System) {
 	system.AddDevice(dev)
 	system.AddZone(z)
 }
-
+*/
 /*
 //TODO: delete, testing
 func importFluxWIFI(system *gohome.System) {
@@ -383,32 +385,33 @@ func importBelkin(system *gohome.System) {
 	}
 	fmt.Printf("%#v", bd)
 
-	dev := gohome.NewDevice(
-		"", //MODEL_NUMBER
-		strings.Replace(responses[0].Location, "/setup.xml", "", -1),
-		system.NextGlobalID(),
-		bd.FriendlyName+" - Device",
-		"",
-		nil,
-		false,
-		nil)
+	/*
+		dev := gohome.NewDevice(
+			"", //MODEL_NUMBER
+			strings.Replace(responses[0].Location, "/setup.xml", "", -1),
+			system.NextGlobalID(),
+			bd.FriendlyName+" - Device",
+			"",
+			nil,
+			false,
+			nil)
 
-	builder, err := intg.CmdBuilderFromID(system, "belkin-wemo-insight")
-	dev.CmdBuilder = builder
-	system.AddDevice(dev)
+		builder, err := intg.CmdBuilderFromID(system, "belkin-wemo-insight")
+		dev.CmdBuilder = builder
+		system.AddDevice(dev)
 
-	z := &zone.Zone{
-		ID:          "",
-		Address:     "1",
-		Name:        bd.FriendlyName,
-		Description: "",
-		DeviceID:    dev.ID,
-		Type:        zone.ZTOutlet,
-		Output:      zone.OTBinary,
-	}
-	system.AddZone(z)
-	dev.AddZone(z)
-
+		z := &zone.Zone{
+			ID:          "",
+			Address:     "1",
+			Name:        bd.FriendlyName,
+			Description: "",
+			DeviceID:    dev.ID,
+			Type:        zone.ZTOutlet,
+			Output:      zone.OTBinary,
+		}
+		system.AddZone(z)
+		dev.AddZone(z)
+	*/
 	return
 	/*
 		{

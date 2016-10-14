@@ -34,28 +34,32 @@ func Devices(modelNumber string) ([]gohome.Device, error) {
 
 		devices := make([]gohome.Device, len(infos))
 		for i, info := range infos {
-			dev := gohome.NewDevice(
-				"fluxwifi",
+			name := info.ID + ": " + info.Model
+			modelNumber := "fluxwifi"
+
+			cmdBuilder, err := intg.CmdBuilderFromID(nil, modelNumber)
+			if err != nil {
+				return nil, err
+			}
+
+			dev, err := gohome.NewDevice(
+				modelNumber,
 				info.IP,
 				"",
-				info.ID+": "+info.Model,
+				name,
 				"",
 				nil,
 				false,
+				cmdBuilder,
+				&comm.ConnectionPoolConfig{
+					Name:           name,
+					Size:           2,
+					ConnectionType: "telnet",
+					Address:        info.IP,
+					TelnetPingCmd:  "",
+				},
 				nil,
 			)
-
-			builder, _ := intg.CmdBuilderFromID(nil, dev.ModelNumber)
-			dev.CmdBuilder = builder
-
-			pool, _ := comm.NewConnectionPool(comm.ConnectionPoolConfig{
-				Name:           dev.Name,
-				Size:           2,
-				ConnectionType: "telnet",
-				Address:        dev.Address,
-				TelnetPingCmd:  "",
-			})
-			dev.Connections = pool
 
 			z := &zone.Zone{
 				Address:     "",
@@ -66,7 +70,7 @@ func Devices(modelNumber string) ([]gohome.Device, error) {
 				Output:      zone.OTRGB,
 			}
 			dev.AddZone(z)
-			devices[i] = dev
+			devices[i] = *dev
 		}
 		return devices, nil
 

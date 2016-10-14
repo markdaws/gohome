@@ -6,6 +6,7 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
+	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
@@ -42,8 +43,11 @@ func NewDevice(
 	description string,
 	hub *Device,
 	stream bool,
-	auth *comm.Auth) Device {
-	device := Device{
+	cmdBuilder cmd.Builder,
+	connPoolCfg *comm.ConnectionPoolConfig,
+	auth *comm.Auth) (*Device, error) {
+
+	dev := &Device{
 		Address:     address,
 		ModelNumber: modelNumber,
 		ID:          ID,
@@ -55,9 +59,23 @@ func NewDevice(
 		Zones:       make(map[string]*zone.Zone),
 		Stream:      stream,
 		Auth:        auth,
+		CmdBuilder:  cmdBuilder,
 	}
 
-	return device
+	if connPoolCfg != nil {
+		if connPoolCfg.ConnectionType == "telnet" && auth != nil {
+			connPoolCfg.TelnetAuth = &comm.TelnetAuthenticator{*auth}
+		}
+
+		pool, err := comm.NewConnectionPool(*connPoolCfg)
+		if err != nil {
+			log.V("failed to create device connection pool: %s", err)
+			return nil, err
+		}
+		dev.Connections = pool
+	}
+
+	return dev, nil
 }
 
 //TODO: Delete

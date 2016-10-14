@@ -122,38 +122,37 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 		}
 
 		log.V("loaded Device: ID:%s, Name:%s, Model:%s, Address:%s", d.ID, d.Name, d.ModelNumber, d.Address)
-		dev := gohome.NewDevice(d.ModelNumber, d.Address, d.ID, d.Name, d.Description, nil, d.Stream, auth)
-
+		var cmdBuilder cmd.Builder
 		if d.CmdBuilder != nil {
-			builder, err := intg.CmdBuilderFromID(sys, d.CmdBuilder.ID)
+			cmdBuilder, err = intg.CmdBuilderFromID(sys, d.CmdBuilder.ID)
 			if err != nil {
-				log.V("unknown command builder id: %s, failed to add device to system", d.CmdBuilder.ID)
-				continue
+				return nil, err
 			}
-			dev.CmdBuilder = builder
 		}
 
+		var connPoolCfg *comm.ConnectionPoolConfig
 		if d.ConnPool != nil {
-			var authenticator *comm.TelnetAuthenticator
-			if d.ConnPool.ConnectionType == "telnet" && auth != nil {
-				authenticator = &comm.TelnetAuthenticator{*auth}
-			}
-			pool, err := comm.NewConnectionPool(comm.ConnectionPoolConfig{
+			connPoolCfg = &comm.ConnectionPoolConfig{
 				Name:           d.ConnPool.Name,
 				Size:           int(d.ConnPool.PoolSize),
 				ConnectionType: d.ConnPool.ConnectionType,
 				Address:        d.ConnPool.Address,
 				TelnetPingCmd:  d.ConnPool.TelnetPingCmd,
-				TelnetAuth:     authenticator,
-			})
-			if err != nil {
-				log.V("failed to create device connection pool: %s", err)
-				continue
 			}
-			dev.Connections = pool
 		}
+		dev, err := gohome.NewDevice(
+			d.ModelNumber,
+			d.Address,
+			d.ID,
+			d.Name,
+			d.Description,
+			nil,
+			d.Stream,
+			cmdBuilder,
+			connPoolCfg,
+			auth)
 
-		err = sys.AddDevice(dev)
+		err = sys.AddDevice(*dev)
 		if err != nil {
 			log.V("failed to add device to system: %s", err)
 			return nil, err

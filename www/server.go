@@ -1008,8 +1008,18 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 			}
 		}
 
+		var cmdBuilder cmd.Builder
+		if data.CmdBuilder != nil {
+			cmdBuilder, err = intg.CmdBuilderFromID(system, data.CmdBuilder.ID)
+			if err != nil {
+				log.E("unknown command builder id: %s, failed to add device to system", data.CmdBuilder.ID)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
+
 		//TODO: Don't pass in ID
-		d := gohome.NewDevice(
+		d, _ := gohome.NewDevice(
 			data.ModelNumber,
 			data.Address,
 			system.NextGlobalID(),
@@ -1018,59 +1028,18 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 			//TODO: Hub
 			nil,
 			false, //TODO: stream?
-			auth,
-		)
-
-		//TODO: This should be inside NewDevice
-		if data.CmdBuilder != nil {
-			builder, err := intg.CmdBuilderFromID(system, data.CmdBuilder.ID)
-			if err != nil {
-				log.E("unknown command builder id: %s, failed to add device to system", data.CmdBuilder.ID)
-			} else {
-				d.CmdBuilder = builder
-			}
-		}
-
-		//TODO: This should be inside NewDevice
-		if data.ConnPool != nil {
-			//TODO: Auth
-			var authenticator *comm.TelnetAuthenticator
-			/*
-				if d.ConnPool.ConnectionType == "telnet" && auth != nil {
-					authenticator = &comm.TelnetAuthenticator{*auth}
-				}*/
-			pool, err := comm.NewConnectionPool(comm.ConnectionPoolConfig{
+			cmdBuilder,
+			&comm.ConnectionPoolConfig{
 				Name:           data.ConnPool.Name,
 				Size:           int(data.ConnPool.PoolSize),
 				ConnectionType: data.ConnPool.ConnectionType,
 				Address:        data.ConnPool.Address,
 				TelnetPingCmd:  data.ConnPool.TelnetPingCmd,
-				TelnetAuth:     authenticator,
-			})
-			if err != nil {
-				log.E("failed to create device connection pool: %s", err)
-			}
-			d.Connections = pool
-		}
+			},
+			auth,
+		)
 
-		//TODO: Connection Pool and command builder
-		/*					var cmdBuilderJson *jsonCmdBuilder
-		if device.CmdBuilder != nil {
-			cmdBuilderJson = &jsonCmdBuilder{ID: device.CmdBuilder.ID()}
-		}
-		var connPoolJson *jsonConnPool
-		if device.Connections != nil {
-			connCfg := device.Connections.Config()
-			connPoolJson = &jsonConnPool{
-				Name:           connCfg.Name,
-				PoolSize:       int32(connCfg.Size),
-				ConnectionType: connCfg.ConnectionType,
-				TelnetPingCmd:  connCfg.TelnetPingCmd,
-				Address:        connCfg.Address,
-			}
-		}
-		*/
-		errors := system.AddDevice(d)
+		errors := system.AddDevice(*d)
 		if errors != nil {
 			if valErrs, ok := errors.(*validation.Errors); ok {
 				w.WriteHeader(http.StatusBadRequest)
@@ -1083,7 +1052,7 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 			return
 		}
 
-		err = system.InitDevice(&d)
+		err = system.InitDevice(d)
 		if err != nil {
 			log.E("Failed to init device on add: %s", err)
 		}
