@@ -23,7 +23,12 @@ var System = React.createClass({
             body = <Import/>
             importBtn = <button className="btn btn-danger pull-right btnExitImport" onClick={this.cancelImport}>Exit Import</button>
         } else {
-            body = <SystemDeviceList devices={this.props.devices}/>
+            if (this.props.devices.length === 0) {
+                body = <h5>You don't have any devices. Click on the "Import" button to start, or you can manually update the .json file if you know what you are doing ;)</h5>
+            } else {
+                body = <SystemDeviceList devices={this.props.devices}/>                
+            }
+
             importBtn = <button className="btn btn-primary" onClick={this.importProduct}>Import</button>
         }
         return (

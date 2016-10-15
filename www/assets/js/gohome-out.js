@@ -19789,7 +19789,9 @@
 	            buttons: [],
 	            devices: [],
 	            zones: [],
-	            scenes: {}
+
+	            //TODO: Change to array
+	            scenes: { items: [] }
 	        };
 	    },
 
@@ -19802,6 +19804,30 @@
 	    },
 
 	    render: function render() {
+
+	        var zoneBody;
+	        if (this.props.zones.length === 0) {
+	            //TODO: Fix, move edit button out of the scene list
+	            zoneBody = React.createElement(
+	                'h5',
+	                null,
+	                'You don\'t have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.'
+	            );
+	        } else {
+	            zoneBody = React.createElement(ZoneList, { zones: this.props.zones });
+	        }
+
+	        var sceneBody;
+	        if (this.props.scenes.items.length === 0) {
+	            sceneBody = React.createElement(
+	                'h5',
+	                null,
+	                'You don\'t have any scenes.  Click on the Edit button to add a new Scene.'
+	            );
+	        } else {
+	            sceneBody = React.createElement(SceneList, { scenes: this.props.scenes, buttons: this.props.buttons, zones: this.props.zones });
+	        }
+
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ControlApp' },
@@ -19842,15 +19868,12 @@
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
-	                    React.createElement(SceneList, {
-	                        scenes: this.props.scenes,
-	                        buttons: this.props.buttons,
-	                        zones: this.props.zones })
+	                    sceneBody
 	                ),
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'zones' },
-	                    React.createElement(ZoneList, { zones: this.props.zones })
+	                    zoneBody
 	                ),
 	                React.createElement(
 	                    'div',
@@ -21700,7 +21723,16 @@
 	                'Exit Import'
 	            );
 	        } else {
-	            body = React.createElement(SystemDeviceList, { devices: this.props.devices });
+	            if (this.props.devices.length === 0) {
+	                body = React.createElement(
+	                    'h5',
+	                    null,
+	                    'You don\'t have any devices. Click on the "Import" button to start, or you can manually update the .json file if you know what you are doing ;)'
+	                );
+	            } else {
+	                body = React.createElement(SystemDeviceList, { devices: this.props.devices });
+	            }
+
 	            importBtn = React.createElement(
 	                'button',
 	                { className: 'btn btn-primary', onClick: this.importProduct },

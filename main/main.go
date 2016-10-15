@@ -21,7 +21,7 @@ type config struct {
 func main() {
 
 	config := config{
-		StartupConfigPath: "/Users/mark/code/gohome/system.json",
+		StartupConfigPath: "/Users/mark/code/gohome/system2.json",
 		WWWPort:           ":8000",
 	}
 
@@ -37,7 +37,7 @@ func main() {
 	rm := gohome.NewRecipeManager(eb)
 
 	//TODO: Remove, simulate user importing lutron information on load
-	reset := true
+	reset := false
 	if reset {
 		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cp, 1)
 		intg.RegisterExtensions(system)
@@ -63,10 +63,21 @@ func main() {
 	//generate an empty system and save it to the location, then execute normal
 	//code path
 	sys, err := store.LoadSystem(config.StartupConfigPath, rm, cp)
-	if err != nil {
-		panic("Failed to load system: " + err.Error())
-		//TODO: New systems, should have a blank system, create if not found
+	if err == store.ErrFileNotFound {
+		log.V("startup file not found at: %s, creating new system", config.StartupConfigPath)
+
+		// First time running the system, create a new blank system, save it
+		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cp, 1)
+		intg.RegisterExtensions(system)
+
+		system.SavePath = config.StartupConfigPath
+		err = store.SaveSystem(system, rm)
+		if err != nil {
+			panic("Failed to save initial system: " + err.Error())
+		}
+		sys = system
 	}
+
 	sys.SavePath = config.StartupConfigPath
 	cp.SetSystem(sys)
 

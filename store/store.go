@@ -2,6 +2,7 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -87,14 +88,16 @@ type commandJSON struct {
 	Attributes map[string]interface{} `json:"attributes"`
 }
 
+// Returned when the specified path cannot be found
+var ErrFileNotFound = errors.New("file not found")
+
 func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor gohome.CommandProcessor) (*gohome.System, error) {
 
 	log.V("loading system from %s", path)
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.V("failed to read file: %", err)
-		return nil, err
+		return nil, ErrFileNotFound
 	}
 
 	var s systemJSON
@@ -291,7 +294,7 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 	}
 
 	out := systemJSON{
-		Version:      "1.0.0.0",
+		Version:      "0.1.0",
 		Name:         s.Name,
 		Description:  s.Description,
 		NextGlobalID: s.PeekNextGlobalID(),
