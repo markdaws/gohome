@@ -9,7 +9,6 @@ import (
 )
 
 type apiServer struct {
-	rootPath      string
 	system        *gohome.System
 	recipeManager *gohome.RecipeManager
 	eventLogger   gohome.WSEventLogger
@@ -18,13 +17,11 @@ type apiServer struct {
 // ListenAndServe creates a new WWW server, that handles API calls and also
 // runs the gohome website
 func ListenAndServe(
-	rootPath string,
 	port string,
 	system *gohome.System,
 	recipeManager *gohome.RecipeManager,
 	eventLogger gohome.WSEventLogger) error {
 	server := &apiServer{
-		rootPath:      rootPath,
 		system:        system,
 		recipeManager: recipeManager,
 		eventLogger:   eventLogger,

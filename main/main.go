@@ -109,7 +109,7 @@ func main() {
 	//TODO: restart on fail
 	go func() {
 		log.V("API Server starting, listening on port %s", config.APIPort)
-		err := api.ListenAndServe("./www", config.APIPort, sys, rm, wsLogger)
+		err := api.ListenAndServe(config.APIPort, sys, rm, wsLogger)
 		if err != nil {
 			fmt.Printf("error with API server, shutting down: %s\n", err)
 		}
