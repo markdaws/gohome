@@ -59,6 +59,9 @@ func main() {
 		}
 	}
 
+	//TODO: Handle the case where the system does not exist, e.g. first load
+	//generate an empty system and save it to the location, then execute normal
+	//code path
 	sys, err := store.LoadSystem(config.StartupConfigPath, rm, cp)
 	if err != nil {
 		panic("Failed to load system: " + err.Error())

@@ -14,7 +14,7 @@ func (e *extension) RegisterCmdBuilders(sys *gohome.System, lookupTable map[stri
 }
 
 func (e *extension) RegisterDiscoverers(sys *gohome.System, lookupTable map[string]gohome.Discoverer) {
-	//TODO: Implement
+	lookupTable["tcp600gwb"] = &discoverer{System: sys}
 }
 
 func (e *extension) RegisterImporters(sys *gohome.System, lookupTable map[string]gohome.Importer) {

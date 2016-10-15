@@ -13,7 +13,6 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
-//TODO: Move into new file/struct
 type systemJSON struct {
 	Version      string              `json:"version"`
 	Name         string              `json:"name"`
@@ -286,6 +285,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 }
 
 func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
+	//TODO: Why is SavePath on system, seems wrong, just pass it in
 	if s.SavePath == "" {
 		return fmt.Errorf("SavePath is not set")
 	}

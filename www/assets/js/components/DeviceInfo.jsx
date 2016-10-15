@@ -175,24 +175,29 @@ var DeviceInfo = React.createClass({
             );
         }
 
-        var zones = this.props.zones.map(function(zone) {
-            return (
-                <ZoneInfo
-                    ref={"zoneInfo_" + zone.clientId}
-                    readOnlyFields="deviceId"
-                    key={zone.id || zone.clientId}
-                    clientId={zone.clientId}
-                    name={zone.name}
-                    description={zone.description}
-                    address={zone.address}
-                    type={zone.type}
-                    output={zone.output}
-                    deviceId={this.state.id || this.state.clientId}
-                    devices={[ this.toJson() ]}
-                    changed={this._zoneChanged} />
-            );
-        }.bind(this));
-        
+        var zones;
+        if (this.props.zones.length === 0) {
+            zones = <h4>0 zones found</h4>
+        } else {
+            zones = this.props.zones.map(function(zone) {
+                return (
+                    <ZoneInfo
+                        ref={"zoneInfo_" + zone.clientId}
+                        readOnlyFields="deviceId"
+                        key={zone.id || zone.clientId}
+                        clientId={zone.clientId}
+                        name={zone.name}
+                        description={zone.description}
+                        address={zone.address}
+                        type={zone.type}
+                        output={zone.output}
+                        deviceId={this.state.id || this.state.clientId}
+                        devices={[ this.toJson() ]}
+                        changed={this._zoneChanged} />
+                );
+            }.bind(this));
+        }
+            
         return (
             <div className="cmp-DeviceInfo well well-sm">
                 {deleteBtn}

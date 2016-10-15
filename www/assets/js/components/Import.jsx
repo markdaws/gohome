@@ -18,8 +18,6 @@ var Import = React.createClass({
         var body
         switch(this.state.selectedProduct) {
         case 'tcp600gwb':
-            body = <ImportTCP600GWB />
-            break;
         case 'fluxwifi':
         case 'f7c029v2':
             body = <DiscoverDevices modelNumber={this.state.selectedProduct} />
@@ -46,3 +44,9 @@ var Import = React.createClass({
     }
 });
 module.exports = Import;
+
+/*
+//TODO: Delete
+                body = <ImportTCP600GWB />
+            break;
+*/

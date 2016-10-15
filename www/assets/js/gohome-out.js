@@ -21745,8 +21745,6 @@
 	        var body;
 	        switch (this.state.selectedProduct) {
 	            case 'tcp600gwb':
-	                body = React.createElement(ImportTCP600GWB, null);
-	                break;
 	            case 'fluxwifi':
 	            case 'f7c029v2':
 	                body = React.createElement(DiscoverDevices, { modelNumber: this.state.selectedProduct });
@@ -21801,6 +21799,12 @@
 	    }
 	});
 	module.exports = Import;
+
+	/*
+	//TODO: Delete
+	                body = <ImportTCP600GWB />
+	            break;
+	*/
 
 /***/ },
 /* 191 */,
@@ -22644,21 +22648,30 @@
 	            );
 	        }
 
-	        var zones = this.props.zones.map(function (zone) {
-	            return React.createElement(ZoneInfo, {
-	                ref: "zoneInfo_" + zone.clientId,
-	                readOnlyFields: 'deviceId',
-	                key: zone.id || zone.clientId,
-	                clientId: zone.clientId,
-	                name: zone.name,
-	                description: zone.description,
-	                address: zone.address,
-	                type: zone.type,
-	                output: zone.output,
-	                deviceId: this.state.id || this.state.clientId,
-	                devices: [this.toJson()],
-	                changed: this._zoneChanged });
-	        }.bind(this));
+	        var zones;
+	        if (this.props.zones.length === 0) {
+	            zones = React.createElement(
+	                'h4',
+	                null,
+	                '0 zones found'
+	            );
+	        } else {
+	            zones = this.props.zones.map(function (zone) {
+	                return React.createElement(ZoneInfo, {
+	                    ref: "zoneInfo_" + zone.clientId,
+	                    readOnlyFields: 'deviceId',
+	                    key: zone.id || zone.clientId,
+	                    clientId: zone.clientId,
+	                    name: zone.name,
+	                    description: zone.description,
+	                    address: zone.address,
+	                    type: zone.type,
+	                    output: zone.output,
+	                    deviceId: this.state.id || this.state.clientId,
+	                    devices: [this.toJson()],
+	                    changed: this._zoneChanged });
+	            }.bind(this));
+	        }
 
 	        return React.createElement(
 	            'div',
