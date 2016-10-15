@@ -1,4 +1,4 @@
-package www
+package api
 
 type jsonZone struct {
 	Address     string `json:"address"`

@@ -1,4 +1,4 @@
-package www
+package api
 
 type jsonScene struct {
 	Address     string        `json:"address"`

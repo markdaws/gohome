@@ -1,4 +1,4 @@
-package www
+package api
 
 type jsonCmdBuilder struct {
 	ID string `json:"id"`

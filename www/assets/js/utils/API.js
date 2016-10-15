@@ -1,5 +1,7 @@
 var Constants = require('../constants.js');
 
+var BASE = '//' + window.location.hostname + ':5000';
+
 /*
  API provides helper methods to access all of the gohome REST APIs
 */
@@ -9,7 +11,7 @@ var API = {
 
     deviceLoadAll: function(callback) {
         $.ajax({
-            url: '/api/v1/devices',
+            url: BASE + '/api/v1/devices',
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -27,7 +29,7 @@ var API = {
 
     deviceCreate: function(deviceJson, callback) {
         $.ajax({
-            url: '/api/v1/devices',
+            url: BASE + '/api/v1/devices',
             type: 'POST',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
@@ -49,7 +51,7 @@ var API = {
     // Deletes a device on the server
     deviceDestroy: function(id, callback) {
         $.ajax({
-            url: '/api/v1/devices/' + id,
+            url: BASE + '/api/v1/devices/' + id,
             type: 'DELETE',
             cache: false,
             success: function(data) {
@@ -68,7 +70,7 @@ var API = {
     // sceneActivate actives the specified scene
     sceneActivate: function(sceneId, callback) {
         $.ajax({
-            url: '/api/v1/scenes/active',
+            url: BASE + '/api/v1/scenes/active',
             type: 'POST',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
@@ -85,7 +87,7 @@ var API = {
     // sceneLoadAll loads all of the scenes from the backing store
     sceneLoadAll: function(callback) {
         $.ajax({
-            url: '/api/v1/scenes',
+            url: BASE + '/api/v1/scenes',
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -107,7 +109,7 @@ var API = {
         // they do have a clientId which is a unique ID created on the client so they can
         // still be distinguished from one another
         $.ajax({
-            url: '/api/v1/scenes',
+            url: BASE + '/api/v1/scenes',
             type: 'POST',
             dataType: 'json',
             data: JSON.stringify(scene),
@@ -130,7 +132,7 @@ var API = {
     // sceneUpdate updates fields of an existing scene
     sceneUpdate: function(scene, callback) {
         $.ajax({
-            url: '/api/v1/scenes/' + scene.id,
+            url: BASE + '/api/v1/scenes/' + scene.id,
             type: 'PUT',
             dataType: 'json',
             data: JSON.stringify(scene),
@@ -153,7 +155,7 @@ var API = {
     // sceneDestroy deletes the scene with the specified ID from the backing store
     sceneDestroy: function(id, callback) {
         $.ajax({
-            url: '/api/v1/scenes/' + id,
+            url: BASE + '/api/v1/scenes/' + id,
             type: 'DELETE',
             cache: false,
             success: function(data) {
@@ -171,7 +173,7 @@ var API = {
 
     sceneSaveCommand: function(sceneId, cmd, callback) {
         $.ajax({
-            url: '/api/v1/scenes/' + sceneId + '/commands',
+            url: BASE + '/api/v1/scenes/' + sceneId + '/commands',
             type: 'POST',
             dataType: 'json',
             data: JSON.stringify(cmd),
@@ -192,7 +194,7 @@ var API = {
 
     sceneDeleteCommand: function(sceneId, cmdIndex, callback) {
         $.ajax({
-            url: '/api/v1/scenes/' + sceneId + '/commands/' + cmdIndex,
+            url: BASE + '/api/v1/scenes/' + sceneId + '/commands/' + cmdIndex,
             type: 'DELETE',
             dataType: 'json',
             data: {},
@@ -213,7 +215,7 @@ var API = {
     // zoneLoadAll loads all of the zones from the backing store
     zoneLoadAll: function(callback) {
         $.ajax({
-            url: '/api/v1/zones',
+            url: BASE + '/api/v1/zones',
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -232,7 +234,7 @@ var API = {
     // zoneCreate creates a new zone on the server
     zoneCreate: function(zoneJson, callback) {
         $.ajax({
-            url: '/api/v1/zones',
+            url: BASE + '/api/v1/zones',
             type: 'POST',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
@@ -256,7 +258,7 @@ var API = {
     // cmd -> 'turnOn | turnOff | setLevel
     zoneSetLevel: function(zoneId, cmd, value, r, g, b, callback) {
         $.ajax({
-            url: '/api/v1/zones/' + zoneId,
+            url: BASE + '/api/v1/zones/' + zoneId,
             type: 'PUT',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
@@ -278,7 +280,7 @@ var API = {
 
     buttonLoadAll: function(callback) {
         $.ajax({
-            url: '/api/v1/buttons',
+            url: BASE + '/api/v1/buttons',
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -296,7 +298,7 @@ var API = {
 
     discoverDevice: function(modelNumber, callback) {
         $.ajax({
-            url: '/api/v1/discovery/' + modelNumber,
+            url: BASE + '/api/v1/discovery/' + modelNumber,
             dataType: 'json',
             cache: false,
             success: function(data) {

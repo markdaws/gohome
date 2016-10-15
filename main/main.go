@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/api"
 	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
@@ -16,6 +17,7 @@ type config struct {
 	RecipeDirPath     string
 	StartupConfigPath string
 	WWWPort           string
+	APIPort           string
 }
 
 func main() {
@@ -23,6 +25,7 @@ func main() {
 	config := config{
 		StartupConfigPath: "/Users/mark/code/gohome/system2.json",
 		WWWPort:           ":8000",
+		APIPort:           ":5000",
 	}
 
 	// Processes all commands in the system in an async fashion
@@ -37,7 +40,7 @@ func main() {
 	rm := gohome.NewRecipeManager(eb)
 
 	//TODO: Remove, simulate user importing lutron information on load
-	reset := false
+	reset := true
 	if reset {
 		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cp, 1)
 		intg.RegisterExtensions(system)
@@ -59,9 +62,6 @@ func main() {
 		}
 	}
 
-	//TODO: Handle the case where the system does not exist, e.g. first load
-	//generate an empty system and save it to the location, then execute normal
-	//code path
 	sys, err := store.LoadSystem(config.StartupConfigPath, rm, cp)
 	if err == store.ErrFileNotFound {
 		log.V("startup file not found at: %s, creating new system", config.StartupConfigPath)
@@ -95,13 +95,25 @@ func main() {
 	eb.AddConsumer(wsLogger)
 
 	done := make(chan bool)
+
+	//TODO: Restart on fail
 	go func() {
 		log.V("WWW Server starting, listening on port %s", config.WWWPort)
 		err := www.ListenAndServe("./www", config.WWWPort, sys, rm, wsLogger)
 		if err != nil {
-			fmt.Println("error with server")
+			fmt.Printf("error with WWW server, shutting down: %s\n", err)
 		}
 		close(done)
 	}()
+
+	//TODO: restart on fail
+	go func() {
+		log.V("API Server starting, listening on port %s", config.APIPort)
+		err := api.ListenAndServe("./www", config.APIPort, sys, rm, wsLogger)
+		if err != nil {
+			fmt.Printf("error with API server, shutting down: %s\n", err)
+		}
+	}()
+
 	<-done
 }

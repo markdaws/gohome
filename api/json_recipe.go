@@ -1,4 +1,4 @@
-package www
+package api
 
 type jsonRecipe struct {
 	ID          string `json:"id"`

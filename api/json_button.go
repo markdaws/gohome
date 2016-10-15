@@ -1,4 +1,4 @@
-package www
+package api
 
 type jsonButton struct {
 	ID       string `json:"id"`

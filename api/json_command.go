@@ -1,4 +1,4 @@
-package www
+package api
 
 type jsonCommand struct {
 	Type string `json:"type"`
