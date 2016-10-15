@@ -19817,15 +19817,13 @@
 	            zoneBody = React.createElement(ZoneList, { zones: this.props.zones });
 	        }
 
-	        var sceneBody;
+	        var emptySceneBody;
 	        if (this.props.scenes.items.length === 0) {
-	            sceneBody = React.createElement(
+	            emptySceneBody = React.createElement(
 	                'h5',
 	                null,
 	                'You don\'t have any scenes.  Click on the Edit button to add a new Scene.'
 	            );
-	        } else {
-	            sceneBody = React.createElement(SceneList, { scenes: this.props.scenes, buttons: this.props.buttons, zones: this.props.zones });
 	        }
 
 	        return React.createElement(
@@ -19868,7 +19866,8 @@
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
-	                    sceneBody
+	                    emptySceneBody,
+	                    React.createElement(SceneList, { scenes: this.props.scenes, buttons: this.props.buttons, zones: this.props.zones })
 	                ),
 	                React.createElement(
 	                    'div',

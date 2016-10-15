@@ -87,14 +87,14 @@ func (s *wwwServer) listenAndServe(port string) error {
 	r.HandleFunc("/api/v1/zones",
 		apiZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/zones",
-		apiAddZoneHandler(s.system)).Methods("POST")
+		apiAddZoneHandler(s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/zones/{id}",
 		apiZoneHandler(s.system)).Methods("PUT")
 
 	r.HandleFunc("/api/v1/devices",
 		apiDevicesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/devices",
-		apiAddDeviceHandler(s.system)).Methods("POST")
+		apiAddDeviceHandler(s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/devices/{id}",
 		apiDeviceHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
 
@@ -584,9 +584,8 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 				return
 			}
 
-			//TODO: remove
 			var r, g, b byte
-			if true || z.Output == zone.OTRGB {
+			if z.Output == zone.OTRGB {
 				_, ok = command.Attributes["R"]
 				if !ok {
 					w.WriteHeader(http.StatusBadRequest)
@@ -892,7 +891,7 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 	}
 }
 
-func apiAddZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+func apiAddZoneHandler(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -928,6 +927,12 @@ func apiAddZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 				//Other kind of errors, TODO: log
 				w.WriteHeader(http.StatusBadRequest)
 			}
+			return
+		}
+
+		err = store.SaveSystem(system, recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
@@ -983,7 +988,7 @@ func apiDeviceHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeM
 	}
 }
 
-func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -1060,6 +1065,12 @@ func apiAddDeviceHandler(system *gohome.System) func(http.ResponseWriter, *http.
 		err = system.InitDevice(d)
 		if err != nil {
 			log.E("Failed to init device on add: %s", err)
+		}
+
+		err = store.SaveSystem(system, recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")

@@ -94,6 +94,12 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 				defer func() {
 					pool.Release(conn)
 				}()
+
+				// Flux requires you make sure it is turned on first, can't just set a level
+				err := fluxwifi.TurnOn(conn)
+				if err != nil {
+					return err
+				}
 				return fluxwifi.SetLevel(rV, gV, bV, conn)
 			},
 		}, nil

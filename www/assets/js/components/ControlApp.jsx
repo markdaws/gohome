@@ -35,16 +35,18 @@ var ControlApp = React.createClass({
         var zoneBody;
         if (this.props.zones.length === 0) {
             //TODO: Fix, move edit button out of the scene list
-            zoneBody = <h5>You don't have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>;
+            zoneBody = (
+                <h5>You don't have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>
+            );
         } else {
             zoneBody = <ZoneList zones={this.props.zones}/>;
         }
 
-        var sceneBody;
+        var emptySceneBody;
         if (this.props.scenes.items.length === 0) {
-            sceneBody = <h5>You don't have any scenes.  Click on the Edit button to add a new Scene.</h5>
-        } else {
-            sceneBody = <SceneList scenes={this.props.scenes} buttons={this.props.buttons} zones={this.props.zones} />
+            emptySceneBody = (
+                <h5>You don't have any scenes.  Click on the Edit button to add a new Scene.</h5>
+            );
         }
 
         return (
@@ -77,7 +79,8 @@ var ControlApp = React.createClass({
                 </ul>
                 <div className="tab-content">
                     <div role="tabpanel" className="tab-pane fade" id="scenes">
-                        {sceneBody}
+                        {emptySceneBody}
+                        <SceneList scenes={this.props.scenes} buttons={this.props.buttons} zones={this.props.zones} />
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="zones">
                         {zoneBody}

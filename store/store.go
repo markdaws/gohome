@@ -236,7 +236,12 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 					ZoneAddress: z.Address,
 					ZoneID:      z.ID,
 					ZoneName:    z.Name,
-					Level:       cmd.Level{Value: float32(command.Attributes["Level"].(float64))},
+					Level: cmd.Level{
+						Value: float32(command.Attributes["Level"].(float64)),
+						R:     byte(command.Attributes["R"].(float64)),
+						G:     byte(command.Attributes["G"].(float64)),
+						B:     byte(command.Attributes["B"].(float64)),
+					},
 				}
 			case "buttonPress":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
@@ -320,6 +325,9 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 					Attributes: map[string]interface{}{
 						"ZoneID": xCmd.ZoneID,
 						"Level":  xCmd.Level.Value,
+						"R":      xCmd.Level.R,
+						"G":      xCmd.Level.G,
+						"B":      xCmd.Level.B,
 					},
 				}
 			case *cmd.ButtonPress:
