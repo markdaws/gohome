@@ -90,5 +90,11 @@ func (s *apiServer) listenAndServe(port string) error {
 	r.HandleFunc("/api/v1/recipes",
 		apiRecipesHandlerGet(s.system, s.recipeManager)).Methods("GET")
 
-	return http.ListenAndServe(port, handlers.CORS()(r))
+	return http.ListenAndServe(
+		port,
+		handlers.CORS(
+			handlers.AllowedMethods([]string{"PUT", "POST", "DELETE", "GET", "OPTIONS"}),
+			handlers.AllowedOrigins([]string{"*"}),
+			handlers.AllowedHeaders([]string{"content-type"}),
+		)(r))
 }

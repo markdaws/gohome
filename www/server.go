@@ -32,9 +32,6 @@ func ListenAndServe(
 	return server.listenAndServe(port)
 }
 
-//TODO: Clean all these up and unify naming
-//TODO: Remove systems/123 from API URLs
-
 func (s *wwwServer) listenAndServe(port string) error {
 
 	r := mux.NewRouter()
