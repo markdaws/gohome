@@ -22,7 +22,6 @@ var ZonePicker = React.createClass({
                 <select
                     disabled={this.props.disabled}
                     className="form-control"
-                    defaultValue={this.props.zoneId}
                     onChange={this.selected}
                     value={this.state.value}>
                 <option value="">Select a Zone...</option>

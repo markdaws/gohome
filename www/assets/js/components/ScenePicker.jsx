@@ -33,7 +33,6 @@ var ScenePicker = React.createClass({
                 <select
                     className="form-control"
                     disabled={this.props.disabled}
-                    defaultValue={this.props.sceneId}
                     onChange={this.selected}
                     value={this.state.value}>
                 <option value="">Select a Scene...</option>

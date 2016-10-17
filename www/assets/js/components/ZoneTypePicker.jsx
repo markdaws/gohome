@@ -37,7 +37,10 @@ var ZoneTypePicker = React.createClass({
         });
         return (
             <div className="cmp-ZoneTypePicker">
-              <select className="form-control" onChange={this.selected} defaultValue={this.props.type} value={this.state.value}>
+                <select
+                    className="form-control"
+                    onChange={this.selected}
+                    value={this.state.value}>
                 {nodes}
               </select>
             </div>
