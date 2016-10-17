@@ -6,7 +6,7 @@ var Scene = React.createClass({
         Api.sceneActivate(this.props.scene.id, function(err, data) {
             //TODO: Show error/success
         });
-    },
+z    },
 
     render: function() {
         return (

@@ -50,9 +50,9 @@
 	var ReactDOM = __webpack_require__(34);
 	var ControlApp = __webpack_require__(172);
 	var Provider = __webpack_require__(173).Provider;
-	var store = __webpack_require__(251);
+	var store = __webpack_require__(261);
 
-	var Testr = __webpack_require__(259);
+	var Testr = __webpack_require__(269);
 
 	//TODO: Remove - testing
 	/*
@@ -21443,12 +21443,13 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
 	var ReactRedux = __webpack_require__(173);
 	var System = __webpack_require__(201);
 	var SceneList = __webpack_require__(220);
-	var ZoneList = __webpack_require__(233);
-	var Logging = __webpack_require__(236);
-	var RecipeApp = __webpack_require__(238);
+	var ZoneList = __webpack_require__(242);
+	var Logging = __webpack_require__(246);
+	var RecipeApp = __webpack_require__(248);
 	var Constants = __webpack_require__(209);
 	var SceneActions = __webpack_require__(231);
 	var SystemActions = __webpack_require__(217);
@@ -21507,7 +21508,7 @@
 	                { className: 'nav nav-tabs', role: 'tablist' },
 	                React.createElement(
 	                    'li',
-	                    { role: 'presentation', className: '' },
+	                    { role: 'presentation', className: 'active' },
 	                    React.createElement(
 	                        'a',
 	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
@@ -21525,7 +21526,7 @@
 	                ),
 	                React.createElement(
 	                    'li',
-	                    { role: 'presentation', className: 'active' },
+	                    { role: 'presentation', className: '' },
 	                    React.createElement(
 	                        'a',
 	                        { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
@@ -21538,7 +21539,7 @@
 	                { className: 'tab-content' },
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
+	                    { role: 'tabpanel', className: 'tab-pane active', id: 'scenes' },
 	                    emptySceneBody,
 	                    React.createElement(SceneList, { scenes: this.props.scenes, buttons: this.props.buttons, zones: this.props.zones })
 	                ),
@@ -21549,7 +21550,7 @@
 	                ),
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane active', id: 'system' },
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'system' },
 	                    React.createElement(System, { devices: this.props.devices })
 	                )
 	            )
@@ -25309,6 +25310,7 @@
 	var SceneInfo = __webpack_require__(222);
 	var UniqueIdMixin = __webpack_require__(205);
 	var SceneActions = __webpack_require__(231);
+	var Grid = __webpack_require__(233);
 
 	var SceneList = React.createClass({
 	    displayName: 'SceneList',
@@ -25338,6 +25340,7 @@
 	        var btns;
 
 	        var scenes = this.props.scenes.items;
+	        var gridCells = [];
 	        if (this.state.editMode) {
 	            body = scenes.map(function (scene) {
 	                var saveState;
@@ -25449,6 +25452,7 @@
 	        Api.sceneActivate(this.props.scene.id, function (err, data) {
 	            //TODO: Show error/success
 	        });
+	        z;
 	    },
 
 	    render: function render() {
@@ -26620,11 +26624,1073 @@
 
 	'use strict';
 
+	var React = __webpack_require__(1);
+	var ReactCSSTransitionGroup = __webpack_require__(234);
+	var ReactTransitionGroup = __webpack_require__(241);
+	var ReactDOM = __webpack_require__(34);
+	var ClassNames = __webpack_require__(215);
+
+	var ExpanderWrapper = React.createClass({
+	    displayName: 'ExpanderWrapper',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            expanded: false
+	        };
+	    },
+
+	    componentWillUnmount: function componentWillUnmount() {
+	        this.props.unmounted();
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: ClassNames({
+	                    "expander": true,
+	                    "xyz": true,
+	                    "expanded": this.state.expanded }) },
+	            this.props.content
+	        );
+	    }
+	});
+
+	var Grid = React.createClass({
+	    displayName: 'Grid',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            cells: [],
+	            cellWidth: 110,
+	            cellHeight: 110,
+	            paddingLeft: 0,
+	            paddingRight: 0,
+	            paddingTop: 0,
+	            paddingBottom: 12,
+	            spacingH: 0,
+	            spacingV: 0
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            cellIndices: { x: -1, y: -1 },
+	            expanderIndex: -1,
+	            selectedIndex: -1,
+	            expanded: false,
+	            cellWidth: this.props.cellWidth,
+	            cellHeight: this.props.cellHeight
+	        };
+	    },
+
+	    calcCellDimensions: function calcCellDimensions() {
+	        var $this = $(ReactDOM.findDOMNode(this));
+	        var gridWidthNoPadding = $this.width();
+	        var cellsPerRow = Math.floor(gridWidthNoPadding / this.props.cellWidth);
+
+	        var fittedWidth = Math.floor(this.props.cellWidth + (gridWidthNoPadding - cellsPerRow * this.props.cellWidth) / cellsPerRow);
+	        return {
+	            width: fittedWidth,
+	            height: fittedWidth
+	        };
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        var dimensions = this.calcCellDimensions();
+	        this.setState({
+	            cellWidth: dimensions.width,
+	            cellHeight: dimensions.height
+	        });
+	    },
+
+	    cellClicked: function cellClicked(evt) {
+	        var $this = $(ReactDOM.findDOMNode(this));
+
+	        //width() returns without padding
+	        var gridWidthNoPadding = $this.width();
+
+	        var cellsPerRow = Math.floor(gridWidthNoPadding / this.state.cellWidth);
+
+	        var $target = $(evt.target);
+	        var targetPos = $target.position();
+
+	        var cellXPos = Math.floor(targetPos.left / this.state.cellWidth);
+	        var yOffset = targetPos.top;
+
+	        var cellIndex = $target.data('cell-index');
+	        if (this.state.expanded) {
+
+	            //console.log('expanded cellindex: ' + cellIndex);
+	            if (cellIndex > this.state.expanderIndex - 1) {
+	                var expanderHeight = $this.find('.expander').height();
+	                yOffset -= expanderHeight;
+	            }
+	        }
+
+	        var cellYPos = Math.floor(yOffset / this.props.cellHeight);
+	        var expanderIndex = (cellYPos + 1) * cellsPerRow;
+
+	        //console.log('x:' + cellXPos + ', y:' + cellYPos);
+	        //console.log('expanderIndex: ' + expanderIndex);
+	        //console.log('cellsPerRow: ' + cellsPerRow);
+
+	        if (cellXPos === this.state.cellIndices.x && cellYPos === this.state.cellIndices.y) {
+	            this.setState({
+	                expanded: false
+	            });
+	        } else {
+	            this.setState({
+	                cellIndices: { x: cellXPos, y: cellYPos },
+	                expanderIndex: expanderIndex,
+	                selectedIndex: cellYPos * cellsPerRow + cellXPos,
+	                expanded: true,
+	                expanderContent: this.props.cells[cellIndex].content
+	            });
+	        }
+	    },
+
+	    expanderUnmounted: function expanderUnmounted() {
+	        // Once the expander has been unmounted, we can now indicate that
+	        // we want to group all the cells back together without the
+	        // expander split
+	        this.setState({
+	            cellIndices: { x: -1, y: -1 },
+	            expanderIndex: -1,
+	            selectedIndex: -1
+	        });
+	    },
+
+	    render: function render() {
+	        function makeCellWrapper(index, selectedIndex, cell) {
+	            return React.createElement(
+	                'div',
+	                {
+	                    key: index,
+	                    ref: "cellWrapper-" + index,
+	                    onClick: this.cellClicked,
+	                    className: 'cellWrapper pull-left',
+	                    'data-cell-index': index,
+	                    style: {
+	                        width: this.state.cellWidth,
+	                        height: this.state.cellHeight
+	                    } },
+	                cell.cell,
+	                React.createElement('i', { className: ClassNames({
+	                        "fa": true,
+	                        "fa-caret-up": true,
+	                        "hidden": index !== selectedIndex }) })
+	            );
+	        }
+
+	        var beforeCells = [];
+	        var afterCells = [];
+	        for (var i = 0; i < this.props.cells.length; ++i) {
+	            if (this.state.expanderIndex === -1 || i < this.state.expanderIndex) {
+	                beforeCells.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
+	            } else {
+	                afterCells.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
+	            }
+	        }
+
+	        var expander;
+	        var items = [];
+	        if (this.state.expanded) {
+	            items.push(React.createElement(ExpanderWrapper, {
+	                key: '1',
+	                unmounted: this.expanderUnmounted,
+	                content: this.state.expanderContent }));
+	        }
+
+	        expander = React.createElement(
+	            ReactCSSTransitionGroup,
+	            {
+	                transitionName: 'expander-animation',
+	                transitionEnterTimeout: 250,
+	                transitionLeaveTimeout: 250 },
+	            items
+	        );
+
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-Grid', style: {
+	                    paddingLeft: this.props.paddingLeft,
+	                    paddingRight: this.props.paddingRight,
+	                    paddingTop: this.props.paddingTop,
+	                    paddingBottom: this.props.paddingBottom
+	                } },
+	            React.createElement(
+	                'div',
+	                { className: 'beforeExpander' },
+	                beforeCells,
+	                React.createElement('div', { style: { clear: "both" } })
+	            ),
+	            expander,
+	            React.createElement(
+	                'div',
+	                { className: 'afterExpander' },
+	                afterCells,
+	                React.createElement('div', { style: { clear: "both" } })
+	            )
+	        );
+	    }
+	});
+	module.exports = Grid;
+
+/***/ },
+/* 234 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(235);
+
+/***/ },
+/* 235 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2013-present, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule ReactCSSTransitionGroup
+	 */
+
+	'use strict';
+
+	var _assign = __webpack_require__(4);
+
+	var React = __webpack_require__(2);
+
+	var ReactTransitionGroup = __webpack_require__(236);
+	var ReactCSSTransitionGroupChild = __webpack_require__(238);
+
+	function createTransitionTimeoutPropValidator(transitionType) {
+	  var timeoutPropName = 'transition' + transitionType + 'Timeout';
+	  var enabledPropName = 'transition' + transitionType;
+
+	  return function (props) {
+	    // If the transition is enabled
+	    if (props[enabledPropName]) {
+	      // If no timeout duration is provided
+	      if (props[timeoutPropName] == null) {
+	        return new Error(timeoutPropName + ' wasn\'t supplied to ReactCSSTransitionGroup: ' + 'this can cause unreliable animations and won\'t be supported in ' + 'a future version of React. See ' + 'https://fb.me/react-animation-transition-group-timeout for more ' + 'information.');
+
+	        // If the duration isn't a number
+	      } else if (typeof props[timeoutPropName] !== 'number') {
+	          return new Error(timeoutPropName + ' must be a number (in milliseconds)');
+	        }
+	    }
+	  };
+	}
+
+	/**
+	 * An easy way to perform CSS transitions and animations when a React component
+	 * enters or leaves the DOM.
+	 * See https://facebook.github.io/react/docs/animation.html#high-level-api-reactcsstransitiongroup
+	 */
+	var ReactCSSTransitionGroup = React.createClass({
+	  displayName: 'ReactCSSTransitionGroup',
+
+	  propTypes: {
+	    transitionName: ReactCSSTransitionGroupChild.propTypes.name,
+
+	    transitionAppear: React.PropTypes.bool,
+	    transitionEnter: React.PropTypes.bool,
+	    transitionLeave: React.PropTypes.bool,
+	    transitionAppearTimeout: createTransitionTimeoutPropValidator('Appear'),
+	    transitionEnterTimeout: createTransitionTimeoutPropValidator('Enter'),
+	    transitionLeaveTimeout: createTransitionTimeoutPropValidator('Leave')
+	  },
+
+	  getDefaultProps: function () {
+	    return {
+	      transitionAppear: false,
+	      transitionEnter: true,
+	      transitionLeave: true
+	    };
+	  },
+
+	  _wrapChild: function (child) {
+	    // We need to provide this childFactory so that
+	    // ReactCSSTransitionGroupChild can receive updates to name, enter, and
+	    // leave while it is leaving.
+	    return React.createElement(ReactCSSTransitionGroupChild, {
+	      name: this.props.transitionName,
+	      appear: this.props.transitionAppear,
+	      enter: this.props.transitionEnter,
+	      leave: this.props.transitionLeave,
+	      appearTimeout: this.props.transitionAppearTimeout,
+	      enterTimeout: this.props.transitionEnterTimeout,
+	      leaveTimeout: this.props.transitionLeaveTimeout
+	    }, child);
+	  },
+
+	  render: function () {
+	    return React.createElement(ReactTransitionGroup, _assign({}, this.props, { childFactory: this._wrapChild }));
+	  }
+	});
+
+	module.exports = ReactCSSTransitionGroup;
+
+/***/ },
+/* 236 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {/**
+	 * Copyright 2013-present, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule ReactTransitionGroup
+	 */
+
+	'use strict';
+
+	var _assign = __webpack_require__(4);
+
+	var React = __webpack_require__(2);
+	var ReactInstanceMap = __webpack_require__(119);
+	var ReactTransitionChildMapping = __webpack_require__(237);
+
+	var emptyFunction = __webpack_require__(12);
+
+	/**
+	 * A basis for animations. When children are declaratively added or removed,
+	 * special lifecycle hooks are called.
+	 * See https://facebook.github.io/react/docs/animation.html#low-level-api-reacttransitiongroup
+	 */
+	var ReactTransitionGroup = React.createClass({
+	  displayName: 'ReactTransitionGroup',
+
+	  propTypes: {
+	    component: React.PropTypes.any,
+	    childFactory: React.PropTypes.func
+	  },
+
+	  getDefaultProps: function () {
+	    return {
+	      component: 'span',
+	      childFactory: emptyFunction.thatReturnsArgument
+	    };
+	  },
+
+	  getInitialState: function () {
+	    return {
+	      // TODO: can we get useful debug information to show at this point?
+	      children: ReactTransitionChildMapping.getChildMapping(this.props.children)
+	    };
+	  },
+
+	  componentWillMount: function () {
+	    this.currentlyTransitioningKeys = {};
+	    this.keysToEnter = [];
+	    this.keysToLeave = [];
+	  },
+
+	  componentDidMount: function () {
+	    var initialChildMapping = this.state.children;
+	    for (var key in initialChildMapping) {
+	      if (initialChildMapping[key]) {
+	        this.performAppear(key);
+	      }
+	    }
+	  },
+
+	  componentWillReceiveProps: function (nextProps) {
+	    var nextChildMapping;
+	    if (process.env.NODE_ENV !== 'production') {
+	      nextChildMapping = ReactTransitionChildMapping.getChildMapping(nextProps.children, ReactInstanceMap.get(this)._debugID);
+	    } else {
+	      nextChildMapping = ReactTransitionChildMapping.getChildMapping(nextProps.children);
+	    }
+	    var prevChildMapping = this.state.children;
+
+	    this.setState({
+	      children: ReactTransitionChildMapping.mergeChildMappings(prevChildMapping, nextChildMapping)
+	    });
+
+	    var key;
+
+	    for (key in nextChildMapping) {
+	      var hasPrev = prevChildMapping && prevChildMapping.hasOwnProperty(key);
+	      if (nextChildMapping[key] && !hasPrev && !this.currentlyTransitioningKeys[key]) {
+	        this.keysToEnter.push(key);
+	      }
+	    }
+
+	    for (key in prevChildMapping) {
+	      var hasNext = nextChildMapping && nextChildMapping.hasOwnProperty(key);
+	      if (prevChildMapping[key] && !hasNext && !this.currentlyTransitioningKeys[key]) {
+	        this.keysToLeave.push(key);
+	      }
+	    }
+
+	    // If we want to someday check for reordering, we could do it here.
+	  },
+
+	  componentDidUpdate: function () {
+	    var keysToEnter = this.keysToEnter;
+	    this.keysToEnter = [];
+	    keysToEnter.forEach(this.performEnter);
+
+	    var keysToLeave = this.keysToLeave;
+	    this.keysToLeave = [];
+	    keysToLeave.forEach(this.performLeave);
+	  },
+
+	  performAppear: function (key) {
+	    this.currentlyTransitioningKeys[key] = true;
+
+	    var component = this.refs[key];
+
+	    if (component.componentWillAppear) {
+	      component.componentWillAppear(this._handleDoneAppearing.bind(this, key));
+	    } else {
+	      this._handleDoneAppearing(key);
+	    }
+	  },
+
+	  _handleDoneAppearing: function (key) {
+	    var component = this.refs[key];
+	    if (component.componentDidAppear) {
+	      component.componentDidAppear();
+	    }
+
+	    delete this.currentlyTransitioningKeys[key];
+
+	    var currentChildMapping;
+	    if (process.env.NODE_ENV !== 'production') {
+	      currentChildMapping = ReactTransitionChildMapping.getChildMapping(this.props.children, ReactInstanceMap.get(this)._debugID);
+	    } else {
+	      currentChildMapping = ReactTransitionChildMapping.getChildMapping(this.props.children);
+	    }
+
+	    if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
+	      // This was removed before it had fully appeared. Remove it.
+	      this.performLeave(key);
+	    }
+	  },
+
+	  performEnter: function (key) {
+	    this.currentlyTransitioningKeys[key] = true;
+
+	    var component = this.refs[key];
+
+	    if (component.componentWillEnter) {
+	      component.componentWillEnter(this._handleDoneEntering.bind(this, key));
+	    } else {
+	      this._handleDoneEntering(key);
+	    }
+	  },
+
+	  _handleDoneEntering: function (key) {
+	    var component = this.refs[key];
+	    if (component.componentDidEnter) {
+	      component.componentDidEnter();
+	    }
+
+	    delete this.currentlyTransitioningKeys[key];
+
+	    var currentChildMapping;
+	    if (process.env.NODE_ENV !== 'production') {
+	      currentChildMapping = ReactTransitionChildMapping.getChildMapping(this.props.children, ReactInstanceMap.get(this)._debugID);
+	    } else {
+	      currentChildMapping = ReactTransitionChildMapping.getChildMapping(this.props.children);
+	    }
+
+	    if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
+	      // This was removed before it had fully entered. Remove it.
+	      this.performLeave(key);
+	    }
+	  },
+
+	  performLeave: function (key) {
+	    this.currentlyTransitioningKeys[key] = true;
+
+	    var component = this.refs[key];
+	    if (component.componentWillLeave) {
+	      component.componentWillLeave(this._handleDoneLeaving.bind(this, key));
+	    } else {
+	      // Note that this is somewhat dangerous b/c it calls setState()
+	      // again, effectively mutating the component before all the work
+	      // is done.
+	      this._handleDoneLeaving(key);
+	    }
+	  },
+
+	  _handleDoneLeaving: function (key) {
+	    var component = this.refs[key];
+
+	    if (component.componentDidLeave) {
+	      component.componentDidLeave();
+	    }
+
+	    delete this.currentlyTransitioningKeys[key];
+
+	    var currentChildMapping;
+	    if (process.env.NODE_ENV !== 'production') {
+	      currentChildMapping = ReactTransitionChildMapping.getChildMapping(this.props.children, ReactInstanceMap.get(this)._debugID);
+	    } else {
+	      currentChildMapping = ReactTransitionChildMapping.getChildMapping(this.props.children);
+	    }
+
+	    if (currentChildMapping && currentChildMapping.hasOwnProperty(key)) {
+	      // This entered again before it fully left. Add it again.
+	      this.performEnter(key);
+	    } else {
+	      this.setState(function (state) {
+	        var newChildren = _assign({}, state.children);
+	        delete newChildren[key];
+	        return { children: newChildren };
+	      });
+	    }
+	  },
+
+	  render: function () {
+	    // TODO: we could get rid of the need for the wrapper node
+	    // by cloning a single child
+	    var childrenToRender = [];
+	    for (var key in this.state.children) {
+	      var child = this.state.children[key];
+	      if (child) {
+	        // You may need to apply reactive updates to a child as it is leaving.
+	        // The normal React way to do it won't work since the child will have
+	        // already been removed. In case you need this behavior you can provide
+	        // a childFactory function to wrap every child, even the ones that are
+	        // leaving.
+	        childrenToRender.push(React.cloneElement(this.props.childFactory(child), { ref: key, key: key }));
+	      }
+	    }
+
+	    // Do not forward ReactTransitionGroup props to primitive DOM nodes
+	    var props = _assign({}, this.props);
+	    delete props.transitionLeave;
+	    delete props.transitionName;
+	    delete props.transitionAppear;
+	    delete props.transitionEnter;
+	    delete props.childFactory;
+	    delete props.transitionLeaveTimeout;
+	    delete props.transitionEnterTimeout;
+	    delete props.transitionAppearTimeout;
+	    delete props.component;
+
+	    return React.createElement(this.props.component, props, childrenToRender);
+	  }
+	});
+
+	module.exports = ReactTransitionGroup;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 237 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {/**
+	 * Copyright 2013-present, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule ReactTransitionChildMapping
+	 */
+
+	'use strict';
+
+	var flattenChildren = __webpack_require__(128);
+
+	var ReactTransitionChildMapping = {
+	  /**
+	   * Given `this.props.children`, return an object mapping key to child. Just
+	   * simple syntactic sugar around flattenChildren().
+	   *
+	   * @param {*} children `this.props.children`
+	   * @param {number=} selfDebugID Optional debugID of the current internal instance.
+	   * @return {object} Mapping of key to child
+	   */
+	  getChildMapping: function (children, selfDebugID) {
+	    if (!children) {
+	      return children;
+	    }
+
+	    if (process.env.NODE_ENV !== 'production') {
+	      return flattenChildren(children, selfDebugID);
+	    }
+
+	    return flattenChildren(children);
+	  },
+
+	  /**
+	   * When you're adding or removing children some may be added or removed in the
+	   * same render pass. We want to show *both* since we want to simultaneously
+	   * animate elements in and out. This function takes a previous set of keys
+	   * and a new set of keys and merges them with its best guess of the correct
+	   * ordering. In the future we may expose some of the utilities in
+	   * ReactMultiChild to make this easy, but for now React itself does not
+	   * directly have this concept of the union of prevChildren and nextChildren
+	   * so we implement it here.
+	   *
+	   * @param {object} prev prev children as returned from
+	   * `ReactTransitionChildMapping.getChildMapping()`.
+	   * @param {object} next next children as returned from
+	   * `ReactTransitionChildMapping.getChildMapping()`.
+	   * @return {object} a key set that contains all keys in `prev` and all keys
+	   * in `next` in a reasonable order.
+	   */
+	  mergeChildMappings: function (prev, next) {
+	    prev = prev || {};
+	    next = next || {};
+
+	    function getValueForKey(key) {
+	      if (next.hasOwnProperty(key)) {
+	        return next[key];
+	      } else {
+	        return prev[key];
+	      }
+	    }
+
+	    // For each key of `next`, the list of keys to insert before that key in
+	    // the combined list
+	    var nextKeysPending = {};
+
+	    var pendingKeys = [];
+	    for (var prevKey in prev) {
+	      if (next.hasOwnProperty(prevKey)) {
+	        if (pendingKeys.length) {
+	          nextKeysPending[prevKey] = pendingKeys;
+	          pendingKeys = [];
+	        }
+	      } else {
+	        pendingKeys.push(prevKey);
+	      }
+	    }
+
+	    var i;
+	    var childMapping = {};
+	    for (var nextKey in next) {
+	      if (nextKeysPending.hasOwnProperty(nextKey)) {
+	        for (i = 0; i < nextKeysPending[nextKey].length; i++) {
+	          var pendingNextKey = nextKeysPending[nextKey][i];
+	          childMapping[nextKeysPending[nextKey][i]] = getValueForKey(pendingNextKey);
+	        }
+	      }
+	      childMapping[nextKey] = getValueForKey(nextKey);
+	    }
+
+	    // Finally, add the keys which didn't appear before any key in `next`
+	    for (i = 0; i < pendingKeys.length; i++) {
+	      childMapping[pendingKeys[i]] = getValueForKey(pendingKeys[i]);
+	    }
+
+	    return childMapping;
+	  }
+	};
+
+	module.exports = ReactTransitionChildMapping;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 238 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2013-present, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule ReactCSSTransitionGroupChild
+	 */
+
+	'use strict';
+
+	var React = __webpack_require__(2);
+	var ReactDOM = __webpack_require__(35);
+
+	var CSSCore = __webpack_require__(239);
+	var ReactTransitionEvents = __webpack_require__(240);
+
+	var onlyChild = __webpack_require__(33);
+
+	var TICK = 17;
+
+	var ReactCSSTransitionGroupChild = React.createClass({
+	  displayName: 'ReactCSSTransitionGroupChild',
+
+	  propTypes: {
+	    name: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.shape({
+	      enter: React.PropTypes.string,
+	      leave: React.PropTypes.string,
+	      active: React.PropTypes.string
+	    }), React.PropTypes.shape({
+	      enter: React.PropTypes.string,
+	      enterActive: React.PropTypes.string,
+	      leave: React.PropTypes.string,
+	      leaveActive: React.PropTypes.string,
+	      appear: React.PropTypes.string,
+	      appearActive: React.PropTypes.string
+	    })]).isRequired,
+
+	    // Once we require timeouts to be specified, we can remove the
+	    // boolean flags (appear etc.) and just accept a number
+	    // or a bool for the timeout flags (appearTimeout etc.)
+	    appear: React.PropTypes.bool,
+	    enter: React.PropTypes.bool,
+	    leave: React.PropTypes.bool,
+	    appearTimeout: React.PropTypes.number,
+	    enterTimeout: React.PropTypes.number,
+	    leaveTimeout: React.PropTypes.number
+	  },
+
+	  transition: function (animationType, finishCallback, userSpecifiedDelay) {
+	    var node = ReactDOM.findDOMNode(this);
+
+	    if (!node) {
+	      if (finishCallback) {
+	        finishCallback();
+	      }
+	      return;
+	    }
+
+	    var className = this.props.name[animationType] || this.props.name + '-' + animationType;
+	    var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
+	    var timeout = null;
+
+	    var endListener = function (e) {
+	      if (e && e.target !== node) {
+	        return;
+	      }
+
+	      clearTimeout(timeout);
+
+	      CSSCore.removeClass(node, className);
+	      CSSCore.removeClass(node, activeClassName);
+
+	      ReactTransitionEvents.removeEndEventListener(node, endListener);
+
+	      // Usually this optional callback is used for informing an owner of
+	      // a leave animation and telling it to remove the child.
+	      if (finishCallback) {
+	        finishCallback();
+	      }
+	    };
+
+	    CSSCore.addClass(node, className);
+
+	    // Need to do this to actually trigger a transition.
+	    this.queueClassAndNode(activeClassName, node);
+
+	    // If the user specified a timeout delay.
+	    if (userSpecifiedDelay) {
+	      // Clean-up the animation after the specified delay
+	      timeout = setTimeout(endListener, userSpecifiedDelay);
+	      this.transitionTimeouts.push(timeout);
+	    } else {
+	      // DEPRECATED: this listener will be removed in a future version of react
+	      ReactTransitionEvents.addEndEventListener(node, endListener);
+	    }
+	  },
+
+	  queueClassAndNode: function (className, node) {
+	    this.classNameAndNodeQueue.push({
+	      className: className,
+	      node: node
+	    });
+
+	    if (!this.timeout) {
+	      this.timeout = setTimeout(this.flushClassNameAndNodeQueue, TICK);
+	    }
+	  },
+
+	  flushClassNameAndNodeQueue: function () {
+	    if (this.isMounted()) {
+	      this.classNameAndNodeQueue.forEach(function (obj) {
+	        CSSCore.addClass(obj.node, obj.className);
+	      });
+	    }
+	    this.classNameAndNodeQueue.length = 0;
+	    this.timeout = null;
+	  },
+
+	  componentWillMount: function () {
+	    this.classNameAndNodeQueue = [];
+	    this.transitionTimeouts = [];
+	  },
+
+	  componentWillUnmount: function () {
+	    if (this.timeout) {
+	      clearTimeout(this.timeout);
+	    }
+	    this.transitionTimeouts.forEach(function (timeout) {
+	      clearTimeout(timeout);
+	    });
+
+	    this.classNameAndNodeQueue.length = 0;
+	  },
+
+	  componentWillAppear: function (done) {
+	    if (this.props.appear) {
+	      this.transition('appear', done, this.props.appearTimeout);
+	    } else {
+	      done();
+	    }
+	  },
+
+	  componentWillEnter: function (done) {
+	    if (this.props.enter) {
+	      this.transition('enter', done, this.props.enterTimeout);
+	    } else {
+	      done();
+	    }
+	  },
+
+	  componentWillLeave: function (done) {
+	    if (this.props.leave) {
+	      this.transition('leave', done, this.props.leaveTimeout);
+	    } else {
+	      done();
+	    }
+	  },
+
+	  render: function () {
+	    return onlyChild(this.props.children);
+	  }
+	});
+
+	module.exports = ReactCSSTransitionGroupChild;
+
+/***/ },
+/* 239 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
+
+	/**
+	 * Copyright (c) 2013-present, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @typechecks
+	 */
+
+	var invariant = __webpack_require__(8);
+
+	/**
+	 * The CSSCore module specifies the API (and implements most of the methods)
+	 * that should be used when dealing with the display of elements (via their
+	 * CSS classes and visibility on screen. It is an API focused on mutating the
+	 * display and not reading it as no logical state should be encoded in the
+	 * display of elements.
+	 */
+
+	/* Slow implementation for browsers that don't natively support .matches() */
+	function matchesSelector_SLOW(element, selector) {
+	  var root = element;
+	  while (root.parentNode) {
+	    root = root.parentNode;
+	  }
+
+	  var all = root.querySelectorAll(selector);
+	  return Array.prototype.indexOf.call(all, element) !== -1;
+	}
+
+	var CSSCore = {
+
+	  /**
+	   * Adds the class passed in to the element if it doesn't already have it.
+	   *
+	   * @param {DOMElement} element the element to set the class on
+	   * @param {string} className the CSS className
+	   * @return {DOMElement} the element passed in
+	   */
+	  addClass: function addClass(element, className) {
+	    !!/\s/.test(className) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'CSSCore.addClass takes only a single class name. "%s" contains ' + 'multiple classes.', className) : invariant(false) : void 0;
+
+	    if (className) {
+	      if (element.classList) {
+	        element.classList.add(className);
+	      } else if (!CSSCore.hasClass(element, className)) {
+	        element.className = element.className + ' ' + className;
+	      }
+	    }
+	    return element;
+	  },
+
+	  /**
+	   * Removes the class passed in from the element
+	   *
+	   * @param {DOMElement} element the element to set the class on
+	   * @param {string} className the CSS className
+	   * @return {DOMElement} the element passed in
+	   */
+	  removeClass: function removeClass(element, className) {
+	    !!/\s/.test(className) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'CSSCore.removeClass takes only a single class name. "%s" contains ' + 'multiple classes.', className) : invariant(false) : void 0;
+
+	    if (className) {
+	      if (element.classList) {
+	        element.classList.remove(className);
+	      } else if (CSSCore.hasClass(element, className)) {
+	        element.className = element.className.replace(new RegExp('(^|\\s)' + className + '(?:\\s|$)', 'g'), '$1').replace(/\s+/g, ' ') // multiple spaces to one
+	        .replace(/^\s*|\s*$/g, ''); // trim the ends
+	      }
+	    }
+	    return element;
+	  },
+
+	  /**
+	   * Helper to add or remove a class from an element based on a condition.
+	   *
+	   * @param {DOMElement} element the element to set the class on
+	   * @param {string} className the CSS className
+	   * @param {*} bool condition to whether to add or remove the class
+	   * @return {DOMElement} the element passed in
+	   */
+	  conditionClass: function conditionClass(element, className, bool) {
+	    return (bool ? CSSCore.addClass : CSSCore.removeClass)(element, className);
+	  },
+
+	  /**
+	   * Tests whether the element has the class specified.
+	   *
+	   * @param {DOMNode|DOMWindow} element the element to check the class on
+	   * @param {string} className the CSS className
+	   * @return {boolean} true if the element has the class, false if not
+	   */
+	  hasClass: function hasClass(element, className) {
+	    !!/\s/.test(className) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'CSS.hasClass takes only a single class name.') : invariant(false) : void 0;
+	    if (element.classList) {
+	      return !!className && element.classList.contains(className);
+	    }
+	    return (' ' + element.className + ' ').indexOf(' ' + className + ' ') > -1;
+	  },
+
+	  /**
+	   * Tests whether the element matches the selector specified
+	   *
+	   * @param {DOMNode|DOMWindow} element the element that we are querying
+	   * @param {string} selector the CSS selector
+	   * @return {boolean} true if the element matches the selector, false if not
+	   */
+	  matchesSelector: function matchesSelector(element, selector) {
+	    var matchesImpl = element.matches || element.webkitMatchesSelector || element.mozMatchesSelector || element.msMatchesSelector || function (s) {
+	      return matchesSelector_SLOW(element, s);
+	    };
+	    return matchesImpl.call(element, selector);
+	  }
+
+	};
+
+	module.exports = CSSCore;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 240 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2013-present, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule ReactTransitionEvents
+	 */
+
+	'use strict';
+
+	var ExecutionEnvironment = __webpack_require__(49);
+
+	var getVendorPrefixedEventName = __webpack_require__(109);
+
+	var endEvents = [];
+
+	function detectEvents() {
+	  var animEnd = getVendorPrefixedEventName('animationend');
+	  var transEnd = getVendorPrefixedEventName('transitionend');
+
+	  if (animEnd) {
+	    endEvents.push(animEnd);
+	  }
+
+	  if (transEnd) {
+	    endEvents.push(transEnd);
+	  }
+	}
+
+	if (ExecutionEnvironment.canUseDOM) {
+	  detectEvents();
+	}
+
+	// We use the raw {add|remove}EventListener() call because EventListener
+	// does not know how to remove event listeners and we really should
+	// clean up. Also, these events are not triggered in older browsers
+	// so we should be A-OK here.
+
+	function addEventListener(node, eventName, eventListener) {
+	  node.addEventListener(eventName, eventListener, false);
+	}
+
+	function removeEventListener(node, eventName, eventListener) {
+	  node.removeEventListener(eventName, eventListener, false);
+	}
+
+	var ReactTransitionEvents = {
+	  addEndEventListener: function (node, eventListener) {
+	    if (endEvents.length === 0) {
+	      // If CSS transitions are not supported, trigger an "end animation"
+	      // event immediately.
+	      window.setTimeout(eventListener, 0);
+	      return;
+	    }
+	    endEvents.forEach(function (endEvent) {
+	      addEventListener(node, endEvent, eventListener);
+	    });
+	  },
+
+	  removeEndEventListener: function (node, eventListener) {
+	    if (endEvents.length === 0) {
+	      return;
+	    }
+	    endEvents.forEach(function (endEvent) {
+	      removeEventListener(node, endEvent, eventListener);
+	    });
+	  }
+	};
+
+	module.exports = ReactTransitionEvents;
+
+/***/ },
+/* 241 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(236);
+
+/***/ },
+/* 242 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var ClassNames = __webpack_require__(215);
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var Zone = __webpack_require__(234);
+	var ZoneControl = __webpack_require__(243);
 	var ZoneActions = __webpack_require__(216);
+	var Grid = __webpack_require__(233);
+	var ZoneListGridCell = __webpack_require__(245);
 
 	var ZoneList = React.createClass({
 	    displayName: 'ZoneList',
@@ -26635,12 +27701,16 @@
 	        var outletZones = [];
 	        var otherZones = [];
 	        this.props.zones.forEach(function (zone) {
-	            var cmpZone = React.createElement(Zone, {
-	                id: zone.id,
-	                name: zone.name,
-	                type: zone.type,
-	                output: zone.output,
-	                key: zone.id });
+
+	            var cmpZone = {
+	                cell: React.createElement(ZoneListGridCell, { zone: zone }),
+	                content: React.createElement(ZoneControl, {
+	                    id: zone.id,
+	                    name: zone.name,
+	                    type: zone.type,
+	                    output: zone.output,
+	                    key: zone.id })
+	            };
 
 	            switch (zone.type) {
 	                case 'light':
@@ -26660,7 +27730,7 @@
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-ZoneList row' },
+	            { className: 'cmp-ZoneList' },
 	            React.createElement(
 	                'div',
 	                { className: 'clearfix' },
@@ -26669,7 +27739,7 @@
 	                    { className: ClassNames({ 'hidden': lightZones.length === 0 }) },
 	                    'Lights'
 	                ),
-	                lightZones
+	                React.createElement(Grid, { cells: lightZones })
 	            ),
 	            React.createElement(
 	                'div',
@@ -26679,7 +27749,7 @@
 	                    { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
 	                    'Shades'
 	                ),
-	                shadeZones
+	                React.createElement(Grid, { cells: shadeZones })
 	            ),
 	            React.createElement(
 	                'div',
@@ -26689,7 +27759,7 @@
 	                    { className: ClassNames({ 'hidden': outletZones.length === 0 }) },
 	                    'Outlets'
 	                ),
-	                outletZones
+	                React.createElement(Grid, { cells: outletZones })
 	            ),
 	            React.createElement(
 	                'div',
@@ -26699,7 +27769,7 @@
 	                    { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
 	                    'Other Zones'
 	                ),
-	                otherZones
+	                React.createElement(Grid, { cells: otherZones })
 	            )
 	        );
 	    }
@@ -26707,7 +27777,7 @@
 	module.exports = ZoneList;
 
 /***/ },
-/* 234 */
+/* 243 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26715,86 +27785,101 @@
 	var ClassNames = __webpack_require__(215);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var CssMixin = __webpack_require__(235);
+	var CssMixin = __webpack_require__(244);
 	var Api = __webpack_require__(208);
+	var ClassNames = __webpack_require__(215);
 
-	var Zone = React.createClass({
-	    displayName: 'Zone',
+	var ZoneControl = React.createClass({
+	    displayName: 'ZoneControl',
 
 	    mixins: [CssMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            value: -1,
-	            showSlider: false,
-	            slider: null
+	            value: -1
 	        };
 	    },
 
-	    componentDidMount: function componentDidMount() {
-	        var self = this;
+	    initSlider: function initSlider() {
+	        var sliders = $(ReactDOM.findDOMNode(this)).find('.slider');
+	        if (!sliders || sliders.length === 0) {
+	            return null;
+	        }
 
-	        switch (this.props.output) {
-	            case 'binary':
-	            case 'continuous':
-	                var s = $(ReactDOM.findDOMNode(this)).find('.valueSlider');
-	                s.slider({ reversed: false });
-	                self.setState({ slider: s });
-	                s.on('change', function (evt) {
-	                    self.setState({ value: evt.value.newValue });
-	                });
-	                s.on('slideStop', function (evt) {
-	                    self.setValue('setLevel', evt.value, 0, 0, 0, function (err) {
-	                        if (err) {
-	                            //TODO:
-	                            console.error(err);
-	                        }
-	                    });
-	                    return false;
-	                });
-	                break;
+	        var slider = sliders[0];
+	        noUiSlider.create(slider, {
+	            connect: [true, false],
+	            start: 0,
+	            step: 1,
+	            orientation: 'horizontal',
+	            range: {
+	                min: 0,
+	                max: 100
+	            }
+	        });
+	        slider.noUiSlider.on('slide', this.sliderChanged.bind(this, slider.noUiSlider));
+	        slider.noUiSlider.on('change', this.sliderEnd.bind(this, slider.noUiSlider));
 
-	            case 'rgb':
-	                var $el = $(ReactDOM.findDOMNode(this)).find('.zone-rgb .clickInfo span');
-	                $el.colorPicker({
-	                    doRender: false,
-	                    opacity: false,
-	                    margin: '0px 0px 0px -30px',
-	                    renderCallback: function renderCallback($e, toggled) {
-	                        if (toggled !== undefined) {
-	                            // only send a value when the user actually interacts with the
-	                            // control not when it is first shown/hidden
-	                            return;
-	                        }
-	                        var rgb = this.color.colors.rgb;
-	                        self.setValue('setLevel', 0, parseInt(rgb.r * 255), parseInt(rgb.g * 255), parseInt(rgb.b * 255), function (err) {
-	                            if (err) {
-	                                console.error(err);
-	                            }
-	                        });
+	        return slider.noUiSlider;
+	    },
+
+	    initSwitch: function initSwitch(slider) {
+	        var sw = $($(ReactDOM.findDOMNode(this)).find('.switch-indeterminate')[0]);
+	        sw.bootstrapSwitch();
+
+	        sw.on('switchChange.bootstrapSwitch', function (event, state) {
+	            this.toggleOn(slider);
+	        }.bind(this));
+	    },
+
+	    initRGB: function initRGB() {
+	        var wrapper = $(ReactDOM.findDOMNode(this)).find('.rgbWrapper');
+	        if (!wrapper || wrapper.length === 0) {
+	            return;
+	        }
+
+	        wrapper.colorpicker({
+	            format: 'rgb',
+	            container: true,
+	            inline: true
+	        });
+
+	        var timeoutId;
+	        wrapper.colorpicker().on('changeColor', function (evt) {
+	            // Limit the number of events we send as the user is moving around
+	            // on the RGB UI, only send when they pause
+	            clearTimeout(timeoutId);
+	            timeoutId = setTimeout(function () {
+	                var rgb = evt.color.toRGB();
+	                this.setValue('setLevel', 0, parseInt(rgb.r), parseInt(rgb.g), parseInt(rgb.b), function (err) {
+	                    if (err) {
+	                        //TODO: err
+	                        console.error(err);
 	                    }
 	                });
-	                break;
-	        }
+	            }.bind(this), 100);
+	        }.bind(this));
 	    },
 
-	    infoClicked: function infoClicked(evt) {
-	        evt.stopPropagation();
-	        evt.preventDefault();
-
-	        if (!this.isRgb()) {
-	            this.setState({ showSlider: true });
-	        }
+	    sliderChanged: function sliderChanged(slider) {
+	        this.setState({ value: parseInt(slider.get(), 10) });
 	    },
 
-	    isRgb: function isRgb() {
-	        return this.props.output === 'rgb';
+	    sliderEnd: function sliderEnd(slider) {
+	        this.setValue('setLevel', parseInt(slider.get(), 10), 0, 0, 0, function (err) {
+	            if (err) {
+	                //TODO:
+	                console.error(err);
+	            }
+	        });
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        var slider = this.initSlider();
+	        this.initSwitch(slider);
+	        this.initRGB();
 	    },
 
 	    setValue: function setValue(cmd, value, r, g, b, callback) {
-	        if (!this.isRgb()) {
-	            this.state.slider.slider('setValue', value, false, true);
-	        }
-	        //TODO: Need rgb
 	        this.setState({ value: value });
 	        this.send({
 	            cmd: cmd,
@@ -26805,14 +27890,7 @@
 	        }, callback);
 	    },
 
-	    toggleOn: function toggleOn(evt) {
-	        evt.stopPropagation();
-	        evt.preventDefault();
-
-	        if (!this.isRgb()) {
-	            this.setState({ showSlider: true });
-	        }
-
+	    toggleOn: function toggleOn(slider) {
 	        var cmd, level;
 	        if (this.state.value !== 0) {
 	            cmd = 'turnOff';
@@ -26821,8 +27899,11 @@
 	            cmd = 'turnOn';
 	            level = 100;
 	        }
+
+	        slider && slider.set(level);
 	        this.setValue(cmd, level, 0, 0, 0, function (err) {
 	            if (err) {
+	                //TODO: error
 	                console.error(err);
 	            }
 	        });
@@ -26835,93 +27916,60 @@
 	    },
 
 	    render: function render() {
-	        var value = this.state.value === -1 ? "?" : this.state.value;
-
-	        var icon;
-	        switch (this.props.type) {
-	            case 'light':
-	                icon = 'fa fa-lightbulb-o';
-	                break;
-	            case 'shade':
-	                icon = 'fa fa-picture-o';
-	                break;
-	            case 'outlet':
-	                icon = 'fa fa-plug';
-	                break;
-	            default:
-	                icon = 'fa fa-question';
-	                break;
-	        }
-
-	        var stepSize;
-	        switch (this.props.output) {
-	            case 'continuous':
-	                stepSize = 1;
-	                break;
-	            //TODO: If binary don't show a slider, only on/off
-	            case 'binary':
-	                stepSize = 100;
-	                break;
-	            case 'rgb':
-	                break;
-	            default:
-	                stepSize = 1;
-	        }
-
-	        var hasSlider = true;
-	        if (this.props.output === 'binary') {
-	            hasSlider = false;
-	        }
-	        //TODO: show the last action e.g. currently on or currently off
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-Zone col-xs-12 col-sm-4 col-md-4 col-lg-4 clearfix' },
-	            React.createElement(
+	        var sliderCmp;
+	        if (this.props.output === 'continuous') {
+	            sliderCmp = React.createElement(
 	                'div',
-	                { className: "zone" + (this.isRgb() ? " zone-rgb" : "") },
-	                React.createElement('i', { className: ClassNames(icon, 'pull-left') }),
+	                null,
+	                React.createElement('div', { className: 'slider' }),
 	                React.createElement(
 	                    'span',
-	                    { className: 'name' },
+	                    { className: ClassNames({
+	                            "value": true,
+	                            "hidden": this.state.value === -1 }) },
+	                    this.state.value,
+	                    '%'
+	                )
+	            );
+	        }
+
+	        var rgbCmp;
+	        if (this.props.output === 'rgb') {
+	            rgbCmp = React.createElement('div', { className: 'rgbWrapper' });
+	        }
+
+	        var classes = { 'cmp-ZoneControl': true };
+	        classes[this.props.output] = true;
+	        return React.createElement(
+	            'div',
+	            { className: ClassNames(classes) },
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'div',
+	                    { className: 'name pull-left' },
 	                    this.props.name
 	                ),
 	                React.createElement(
 	                    'div',
-	                    { className: "sliderWrapper pull-right" + (hasSlider && this.state.showSlider ? "" : " hidden") },
-	                    React.createElement(
-	                        'span',
-	                        { className: 'level' },
-	                        value,
-	                        '%'
-	                    ),
-	                    React.createElement('input', { className: 'valueSlider', type: 'text', 'data-slider-value': '0', 'data-slider-min': '00', 'data-slider-max': '100', 'data-slider-step': stepSize, 'data-slider-orientation': 'horizontal' })
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: 'clearfix footer' },
-	                    React.createElement(
-	                        'div',
-	                        { className: "clickInfo pull-right" + (!hasSlider || this.state.showSlider ? " hidden" : "") },
-	                        React.createElement(
-	                            'span',
-	                            { onClick: this.infoClicked },
-	                            'Set Level'
-	                        )
-	                    ),
-	                    React.createElement(
-	                        'a',
-	                        { className: 'btn btn-link btnToggle pull-left', onClick: this.toggleOn },
-	                        React.createElement('i', { className: 'fa fa-power-off' })
-	                    )
+	                    { className: 'onOffWrapper pull-right' },
+	                    React.createElement('input', {
+	                        className: 'switch-indeterminate',
+	                        type: 'checkbox',
+	                        defaultChecked: true,
+	                        'data-indeterminate': 'true' })
 	                )
-	            )
+	            ),
+	            sliderCmp,
+	            rgbCmp
 	        );
 	    }
 	});
-	module.exports = Zone;
+	module.exports = ZoneControl;
 
 /***/ },
-/* 235 */
+/* 244 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -26933,14 +27981,67 @@
 	};
 
 /***/ },
-/* 236 */
+/* 245 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ZoneListGridCell = React.createClass({
+	    displayName: 'ZoneListGridCell',
+
+	    render: function render() {
+	        var icon1, icon2;
+	        switch (this.props.zone.type) {
+	            case 'light':
+	                icon1 = 'icon ion-ios-lightbulb-outline';
+	                break;
+	            case 'shade':
+	                icon1 = 'icon ion-ios-arrow-thin-up';
+	                icon2 = 'icon ion-ios-arrow-thin-down';
+	                break;
+	            case 'outlet':
+	                icon1 = 'icon ion-ios-bolt-outline';
+	                break;
+	            default:
+	                icon1 = 'icon ion-ios-help-empty';
+	                break;
+	        }
+
+	        var icon1Cmp, icon2Cmp;
+	        icon1Cmp = React.createElement('i', { className: icon1 });
+	        if (icon2) {
+	            icon2Cmp = React.createElement('i', { className: icon2 });
+	        }
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZoneListGridCell' },
+	            React.createElement(
+	                'div',
+	                { className: 'icon' },
+	                icon1Cmp,
+	                icon2Cmp
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'name' },
+	                this.props.zone.name
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneListGridCell;
+
+/***/ },
+/* 246 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var LogLine = __webpack_require__(237);
+	var LogLine = __webpack_require__(247);
 
 	var Logging = React.createClass({
 	    displayName: 'Logging',
@@ -27076,7 +28177,7 @@
 	module.exports = Logging;
 
 /***/ },
-/* 237 */
+/* 247 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27121,14 +28222,14 @@
 	module.exports = LogLine;
 
 /***/ },
-/* 238 */
+/* 248 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var NewRecipe = __webpack_require__(239);
-	var RecipeList = __webpack_require__(249);
+	var NewRecipe = __webpack_require__(249);
+	var RecipeList = __webpack_require__(259);
 
 	var RecipeApp = React.createClass({
 	    displayName: 'RecipeApp',
@@ -27195,16 +28296,16 @@
 	module.exports = RecipeApp;
 
 /***/ },
-/* 239 */
+/* 249 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var IngredientList = __webpack_require__(240);
-	var TriggerList = __webpack_require__(242);
-	var ActionList = __webpack_require__(244);
-	var CookBookList = __webpack_require__(246);
+	var IngredientList = __webpack_require__(250);
+	var TriggerList = __webpack_require__(252);
+	var ActionList = __webpack_require__(254);
+	var CookBookList = __webpack_require__(256);
 
 	var NewRecipe = React.createClass({
 	    displayName: 'NewRecipe',
@@ -27488,13 +28589,13 @@
 	module.exports = NewRecipe;
 
 /***/ },
-/* 240 */
+/* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Ingredient = __webpack_require__(241);
+	var Ingredient = __webpack_require__(251);
 
 	var IngredientList = React.createClass({
 	    displayName: 'IngredientList',
@@ -27531,7 +28632,7 @@
 	module.exports = IngredientList;
 
 /***/ },
-/* 241 */
+/* 251 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27628,13 +28729,13 @@
 	module.exports = Ingredient;
 
 /***/ },
-/* 242 */
+/* 252 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Trigger = __webpack_require__(243);
+	var Trigger = __webpack_require__(253);
 
 	var TriggerList = React.createClass({
 	    displayName: 'TriggerList',
@@ -27659,7 +28760,7 @@
 	module.exports = TriggerList;
 
 /***/ },
-/* 243 */
+/* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27699,13 +28800,13 @@
 	module.exports = Trigger;
 
 /***/ },
-/* 244 */
+/* 254 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Action = __webpack_require__(245);
+	var Action = __webpack_require__(255);
 
 	var ActionList = React.createClass({
 	    displayName: 'ActionList',
@@ -27729,7 +28830,7 @@
 	module.exports = ActionList;
 
 /***/ },
-/* 245 */
+/* 255 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27769,13 +28870,13 @@
 	module.exports = Action;
 
 /***/ },
-/* 246 */
+/* 256 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var CookBook = __webpack_require__(247);
+	var CookBook = __webpack_require__(257);
 
 	var CookBookList = React.createClass({
 	    displayName: 'CookBookList',
@@ -27799,13 +28900,13 @@
 	module.exports = CookBookList;
 
 /***/ },
-/* 247 */
+/* 257 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var AssetsMixin = __webpack_require__(248);
+	var AssetsMixin = __webpack_require__(258);
 
 	var CookBook = React.createClass({
 	    displayName: 'CookBook',
@@ -27833,7 +28934,7 @@
 	module.exports = CookBook;
 
 /***/ },
-/* 248 */
+/* 258 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -27845,7 +28946,7 @@
 	};
 
 /***/ },
-/* 249 */
+/* 259 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27853,7 +28954,7 @@
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	var React = __webpack_require__(1);
-	var RecipeInfo = __webpack_require__(250);
+	var RecipeInfo = __webpack_require__(260);
 
 	var RecipeList = React.createClass({
 	    displayName: 'RecipeList',
@@ -27921,7 +29022,7 @@
 	module.exports = RecipeList;
 
 /***/ },
-/* 250 */
+/* 260 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28015,18 +29116,18 @@
 	module.exports = RecipeInfo;
 
 /***/ },
-/* 251 */
+/* 261 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Redux = __webpack_require__(180);
-	var thunk = __webpack_require__(252).default;
-	var initialState = __webpack_require__(253);
-	var buttonReducer = __webpack_require__(254);
-	var systemReducer = __webpack_require__(255);
-	var scenesReducer = __webpack_require__(256);
-	var zonesReducer = __webpack_require__(258);
+	var thunk = __webpack_require__(262).default;
+	var initialState = __webpack_require__(263);
+	var buttonReducer = __webpack_require__(264);
+	var systemReducer = __webpack_require__(265);
+	var scenesReducer = __webpack_require__(266);
+	var zonesReducer = __webpack_require__(268);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
@@ -28038,7 +29139,7 @@
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
 
 /***/ },
-/* 252 */
+/* 262 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -28066,7 +29167,7 @@
 	exports['default'] = thunk;
 
 /***/ },
-/* 253 */
+/* 263 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -28100,13 +29201,13 @@
 	};
 
 /***/ },
-/* 254 */
+/* 264 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(253);
+	var initialState = __webpack_require__(263);
 
 	module.exports = function (state, action) {
 	    var newState = [];
@@ -28131,13 +29232,13 @@
 	};
 
 /***/ },
-/* 255 */
+/* 265 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(253);
+	var initialState = __webpack_require__(263);
 
 	var _clientId = 1;
 	module.exports = function (state, action) {
@@ -28218,14 +29319,14 @@
 	};
 
 /***/ },
-/* 256 */
+/* 266 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(253);
-	var CommandsReducer = __webpack_require__(257);
+	var initialState = __webpack_require__(263);
+	var CommandsReducer = __webpack_require__(267);
 
 	var _clientId = 1;
 
@@ -28355,7 +29456,7 @@
 	};
 
 /***/ },
-/* 257 */
+/* 267 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28393,13 +29494,13 @@
 	};
 
 /***/ },
-/* 258 */
+/* 268 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(253);
+	var initialState = __webpack_require__(263);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -28438,7 +29539,7 @@
 	};
 
 /***/ },
-/* 259 */
+/* 269 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';

@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var ReactRedux = require('react-redux');
 var System = require('./System.jsx');
 var SceneList = require('./SceneList.jsx');
@@ -52,7 +53,7 @@ var ControlApp = React.createClass({
         return (
             <div className="cmp-ControlApp">
                 <ul className="nav nav-tabs" role="tablist">
-                    <li role="presentation" className="">
+                    <li role="presentation" className="active">
                         <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">
                             <i className="fa fa-sliders"></i>
                         </a>
@@ -62,7 +63,7 @@ var ControlApp = React.createClass({
                             <i className="fa fa-code-fork"></i>
                         </a>
                     </li>
-                    <li role="presentation" className="active">
+                    <li role="presentation" className="">
                         <a href="#system" role="tab" aria-controls="system" data-toggle="tab">
                             <i className="fa fa-tablet"></i>
                         </a>
@@ -78,14 +79,14 @@ var ControlApp = React.createClass({
                     */}
                 </ul>
                 <div className="tab-content">
-                    <div role="tabpanel" className="tab-pane fade" id="scenes">
+                    <div role="tabpanel" className="tab-pane active" id="scenes">
                         {emptySceneBody}
                         <SceneList scenes={this.props.scenes} buttons={this.props.buttons} zones={this.props.zones} />
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="zones">
                         {zoneBody}
                     </div>
-                    <div role="tabpanel" className="tab-pane active" id="system">
+                    <div role="tabpanel" className="tab-pane fade" id="system">
                         <System devices={this.props.devices}/>
                     </div>
                     {/*

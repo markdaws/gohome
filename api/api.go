@@ -37,6 +37,7 @@ func (s *apiServer) listenAndServe(port string) error {
 
 	r.HandleFunc("/api/v1/events/ws", s.eventLogger.HTTPHandler())
 
+	//TODO: Register these handlers in their respective .go file
 	r.HandleFunc("/api/v1/scenes",
 		apiScenesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/scenes/{id}",

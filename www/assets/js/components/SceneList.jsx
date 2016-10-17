@@ -6,6 +6,7 @@ var Scene = require('./Scene.jsx');
 var SceneInfo = require('./SceneInfo.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var SceneActions = require('../actions/SceneActions.js');
+var Grid = require('./Grid.jsx');
 
 var SceneList = React.createClass({
     mixins: [UniqueIdMixin],
@@ -33,6 +34,7 @@ var SceneList = React.createClass({
         var btns;
 
         var scenes = this.props.scenes.items;
+        var gridCells = [];
         if (this.state.editMode) {
             body = scenes.map(function(scene) {
                 var saveState;

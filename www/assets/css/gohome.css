@@ -3,6 +3,7 @@
 body, html {
     overflow-x: hidden;
     width: 100%;
+    background-color: #fff;
 }
 
 .spinnerWrapper {
@@ -19,7 +20,7 @@ button.disabled {
 }
 
 .tab-content {
-    padding: 12px;
+/*    padding: 12px;*/
 }
 
 .fa.fa-spinner {
@@ -82,74 +83,60 @@ button.disabled {
     padding: 0;
 }
 
-.cmp-Zone .zone {
-    color: #fff;
-    background-color: #337ab7;
-    border-color: 2e6da4;
-    border-radius: 4px;
-    padding: 8px;
-    display: block;
-    margin-bottom: 12px;
-    box-shadow: 3px 3px 5px #aaa;
+.cmp-ZoneControl {
+    padding: 24px;
+    padding-left: 12px;
+    padding-right: 12px;
+    text-align: center;
 }
-.cmp-Zone .zone .name{
-    display: block;
-    font-size: 16px;
-    margin-left: 45px;
+.cmp-ZoneControl.continuous {
+    height: 200px;
+}
+.cmp-ZoneControl.binary {
+    height: 86px;
+}
+.cmp-ZoneControl.rgb {
+    height: 222px;
+}
+.cmp-ZoneControl .name {
+    text-transform: uppercase;
+    font-size: 20px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 242px;
+    margin-top: 3px;
 }
-.cmp-Zone .zone .fa {
-    font-size: 30px;
-    text-align: center;
-    width: 30px;
+.cmp-ZoneControl .rgbWrapper {
+    margin-top: 22px;
 }
-.cmp-Zone button {
-    width: 100%;
-    text-align: left;
-    height: 90px;
-}
-.cmp-Zone .sliderWrapper {
-    margin: 8px 12px 8px 8px;
+.cmp-ZoneControl .slider {
+    max-width: 400px;
     position: absolute;
-    left: 67px;
-    right: 21px;
+    left: 0;
+    right: 0;
+    margin-left: 30px;
+    margin-right: 30px;
+    bottom: 26px;
 }
-.cmp-Zone .sliderWrapper .level {
-    display: block;
+.cmp-ZoneControl .value {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 50px;
+}
+.cmp-ZoneControl .onOffWrapper {
     text-align: center;
-    font-size: 10px;
-}
-.cmp-Zone .slider.slider-horizontal {
-    width: 100%;
-}
-.cmp-Zone .footer {
-    color: #fff;
-    margin-top: 14px;
-}
-.cmp-Zone .clickInfo {
-    text-align: center;
-    margin: 12px 0px 8px 12px;
-    font-style: italic;
-    font-size: 10px;
-    text-decoration: underline;
-}
-.cmp-Zone .zone .btnToggle .fa-power-off {
-    color: #fff;
-    font-size: 24px;
-    margin-left: -1px;
-}
-.cmp-Zone .btnToggle {
-    padding-left: 0px;
-}
-.cmp-Zone .name {
-    min-width: 60px; /*Stops slider jumping up */
 }
 
+.cmp-ZoneList {
+    width: 100%;
+    background-color: #fff;
+}
 .cmp-ZoneList h2 {
-    margin-left: 12px;
-    margin-top: 0px;
+    margin-top: 12px;
+    text-transform: uppercase;
+    font-weight: 200;
+    text-align: center;
 }
 
 .cmp-ZoneSetLevelCommand p {
@@ -180,6 +167,105 @@ button.disabled {
 }
 .cmp-DiscoverDevices .discover.fa-spinner {
     margin-left: 12px;
+}
+
+.cmp-Grid {
+    position: relative;
+    background-color: #fff;
+    width: 100%;
+    font-size: 0px; /*needed to remove gaps between cells*/
+}
+.cmp-Grid .beforeExpander {
+    position: relative;
+/*    box-shadow: 0px 0px 8px #777;*/
+}
+.cmp-Grid .afterExpander {
+/*    box-shadow: 0px 0px 8px #777;*/
+}
+.cmp-Grid .expander {
+    background-color: #eee;
+    width: 100%;
+    font-size: 12px;
+    max-height: 500px;
+    overflow: hidden;
+    position: relative;
+}
+/*
+.cmp-Grid .expander.xyz {
+    height: 400px;
+}*/
+.cmp-Grid .expander-animation-enter {
+    max-height: 0px;
+}
+/*.cmp-Grid .expander-animation-enter.expander-animation-enter-active {
+    height: 200px;
+    transition: height 250ms ease-in-out;
+    -webkit-transition: height 250ms ease-in-out;
+}*/
+.cmp-Grid .expander-animation-enter.expander-animation-enter-active {
+    max-height: 500px;
+    transition: max-height 250ms ease-in-out;
+    -webkit-transition: max-height 250ms ease-in-out;
+}
+.
+.cmp-Grid .expander-animation-leave {
+    max-height: 500px;
+}
+.cmp-Grid .expander-animation-leave.expander-animation-leave-active {
+    max-height: 0px;
+    transition: max-height 250ms ease-in-out;
+    -webkit-transition: max-height 250ms ease-in-out;
+}
+.cmp-Grid .cellWrapper {
+    background-color: #fff;
+    overflow: hidden;
+    font-size: 0px;
+    border: 1px solid #eee;
+    /*
+    border-bottom: none;
+    border-right: none;*/
+    text-align: center;
+    padding-left: 4px;
+    padding-right: 4px;
+    /*margin-left: -1px;
+    margin-bottom: -1px;*/
+}
+.cmp-Grid .cellWrapper:after {
+    border: 1px solid #eee;
+}
+
+.cmp-Grid .cellWrapper i.fa-caret-up {
+    font-size: 58px;
+    margin-top: -30px;
+    color: #eee;
+}
+
+.cmp-ZoneListGridCell {
+    pointer-events: none;
+    position: relative;
+    height: 100%;
+    font-size: 0px;
+}
+.cmp-ZoneListGridCell .name{
+    display: block;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    pointer-events: none;
+    text-transform: uppercase;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto 8px auto;
+}
+.cmp-ZoneListGridCell .icon {
+    pointer-events: none;
+    font-size: 57px;
+    text-align: center;
+    color: #555;
 }
 
 .cmp-ZoneInfo label {
@@ -343,3 +429,12 @@ button.disabled {
 .cmp-LogLine span.rawMessage {
     font-style: italic;
 }
+
+/* bootstrap hack: fix content width inside hidden tabs */
+.tab-content > .tab-pane:not(.active),
+.pill-content > .pill-pane:not(.active) {
+    display: block;
+    height: 0;
+    overflow-y: hidden;
+}
+/* bootstrap hack end */
