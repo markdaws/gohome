@@ -24,6 +24,7 @@ I have a roadmap for where I would like to go with this project:
   - Monitor Hardware
   - Raspberry PI support, allowing goHOME to run 24/7 on a cheap small device
   - Recipes, allow programing locally like IFTTT support
+  - Out of the box solution for hardware makers as a whitelabel UI
 //TODO:
 
 ##Supported Hardware
@@ -31,6 +32,7 @@ I have a roadmap for where I would like to go with this project:
 ###Flux WIFI Bulbs
 ###ConnectedByTCP Bulbs
 ###Belkin WeMo Insight Switch
+###Belkin WeMo Maker
 
 ##Documentation
 ###Buttons
@@ -40,10 +42,6 @@ I have a roadmap for where I would like to go with this project:
 ###[Scenes](docs/scene.md)
 ###[Zones](docs/zone.md)
 ###[HTTP API](docs/api.md)
-
-
-##Events
- /api/v1/events/ws
 
 ##Development
 Currently there are two main parts to the project, the golang powered server and the web UI.
