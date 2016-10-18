@@ -24,8 +24,8 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 	}
 
 	devices := make([]gohome.Device, len(responses))
-	for i, response := range responses {
-		devInfo, err := belkinExt.LoadDevice(response)
+	for i, devInfo := range responses {
+		err := devInfo.Load()
 
 		if err != nil {
 			// Keep going, try to get as many as we can
@@ -43,7 +43,7 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 
 		dev, _ := gohome.NewDevice(
 			modelNumber,
-			strings.Replace(response.Location, "/setup.xml", "", -1),
+			strings.Replace(devInfo.Scan.Location, "/setup.xml", "", -1),
 			"",
 			devInfo.FriendlyName,
 			devInfo.ModelDescription,

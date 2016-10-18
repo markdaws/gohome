@@ -17,9 +17,11 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	case *cmd.ZoneTurnOn:
 		z := b.System.Zones[command.ZoneID]
 		d := b.System.Devices[z.DeviceID]
+
+		belkinDev := belkinExt.Device{Scan: belkinExt.ScanResponse{Location: d.Address}}
 		return &cmd.Func{
 			Func: func() error {
-				return belkinExt.TurnOn(d.Address)
+				return belkinDev.TurnOn()
 			},
 			Friendly: "belkin.cmdBuilder.ZoneTurnOn",
 		}, nil
@@ -27,9 +29,11 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	case *cmd.ZoneTurnOff:
 		z := b.System.Zones[command.ZoneID]
 		d := b.System.Devices[z.DeviceID]
+
+		belkinDev := belkinExt.Device{Scan: belkinExt.ScanResponse{Location: d.Address}}
 		return &cmd.Func{
 			Func: func() error {
-				return belkinExt.TurnOff(d.Address)
+				return belkinDev.TurnOff()
 			},
 			Friendly: "belkin.cmdBuilder.ZoneTurnOff",
 		}, nil
