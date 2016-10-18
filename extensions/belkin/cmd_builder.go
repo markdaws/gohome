@@ -3,8 +3,8 @@ package belkin
 import (
 	"fmt"
 
+	belkinExt "github.com/go-home-iot/belkin"
 	"github.com/markdaws/gohome"
-	belkinExt "github.com/markdaws/gohome/belkin"
 	"github.com/markdaws/gohome/cmd"
 )
 
