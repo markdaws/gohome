@@ -11,7 +11,7 @@ var ZoneListGridCell = React.createClass({
                 icon1 = 'icon ion-ios-arrow-thin-up';
                 icon2 = 'icon ion-ios-arrow-thin-down';
                 break;
-            case 'outlet':
+            case 'switch':
                 icon1 = 'icon ion-ios-bolt-outline';
                 break;
             default:

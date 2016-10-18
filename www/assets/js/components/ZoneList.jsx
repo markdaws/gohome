@@ -10,7 +10,7 @@ var ZoneList = React.createClass({
     render: function() {
         var lightZones = [];
         var shadeZones = [];
-        var outletZones = [];
+        var switchZones = [];
         var otherZones = [];
         this.props.zones.forEach(function(zone) {
 
@@ -32,8 +32,8 @@ var ZoneList = React.createClass({
                 case 'shade':
                     shadeZones.push(cmpZone);
                     break;
-                case 'outlet':
-                    outletZones.push(cmpZone);
+                case 'switch':
+                    switchZones.push(cmpZone);
                     break;
                 default:
                     otherZones.push(cmpZone);
@@ -52,8 +52,8 @@ var ZoneList = React.createClass({
                     <Grid cells={shadeZones} />
                 </div>
                 <div className="clearfix">
-                    <h2 className={ClassNames({ 'hidden': outletZones.length === 0})}>Outlets</h2>
-                    <Grid cells={outletZones} />
+                    <h2 className={ClassNames({ 'hidden': switchZones.length === 0})}>Switches</h2>
+                    <Grid cells={switchZones} />
                 </div>
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': otherZones.length === 0})}>Other Zones</h2>

@@ -70,7 +70,7 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 			Name:        devInfo.FriendlyName,
 			Description: devInfo.ModelDescription,
 			DeviceID:    "",
-			Type:        zone.ZTOutlet,
+			Type:        zone.ZTSwitch,
 			Output:      zone.OTBinary,
 		}
 		dev.AddZone(z)

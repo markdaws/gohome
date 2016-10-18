@@ -24895,7 +24895,7 @@
 	    },
 
 	    render: function render() {
-	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Outlet", val: "outlet" }, { str: "Shade", val: "shade" }];
+	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Switch", val: "switch" }, { str: "Shade", val: "shade" }];
 	        var self = this;
 	        var nodes = types.map(function (type) {
 	            return React.createElement(
@@ -27704,7 +27704,7 @@
 	    render: function render() {
 	        var lightZones = [];
 	        var shadeZones = [];
-	        var outletZones = [];
+	        var switchZones = [];
 	        var otherZones = [];
 	        this.props.zones.forEach(function (zone) {
 
@@ -27725,8 +27725,8 @@
 	                case 'shade':
 	                    shadeZones.push(cmpZone);
 	                    break;
-	                case 'outlet':
-	                    outletZones.push(cmpZone);
+	                case 'switch':
+	                    switchZones.push(cmpZone);
 	                    break;
 	                default:
 	                    otherZones.push(cmpZone);
@@ -27762,10 +27762,10 @@
 	                { className: 'clearfix' },
 	                React.createElement(
 	                    'h2',
-	                    { className: ClassNames({ 'hidden': outletZones.length === 0 }) },
-	                    'Outlets'
+	                    { className: ClassNames({ 'hidden': switchZones.length === 0 }) },
+	                    'Switches'
 	                ),
-	                React.createElement(Grid, { cells: outletZones })
+	                React.createElement(Grid, { cells: switchZones })
 	            ),
 	            React.createElement(
 	                'div',
@@ -28010,7 +28010,7 @@
 	                icon1 = 'icon ion-ios-arrow-thin-up';
 	                icon2 = 'icon ion-ios-arrow-thin-down';
 	                break;
-	            case 'outlet':
+	            case 'switch':
 	                icon1 = 'icon ion-ios-bolt-outline';
 	                break;
 	            default:

@@ -28,7 +28,7 @@ var ZoneTypePicker = React.createClass({
         var types = [
             { str: "Unknown", val:"unknown" },
             { str: "Light", val:"light" },
-            { str: "Outlet", val:"outlet" },
+            { str: "Switch", val:"switch" },
             { str: "Shade", val:"shade" }
         ];
         var self = this;
