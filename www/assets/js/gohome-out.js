@@ -23419,6 +23419,7 @@
 	            case 'tcp600gwb':
 	            case 'fluxwifi':
 	            case 'f7c029v2':
+	            case 'f7c043fc':
 	                body = React.createElement(DiscoverDevices, { modelNumber: this.state.selectedProduct });
 	                break;
 	            default:
@@ -23445,6 +23446,11 @@
 	                    'option',
 	                    { value: 'f7c029v2' },
 	                    'Belkin WeMo Insight'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'f7c043fc' },
+	                    'Belkin WeMo Maker'
 	                ),
 	                React.createElement(
 	                    'option',

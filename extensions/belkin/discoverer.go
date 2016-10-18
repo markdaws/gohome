@@ -17,7 +17,18 @@ type discoverer struct {
 func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
 
 	log.V("scanning belkin")
-	responses, err := belkinExt.Scan(belkinExt.DTInsight, 5)
+	var scanType belkinExt.DeviceType
+	switch modelNumber {
+	case "f7c043fc":
+		scanType = belkinExt.DTMaker
+	case "f7c029v2":
+		scanType = belkinExt.DTInsight
+	default:
+		return nil, fmt.Errorf("unsupported model number: %s", modelNumber)
+	}
+
+	responses, err := belkinExt.Scan(scanType, 5)
+	fmt.Printf("%+v\n", responses)
 	if err != nil {
 		log.V("scan err: %s", err)
 		return nil, err

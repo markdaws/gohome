@@ -11,7 +11,7 @@ import (
 )
 
 func RegisterDiscoveryHandlers(r *mux.Router, s *apiServer) {
-		r.HandleFunc("/api/v1/discovery/{modelNumber}",
+	r.HandleFunc("/api/v1/discovery/{modelNumber}",
 		apiDiscoveryHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/discovery/{modelNumber}/token",
 		apiDiscoveryTokenHandler(s.system)).Methods("GET")

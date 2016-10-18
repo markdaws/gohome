@@ -20,6 +20,7 @@ var Import = React.createClass({
         case 'tcp600gwb':
         case 'fluxwifi':
         case 'f7c029v2':
+        case 'f7c043fc':
             body = <DiscoverDevices modelNumber={this.state.selectedProduct} />
             break;
         default:
@@ -31,7 +32,8 @@ var Import = React.createClass({
                 <h3>Select a product to import</h3>
                 <select className="form-control" onChange={this.productSelected} value={this.state.selectedProduct}>
                     <option value="">Choose ...</option>
-                    <option value="f7c029v2">Belkin WeMo Insight</option>          
+                    <option value="f7c029v2">Belkin WeMo Insight</option>
+                    <option value="f7c043fc">Belkin WeMo Maker</option>
                     <option value="l-bdgpro2-wh">Lutron</option>
                     <option value="tcp600gwb">Connected By TCP Hub</option>
                     <option value="fluxwifi">Flux WIFI Bulb</option>
