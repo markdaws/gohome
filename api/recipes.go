@@ -13,6 +13,17 @@ import (
 	"github.com/markdaws/gohome/store"
 )
 
+func RegisterRecipeHandlers(r *mux.Router, s *apiServer) {
+	r.HandleFunc("/api/v1/recipes",
+		apiRecipesHandlerPost(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/recipes/{id}",
+		apiRecipeHandler(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/recipes/{id}",
+		apiRecipeHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/recipes",
+		apiRecipesHandlerGet(s.system, s.recipeManager)).Methods("GET")
+}
+
 func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 

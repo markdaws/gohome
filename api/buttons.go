@@ -5,8 +5,14 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
 )
+
+func RegisterButtonHandlers(r *mux.Router, s *apiServer) {
+	r.HandleFunc("/api/v1/buttons",
+		apiButtonsHandler(s.system)).Methods("GET")
+}
 
 func apiButtonsHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

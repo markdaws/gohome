@@ -17,6 +17,15 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+func RegisterZoneHandlers(r *mux.Router, s *apiServer) {
+	r.HandleFunc("/api/v1/zones",
+		apiZonesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/zones",
+		apiAddZoneHandler(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/zones/{id}",
+		apiZoneHandler(s.system)).Methods("PUT")
+}
+
 func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))

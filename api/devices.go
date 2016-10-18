@@ -17,6 +17,15 @@ import (
 	"github.com/markdaws/gohome/validation"
 )
 
+func RegisterDeviceHandlers(r *mux.Router, s *apiServer) {
+	r.HandleFunc("/api/v1/devices",
+		apiDevicesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/devices",
+		apiAddDeviceHandler(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/devices/{id}",
+		apiDeviceHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+}
+
 func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")

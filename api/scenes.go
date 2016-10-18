@@ -17,6 +17,24 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+func RegisterSceneHandlers(r *mux.Router, s *apiServer) {
+	//TODO: Register these handlers in their respective .go file
+	r.HandleFunc("/api/v1/scenes",
+		apiScenesHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/scenes/{id}",
+		apiSceneHandlerUpdate(s.system, s.recipeManager)).Methods("PUT")
+	r.HandleFunc("/api/v1/scenes",
+		apiSceneHandlerCreate(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/scenes/{sceneId}/commands/{index}",
+		apiSceneHandlerCommandDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/scenes/{sceneId}/commands",
+		apiSceneHandlerCommandAdd(s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/scenes/{id}",
+		apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/scenes/active",
+		apiActiveScenesHandler(s.system)).Methods("POST")
+}
+
 func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))

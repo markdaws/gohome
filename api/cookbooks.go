@@ -8,6 +8,13 @@ import (
 	"github.com/markdaws/gohome"
 )
 
+func RegisterCookBookHandlers(r *mux.Router, s *apiServer) {
+	r.HandleFunc("/api/v1/cookbooks",
+		apiCookBooksHandler(s.recipeManager.CookBooks)).Methods("GET")
+	r.HandleFunc("/api/v1/cookbooks/{id}",
+		apiCookBookHandler(s.recipeManager.CookBooks)).Methods("GET")
+}
+
 func apiCookBooksHandler(cookBooks []*gohome.CookBook) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")

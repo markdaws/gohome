@@ -10,6 +10,15 @@ import (
 	"github.com/markdaws/gohome/discovery"
 )
 
+func RegisterDiscoveryHandlers(r *mux.Router, s *apiServer) {
+		r.HandleFunc("/api/v1/discovery/{modelNumber}",
+		apiDiscoveryHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}/token",
+		apiDiscoveryTokenHandler(s.system)).Methods("GET")
+	r.HandleFunc("/api/v1/discovery/{modelNumber}/access",
+		apiDiscoveryAccessHandler(s.system)).Methods("GET")
+}
+
 func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
