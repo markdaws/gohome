@@ -40,7 +40,10 @@ var ZoneControl = React.createClass({
 
     initSwitch: function(slider) {
         var sw = $($(ReactDOM.findDOMNode(this)).find('.switch-indeterminate')[0]);
-        sw.bootstrapSwitch();
+        sw.bootstrapSwitch({
+            onText: this.props.type === 'shade' ? 'open' : 'on',
+            offText: this.props.type === 'shade' ? 'close' : 'off',
+        });
 
         sw.on('switchChange.bootstrapSwitch', function(event, state) {
             this.toggleOn(slider);
