@@ -5,7 +5,7 @@ import (
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/comm"
-	fluxwifiExt "github.com/markdaws/gohome/fluxwifi"
+	fluxwifiExt "github.com/go-home-iot/fluxwifi"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -18,14 +18,6 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 	if err != nil {
 		return nil, err
 	}
-
-	/*
-		//TODO: Remove, for testing
-		infos := [1]fluxwifi.BulbInfo{fluxwifi.BulbInfo{
-			IP:    "192.168.0.1:1234",
-			ID:    "thisisanid",
-			Model: "modelnumber",
-		}}*/
 
 	devices := make([]gohome.Device, len(infos))
 	for i, info := range infos {
