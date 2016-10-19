@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fromkeith/gossdp"
+	"github.com/go-home-iot/gossdp"
 	"github.com/nu7hatch/gouuid"
 )
 

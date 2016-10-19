@@ -1,0 +1,53 @@
+{
+	"ImportPath": "github.com/markdaws/gohome",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v74",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/go-home-iot/belkin",
+			"Rev": "6aa4fcc3c0800cac649999891cd00ded370ec5e7"
+		},
+		{
+			"ImportPath": "github.com/go-home-iot/fluxwifi",
+			"Rev": "0b89a8a3596b1f1977e8e354c9f15e8d92036441"
+		},
+		{
+			"ImportPath": "github.com/go-home-iot/gossdp",
+			"Rev": "49870f3db38de953e84a5ac69766b7058233805f"
+		},
+		{
+			"ImportPath": "github.com/gorilla/handlers",
+			"Comment": "v1.1-11-ga577578",
+			"Rev": "a5775781a543af3c6b9f5baf10995e4d14168950"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-13-g9fa818a",
+			"Rev": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.0.0-12-ga687089",
+			"Rev": "a68708917c6a4f06314ab4e52493cc61359c9d42"
+		},
+		{
+			"ImportPath": "github.com/nu7hatch/gouuid",
+			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
+		},
+		{
+			"ImportPath": "golang.org/x/net/bpf",
+			"Rev": "e445b19913b9d40fdbdfe19ac5e3d314aafd6f63"
+		},
+		{
+			"ImportPath": "golang.org/x/net/internal/iana",
+			"Rev": "e445b19913b9d40fdbdfe19ac5e3d314aafd6f63"
+		},
+		{
+			"ImportPath": "golang.org/x/net/ipv4",
+			"Rev": "e445b19913b9d40fdbdfe19ac5e3d314aafd6f63"
+		}
+	]
+}
