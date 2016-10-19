@@ -13,10 +13,14 @@ import (
 func RegisterDiscoveryHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/discovery/{modelNumber}",
 		apiDiscoveryHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/discovery/{modelNumber}/token",
-		apiDiscoveryTokenHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/discovery/{modelNumber}/access",
-		apiDiscoveryAccessHandler(s.system)).Methods("GET")
+
+	//TODO: Implement with extensions
+	/*
+		r.HandleFunc("/api/v1/discovery/{modelNumber}/token",
+			apiDiscoveryTokenHandler(s.system)).Methods("GET")
+		r.HandleFunc("/api/v1/discovery/{modelNumber}/access",
+			apiDiscoveryAccessHandler(s.system)).Methods("GET")
+	*/
 }
 
 func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
@@ -128,6 +132,7 @@ func apiDiscoveryZoneHandler(system *gohome.System) func(http.ResponseWriter, *h
 }
 */
 
+/*
 func apiDiscoveryTokenHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -178,3 +183,4 @@ func apiDiscoveryAccessHandler(system *gohome.System) func(http.ResponseWriter, 
 		json.NewEncoder(w).Encode(struct{}{})
 	}
 }
+*/

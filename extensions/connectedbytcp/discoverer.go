@@ -3,8 +3,8 @@ package connectedbytcp
 import (
 	"fmt"
 
+	connectedbytcpExt "github.com/go-home-iot/connectedbytcp"
 	"github.com/markdaws/gohome"
-	connectedbytcpExt "github.com/markdaws/gohome/connectedbytcp"
 )
 
 type discoverer struct {
@@ -54,3 +54,31 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 	}
 	return devices, nil
 }
+
+/*
+//TODO: Move into discoverer type
+func DiscoverToken(modelNumber, address string) (string, error) {
+	switch modelNumber {
+	case "TCP600GWB":
+		token, err := connectedbytcp.GetToken(address)
+		if err == connectedbytcp.ErrUnauthorized {
+			return "", ErrUnauthorized
+		}
+		return token, err
+	}
+	return "", ErrUnsupported
+}
+
+//TODO:
+func VerifyConnection(modelNumber, address, token string) error {
+	switch modelNumber {
+	case "TCP600GWB":
+		err := connectedbytcp.VerifyConnection(address, token)
+		if err != nil {
+			return fmt.Errorf("access check failed: %s", err)
+		}
+		return nil
+	}
+	return ErrUnsupported
+}
+*/

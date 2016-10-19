@@ -3,9 +3,9 @@ package connectedbytcp
 import (
 	"fmt"
 
+	connectedbytcpExt "github.com/go-home-iot/connectedbytcp"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	connectedbytcpExt "github.com/markdaws/gohome/connectedbytcp"
 )
 
 type cmdBuilder struct {
