@@ -2,7 +2,8 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var Redux = require('redux');
 var ReactRedux = require('react-redux');
-var Scene = require('./Scene.jsx');
+var SceneListGridCell = require('./SceneListGridCell.jsx');
+var SceneControl = require('./SceneControl.jsx');
 var SceneInfo = require('./SceneInfo.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var SceneActions = require('../actions/SceneActions.js');
@@ -66,10 +67,11 @@ var SceneList = React.createClass({
             );
         } else {
 
-            body = scenes.map(function(scene) {
-                return (
-                    <Scene scene={scene} key={scene.id || scene.clientId}/>
-                );
+            var gridCells = scenes.map(function(scene) {
+                return {
+                    cell: <SceneListGridCell scene={scene} />,
+                    content: <SceneControl scene={scene} key={scene.id || scene.clientId}/>
+                };
             });
             btns = (
                 <div className="clearfix buttonWrapper">
@@ -78,6 +80,8 @@ var SceneList = React.createClass({
                     </button>
                 </div>
             );
+
+            body = <Grid cells={gridCells} />
         }
 
         return (

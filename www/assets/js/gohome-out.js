@@ -25312,7 +25312,8 @@
 	var ReactDOM = __webpack_require__(34);
 	var Redux = __webpack_require__(180);
 	var ReactRedux = __webpack_require__(173);
-	var Scene = __webpack_require__(221);
+	var SceneListGridCell = __webpack_require__(271);
+	var SceneControl = __webpack_require__(272);
 	var SceneInfo = __webpack_require__(222);
 	var UniqueIdMixin = __webpack_require__(205);
 	var SceneActions = __webpack_require__(231);
@@ -25384,8 +25385,11 @@
 	            );
 	        } else {
 
-	            body = scenes.map(function (scene) {
-	                return React.createElement(Scene, { scene: scene, key: scene.id || scene.clientId });
+	            var gridCells = scenes.map(function (scene) {
+	                return {
+	                    cell: React.createElement(SceneListGridCell, { scene: scene }),
+	                    content: React.createElement(SceneControl, { scene: scene, key: scene.id || scene.clientId })
+	                };
 	            });
 	            btns = React.createElement(
 	                'div',
@@ -25396,6 +25400,8 @@
 	                    React.createElement('i', { className: 'fa fa-cog', 'aria-hidden': 'true' })
 	                )
 	            );
+
+	            body = React.createElement(Grid, { cells: gridCells });
 	        }
 
 	        return React.createElement(
@@ -25443,48 +25449,7 @@
 	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
 
 /***/ },
-/* 221 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var Api = __webpack_require__(208);
-
-	var Scene = React.createClass({
-	    displayName: 'Scene',
-
-	    handleClick: function handleClick(event) {
-	        Api.sceneActivate(this.props.scene.id, function (err, data) {
-	            //TODO: Show error/success
-	        });
-	        z;
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-Scene col-xs-6 col-sm-3 col-md-3 col-lg-3' },
-	            React.createElement(
-	                'a',
-	                { role: 'button', className: 'btn btn-primary scene', onClick: this.handleClick },
-	                React.createElement(
-	                    'div',
-	                    null,
-	                    React.createElement('i', { className: 'fa fa-sliders' })
-	                ),
-	                React.createElement(
-	                    'span',
-	                    { className: 'name' },
-	                    this.props.scene.name
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = Scene;
-
-/***/ },
+/* 221 */,
 /* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -29672,6 +29637,85 @@
 	    }
 	});
 	module.exports = Testr;
+
+/***/ },
+/* 270 */,
+/* 271 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var React = __webpack_require__(1);
+
+	var SceneListGridCell = React.createClass({
+	    displayName: "SceneListGridCell",
+
+	    render: function render() {
+	        return React.createElement(
+	            "div",
+	            { className: "cmp-SceneListGridCell" },
+	            React.createElement(
+	                "div",
+	                { className: "icon" },
+	                React.createElement("i", { className: "icon ion-ios-settings" })
+	            ),
+	            React.createElement(
+	                "div",
+	                { className: "name" },
+	                this.props.scene.name
+	            )
+	        );
+	    }
+	});
+	module.exports = SceneListGridCell;
+
+/***/ },
+/* 272 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var Api = __webpack_require__(208);
+
+	var SceneControl = React.createClass({
+	    displayName: 'SceneControl',
+
+	    handleClick: function handleClick(event) {
+	        Api.sceneActivate(this.props.scene.id, function (err, data) {
+	            if (err) {
+	                //TODO: Show error/success
+	                console.error(err);
+	            }
+	        });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SceneControl' },
+	            React.createElement(
+	                'div',
+	                { className: 'name' },
+	                this.props.scene.name
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'activateWrapper' },
+	                React.createElement(
+	                    'a',
+	                    { role: 'button', className: 'btn btn-primary scene', onClick: this.handleClick },
+	                    React.createElement(
+	                        'span',
+	                        { className: 'name' },
+	                        'Activate'
+	                    )
+	                )
+	            )
+	        );
+	    }
+	});
+	module.exports = SceneControl;
 
 /***/ }
 /******/ ]);

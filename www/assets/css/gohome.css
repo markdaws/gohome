@@ -27,37 +27,6 @@ button.disabled {
     font-size: 35px;
 }
 
-.cmp-SceneList .buttonWrapper {
-    padding-bottom: 14px;
-}
-.cmp-SceneList .buttonWrapper .btnEdit {
-    margin-right: 15px;
-}
-.cmp-SceneList .cmp-SceneInfo {
-    margin-bottom: 50px;
-}
-.cmp-SceneList h2 {
-    margin-top: 0;
-}
-
-.cmp-Scene .btn.scene {
-    text-align: center;
-    padding: 8px;
-    display: block;
-    margin-bottom: 12px;
-    box-shadow: 3px 3px 5px #aaa;
-}
-.cmp-Scene .btn.scene .fa {
-    font-size: 30px;
-}
-.cmp-Scene .btn.scene .name {
-    display:block;
-    font-size: 18px;
-    padding: 8px 0px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 .cmp-SceneInfo .btnDelete {
     padding: 0;
 }
@@ -190,24 +159,14 @@ button.disabled {
     overflow: hidden;
     position: relative;
 }
-/*
-.cmp-Grid .expander.xyz {
-    height: 400px;
-}*/
 .cmp-Grid .expander-animation-enter {
     max-height: 0px;
 }
-/*.cmp-Grid .expander-animation-enter.expander-animation-enter-active {
-    height: 200px;
-    transition: height 250ms ease-in-out;
-    -webkit-transition: height 250ms ease-in-out;
-}*/
 .cmp-Grid .expander-animation-enter.expander-animation-enter-active {
     max-height: 500px;
     transition: max-height 250ms ease-in-out;
     -webkit-transition: max-height 250ms ease-in-out;
 }
-.
 .cmp-Grid .expander-animation-leave {
     max-height: 500px;
 }
@@ -266,6 +225,72 @@ button.disabled {
     font-size: 57px;
     text-align: center;
     color: #555;
+}
+
+.cmp-SceneList {
+    position: relative;
+}
+.cmp-SceneList h2 {
+    margin-top: 12px;
+    text-transform: uppercase;
+    font-weight: 200;
+    text-align: center;
+}
+.cmp-SceneList .buttonWrapper {
+    position: absolute;
+    top: 0;
+    right: 12px;
+}
+.cmp-SceneList .cmp-SceneInfo {
+    margin-bottom: 50px;
+}
+
+.cmp-SceneListGridCell {
+    pointer-events: none;
+    position: relative;
+    height: 100%;
+    font-size: 0px;
+}
+.cmp-SceneListGridCell .name{
+    display: block;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    pointer-events: none;
+    text-transform: uppercase;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto 8px auto;
+}
+.cmp-SceneListGridCell .icon {
+    pointer-events: none;
+    font-size: 50px;
+    text-align: center;
+    color: #555;
+    padding-top: 12px;
+}
+
+.cmp-SceneControl {
+    padding: 8px 12px 0px 12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    text-align: center;
+    height: 112px;
+}
+.cmp-SceneControl .name {
+    text-align: left;
+    text-transform: uppercase;
+    font-size: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 296px;
+    margin-top: 3px;
+    margin-bottom: 12px;
 }
 
 .cmp-ZoneInfo label {
