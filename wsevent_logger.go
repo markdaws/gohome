@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-home-iot/gouuid"
 	"github.com/gorilla/websocket"
 	"github.com/markdaws/gohome/event"
-	"github.com/nu7hatch/gouuid"
 )
 
 type WSEventLogger interface {
