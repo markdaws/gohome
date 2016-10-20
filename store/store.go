@@ -378,10 +378,10 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			}
 		}
 
-		var connPoolJSON *connPoolJSON
+		var poolJSON *connPoolJSON
 		if device.Connections != nil {
 			config := device.Connections.Config()
-			connPoolJSON = &connPoolJSON{
+			poolJSON = &connPoolJSON{
 				Name:           config.Name,
 				PoolSize:       int32(config.Size),
 				ConnectionType: config.ConnectionType,
@@ -398,7 +398,7 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			ModelNumber: device.ModelNumber,
 			Stream:      device.Stream,
 			CmdBuilder:  builderJSON,
-			ConnPool:    connPoolJSON,
+			ConnPool:    poolJSON,
 		}
 
 		if device.Auth != nil {

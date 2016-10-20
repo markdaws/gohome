@@ -43,6 +43,7 @@ func (s *wwwServer) listenAndServe(port string) error {
 
 	cssHandler := http.FileServer(http.Dir(s.rootPath + "/assets/css/"))
 	jsHandler := http.FileServer(http.Dir(s.rootPath + "/assets/js/"))
+	jsExtHandler := http.FileServer(http.Dir(s.rootPath + "/assets/js/ext/"))
 	fontHandler := http.FileServer(http.Dir(s.rootPath + "/assets/fonts/"))
 	jsxHandler := http.FileServer(http.Dir(s.rootPath + "/assets/jsx/"))
 	imageHandler := http.FileServer(http.Dir(s.rootPath + "/assets/images/"))
@@ -50,6 +51,7 @@ func (s *wwwServer) listenAndServe(port string) error {
 	sub := r.PathPrefix("/assets").Subrouter()
 	sub.Handle("/css/{filename}", http.StripPrefix("/assets/css/", cssHandler))
 	sub.Handle("/js/{filename}", http.StripPrefix("/assets/js/", jsHandler))
+	sub.Handle("/js/ext/{filename}", http.StripPrefix("/assets/js/ext/", jsExtHandler))
 	sub.Handle("/fonts/{filename}", http.StripPrefix("/assets/fonts/", fontHandler))
 	sub.Handle("/jsx/{filename}", http.StripPrefix("/assets/jsx/", jsxHandler))
 	sub.Handle("/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
