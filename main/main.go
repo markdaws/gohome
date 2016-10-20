@@ -29,8 +29,8 @@ func main() {
 	}
 
 	// Processes all commands in the system in an async fashion
-	cp := gohome.NewCommandProcessor()
-	go cp.Process()
+	cp := gohome.NewCommandProcessor(3, 1000)
+	cp.Start()
 
 	// Processes events
 	eb := event.NewBroker()

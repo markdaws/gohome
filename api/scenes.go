@@ -57,10 +57,11 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 			return
 		}
 
-		err = system.CmdProcessor.Enqueue(&cmd.SceneSet{
+		desc := fmt.Sprintf("Set scene: %s", scene.Name)
+		err = system.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.SceneSet{
 			SceneID:   scene.ID,
 			SceneName: scene.Name,
-		})
+		}))
 		if err != nil {
 			//TODO: log
 			fmt.Printf("enqueue failed: %s\n", err)

@@ -66,10 +66,11 @@ func (a *SceneSetToggleAction) Execute(s *System) error {
 		scene = first
 	}
 
-	return s.CmdProcessor.Enqueue(&cmd.SceneSet{
+	desc := fmt.Sprintf("Toggle Scene: %s", scene.Name)
+	return s.CmdProcessor.Enqueue(NewCommandGroup(desc, &cmd.SceneSet{
 		SceneID:   scene.ID,
 		SceneName: scene.Name,
-	})
+	}))
 }
 
 func (a *SceneSetToggleAction) New() Action {

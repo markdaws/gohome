@@ -68,12 +68,13 @@ func (a *ZoneSetLevelToggleAction) Execute(s *System) error {
 		level = a.FirstLevel
 	}
 
-	return s.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
+	desc := fmt.Sprintf("Zone[%s] Set Level: %f", zone.Name, level)
+	return s.CmdProcessor.Enqueue(NewCommandGroup(desc, &cmd.ZoneSetLevel{
 		ZoneAddress: zone.Address,
 		ZoneID:      zone.ID,
 		ZoneName:    zone.Name,
 		Level:       cmd.Level{Value: level},
-	})
+	}))
 }
 
 func (a *ZoneSetLevelToggleAction) New() Action {

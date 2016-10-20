@@ -12,5 +12,9 @@ func (c *Func) FriendlyString() string {
 	return c.Friendly
 }
 func (c *Func) String() string {
-	return "cmd.Func"
+	if c.Friendly == "" {
+		return "cmd.Func"
+	} else {
+		return c.Friendly
+	}
 }

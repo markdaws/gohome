@@ -49,12 +49,13 @@ func (a *ZoneSetLevelAction) Execute(s *System) error {
 		return fmt.Errorf("Unknown ZoneID %s", a.ZoneID)
 	}
 
-	return s.CmdProcessor.Enqueue(&cmd.ZoneSetLevel{
+	desc := fmt.Sprintf("Zone[%s] Set Level: %f", zone.Name, a.Level)
+	return s.CmdProcessor.Enqueue(NewCommandGroup(desc, &cmd.ZoneSetLevel{
 		ZoneAddress: zone.Address,
 		ZoneID:      zone.ID,
 		ZoneName:    zone.Name,
 		Level:       cmd.Level{Value: a.Level},
-	})
+	}))
 }
 
 func (a *ZoneSetLevelAction) New() Action {

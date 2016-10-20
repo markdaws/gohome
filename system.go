@@ -19,7 +19,9 @@ type System struct {
 	Buttons     map[string]*Button
 	Recipes     map[string]*Recipe
 
-	Extensions   *Extensions
+	Extensions *Extensions
+
+	//TODO: Remove this, actions should not have execute or pass in cmdproc to Execute
 	CmdProcessor CommandProcessor
 	EventBroker  event.Broker
 

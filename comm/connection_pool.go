@@ -83,6 +83,7 @@ func (p *connectionPool) Init() error {
 	return nil
 }
 
+//TODO: Have concept of maxTimeout waiting for a connection
 func (p *connectionPool) Get() Connection {
 	if len(p.pool) == 0 {
 		return nil

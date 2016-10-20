@@ -41,10 +41,11 @@ func (a *SceneSetAction) Execute(s *System) error {
 		return fmt.Errorf("Unknown Scene ID %s", a.SceneID)
 	}
 
-	return s.CmdProcessor.Enqueue(&cmd.SceneSet{
+	desc := fmt.Sprintf("Set Scene: %s", scene.Name)
+	return s.CmdProcessor.Enqueue(NewCommandGroup(desc, &cmd.SceneSet{
 		SceneID:   scene.ID,
 		SceneName: scene.Name,
-	})
+	}))
 }
 
 func (a *SceneSetAction) New() Action {
