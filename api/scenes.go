@@ -17,8 +17,8 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+// RegisterSceneHandlers registers all of the scene specific API REST routes
 func RegisterSceneHandlers(r *mux.Router, s *apiServer) {
-	//TODO: Register these handlers in their respective .go file
 	r.HandleFunc("/api/v1/scenes",
 		apiScenesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/scenes/{id}",

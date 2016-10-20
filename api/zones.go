@@ -17,6 +17,7 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+// RegisterZoneHandlers registers all of the zone specific API REST routes
 func RegisterZoneHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/zones",
 		apiZonesHandler(s.system)).Methods("GET")

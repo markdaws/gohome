@@ -13,6 +13,7 @@ import (
 	"github.com/markdaws/gohome/store"
 )
 
+// RegisterRecipeHandlers registers all of the recipe specific API REST routes
 func RegisterRecipeHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/recipes",
 		apiRecipesHandlerPost(s.system, s.recipeManager)).Methods("POST")

@@ -88,9 +88,10 @@ type commandJSON struct {
 	Attributes map[string]interface{} `json:"attributes"`
 }
 
-// Returned when the specified path cannot be found
+// ErrFileNotFound is returned when the specified path cannot be found
 var ErrFileNotFound = errors.New("file not found")
 
+// LoadSystem loads a gohome data file from the specified path
 func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor gohome.CommandProcessor) (*gohome.System, error) {
 
 	log.V("loading system from %s", path)
@@ -292,6 +293,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 	return sys, nil
 }
 
+// SaveSystem saves the specified system to disk, at the s.SavePath location
 func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 	//TODO: Why is SavePath on system, seems wrong, just pass it in
 	if s.SavePath == "" {
@@ -369,17 +371,17 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			hubID = hub.ID
 		}
 
-		var builderJson *cmdBuilderJSON
+		var builderJSON *cmdBuilderJSON
 		if device.CmdBuilder != nil {
-			builderJson = &cmdBuilderJSON{
+			builderJSON = &cmdBuilderJSON{
 				ID: device.CmdBuilder.ID(),
 			}
 		}
 
-		var connPoolJson *connPoolJSON
+		var connPoolJSON *connPoolJSON
 		if device.Connections != nil {
 			config := device.Connections.Config()
-			connPoolJson = &connPoolJSON{
+			connPoolJSON = &connPoolJSON{
 				Name:           config.Name,
 				PoolSize:       int32(config.Size),
 				ConnectionType: config.ConnectionType,
@@ -395,8 +397,8 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			HubID:       hubID,
 			ModelNumber: device.ModelNumber,
 			Stream:      device.Stream,
-			CmdBuilder:  builderJson,
-			ConnPool:    connPoolJson,
+			CmdBuilder:  builderJSON,
+			ConnPool:    connPoolJSON,
 		}
 
 		if device.Auth != nil {

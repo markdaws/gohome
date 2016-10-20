@@ -5,12 +5,15 @@ import (
 	"io"
 )
 
+// Device represents an interface to a Lutron device.  Different Lutron devices may
+// send different commands, so this interface is used to abstract that from the callers
 type Device interface {
 	SetLevel(level float32, zoneAddress string, w io.Writer) error
 	ButtonPress(devAddr, btnAddr string, w io.Writer) error
 	ButtonRelease(devAddr, btnAddr string, w io.Writer) error
 }
 
+// DeviceFromModelNumber returns a Lutron device, based on the modelNumber parameter
 func DeviceFromModelNumber(modelNumber string) (Device, error) {
 	switch modelNumber {
 	case "l-bdgpro2-wh":

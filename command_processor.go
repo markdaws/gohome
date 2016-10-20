@@ -15,10 +15,12 @@ type CommandGroup struct {
 	Cmds []cmd.Command
 }
 
+// NewCommandGroup returns a CommandGroup instance with the Desc and Cmds field set
 func NewCommandGroup(desc string, cmds ...cmd.Command) CommandGroup {
 	return CommandGroup{Desc: desc, Cmds: cmds}
 }
 
+// CommandProcessor represents an interface to a type that knows how to process commands
 type CommandProcessor interface {
 	Start()
 	Stop()
@@ -32,6 +34,7 @@ type CommandBuilder interface {
 	Build(cmd.Command) (*cmd.Func, error)
 }
 
+// NewCommandProcessor returns an initialized type that implements the CommandProcessor interface
 func NewCommandProcessor(maxWorkers, queueSize int) CommandProcessor {
 	return &commandProcessor{
 		queueSize:  queueSize,

@@ -9,6 +9,7 @@ import (
 	"github.com/markdaws/gohome"
 )
 
+// RegisterButtonHandlers registers all of the button specific API REST routes
 func RegisterButtonHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/buttons",
 		apiButtonsHandler(s.system)).Methods("GET")

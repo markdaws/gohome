@@ -8,6 +8,7 @@ import (
 	"github.com/markdaws/gohome"
 )
 
+// RegisterCookBookHandlers registers all of the CookBook specific API REST routes
 func RegisterCookBookHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/cookbooks",
 		apiCookBooksHandler(s.recipeManager.CookBooks)).Methods("GET")

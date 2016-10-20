@@ -10,6 +10,7 @@ import (
 	"github.com/markdaws/gohome/discovery"
 )
 
+// RegisterDiscoveryHandlers registers all of the discovery specific API REST routes
 func RegisterDiscoveryHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/discovery/{modelNumber}",
 		apiDiscoveryHandler(s.system)).Methods("GET")

@@ -72,9 +72,8 @@ func (s *System) InitDevice(d *Device) error {
 		if err != nil {
 			log.E("%s failed to init connection pool: %s", d, err)
 			return err
-		} else {
-			log.V("%s connected", d)
 		}
+		log.V("%s connected", d)
 	}
 
 	if s.EventBroker != nil {
