@@ -11,13 +11,13 @@ type discoverer struct {
 	System *gohome.System
 }
 
-func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
+func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
 	infos, err := connectedbytcpExt.Scan(5)
 	if err != nil {
 		return nil, err
 	}
 
-	devices := make([]gohome.Device, len(infos))
+	devices := make([]*gohome.Device, len(infos))
 	for i, info := range infos {
 		cmdBuilder, ok := sys.Extensions.CmdBuilders[modelNumber]
 		if !ok {
@@ -50,7 +50,7 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 							Output:      zone.OTRGB,
 						}
 						dev.AddZone(z)*/
-		devices[i] = *dev
+		devices[i] = dev
 	}
 	return devices, nil
 }

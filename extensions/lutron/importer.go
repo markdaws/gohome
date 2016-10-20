@@ -44,7 +44,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 		hub *gohome.Device,
 		sys *gohome.System,
 		stream bool,
-		auth *comm.Auth) gohome.Device {
+		auth *comm.Auth) *gohome.Device {
 
 		device, _ := gohome.NewDevice(
 			modelNumber,
@@ -74,16 +74,16 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 				ID:          sys.NextGlobalID(),
 				Name:        btnName,
 				Description: btnName,
-				Device:      *device,
+				Device:      device,
 			}
 			device.Buttons[btnNumber] = b
 			system.AddButton(b)
 		}
 
-		return *device
+		return device
 	}
 
-	var makeScenes = func(deviceMap map[string]interface{}, sbp gohome.Device) error {
+	var makeScenes = func(deviceMap map[string]interface{}, sbp *gohome.Device) error {
 		buttons, ok := deviceMap["Buttons"].([]interface{})
 		if !ok {
 			return errors.New("Missing Buttons key, or value not array")
@@ -156,7 +156,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 					Login:    "lutron",
 					Password: "integration",
 				})
-			sbp = &dev
+			sbp = dev
 
 			builder, ok := system.Extensions.CmdBuilders["l-bdgpro2-wh"]
 			if !ok {
@@ -176,13 +176,11 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 
 			//TODO: Add event parser
 
-			// TODO: Phantom device still needed?
 			// The smart bridge pro controls scenes by having phantom buttons that can be pressed,
 			// each button activates a different scene. This means it really has two addresses, the
 			// first is the IP address to talk to it, but then it also have the DeviceID which is needed
 			// to press the buttons, so here, we make another device and assign the buttons to this
 			// new device and use the lutron hub solely for communicating to.
-			fmt.Printf("phantom id: %s\n", deviceID)
 			sbpSceneDevice := makeDevice("", "Smart Bridge - Phantom Buttons", deviceID, device, sbp, system, false, nil)
 			system.AddDevice(sbpSceneDevice)
 			sbp.AddDevice(sbpSceneDevice)
@@ -194,7 +192,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 	if sbp == nil {
 		return errors.New("Did not find Smart Bridge Pro with ID:" + smartBridgeProID)
 	}
-	system.AddDevice(*sbp)
+	system.AddDevice(sbp)
 
 	for _, deviceMap := range devices {
 		device, ok := deviceMap.(map[string]interface{})

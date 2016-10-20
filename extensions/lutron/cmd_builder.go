@@ -30,7 +30,9 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				z := b.System.Zones[command.ZoneID]
 				dev := b.System.Devices[z.DeviceID]
-
+				if dev.Hub != nil {
+					dev = dev.Hub
+				}
 				return getWriterAndExec(dev, func(w io.Writer) error {
 					return b.device.SetLevel(command.Level.Value, command.ZoneAddress, w)
 				})
@@ -41,6 +43,9 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				z := b.System.Zones[command.ZoneID]
 				dev := b.System.Devices[z.DeviceID]
+				if dev.Hub != nil {
+					dev = dev.Hub
+				}
 				return getWriterAndExec(dev, func(w io.Writer) error {
 					return b.device.SetLevel(100.0, command.ZoneAddress, w)
 				})
@@ -51,6 +56,9 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				z := b.System.Zones[command.ZoneID]
 				dev := b.System.Devices[z.DeviceID]
+				if dev.Hub != nil {
+					dev = dev.Hub
+				}
 				return getWriterAndExec(dev, func(w io.Writer) error {
 					return b.device.SetLevel(0.0, command.ZoneAddress, w)
 				})
@@ -60,6 +68,9 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return &cmd.Func{
 			Func: func() error {
 				dev := b.System.Devices[command.DeviceID]
+				if dev.Hub != nil {
+					dev = dev.Hub
+				}
 				return getWriterAndExec(dev, func(w io.Writer) error {
 					return b.device.ButtonPress(command.DeviceAddress, command.ButtonAddress, w)
 				})
@@ -69,6 +80,9 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return &cmd.Func{
 			Func: func() error {
 				dev := b.System.Devices[command.DeviceID]
+				if dev.Hub != nil {
+					dev = dev.Hub
+				}
 				return getWriterAndExec(dev, func(w io.Writer) error {
 					return b.device.ButtonPress(command.DeviceAddress, command.ButtonAddress, w)
 				})
@@ -85,7 +99,7 @@ func (b *cmdBuilder) ID() string {
 	return "l-bdgpro2-wh"
 }
 
-func getWriterAndExec(d gohome.Device, f func(io.Writer) error) error {
+func getWriterAndExec(d *gohome.Device, f func(io.Writer) error) error {
 	conn := d.Connections.Get()
 	if conn == nil {
 		return fmt.Errorf("error connecting, pool returned nil")

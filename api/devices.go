@@ -132,7 +132,7 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			auth,
 		)
 
-		errors := system.AddDevice(*d)
+		errors := system.AddDevice(d)
 		if errors != nil {
 			if valErrs, ok := errors.(*validation.Errors); ok {
 				w.WriteHeader(http.StatusBadRequest)

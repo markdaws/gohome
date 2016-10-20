@@ -155,7 +155,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			connPoolCfg,
 			auth)
 
-		err = sys.AddDevice(*dev)
+		err = sys.AddDevice(dev)
 		if err != nil {
 			log.V("failed to add device to system: %s", err)
 			return nil, err
@@ -177,7 +177,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			if !ok {
 				return nil, fmt.Errorf("invalid hub ID: %s", d.HubID)
 			}
-			dev.Hub = &hub
+			dev.Hub = hub
 		}
 
 		for _, btn := range d.Buttons {

@@ -3,6 +3,7 @@ package gohome
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/log"
@@ -52,7 +53,7 @@ func (cp *commandProcessor) SetSystem(s *System) {
 func (cp *commandProcessor) Enqueue(cg CommandGroup) error {
 	select {
 	case cp.requests <- cg:
-		log.V("CommandGroup enqueued: %s", cg.Desc)
+		log.V("CommandProcessor - enqueued: %s", cg.Desc)
 		return nil
 	default:
 		err := errors.New("CommandGroup enqueue failed, CommandProcessor queue is full")
@@ -84,7 +85,7 @@ func (cp *commandProcessor) Start() {
 	}
 }
 
-func (cp *commandProcessor) startWorker(index int) (errRet interface{}) {
+func (cp *commandProcessor) startWorker(index int) (errRet error) {
 
 	log.V("CommandProcessor - starting worker %d", index)
 
@@ -92,7 +93,7 @@ func (cp *commandProcessor) startWorker(index int) (errRet interface{}) {
 	// recover and log the error
 	defer func() {
 		if r := recover(); r != nil {
-			errRet = r
+			errRet = fmt.Errorf("%s, %s", r, debug.Stack())
 		}
 	}()
 
@@ -101,7 +102,7 @@ func (cp *commandProcessor) startWorker(index int) (errRet interface{}) {
 
 		cmds, err := cp.buildCommands(cg)
 		if err != nil {
-			log.E("CommandProcessor - unable to generate commands: %s", cg.Desc)
+			log.E("CommandProcessor - unable to generate commands: %s, %s", cg.Desc, err)
 			continue
 		}
 
@@ -130,137 +131,182 @@ func (cp *commandProcessor) Stop() {
 }
 
 func (cp *commandProcessor) buildCommands(cg CommandGroup) ([]*cmd.Func, error) {
-
-	cmds := make([]*cmd.Func, len(cg.Cmds))
+	var cmds []*cmd.Func
 
 	// TODO: Shouldn't have this code here, if each command contains the CmdBuild information
 	// we can pull it directly vs having to get it back here.
-	for i, c := range cg.Cmds {
-		switch command := c.(type) {
-		case *cmd.ZoneTurnOn:
-			z, ok := cp.system.Zones[command.ZoneID]
-			if !ok {
-				return nil, fmt.Errorf("unknown zone ID %s", command.ZoneID)
-			}
-			d, ok := cp.system.Devices[z.DeviceID]
-			if !ok {
-				return nil, fmt.Errorf("unknown device ID %s", z.DeviceID)
-			}
-
-			var zCmd *cmd.Func
-			var err error
-			if d.CmdBuilder != nil {
-				zCmd, err = d.CmdBuilder.Build(command)
-			}
-			if err != nil {
-				return nil, err
-			}
-			cmds[i] = zCmd
-
-		case *cmd.ZoneTurnOff:
-			z, ok := cp.system.Zones[command.ZoneID]
-			if !ok {
-				return nil, fmt.Errorf("unknown zone ID %s", command.ZoneID)
-			}
-			d, ok := cp.system.Devices[z.DeviceID]
-			if !ok {
-				return nil, fmt.Errorf("unknown device ID %s", z.DeviceID)
-			}
-
-			var zCmd *cmd.Func
-			var err error
-			if d.CmdBuilder != nil {
-				zCmd, err = d.CmdBuilder.Build(command)
-			}
-			if err != nil {
-				return nil, err
-			}
-			cmds[i] = zCmd
-
-		case *cmd.ZoneSetLevel:
-			z, ok := cp.system.Zones[command.ZoneID]
-			if !ok {
-				return nil, fmt.Errorf("unknown zone ID %s", command.ZoneID)
-			}
-			d, ok := cp.system.Devices[z.DeviceID]
-			if !ok {
-				return nil, fmt.Errorf("unknown device ID %s", z.DeviceID)
-			}
-
-			var zCmd *cmd.Func
-			var err error
-			if d.CmdBuilder != nil {
-				zCmd, err = d.CmdBuilder.Build(command)
-			}
-			if err != nil {
-				return nil, err
-			}
-			cmds[i] = zCmd
-
-		case *cmd.SceneSet:
-			s, ok := cp.system.Scenes[command.SceneID]
-			if !ok {
-				return nil, fmt.Errorf("unknown scene ID %s", command.SceneID)
-			}
-			for _, sceneCmd := range s.Commands {
-				err := cp.Enqueue(NewCommandGroup(cg.Desc, sceneCmd))
-				if err != nil {
-					return nil, err
-				}
-			}
-
-		case *cmd.ButtonPress:
-			b, ok := cp.system.Buttons[command.ButtonID]
-			if !ok {
-				return nil, fmt.Errorf("unknown button ID %s", command.ButtonID)
-			}
-
-			// The hub is the device that is used to talk to the target device. If the device
-			// doesn't have a hub it is assumed to be a hub
-			hub := b.Device.Hub
-			if hub == nil {
-				hub = &b.Device
-			}
-
-			//TODO: Remove hub or use it here
-			var err error
-			var bCmd *cmd.Func
-			if b.Device.CmdBuilder != nil {
-				bCmd, err = b.Device.CmdBuilder.Build(command)
-			}
-			if err != nil {
-				return nil, err
-			}
-			cmds[i] = bCmd
-
-		case *cmd.ButtonRelease:
-			b, ok := cp.system.Buttons[command.ButtonID]
-			if !ok {
-				return nil, fmt.Errorf("unknown button ID %s", command.ButtonID)
-			}
-			hub := b.Device.Hub
-			if hub == nil {
-				hub = &b.Device
-			}
-
-			//TODO: remove hub or use it here
-			var err error
-			var bCmd *cmd.Func
-			if b.Device.CmdBuilder != nil {
-				bCmd, err = b.Device.CmdBuilder.Build(command)
-			}
-			if err != nil {
-				return nil, err
-			}
-			cmds[i] = bCmd
-
-		default:
-			return nil, fmt.Errorf("unknown command, cannot process")
+	for _, c := range cg.Cmds {
+		finalCmd, err := cp.buildCommand(c)
+		if err != nil {
+			return nil, err
 		}
-
-		if cmds[i].Friendly == "" {
-			cmds[i].Friendly = c.FriendlyString()
-		}
+		cmds = append(cmds, finalCmd...)
 	}
+	return cmds, nil
+}
+
+func (cp *commandProcessor) buildCommand(c cmd.Command) ([]*cmd.Func, error) {
+
+	var cmds []*cmd.Func
+
+	// TODO: Shouldn't have this code here, if each command contains the CmdBuild information
+	// we can pull it directly vs having to get it back here.
+	var finalCmd *cmd.Func
+	switch command := c.(type) {
+	case *cmd.ZoneTurnOn:
+		z, ok := cp.system.Zones[command.ZoneID]
+		if !ok {
+			return nil, fmt.Errorf("unknown zone ID %s", command.ZoneID)
+		}
+		d, ok := cp.system.Devices[z.DeviceID]
+		if !ok {
+			return nil, fmt.Errorf("unknown device ID %s", z.DeviceID)
+		}
+
+		hub := d.Hub
+		if hub == nil {
+			hub = d
+		}
+
+		var zCmd *cmd.Func
+		var err error
+		if hub.CmdBuilder != nil {
+			zCmd, err = hub.CmdBuilder.Build(command)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("no command builder for device id:%s", z.DeviceID)
+		}
+		finalCmd = zCmd
+
+	case *cmd.ZoneTurnOff:
+		z, ok := cp.system.Zones[command.ZoneID]
+		if !ok {
+			return nil, fmt.Errorf("unknown zone ID %s", command.ZoneID)
+		}
+		d, ok := cp.system.Devices[z.DeviceID]
+		if !ok {
+			return nil, fmt.Errorf("unknown device ID %s", z.DeviceID)
+		}
+
+		hub := d.Hub
+		if hub == nil {
+			hub = d
+		}
+
+		var zCmd *cmd.Func
+		var err error
+		if hub.CmdBuilder != nil {
+			zCmd, err = hub.CmdBuilder.Build(command)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("no command builder for device id:%s", z.DeviceID)
+		}
+		finalCmd = zCmd
+
+	case *cmd.ZoneSetLevel:
+		z, ok := cp.system.Zones[command.ZoneID]
+		if !ok {
+			return nil, fmt.Errorf("unknown zone ID %s", command.ZoneID)
+		}
+		d, ok := cp.system.Devices[z.DeviceID]
+		if !ok {
+			return nil, fmt.Errorf("unknown device ID %s", z.DeviceID)
+		}
+
+		hub := d.Hub
+		if hub == nil {
+			hub = d
+		}
+
+		var zCmd *cmd.Func
+		var err error
+		if hub.CmdBuilder != nil {
+			zCmd, err = hub.CmdBuilder.Build(command)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("no command builder for device id:%s", z.DeviceID)
+		}
+		finalCmd = zCmd
+
+	case *cmd.SceneSet:
+		s, ok := cp.system.Scenes[command.SceneID]
+		if !ok {
+			return nil, fmt.Errorf("unknown scene ID %s", command.SceneID)
+		}
+		for _, sceneCmd := range s.Commands {
+			// Scenes are a list of commands, so we may get multiple commands
+			// that we need to execute, also scenes can execute other scenes
+			sceneCmds, err := cp.buildCommand(sceneCmd)
+			if err != nil {
+				return nil, err
+			}
+			cmds = append(cmds, sceneCmds...)
+		}
+
+	case *cmd.ButtonPress:
+		b, ok := cp.system.Buttons[command.ButtonID]
+		if !ok {
+			return nil, fmt.Errorf("unknown button ID %s", command.ButtonID)
+		}
+
+		// The hub is the device that is used to talk to the target device. If the device
+		// doesn't have a hub it is assumed to be a hub
+		hub := b.Device.Hub
+		if hub == nil {
+			hub = b.Device
+		}
+
+		var err error
+		var bCmd *cmd.Func
+		if hub.CmdBuilder != nil {
+			bCmd, err = hub.CmdBuilder.Build(command)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("no command builder for device id:%s", hub.ID)
+		}
+		finalCmd = bCmd
+
+	case *cmd.ButtonRelease:
+		b, ok := cp.system.Buttons[command.ButtonID]
+		if !ok {
+			return nil, fmt.Errorf("unknown button ID %s", command.ButtonID)
+		}
+		hub := b.Device.Hub
+		if hub == nil {
+			hub = b.Device
+		}
+
+		var err error
+		var bCmd *cmd.Func
+		if hub.CmdBuilder != nil {
+			bCmd, err = hub.CmdBuilder.Build(command)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("no command builder for device id:%s", hub.ID)
+		}
+		finalCmd = bCmd
+
+	default:
+		return nil, fmt.Errorf("unknown command, cannot process")
+	}
+
+	if finalCmd != nil {
+		if finalCmd.Friendly == "" {
+			finalCmd.Friendly = c.FriendlyString()
+		}
+
+		cmds = append(cmds, finalCmd)
+	}
+
 	return cmds, nil
 }

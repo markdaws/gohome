@@ -5,7 +5,7 @@ import (
 )
 
 type Discoverer interface {
-	Devices(sys *System, modelNumber string) ([]Device, error)
+	Devices(sys *System, modelNumber string) ([]*Device, error)
 }
 
 type Importer interface {

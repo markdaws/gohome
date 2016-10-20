@@ -14,7 +14,7 @@ type discoverer struct {
 	System *gohome.System
 }
 
-func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
+func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
 
 	log.V("scanning belkin")
 	var scanType belkinExt.DeviceType
@@ -34,7 +34,7 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 		return nil, err
 	}
 
-	devices := make([]gohome.Device, len(responses))
+	devices := make([]*gohome.Device, len(responses))
 	for i, devInfo := range responses {
 		err := devInfo.Load()
 
@@ -74,7 +74,7 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 			Output:      zone.OTBinary,
 		}
 		dev.AddZone(z)
-		devices[i] = *dev
+		devices[i] = dev
 	}
 
 	return devices, nil

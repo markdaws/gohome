@@ -63,7 +63,6 @@ func TestWorkersShouldRestartAfterPanic(t *testing.T) {
 	// Wait here until all 10 requests are processed, if something goes wrong we will be stuck here
 	// and the test will fail
 	wg.Wait()
-	fmt.Println("all workers done")
 }
 
 func TestEnqueueToFullChannelReturnsError(t *testing.T) {
@@ -72,7 +71,7 @@ func TestEnqueueToFullChannelReturnsError(t *testing.T) {
 
 	// Have 0 workers to simulate queue backing up
 	cp := gohome.NewCommandProcessor(0, 1)
-	cp.Start();
+	cp.Start()
 
 	// Queue holds up to 1 command
 	err := cp.Enqueue(gohome.NewCommandGroup("mock group", &cmd.ZoneTurnOn{ZoneID: "z1"}))

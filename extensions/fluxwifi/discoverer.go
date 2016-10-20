@@ -3,9 +3,9 @@ package fluxwifi
 import (
 	"fmt"
 
+	fluxwifiExt "github.com/go-home-iot/fluxwifi"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/comm"
-	fluxwifiExt "github.com/go-home-iot/fluxwifi"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -13,13 +13,13 @@ type discoverer struct {
 	System *gohome.System
 }
 
-func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
+func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
 	infos, err := fluxwifiExt.Scan(5)
 	if err != nil {
 		return nil, err
 	}
 
-	devices := make([]gohome.Device, len(infos))
+	devices := make([]*gohome.Device, len(infos))
 	for i, info := range infos {
 		name := info.ID + ": " + info.Model
 		modelNumber := "fluxwifi"
@@ -58,7 +58,7 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]gohome.D
 			Output:      zone.OTRGB,
 		}
 		dev.AddZone(z)
-		devices[i] = *dev
+		devices[i] = dev
 	}
 	return devices, nil
 }

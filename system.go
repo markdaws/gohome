@@ -13,7 +13,7 @@ type System struct {
 	Name        string
 	Description string
 	SavePath    string
-	Devices     map[string]Device
+	Devices     map[string]*Device
 	Scenes      map[string]*Scene
 	Zones       map[string]*zone.Zone
 	Buttons     map[string]*Button
@@ -32,7 +32,7 @@ func NewSystem(name, desc string, cmdProcessor CommandProcessor, nextGlobalID in
 	s := &System{
 		Name:         name,
 		Description:  desc,
-		Devices:      make(map[string]Device),
+		Devices:      make(map[string]*Device),
 		Scenes:       make(map[string]*Scene),
 		Zones:        make(map[string]*zone.Zone),
 		Buttons:      make(map[string]*Button),
@@ -59,7 +59,7 @@ func (s *System) PeekNextGlobalID() int {
 func (s *System) InitDevices() {
 	for _, d := range s.Devices {
 		d := d
-		go s.InitDevice(&d)
+		go s.InitDevice(d)
 	}
 }
 
@@ -88,7 +88,7 @@ func (s *System) AddButton(b *Button) {
 	s.Buttons[b.ID] = b
 }
 
-func (s *System) AddDevice(d Device) error {
+func (s *System) AddDevice(d *Device) error {
 	errors := d.Validate()
 	if errors != nil {
 		return errors
@@ -139,7 +139,7 @@ func (s *System) DeleteScene(scn *Scene) {
 	delete(s.Scenes, scn.ID)
 }
 
-func (s *System) DeleteDevice(d Device) {
+func (s *System) DeleteDevice(d *Device) {
 	delete(s.Devices, d.ID)
 	//TODO: Remove all associated zones + buttons
 	//TODO: Need to stop all services, recipes, networking etc to this device
@@ -152,5 +152,5 @@ func (s *System) AddRecipe(r *Recipe) {
 //TODO: Still needed?
 func (s *System) FromID(ID string) *Device {
 	dev := s.Devices[ID]
-	return &dev
+	return dev
 }

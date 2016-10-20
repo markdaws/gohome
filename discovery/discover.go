@@ -10,7 +10,7 @@ import (
 var ErrUnauthorized = errors.New("unauthorized")
 var ErrUnsupported = errors.New("unsupported model number")
 
-func Devices(sys *gohome.System, modelNumber string) ([]gohome.Device, error) {
+func Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
 
 	discoverer, ok := sys.Extensions.Discoverers[modelNumber]
 	if !ok {

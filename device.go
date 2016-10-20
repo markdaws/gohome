@@ -17,17 +17,16 @@ type Device struct {
 	Name        string
 	Description string
 	ModelNumber string
-	System      *System
 	Buttons     map[string]*Button
-	Devices     map[string]Device
+	Devices     map[string]*Device
 	Zones       map[string]*zone.Zone
 	CmdBuilder  cmd.Builder
 	Connections comm.ConnectionPool
 	Auth        *comm.Auth
+	Hub         *Device
 
 	//TODO: delete?
 	producesEvents bool
-	Hub            *Device
 
 	//TODO: Needed? Clean up
 	Stream  bool
@@ -55,7 +54,7 @@ func NewDevice(
 		Description: description,
 		Hub:         hub,
 		Buttons:     make(map[string]*Button),
-		Devices:     make(map[string]Device),
+		Devices:     make(map[string]*Device),
 		Zones:       make(map[string]*zone.Zone),
 		Stream:      stream,
 		Auth:        auth,
@@ -119,7 +118,7 @@ func (d *Device) AddZone(z *zone.Zone) error {
 	return nil
 }
 
-func (d *Device) AddDevice(cd Device) error {
+func (d *Device) AddDevice(cd *Device) error {
 	if _, ok := d.Devices[cd.Address]; ok {
 		return fmt.Errorf("device with address: %s already added to parent device", cd.Address)
 	}
