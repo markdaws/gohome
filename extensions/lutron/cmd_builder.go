@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 
+	lutronExt "github.com/go-home-iot/lutron"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	lutronExt "github.com/markdaws/gohome/lutron"
 )
 
 type cmdBuilder struct {
