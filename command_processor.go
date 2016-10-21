@@ -111,7 +111,6 @@ func (cp *commandProcessor) startWorker(index int) (errRet error) {
 
 		for _, c := range cmds {
 			log.V("CommandProcessor - executing command: %s", c)
-
 			err := c.Func()
 			if err != nil {
 				log.E("CommandProcessor - execute error: %s", err)
@@ -119,6 +118,7 @@ func (cp *commandProcessor) startWorker(index int) (errRet error) {
 				// Don't continue with any other commands in the group
 				break
 			}
+			log.V("CommandProcessor - executed command: %s", c)
 		}
 	}
 

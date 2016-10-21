@@ -64,13 +64,10 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 			}
 			var connPoolJson *jsonConnPool
 			if device.Connections != nil {
-				connCfg := device.Connections.Config()
+				connCfg := device.Connections.Config
 				connPoolJson = &jsonConnPool{
-					Name:           connCfg.Name,
-					PoolSize:       int32(connCfg.Size),
-					ConnectionType: connCfg.ConnectionType,
-					TelnetPingCmd:  connCfg.TelnetPingCmd,
-					Address:        connCfg.Address,
+					Name:     connCfg.Name,
+					PoolSize: int32(connCfg.Size),
 				}
 			}
 			jsonDevices[i] = jsonDevice{

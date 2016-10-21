@@ -1,20 +1,23 @@
 package belkin
 
 import (
+	"errors"
 	"fmt"
+	"net"
 	"strings"
 
 	belkinExt "github.com/go-home-iot/belkin"
+	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/zone"
 )
 
-type discoverer struct {
+type network struct {
 	System *gohome.System
 }
 
-func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
+func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
 
 	log.V("scanning belkin")
 	var scanType belkinExt.DeviceType
@@ -78,4 +81,8 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.
 	}
 
 	return devices, nil
+}
+
+func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(pool.Config) (net.Conn, error), error) {
+	return nil, errors.New("unsupported method")
 }

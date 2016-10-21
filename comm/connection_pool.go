@@ -1,5 +1,6 @@
 package comm
 
+/*
 import (
 	"fmt"
 	"time"
@@ -182,3 +183,4 @@ func appendAndOpenNewConnection(p *connectionPool) error {
 	}
 	return nil
 }
+*/

@@ -13,9 +13,8 @@ func (e *extension) RegisterCmdBuilders(sys *gohome.System, lookupTable map[stri
 	lookupTable[builder.ID()] = builder
 }
 
-func (e *extension) RegisterDiscoverers(sys *gohome.System, lookupTable map[string]gohome.Discoverer) {
-	discoverer := &discoverer{System: sys}
-	lookupTable["fluxwifi"] = discoverer
+func (e *extension) RegisterNetwork(sys *gohome.System, lookupTable map[string]gohome.Network) {
+	lookupTable["fluxwifi"] = &network{System: sys}
 }
 
 func (e *extension) RegisterImporters(sys *gohome.System, lookupTable map[string]gohome.Importer) {

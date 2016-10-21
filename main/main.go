@@ -76,6 +76,8 @@ func main() {
 			panic("Failed to save initial system: " + err.Error())
 		}
 		sys = system
+	} else if err != nil {
+		panic("Failed to load system: " + err.Error())
 	}
 
 	sys.SavePath = config.StartupConfigPath
@@ -83,6 +85,7 @@ func main() {
 
 	log.V("Initing devices...")
 	sys.EventBroker = eb
+
 	sys.InitDevices()
 
 	log.V("Starting recipes...")

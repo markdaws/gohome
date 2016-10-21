@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/go-home-iot/connection-pool"
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
@@ -106,14 +107,11 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			}
 		}
 
-		var connPoolCfg *comm.ConnectionPoolConfig
+		var connPoolCfg *pool.Config
 		if data.ConnPool != nil {
-			connPoolCfg = &comm.ConnectionPoolConfig{
-				Name:           data.ConnPool.Name,
-				Size:           int(data.ConnPool.PoolSize),
-				ConnectionType: data.ConnPool.ConnectionType,
-				Address:        data.ConnPool.Address,
-				TelnetPingCmd:  data.ConnPool.TelnetPingCmd,
+			connPoolCfg = &pool.Config{
+				Name: data.ConnPool.Name,
+				Size: int(data.ConnPool.PoolSize),
 			}
 		}
 

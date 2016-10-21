@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
@@ -164,13 +166,19 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 			}
 			sbp.CmdBuilder = builder
 
-			pool, _ := comm.NewConnectionPool(comm.ConnectionPoolConfig{
-				Name:           sbp.Name,
-				Size:           2,
-				ConnectionType: "telnet",
-				Address:        sbp.Address,
-				TelnetPingCmd:  "",
-				TelnetAuth:     &comm.TelnetAuthenticator{*sbp.Auth},
+			f, ok := system.Extensions.Network["l-bdgpro2-wh"]
+			if !ok {
+				//TODO: Err
+			}
+			connFactory, err := f.NewConnection(system, sbp)
+			if err != nil {
+				//TODO: err
+			}
+			pool := pool.NewPool(pool.Config{
+				Name:          sbp.Name,
+				Size:          2,
+				RetryDuration: time.Second * 10,
+				NewConnection: connFactory,
 			})
 			sbp.Connections = pool
 

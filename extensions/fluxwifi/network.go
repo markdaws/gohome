@@ -2,18 +2,19 @@ package fluxwifi
 
 import (
 	"fmt"
+	"net"
 
+	"github.com/go-home-iot/connection-pool"
 	fluxwifiExt "github.com/go-home-iot/fluxwifi"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/zone"
 )
 
-type discoverer struct {
+type network struct {
 	System *gohome.System
 }
 
-func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
+func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
 	infos, err := fluxwifiExt.Scan(5)
 	if err != nil {
 		return nil, err
@@ -39,12 +40,10 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.
 			nil,
 			false,
 			cmdBuilder,
-			&comm.ConnectionPoolConfig{
-				Name:           name,
-				Size:           2,
-				ConnectionType: "telnet",
-				Address:        info.IP,
-				TelnetPingCmd:  "",
+			&pool.Config{
+				Name: name,
+				Size: 2,
+				//TODO::::!!!!
 			},
 			nil,
 		)
@@ -61,4 +60,10 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.
 		devices[i] = dev
 	}
 	return devices, nil
+}
+
+func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(pool.Config) (net.Conn, error), error) {
+	return func(cfg pool.Config) (net.Conn, error) {
+		return net.Dial("tcp", dev.Address)
+	}, nil
 }

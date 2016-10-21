@@ -1,17 +1,20 @@
 package connectedbytcp
 
 import (
+	"errors"
 	"fmt"
+	"net"
 
 	connectedbytcpExt "github.com/go-home-iot/connectedbytcp"
+	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
 )
 
-type discoverer struct {
+type network struct {
 	System *gohome.System
 }
 
-func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
+func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
 	infos, err := connectedbytcpExt.Scan(5)
 	if err != nil {
 		return nil, err
@@ -55,8 +58,12 @@ func (d *discoverer) Devices(sys *gohome.System, modelNumber string) ([]*gohome.
 	return devices, nil
 }
 
+func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(pool.Config) (net.Conn, error), error) {
+	return nil, errors.New("unsupported method")
+}
+
 /*
-//TODO: Move into discoverer type
+//TODO: Move into network type
 func DiscoverToken(modelNumber, address string) (string, error) {
 	switch modelNumber {
 	case "TCP600GWB":

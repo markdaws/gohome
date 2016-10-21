@@ -1,5 +1,6 @@
 package comm
 
+/*
 import (
 	"bufio"
 	"fmt"
@@ -34,3 +35,4 @@ func (a *TelnetAuthenticator) Authenticate(c Connection) error {
 	}
 	return nil
 }
+*/

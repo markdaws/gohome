@@ -1,5 +1,6 @@
 package comm
 
+/*
 import (
 	"fmt"
 	"net"
@@ -100,3 +101,4 @@ func (c *TelnetConnection) Write(p []byte) (n int, err error) {
 func (c *TelnetConnection) String() string {
 	return fmt.Sprintf("TelnetConnection[%d %s]", c.id, c.addr)
 }
+*/

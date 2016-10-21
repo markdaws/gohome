@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"time"
 
+	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
@@ -54,11 +56,8 @@ type cmdBuilderJSON struct {
 }
 
 type connPoolJSON struct {
-	Name           string `json:"name"`
-	PoolSize       int32  `json:"poolSize"`
-	ConnectionType string `json:"connectionType"`
-	TelnetPingCmd  string `json:"telnetPingCmd"`
-	Address        string `json:"address"`
+	Name     string `json:"name"`
+	PoolSize int32  `json:"poolSize"`
 }
 
 type deviceJSON struct {
@@ -134,16 +133,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			}
 		}
 
-		var connPoolCfg *comm.ConnectionPoolConfig
-		if d.ConnPool != nil {
-			connPoolCfg = &comm.ConnectionPoolConfig{
-				Name:           d.ConnPool.Name,
-				Size:           int(d.ConnPool.PoolSize),
-				ConnectionType: d.ConnPool.ConnectionType,
-				Address:        d.ConnPool.Address,
-				TelnetPingCmd:  d.ConnPool.TelnetPingCmd,
-			}
-		}
 		dev, err := gohome.NewDevice(
 			d.ModelNumber,
 			d.Address,
@@ -153,8 +142,32 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			nil,
 			d.Stream,
 			cmdBuilder,
-			connPoolCfg,
+			nil,
 			auth)
+		if err != nil {
+			return nil, err
+		}
+
+		if d.ConnPool != nil {
+			f, ok := sys.Extensions.Network[d.ModelNumber]
+			if !ok {
+				return nil, fmt.Errorf("unsupported model number, no discoverer found: %s", d.ModelNumber)
+			}
+
+			connFactory, err := f.NewConnection(sys, dev)
+			if err != nil {
+				return nil, err
+			}
+
+			dev.SetConnPoolCfg(pool.Config{
+				Name:          d.ConnPool.Name,
+				Size:          int(d.ConnPool.PoolSize),
+				NewConnection: connFactory,
+
+				//TODO: Need to store this in the system file, let imports decide this
+				RetryDuration: time.Second * 10,
+			})
+		}
 
 		err = sys.AddDevice(dev)
 		if err != nil {
@@ -380,13 +393,10 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 
 		var poolJSON *connPoolJSON
 		if device.Connections != nil {
-			config := device.Connections.Config()
+			config := device.Connections.Config
 			poolJSON = &connPoolJSON{
-				Name:           config.Name,
-				PoolSize:       int32(config.Size),
-				ConnectionType: config.ConnectionType,
-				Address:        config.Address,
-				TelnetPingCmd:  config.TelnetPingCmd,
+				Name:     config.Name,
+				PoolSize: int32(config.Size),
 			}
 		}
 		d := deviceJSON{

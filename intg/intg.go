@@ -20,10 +20,10 @@ type Extension interface {
 	// specific pieve of hardware
 	RegisterCmdBuilders(*gohome.System, map[string]cmd.Builder)
 
-	// RegisterDiscoverers allows extensions to register gohome.Discoverer instances for
-	// model numbers.  Discoverers know how to scan the local network looking for a
-	// particular kind of device
-	RegisterDiscoverers(*gohome.System, map[string]gohome.Discoverer)
+	// RegisterNetwork allows extensions to register gohome.Network instances for
+	// model numbers.  Network know how to scan the local network looking for a
+	// particular kind of device, or create new connections to a device
+	RegisterNetwork(*gohome.System, map[string]gohome.Network)
 
 	// RegisterImports allows extensions to register importers for different model numbers.
 	// An importer knows how to take device specific config files and convert that into
@@ -52,6 +52,6 @@ func RegisterExtensions(sys *gohome.System) error {
 
 func registerExtension(sys *gohome.System, ext Extension) {
 	ext.RegisterCmdBuilders(sys, sys.Extensions.CmdBuilders)
-	ext.RegisterDiscoverers(sys, sys.Extensions.Discoverers)
+	ext.RegisterNetwork(sys, sys.Extensions.Network)
 	ext.RegisterImporters(sys, sys.Extensions.Importers)
 }

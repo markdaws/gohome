@@ -3,10 +3,10 @@ package gohome
 import (
 	"fmt"
 
+	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
-	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
@@ -16,12 +16,13 @@ type Device struct {
 	ID          string
 	Name        string
 	Description string
+	//TODO: Add ModelName, FirmwareVersion
 	ModelNumber string
 	Buttons     map[string]*Button
 	Devices     map[string]*Device
 	Zones       map[string]*zone.Zone
 	CmdBuilder  cmd.Builder
-	Connections comm.ConnectionPool
+	Connections *pool.ConnectionPool
 	Auth        *comm.Auth
 	Hub         *Device
 
@@ -43,7 +44,7 @@ func NewDevice(
 	hub *Device,
 	stream bool,
 	cmdBuilder cmd.Builder,
-	connPoolCfg *comm.ConnectionPoolConfig,
+	connPoolCfg *pool.Config,
 	auth *comm.Auth) (*Device, error) {
 
 	dev := &Device{
@@ -62,19 +63,14 @@ func NewDevice(
 	}
 
 	if connPoolCfg != nil {
-		if connPoolCfg.ConnectionType == "telnet" && auth != nil {
-			connPoolCfg.TelnetAuth = &comm.TelnetAuthenticator{*auth}
-		}
-
-		pool, err := comm.NewConnectionPool(*connPoolCfg)
-		if err != nil {
-			log.V("failed to create device connection pool: %s", err)
-			return nil, err
-		}
-		dev.Connections = pool
+		dev.SetConnPoolCfg(*connPoolCfg)
 	}
 
 	return dev, nil
+}
+
+func (d *Device) SetConnPoolCfg(cfg pool.Config) {
+	d.Connections = pool.NewPool(cfg)
 }
 
 //TODO: Delete
