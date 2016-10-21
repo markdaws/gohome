@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
@@ -23,7 +22,7 @@ type Device struct {
 	Zones       map[string]*zone.Zone
 	CmdBuilder  cmd.Builder
 	Connections *pool.ConnectionPool
-	Auth        *comm.Auth
+	Auth        *Auth
 	Hub         *Device
 
 	//TODO: delete?
@@ -45,7 +44,7 @@ func NewDevice(
 	stream bool,
 	cmdBuilder cmd.Builder,
 	connPoolCfg *pool.Config,
-	auth *comm.Auth) (*Device, error) {
+	auth *Auth) (*Device, error) {
 
 	dev := &Device{
 		Address:     address,

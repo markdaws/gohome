@@ -10,7 +10,6 @@ import (
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/zone"
@@ -114,9 +113,9 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 
 	// Load all devices into global device list
 	for _, d := range s.Devices {
-		var auth *comm.Auth
+		var auth *gohome.Auth
 		if d.Auth != nil {
-			auth = &comm.Auth{
+			auth = &gohome.Auth{
 				Login:    d.Auth.Login,
 				Password: d.Auth.Password,
 				Token:    d.Auth.Token,

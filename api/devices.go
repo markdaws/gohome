@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/validation"
@@ -89,9 +88,9 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			return
 		}
 
-		var auth *comm.Auth
+		var auth *gohome.Auth
 		if data.Token != "" {
-			auth = &comm.Auth{
+			auth = &gohome.Auth{
 				Token: data.Token,
 			}
 		}

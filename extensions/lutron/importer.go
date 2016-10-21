@@ -11,7 +11,6 @@ import (
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/comm"
 	"github.com/markdaws/gohome/zone"
 )
 
@@ -46,7 +45,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 		hub *gohome.Device,
 		sys *gohome.System,
 		stream bool,
-		auth *comm.Auth) *gohome.Device {
+		auth *gohome.Auth) *gohome.Device {
 
 		device, _ := gohome.NewDevice(
 			modelNumber,
@@ -154,7 +153,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 				nil,
 				system,
 				true,
-				&comm.Auth{
+				&gohome.Auth{
 					Login:    "lutron",
 					Password: "integration",
 				})

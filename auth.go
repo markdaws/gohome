@@ -1,4 +1,4 @@
-package comm
+package gohome
 
 type Auth struct {
 	Login    string
