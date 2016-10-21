@@ -57,6 +57,8 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 
 		dev, _ := gohome.NewDevice(
 			modelNumber,
+			devInfo.ModelName,
+			devInfo.FirmwareVersion,
 			strings.Replace(devInfo.Scan.Location, "/setup.xml", "", -1),
 			"",
 			devInfo.FriendlyName,

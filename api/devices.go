@@ -117,6 +117,8 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 		//TODO: Don't pass in ID
 		d, _ := gohome.NewDevice(
 			data.ModelNumber,
+			data.ModelName,
+			data.SoftwareVersion,
 			data.Address,
 			system.NextGlobalID(),
 			data.Name,

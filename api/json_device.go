@@ -5,24 +5,23 @@ type jsonCmdBuilder struct {
 }
 
 type jsonConnPool struct {
-	Name           string `json:"name"`
-	PoolSize       int32  `json:"poolSize"`
-	ConnectionType string `json:"connectionType"`
-	TelnetPingCmd  string `json:"telnetPingCmd"`
-	Address        string `json:"address"`
+	Name     string `json:"name"`
+	PoolSize int32  `json:"poolSize"`
 }
 
 type jsonDevice struct {
-	Address     string          `json:"address"`
-	ID          string          `json:"id"`
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	ModelNumber string          `json:"modelNumber"`
-	Token       string          `json:"token"`
-	ClientID    string          `json:"clientId,omitempty"`
-	Zones       []jsonZone      `json:"zones"`
-	CmdBuilder  *jsonCmdBuilder `json:"cmdBuilder"`
-	ConnPool    *jsonConnPool   `json:"connPool"`
+	Address         string          `json:"address"`
+	ID              string          `json:"id"`
+	Name            string          `json:"name"`
+	Description     string          `json:"description"`
+	ModelNumber     string          `json:"modelNumber"`
+	ModelName       string          `json:"modelName"`
+	SoftwareVersion string          `json:"softwareVersion"`
+	Token           string          `json:"token"`
+	ClientID        string          `json:"clientId,omitempty"`
+	Zones           []jsonZone      `json:"zones"`
+	CmdBuilder      *jsonCmdBuilder `json:"cmdBuilder"`
+	ConnPool        *jsonConnPool   `json:"connPool"`
 }
 type devices []jsonDevice
 

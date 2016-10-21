@@ -33,6 +33,8 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 
 		dev, _ := gohome.NewDevice(
 			modelNumber,
+			"",
+			"",
 			info.IP,
 			"",
 			name,

@@ -7,8 +7,6 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
-//TODO: Take address out of connection-pool config
-//TODO: Fix flux wifi
 //TODO: Ping mechanism
 //TODO: Check connection is bad don't put back in the pool
 //TODO: Set write, read timeouts for connections
@@ -27,6 +25,9 @@ type Extensions struct {
 	Network     map[string]Network
 	Importers   map[string]Importer
 }
+
+//TODO: Store as linked list, iterate through, you pass in device, keep going until
+//one responds that it handles this device
 
 func NewExtensions() *Extensions {
 	exts := &Extensions{}

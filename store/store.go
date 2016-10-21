@@ -60,19 +60,21 @@ type connPoolJSON struct {
 }
 
 type deviceJSON struct {
-	Address     string          `json:"address"`
-	ID          string          `json:"id"`
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	ModelNumber string          `json:"modelNumber"`
-	HubID       string          `json:"hubId"`
-	Buttons     []buttonJSON    `json:"buttons"`
-	Zones       []zoneJSON      `json:"zones"`
-	DeviceIDs   []string        `json:"deviceIds"`
-	Auth        *authJSON       `json:"auth"`
-	Stream      bool            `json:"stream"`
-	CmdBuilder  *cmdBuilderJSON `json:"cmdBuilder"`
-	ConnPool    *connPoolJSON   `json:"connPool"`
+	Address         string          `json:"address"`
+	ID              string          `json:"id"`
+	Name            string          `json:"name"`
+	Description     string          `json:"description"`
+	ModelNumber     string          `json:"modelNumber"`
+	ModelName       string          `json:"modelName"`
+	SoftwareVersion string          `json:"softwareVersion"`
+	HubID           string          `json:"hubId"`
+	Buttons         []buttonJSON    `json:"buttons"`
+	Zones           []zoneJSON      `json:"zones"`
+	DeviceIDs       []string        `json:"deviceIds"`
+	Auth            *authJSON       `json:"auth"`
+	Stream          bool            `json:"stream"`
+	CmdBuilder      *cmdBuilderJSON `json:"cmdBuilder"`
+	ConnPool        *connPoolJSON   `json:"connPool"`
 }
 
 type authJSON struct {
@@ -134,6 +136,8 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 
 		dev, err := gohome.NewDevice(
 			d.ModelNumber,
+			d.ModelName,
+			d.SoftwareVersion,
 			d.Address,
 			d.ID,
 			d.Name,
@@ -399,15 +403,17 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			}
 		}
 		d := deviceJSON{
-			Address:     device.Address,
-			ID:          device.ID,
-			Name:        device.Name,
-			Description: device.Description,
-			HubID:       hubID,
-			ModelNumber: device.ModelNumber,
-			Stream:      device.Stream,
-			CmdBuilder:  builderJSON,
-			ConnPool:    poolJSON,
+			Address:         device.Address,
+			ID:              device.ID,
+			Name:            device.Name,
+			Description:     device.Description,
+			HubID:           hubID,
+			ModelNumber:     device.ModelNumber,
+			ModelName:       device.ModelName,
+			SoftwareVersion: device.SoftwareVersion,
+			Stream:          device.Stream,
+			CmdBuilder:      builderJSON,
+			ConnPool:        poolJSON,
 		}
 
 		if device.Auth != nil {

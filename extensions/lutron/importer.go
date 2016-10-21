@@ -49,6 +49,8 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 
 		device, _ := gohome.NewDevice(
 			modelNumber,
+			"",
+			"",
 			address,
 			sys.NextGlobalID(),
 			name,

@@ -11,19 +11,20 @@ import (
 )
 
 type Device struct {
-	Address     string
-	ID          string
-	Name        string
-	Description string
-	//TODO: Add ModelName, FirmwareVersion
-	ModelNumber string
-	Buttons     map[string]*Button
-	Devices     map[string]*Device
-	Zones       map[string]*zone.Zone
-	CmdBuilder  cmd.Builder
-	Connections *pool.ConnectionPool
-	Auth        *Auth
-	Hub         *Device
+	Address         string
+	ID              string
+	Name            string
+	Description     string
+	ModelName       string
+	ModelNumber     string
+	SoftwareVersion string
+	Buttons         map[string]*Button
+	Devices         map[string]*Device
+	Zones           map[string]*zone.Zone
+	CmdBuilder      cmd.Builder
+	Connections     *pool.ConnectionPool
+	Auth            *Auth
+	Hub             *Device
 
 	//TODO: delete?
 	producesEvents bool
@@ -36,6 +37,8 @@ type Device struct {
 
 func NewDevice(
 	modelNumber,
+	modelName,
+	softwareVersion,
 	address,
 	ID,
 	name,
@@ -47,18 +50,20 @@ func NewDevice(
 	auth *Auth) (*Device, error) {
 
 	dev := &Device{
-		Address:     address,
-		ModelNumber: modelNumber,
-		ID:          ID,
-		Name:        name,
-		Description: description,
-		Hub:         hub,
-		Buttons:     make(map[string]*Button),
-		Devices:     make(map[string]*Device),
-		Zones:       make(map[string]*zone.Zone),
-		Stream:      stream,
-		Auth:        auth,
-		CmdBuilder:  cmdBuilder,
+		Address:         address,
+		ModelNumber:     modelNumber,
+		ModelName:       modelName,
+		SoftwareVersion: softwareVersion,
+		ID:              ID,
+		Name:            name,
+		Description:     description,
+		Hub:             hub,
+		Buttons:         make(map[string]*Button),
+		Devices:         make(map[string]*Device),
+		Zones:           make(map[string]*zone.Zone),
+		Stream:          stream,
+		Auth:            auth,
+		CmdBuilder:      cmdBuilder,
 	}
 
 	if connPoolCfg != nil {
