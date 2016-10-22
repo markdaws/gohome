@@ -7,7 +7,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/discovery"
 )
 
 // RegisterDiscoveryHandlers registers all of the discovery specific API REST routes
@@ -31,7 +30,13 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 		modelNumber := vars["modelNumber"]
 
 		//TODO: fix, This is blocking
-		devs, err := discovery.Devices(system, modelNumber)
+		network := system.Extensions.FindNetwork(system, &gohome.Device{ModelNumber: modelNumber})
+		if network == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		devs, err := network.Devices(system, modelNumber)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return

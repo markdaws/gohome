@@ -11,6 +11,22 @@ import (
 //TODO: Check connection is bad don't put back in the pool
 //TODO: Set write, read timeouts for connections
 //TODO: Store retry time in system config file
+/*func (c *TelnetConnection) Read(p []byte) (n int, err error) {
+	c.conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	n, err = c.conn.Read(p)
+	if err != nil {
+		c.status = CSClosed
+	}
+	return
+}
+func (c *TelnetConnection) Write(p []byte) (n int, err error) {
+	c.conn.SetWriteDeadline(time.Now().Add(15 * time.Second))
+	n, err = c.conn.Write(p)
+	if err != nil {
+		c.status = CSClosed
+	}
+	return
+}*/
 
 // Network is an interface that must be exported by an extension that provides
 // network related functionality pertaining to the extensions hardware
