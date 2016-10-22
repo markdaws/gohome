@@ -27766,7 +27766,10 @@
 	    mixins: [CssMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            value: -1
+	            value: -1,
+	            r: 0,
+	            g: 0,
+	            b: 0
 	        };
 	    },
 
@@ -27854,7 +27857,12 @@
 	    },
 
 	    setValue: function setValue(cmd, value, r, g, b, callback) {
-	        this.setState({ value: value });
+	        this.setState({
+	            value: value,
+	            r: r,
+	            g: g,
+	            b: b
+	        });
 	        this.send({
 	            cmd: cmd,
 	            value: parseFloat(value),
@@ -27866,7 +27874,7 @@
 
 	    toggleOn: function toggleOn(slider) {
 	        var cmd, level;
-	        if (this.state.value !== 0) {
+	        if (this.state.value !== 0 || this.state.r !== 0 || this.state.g !== 0 || this.state.b !== 0) {
 	            cmd = 'turnOff';
 	            level = 0;
 	        } else {

@@ -10,6 +10,9 @@ var ZoneControl = React.createClass({
     getInitialState: function() {
         return {
             value: -1,
+            r: 0,
+            g: 0,
+            b: 0
         }
     },
 
@@ -106,7 +109,12 @@ var ZoneControl = React.createClass({
     },
 
     setValue: function(cmd, value, r, g, b, callback) {
-        this.setState({ value: value });
+        this.setState({
+            value: value,
+            r: r,
+            g: g,
+            b: b
+        });
         this.send({
             cmd: cmd,
             value: parseFloat(value),
@@ -118,7 +126,7 @@ var ZoneControl = React.createClass({
 
     toggleOn: function(slider) {
         var cmd, level;
-        if (this.state.value !== 0) {
+        if (this.state.value !== 0 || this.state.r !== 0 || this.state.g !== 0 || this.state.b !== 0) {
             cmd = 'turnOff';
             level = 0;
         } else {

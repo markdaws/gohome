@@ -95,14 +95,6 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			}
 		}
 
-		var connPoolCfg *pool.Config
-		if data.ConnPool != nil {
-			connPoolCfg = &pool.Config{
-				Name: data.ConnPool.Name,
-				Size: int(data.ConnPool.PoolSize),
-			}
-		}
-
 		d, _ := gohome.NewDevice(
 			data.ModelNumber,
 			data.ModelName,
@@ -115,19 +107,29 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			nil,
 			false, //TODO: stream?
 			nil,
-			connPoolCfg,
+			nil,
 			auth,
 		)
 
-		if data.CmdBuilder != nil {
-			cmdBuilder := system.Extensions.FindCmdBuilder(system, d)
-			if cmdBuilder == nil {
-				log.E("unknown command builder id: %s, failed to add device to system", data.CmdBuilder.ID)
-				w.WriteHeader(http.StatusBadRequest)
-				return
+		var connPoolCfg *pool.Config
+		if data.ConnPool != nil {
+			connPoolCfg = &pool.Config{
+				Name: data.ConnPool.Name,
+				Size: int(data.ConnPool.PoolSize),
 			}
-			d.CmdBuilder = cmdBuilder
 		}
+
+		network := system.Extensions.FindNetwork(system, d)
+		if network != nil {
+			connFactory, err := network.NewConnection(system, d)
+			if err == nil {
+				connPoolCfg.NewConnection = connFactory
+			}
+		}
+		d.SetConnPoolCfg(*connPoolCfg)
+
+		cmdBuilder := system.Extensions.FindCmdBuilder(system, d)
+		d.CmdBuilder = cmdBuilder
 
 		errors := system.AddDevice(d)
 		if errors != nil {

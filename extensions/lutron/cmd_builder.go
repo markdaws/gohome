@@ -96,6 +96,7 @@ func getWriterAndExec(d *gohome.Device, f func(lutronExt.Device, io.Writer) erro
 
 	err = f(lDev, conn)
 	if err != nil {
+		conn.IsBad = true
 		return fmt.Errorf("Failed to send command %s\n", err)
 	}
 	return nil
