@@ -22,6 +22,14 @@ module.exports = function() {
         zones: [],
 
         // An array of all the button items
-        buttons: []
+        buttons: [],
+
+        // Initial load of the app
+        appLoadStatus: {
+            devicesLoaded: false,
+            zonesLoaded: false,
+            scenesLoaded: false,
+            buttonsLoaded: false
+        }
     };
 };

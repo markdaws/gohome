@@ -21481,10 +21481,9 @@
 
 	        var zoneBody;
 	        if (this.props.zones.length === 0) {
-	            //TODO: Fix, move edit button out of the scene list
 	            zoneBody = React.createElement(
 	                'h5',
-	                null,
+	                { className: 'emptyMessage' },
 	                'You don\'t have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.'
 	            );
 	        } else {
@@ -21495,7 +21494,7 @@
 	        if (this.props.scenes.items.length === 0) {
 	            emptySceneBody = React.createElement(
 	                'h5',
-	                null,
+	                { className: 'emptyMessage' },
 	                'You don\'t have any scenes.  Click on the Edit button to add a new Scene.'
 	            );
 	        }
@@ -21540,18 +21539,33 @@
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane active', id: 'scenes' },
-	                    emptySceneBody,
-	                    React.createElement(SceneList, { scenes: this.props.scenes, buttons: this.props.buttons, zones: this.props.zones })
+	                    React.createElement(
+	                        'div',
+	                        { className: this.props.appLoadStatus.scenesLoaded ? "" : "hideTabContent" },
+	                        React.createElement(SceneList, { scenes: this.props.scenes, buttons: this.props.buttons, zones: this.props.zones }),
+	                        emptySceneBody
+	                    ),
+	                    React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "") })
 	                ),
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'zones' },
-	                    zoneBody
+	                    React.createElement(
+	                        'div',
+	                        { className: this.props.appLoadStatus.zonesLoaded ? "" : "hideTabContent" },
+	                        zoneBody
+	                    ),
+	                    React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.zonesLoaded ? "hidden" : "") })
 	                ),
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'system' },
-	                    React.createElement(System, { devices: this.props.devices })
+	                    React.createElement(
+	                        'div',
+	                        { className: this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent" },
+	                        React.createElement(System, { devices: this.props.devices })
+	                    ),
+	                    React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "") })
 	                )
 	            )
 	        );
@@ -21563,7 +21577,8 @@
 	        devices: state.system.devices,
 	        zones: state.zones,
 	        scenes: state.scenes,
-	        buttons: state.buttons
+	        buttons: state.buttons,
+	        appLoadStatus: state.appLoadStatus
 	    };
 	}
 
@@ -23366,7 +23381,7 @@
 	            if (this.props.devices.length === 0) {
 	                body = React.createElement(
 	                    'h5',
-	                    null,
+	                    { className: 'emptyMessage' },
 	                    'You don\'t have any devices. Click on the "Import" button to start, or you can manually update the .json file if you know what you are doing ;)'
 	                );
 	            } else {
@@ -29123,12 +29138,14 @@
 	var systemReducer = __webpack_require__(265);
 	var scenesReducer = __webpack_require__(266);
 	var zonesReducer = __webpack_require__(268);
+	var loadStatusReducer = __webpack_require__(273);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
 	    scenes: scenesReducer,
 	    zones: zonesReducer,
-	    buttons: buttonReducer
+	    buttons: buttonReducer,
+	    appLoadStatus: loadStatusReducer
 	});
 
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
@@ -29191,7 +29208,15 @@
 	        zones: [],
 
 	        // An array of all the button items
-	        buttons: []
+	        buttons: [],
+
+	        // Initial load of the app
+	        appLoadStatus: {
+	            devicesLoaded: false,
+	            zonesLoaded: false,
+	            scenesLoaded: false,
+	            buttonsLoaded: false
+	        }
 	    };
 	};
 
@@ -29737,6 +29762,38 @@
 	    }
 	});
 	module.exports = SceneControl;
+
+/***/ },
+/* 273 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(209);
+
+	module.exports = function (state, action) {
+	    var newState = Object.assign({}, state);
+
+	    switch (action.type) {
+	        case Constants.SCENE_LOAD_ALL_RAW:
+	            newState.scenesLoaded = true;
+	            break;
+
+	        case Constants.ZONE_LOAD_ALL_RAW:
+	            newState.zonesLoaded = true;
+	            break;
+
+	        case Constants.DEVICE_LOAD_ALL_RAW:
+	            newState.devicesLoaded = true;
+	            break;
+
+	        case Constants.BUTTON_LOAD_ALL:
+	            newState.buttonsLoaded = true;
+	            break;
+	    }
+
+	    return newState;
+	};
 
 /***/ }
 /******/ ]);

@@ -35,9 +35,8 @@ var ControlApp = React.createClass({
 
         var zoneBody;
         if (this.props.zones.length === 0) {
-            //TODO: Fix, move edit button out of the scene list
             zoneBody = (
-                <h5>You don't have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>
+                <h5 className="emptyMessage">You don't have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>
             );
         } else {
             zoneBody = <ZoneList zones={this.props.zones}/>;
@@ -46,7 +45,7 @@ var ControlApp = React.createClass({
         var emptySceneBody;
         if (this.props.scenes.items.length === 0) {
             emptySceneBody = (
-                <h5>You don't have any scenes.  Click on the Edit button to add a new Scene.</h5>
+                <h5 className="emptyMessage">You don't have any scenes.  Click on the Edit button to add a new Scene.</h5>
             );
         }
 
@@ -80,20 +79,29 @@ var ControlApp = React.createClass({
                 </ul>
                 <div className="tab-content">
                     <div role="tabpanel" className="tab-pane active" id="scenes">
-                        {emptySceneBody}
-                        <SceneList scenes={this.props.scenes} buttons={this.props.buttons} zones={this.props.zones} />
+                        <div className={(this.props.appLoadStatus.scenesLoaded ? "" : "hideTabContent")}>
+                            <SceneList scenes={this.props.scenes} buttons={this.props.buttons} zones={this.props.zones} />
+                            {emptySceneBody}
+                        </div>
+                        <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="zones">
-                        {zoneBody}
+                        <div className={(this.props.appLoadStatus.zonesLoaded ? "" : "hideTabContent")}>
+                            {zoneBody}
+                        </div>
+                        <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.zonesLoaded ? "hidden" : "")}></i>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="system">
-                        <System devices={this.props.devices}/>
+                        <div className={(this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent")}>
+                            <System devices={this.props.devices}/>
+                        </div>
+                        <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
                     </div>
-                    {/*
-                    <div role="tabpanel" className="tab-pane fade" id="logging">
-                    <Logging />
-                    </div>
-                    <div role="tabpanel" className="tab-pane fade" id="recipes">
+            {/*
+            <div role="tabpanel" className="tab-pane fade" id="logging">
+            <Logging />
+            </div>
+            <div role="tabpanel" className="tab-pane fade" id="recipes">
                     <RecipeApp />
                     </div>
                     */}
@@ -108,7 +116,8 @@ function mapStateToProps(state) {
         devices: state.system.devices,
         zones: state.zones,
         scenes: state.scenes,
-        buttons: state.buttons
+        buttons: state.buttons,
+        appLoadStatus: state.appLoadStatus
     };
 }
 

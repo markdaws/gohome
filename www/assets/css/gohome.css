@@ -119,6 +119,9 @@ button.disabled {
 .cmp-System .btnExitImport {
     margin-bottom: 12px;
 }
+.cmp-System h5.emptyMessage {
+    margin: 12px;
+}
 
 .cmp-Import .content {
     margin-top: 12px;
@@ -371,6 +374,20 @@ button.disabled {
 .cmp-ControlApp .tab-nav > li > a::after {
     background: #21527d none repeat scroll 0% 0%;
     color: #fff;
+}
+.cmp-ControlApp h5.emptyMessage {
+    margin: 12px;
+}
+.cmp-ControlApp .fa-spinner {
+    width: 100%;
+    text-align: center;
+    top: 120px;
+    position: absolute;
+}
+.cmp-ControlApp .hideTabContent {
+    /* Have to hide visibility not display because otherwise the with of the content
+       isn't set and then the grid computes the wrong width */
+    visibility: hidden;
 }
 
 .cmp-RecipeApp h2 {
