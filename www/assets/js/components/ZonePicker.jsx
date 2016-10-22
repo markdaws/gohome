@@ -9,7 +9,14 @@ var ZonePicker = React.createClass({
 
     selected: function(evt) {
         this.setState({ value: evt.target.value });
-        this.props.changed && this.props.changed(evt.target.value);
+
+        
+        for (var i=0; i<this.props.zones.length; ++i) {
+            if (this.props.zones[i].id === evt.target.value) {
+                this.props.changed && this.props.changed(this.props.zones[i]);
+                return;
+            }
+        }
     },
 
     render: function() {

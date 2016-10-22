@@ -25375,7 +25375,7 @@
 	                React.createElement(
 	                    'button',
 	                    { className: 'btn btn-primary btnNew pull-left', onClick: this.props.newClientScene },
-	                    'New Scene'
+	                    'New'
 	                ),
 	                React.createElement(
 	                    'button',
@@ -25817,6 +25817,7 @@
 	var UniqueIdMixin = __webpack_require__(205);
 	var ZonePicker = __webpack_require__(225);
 	var Api = __webpack_require__(208);
+	var ClassNames = __webpack_require__(215);
 
 	var ZoneSetLevelCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -25831,6 +25832,7 @@
 	            g: attr.G || 0,
 	            b: attr.B || 0,
 	            zoneId: this.props.command.attributes.ZoneID || '',
+	            zoneOutput: '',
 	            errors: null
 	        };
 	    },
@@ -25854,8 +25856,10 @@
 	        this.setState({ errors: errors });
 	    },
 
-	    zonePickerChanged: function zonePickerChanged(zoneId) {
-	        this.setState({ zoneId: zoneId });
+	    zonePickerChanged: function zonePickerChanged(zone) {
+	        this.setState({
+	            zoneId: zone.id,
+	            zoneOutput: zone.output });
 	    },
 
 	    testLevel: function testLevel() {
@@ -25928,7 +25932,10 @@
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: 'clearfix rgbExpander' },
+	                { className: ClassNames({
+	                        clearfix: true,
+	                        rgbExpander: true,
+	                        hidden: this.state.zoneOutput !== 'rgb' }) },
 	                React.createElement(
 	                    'a',
 	                    { 'data-toggle': 'collapse', href: "#" + this.uid("rgbExpand") },
@@ -26028,7 +26035,13 @@
 
 	    selected: function selected(evt) {
 	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
+
+	        for (var i = 0; i < this.props.zones.length; ++i) {
+	            if (this.props.zones[i].id === evt.target.value) {
+	                this.props.changed && this.props.changed(this.props.zones[i]);
+	                return;
+	            }
+	        }
 	    },
 
 	    render: function render() {

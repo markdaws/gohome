@@ -61,7 +61,7 @@ var SceneList = React.createClass({
             }.bind(this));
             btns = (
                 <div className="clearfix buttonWrapper">
-                    <button className="btn btn-primary btnNew pull-left" onClick={this.props.newClientScene}>New Scene</button>
+                    <button className="btn btn-primary btnNew pull-left" onClick={this.props.newClientScene}>New</button>
                     <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
                 </div>
             );

@@ -3,6 +3,7 @@ var InputValidationMixin = require('./InputValidationMixin.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var ZonePicker = require('./ZonePicker.jsx');
 var Api = require('../utils/API.js');
+var ClassNames = require('classnames');
 
 var ZoneSetLevelCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
@@ -15,6 +16,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
             g: attr.G || 0,
             b: attr.B || 0,
             zoneId: this.props.command.attributes.ZoneID || '',
+            zoneOutput: '',
             errors: null,
         }
     },
@@ -38,8 +40,10 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
         this.setState({ errors: errors });
     },
 
-    zonePickerChanged: function(zoneId) {
-        this.setState({ zoneId: zoneId });
+    zonePickerChanged: function(zone) {
+        this.setState({
+            zoneId: zone.id,
+            zoneOutput: zone.output });
     },
 
     testLevel: function() {
@@ -94,7 +98,10 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
                         {this.errMsg("attributes_Level")}
                     </div>
                 </div>
-                <div className="clearfix rgbExpander">
+                <div className={ClassNames({
+                               clearfix: true,
+                               rgbExpander: true,
+                               hidden: this.state.zoneOutput !== 'rgb' })}>
                     <a data-toggle="collapse" href={"#" + this.uid("rgbExpand")}>
                         RGB
                         <i className="glyphicon glyphicon-menu-down"></i>

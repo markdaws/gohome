@@ -240,9 +240,12 @@ button.disabled {
     position: absolute;
     top: 0;
     right: 12px;
+    left: 12px;
 }
 .cmp-SceneList .cmp-SceneInfo {
     margin-bottom: 50px;
+    margin-left: 12px;
+    margin-right: 12px;
 }
 
 .cmp-SceneListGridCell {

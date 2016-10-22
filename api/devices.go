@@ -117,16 +117,16 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 				Name: data.ConnPool.Name,
 				Size: int(data.ConnPool.PoolSize),
 			}
-		}
 
-		network := system.Extensions.FindNetwork(system, d)
-		if network != nil {
-			connFactory, err := network.NewConnection(system, d)
-			if err == nil {
-				connPoolCfg.NewConnection = connFactory
+			network := system.Extensions.FindNetwork(system, d)
+			if network != nil {
+				connFactory, err := network.NewConnection(system, d)
+				if err == nil {
+					connPoolCfg.NewConnection = connFactory
+				}
 			}
+			d.SetConnPoolCfg(*connPoolCfg)
 		}
-		d.SetConnPoolCfg(*connPoolCfg)
 
 		cmdBuilder := system.Extensions.FindCmdBuilder(system, d)
 		d.CmdBuilder = cmdBuilder
