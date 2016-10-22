@@ -5,19 +5,32 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
-type extension struct {
+type extension struct{}
+
+func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.Builder {
+	switch d.ModelNumber {
+	case "fluxwifi":
+		return &cmdBuilder{System: sys}
+	default:
+		return nil
+	}
 }
 
-func (e *extension) RegisterCmdBuilders(sys *gohome.System, lookupTable map[string]cmd.Builder) {
-	builder := &cmdBuilder{System: sys}
-	lookupTable[builder.ID()] = builder
+func (e *extension) NetworkForDevice(sys *gohome.System, d *gohome.Device) gohome.Network {
+	switch d.ModelNumber {
+	case "fluxwifi":
+		return &network{System: sys}
+	default:
+		return nil
+	}
 }
 
-func (e *extension) RegisterNetwork(sys *gohome.System, lookupTable map[string]gohome.Network) {
-	lookupTable["fluxwifi"] = &network{System: sys}
+func (e *extension) ImporterForDevice(sys *gohome.System, d *gohome.Device) gohome.Importer {
+	return nil
 }
 
-func (e *extension) RegisterImporters(sys *gohome.System, lookupTable map[string]gohome.Importer) {
+func (e *extension) Name() string {
+	return "fluxwifi"
 }
 
 func NewExtension() *extension {

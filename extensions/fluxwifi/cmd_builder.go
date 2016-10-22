@@ -83,7 +83,3 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return nil, fmt.Errorf("unsupported command type")
 	}
 }
-
-func (b *cmdBuilder) ID() string {
-	return "fluxwifi"
-}

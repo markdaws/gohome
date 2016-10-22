@@ -58,14 +58,10 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 				j++
 			}
 
-			var cmdBuilderJson *jsonCmdBuilder
-			if device.CmdBuilder != nil {
-				cmdBuilderJson = &jsonCmdBuilder{ID: device.CmdBuilder.ID()}
-			}
-			var connPoolJson *jsonConnPool
+			var connPoolJSON *jsonConnPool
 			if device.Connections != nil {
 				connCfg := device.Connections.Config
-				connPoolJson = &jsonConnPool{
+				connPoolJSON = &jsonConnPool{
 					Name:     connCfg.Name,
 					PoolSize: int32(connCfg.Size),
 				}
@@ -79,8 +75,7 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 				Token:       "",
 				ClientID:    modelNumber + "_" + strconv.Itoa(i),
 				Zones:       jsonZones,
-				CmdBuilder:  cmdBuilderJson,
-				ConnPool:    connPoolJson,
+				ConnPool:    connPoolJSON,
 			}
 		}
 

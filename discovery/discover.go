@@ -12,8 +12,8 @@ var ErrUnsupported = errors.New("unsupported model number")
 
 func Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
 
-	network, ok := sys.Extensions.Network[modelNumber]
-	if !ok {
+	network := sys.Extensions.FindNetwork(sys, &gohome.Device{ModelNumber: modelNumber})
+	if network == nil {
 		return nil, fmt.Errorf("unsupported model number: %s, no registered extension", modelNumber)
 	}
 

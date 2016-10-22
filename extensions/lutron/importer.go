@@ -161,17 +161,17 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 				})
 			sbp = dev
 
-			builder, ok := system.Extensions.CmdBuilders["l-bdgpro2-wh"]
-			if !ok {
+			builder := system.Extensions.FindCmdBuilder(system, dev)
+			if builder == nil {
 				//TODO: Err
 			}
 			sbp.CmdBuilder = builder
 
-			f, ok := system.Extensions.Network["l-bdgpro2-wh"]
-			if !ok {
+			network := system.Extensions.FindNetwork(system, dev)
+			if network == nil {
 				//TODO: Err
 			}
-			connFactory, err := f.NewConnection(system, sbp)
+			connFactory, err := network.NewConnection(system, sbp)
 			if err != nil {
 				//TODO: err
 			}

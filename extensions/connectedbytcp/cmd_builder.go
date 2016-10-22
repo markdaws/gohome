@@ -49,7 +49,3 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	}
 	return nil, nil
 }
-
-func (b *cmdBuilder) ID() string {
-	return "tcp600gwb"
-}

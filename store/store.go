@@ -50,31 +50,26 @@ type sceneJSON struct {
 	Commands    []commandJSON `json:"commands"`
 }
 
-type cmdBuilderJSON struct {
-	ID string `json:id`
-}
-
 type connPoolJSON struct {
 	Name     string `json:"name"`
 	PoolSize int32  `json:"poolSize"`
 }
 
 type deviceJSON struct {
-	Address         string          `json:"address"`
-	ID              string          `json:"id"`
-	Name            string          `json:"name"`
-	Description     string          `json:"description"`
-	ModelNumber     string          `json:"modelNumber"`
-	ModelName       string          `json:"modelName"`
-	SoftwareVersion string          `json:"softwareVersion"`
-	HubID           string          `json:"hubId"`
-	Buttons         []buttonJSON    `json:"buttons"`
-	Zones           []zoneJSON      `json:"zones"`
-	DeviceIDs       []string        `json:"deviceIds"`
-	Auth            *authJSON       `json:"auth"`
-	Stream          bool            `json:"stream"`
-	CmdBuilder      *cmdBuilderJSON `json:"cmdBuilder"`
-	ConnPool        *connPoolJSON   `json:"connPool"`
+	Address         string        `json:"address"`
+	ID              string        `json:"id"`
+	Name            string        `json:"name"`
+	Description     string        `json:"description"`
+	ModelNumber     string        `json:"modelNumber"`
+	ModelName       string        `json:"modelName"`
+	SoftwareVersion string        `json:"softwareVersion"`
+	HubID           string        `json:"hubId"`
+	Buttons         []buttonJSON  `json:"buttons"`
+	Zones           []zoneJSON    `json:"zones"`
+	DeviceIDs       []string      `json:"deviceIds"`
+	Auth            *authJSON     `json:"auth"`
+	Stream          bool          `json:"stream"`
+	ConnPool        *connPoolJSON `json:"connPool"`
 }
 
 type authJSON struct {
@@ -125,14 +120,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 		}
 
 		log.V("loaded Device: ID:%s, Name:%s, Model:%s, Address:%s", d.ID, d.Name, d.ModelNumber, d.Address)
-		var cmdBuilder cmd.Builder
-		if d.CmdBuilder != nil {
-			var ok bool
-			cmdBuilder, ok = sys.Extensions.CmdBuilders[d.CmdBuilder.ID]
-			if !ok {
-				return nil, fmt.Errorf("unsupported comand builder ID: %s", d.CmdBuilder.ID)
-			}
-		}
 
 		dev, err := gohome.NewDevice(
 			d.ModelNumber,
@@ -144,20 +131,23 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			d.Description,
 			nil,
 			d.Stream,
-			cmdBuilder,
+			nil,
 			nil,
 			auth)
 		if err != nil {
 			return nil, err
 		}
 
+		cmdBuilder := sys.Extensions.FindCmdBuilder(sys, dev)
+		dev.CmdBuilder = cmdBuilder
+
 		if d.ConnPool != nil {
-			f, ok := sys.Extensions.Network[d.ModelNumber]
-			if !ok {
+			network := sys.Extensions.FindNetwork(sys, dev)
+			if network == nil {
 				return nil, fmt.Errorf("unsupported model number, no discoverer found: %s", d.ModelNumber)
 			}
 
-			connFactory, err := f.NewConnection(sys, dev)
+			connFactory, err := network.NewConnection(sys, dev)
 			if err != nil {
 				return nil, err
 			}
@@ -387,13 +377,6 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			hubID = hub.ID
 		}
 
-		var builderJSON *cmdBuilderJSON
-		if device.CmdBuilder != nil {
-			builderJSON = &cmdBuilderJSON{
-				ID: device.CmdBuilder.ID(),
-			}
-		}
-
 		var poolJSON *connPoolJSON
 		if device.Connections != nil {
 			config := device.Connections.Config
@@ -412,7 +395,6 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			ModelName:       device.ModelName,
 			SoftwareVersion: device.SoftwareVersion,
 			Stream:          device.Stream,
-			CmdBuilder:      builderJSON,
 			ConnPool:        poolJSON,
 		}
 

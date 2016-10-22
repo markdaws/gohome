@@ -17,22 +17,14 @@ type cmdBuilder struct {
 
 func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 
-	if b.device == nil {
-		lDev, err := lutronExt.DeviceFromModelNumber(b.ID())
-		if err != nil {
-			return nil, err
-		}
-		b.device = lDev
-	}
-
 	switch command := c.(type) {
 	case *cmd.ZoneSetLevel:
 		return &cmd.Func{
 			Func: func() error {
 				z := b.System.Zones[command.ZoneID]
 				dev := b.System.Devices[z.DeviceID]
-				return getWriterAndExec(dev, func(w io.Writer) error {
-					return b.device.SetLevel(command.Level.Value, command.ZoneAddress, w)
+				return getWriterAndExec(dev, func(d lutronExt.Device, w io.Writer) error {
+					return d.SetLevel(command.Level.Value, command.ZoneAddress, w)
 				})
 			},
 		}, nil
@@ -41,8 +33,8 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				z := b.System.Zones[command.ZoneID]
 				dev := b.System.Devices[z.DeviceID]
-				return getWriterAndExec(dev, func(w io.Writer) error {
-					return b.device.SetLevel(100.0, command.ZoneAddress, w)
+				return getWriterAndExec(dev, func(d lutronExt.Device, w io.Writer) error {
+					return d.SetLevel(100.0, command.ZoneAddress, w)
 				})
 			},
 		}, nil
@@ -51,8 +43,8 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 			Func: func() error {
 				z := b.System.Zones[command.ZoneID]
 				dev := b.System.Devices[z.DeviceID]
-				return getWriterAndExec(dev, func(w io.Writer) error {
-					return b.device.SetLevel(0.0, command.ZoneAddress, w)
+				return getWriterAndExec(dev, func(d lutronExt.Device, w io.Writer) error {
+					return d.SetLevel(0.0, command.ZoneAddress, w)
 				})
 			},
 		}, nil
@@ -60,8 +52,8 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return &cmd.Func{
 			Func: func() error {
 				dev := b.System.Devices[command.DeviceID]
-				return getWriterAndExec(dev, func(w io.Writer) error {
-					return b.device.ButtonPress(command.DeviceAddress, command.ButtonAddress, w)
+				return getWriterAndExec(dev, func(d lutronExt.Device, w io.Writer) error {
+					return d.ButtonPress(command.DeviceAddress, command.ButtonAddress, w)
 				})
 			},
 		}, nil
@@ -69,8 +61,8 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return &cmd.Func{
 			Func: func() error {
 				dev := b.System.Devices[command.DeviceID]
-				return getWriterAndExec(dev, func(w io.Writer) error {
-					return b.device.ButtonPress(command.DeviceAddress, command.ButtonAddress, w)
+				return getWriterAndExec(dev, func(d lutronExt.Device, w io.Writer) error {
+					return d.ButtonPress(command.DeviceAddress, command.ButtonAddress, w)
 				})
 			},
 		}, nil
@@ -81,11 +73,7 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	return nil, nil
 }
 
-func (b *cmdBuilder) ID() string {
-	return "l-bdgpro2-wh"
-}
-
-func getWriterAndExec(d *gohome.Device, f func(io.Writer) error) error {
+func getWriterAndExec(d *gohome.Device, f func(lutronExt.Device, io.Writer) error) error {
 	var hub *gohome.Device = d
 	if d.Hub != nil {
 		hub = d.Hub
@@ -100,7 +88,13 @@ func getWriterAndExec(d *gohome.Device, f func(io.Writer) error) error {
 		hub.Connections.Release(conn)
 	}()
 
-	err = f(conn)
+	fmt.Printf("%+v\n", hub)
+	lDev, err := lutronExt.DeviceFromModelNumber(hub.ModelNumber)
+	if err != nil {
+		return err
+	}
+
+	err = f(lDev, conn)
 	if err != nil {
 		return fmt.Errorf("Failed to send command %s\n", err)
 	}

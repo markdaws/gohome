@@ -22,11 +22,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 
 	devices := make([]*gohome.Device, len(infos))
 	for i, info := range infos {
-		cmdBuilder, ok := sys.Extensions.CmdBuilders[modelNumber]
-		if !ok {
-			return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
-		}
-
 		//TODO: Need to send back a flag indicating this device needs some kind of
 		//authentication to work
 		dev, _ := gohome.NewDevice(
@@ -39,10 +34,16 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			"",
 			nil,
 			false,
-			cmdBuilder,
+			nil,
 			nil,
 			nil,
 		)
+
+		cmdBuilder := sys.Extensions.FindCmdBuilder(sys, dev)
+		if cmdBuilder == nil {
+			return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
+		}
+		dev.CmdBuilder = cmdBuilder
 
 		/*
 			//TODO: Need to get once we have the security information

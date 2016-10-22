@@ -50,11 +50,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 		//fmt.Printf("%#v\n", response)
 		//fmt.Printf("%#v\n", devInfo)
 
-		cmdBuilder, ok := sys.Extensions.CmdBuilders[modelNumber]
-		if !ok {
-			return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
-		}
-
 		dev, _ := gohome.NewDevice(
 			modelNumber,
 			devInfo.ModelName,
@@ -65,10 +60,16 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			devInfo.ModelDescription,
 			nil,
 			false,
-			cmdBuilder,
+			nil,
 			nil,
 			nil,
 		)
+
+		cmdBuilder := sys.Extensions.FindCmdBuilder(sys, dev)
+		if cmdBuilder == nil {
+			return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
+		}
+		dev.CmdBuilder = cmdBuilder
 
 		z := &zone.Zone{
 			Address:     "",

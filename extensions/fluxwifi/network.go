@@ -24,12 +24,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 	for i, info := range infos {
 		name := info.ID + ": " + info.Model
 		modelNumber := "fluxwifi"
-		builderID := modelNumber
-
-		cmdBuilder, ok := sys.Extensions.CmdBuilders[builderID]
-		if !ok {
-			return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
-		}
 
 		dev, _ := gohome.NewDevice(
 			modelNumber,
@@ -41,7 +35,7 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			"",
 			nil,
 			false,
-			cmdBuilder,
+			nil,
 			&pool.Config{
 				Name: name,
 				Size: 2,
@@ -49,6 +43,12 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			},
 			nil,
 		)
+
+		cmdBuilder := sys.Extensions.FindCmdBuilder(sys, dev)
+		if cmdBuilder == nil {
+			return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
+		}
+		dev.CmdBuilder = cmdBuilder
 
 		z := &zone.Zone{
 			Address:     "",

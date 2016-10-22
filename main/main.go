@@ -50,7 +50,11 @@ func main() {
 			panic("Could not read ip.json")
 		}
 
-		err = system.Extensions.Importers["l-bdgpro2-wh"].FromString(system, string(bytes[:]), "l-bdgpro2-wh")
+		importer := system.Extensions.FindImporter(system, &gohome.Device{ModelNumber: "l-bdgpro2-wh"})
+		if importer == nil {
+			panic("Failed to import: " + err.Error())
+		}
+		err = importer.FromString(system, string(bytes[:]), "l-bdgpro2-wh")
 		if err != nil {
 			panic("Failed to import: " + err.Error())
 		}

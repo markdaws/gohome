@@ -11,12 +11,12 @@ import (
 	"github.com/go-home-iot/connection-pool"
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/validation"
 )
 
+// RegisterDeviceHandlers registers the REST API routes relating to devices
 func RegisterDeviceHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/devices",
 		apiDevicesHandler(s.system)).Methods("GET")
@@ -95,17 +95,6 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			}
 		}
 
-		var cmdBuilder cmd.Builder
-		if data.CmdBuilder != nil {
-			var ok bool
-			cmdBuilder, ok = system.Extensions.CmdBuilders[data.CmdBuilder.ID]
-			if !ok {
-				log.E("unknown command builder id: %s, failed to add device to system", data.CmdBuilder.ID)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-		}
-
 		var connPoolCfg *pool.Config
 		if data.ConnPool != nil {
 			connPoolCfg = &pool.Config{
@@ -114,7 +103,6 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			}
 		}
 
-		//TODO: Don't pass in ID
 		d, _ := gohome.NewDevice(
 			data.ModelNumber,
 			data.ModelName,
@@ -126,10 +114,20 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			//TODO: Hub
 			nil,
 			false, //TODO: stream?
-			cmdBuilder,
+			nil,
 			connPoolCfg,
 			auth,
 		)
+
+		if data.CmdBuilder != nil {
+			cmdBuilder := system.Extensions.FindCmdBuilder(system, d)
+			if cmdBuilder == nil {
+				log.E("unknown command builder id: %s, failed to add device to system", data.CmdBuilder.ID)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			d.CmdBuilder = cmdBuilder
+		}
 
 		errors := system.AddDevice(d)
 		if errors != nil {

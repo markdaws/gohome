@@ -10,7 +10,6 @@ import (
 
 type cmdBuilder struct {
 	System *gohome.System
-	id     string
 }
 
 func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
@@ -43,8 +42,4 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return nil, fmt.Errorf("unsupported command type")
 	}
 	return nil, nil
-}
-
-func (b *cmdBuilder) ID() string {
-	return b.id
 }
