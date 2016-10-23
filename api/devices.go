@@ -39,6 +39,7 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 				Name:        device.Name,
 				Description: device.Description,
 				ModelNumber: device.ModelNumber,
+				Type:        string(device.Type),
 			}
 			i++
 		}
@@ -110,6 +111,7 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			nil,
 			auth,
 		)
+		d.Type = gohome.DeviceType(data.Type)
 
 		var connPoolCfg *pool.Config
 		if data.ConnPool != nil {

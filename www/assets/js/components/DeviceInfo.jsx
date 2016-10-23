@@ -7,6 +7,7 @@ var Api = require('../utils/API.js');
 var ZoneInfo = require('./ZoneInfo.jsx')
 var Classnames = require('classnames')
 var ZoneActions = require('../actions/ZoneActions.js');
+var DeviceTypePicker = require('./DeviceTypePicker.jsx');
 
 var DeviceInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
@@ -25,7 +26,8 @@ var DeviceInfo = React.createClass({
             saveButtonStatus: '',
             dirty: !this.props.id,
             connectionPool: this.props.connectionPool,
-            cmdBuilder: this.props.cmdBuilder
+            cmdBuilder: this.props.cmdBuilder,
+            type: this.props.type
         }
     },
 
@@ -47,11 +49,13 @@ var DeviceInfo = React.createClass({
             token: s.token,
             id: s.id,
             connPool: this.props.connectionPool,
-            cmdBuilder: this.props.cmdBuilder
+            cmdBuilder: this.props.cmdBuilder,
+            type: s.type
         };
     },
 
     componentWillReceiveProps: function(nextProps) {
+        //TODO: Needed?
         var device = this.state.device;
         if (nextProps.name != "") {
             this.setState({ name: nextProps.name });
@@ -61,6 +65,9 @@ var DeviceInfo = React.createClass({
         }
         if (nextProps.address != "") {
             this.setState({ address: nextProps.address });
+        }
+        if (nextProps.type != "") {
+            this.setState({ type: nextProps.type });
         }
         if (nextProps.token != "") {
             this.setState({ token: nextProps.token });
@@ -122,6 +129,18 @@ var DeviceInfo = React.createClass({
 
     deleteDevice: function() {
         this.props.deviceDelete(this.state.id, this.state.clientId);
+    },
+
+    typeChanged: function(type) {
+        //this.setState({ type: type });
+        this.changed({
+            target: {
+                getAttribute: function() {
+                    return 'type'
+                },
+                value: type
+            }
+        });
     },
 
     _changed: function(evt) {
@@ -199,7 +218,7 @@ var DeviceInfo = React.createClass({
         }
             
         return (
-            <div className="cmp-DeviceInfo well well-sm">
+            <div className="cmp-DeviceInfo well-sm">
                 {deleteBtn}
                 <div className={this.addErr("form-group", "name")}>
                     <label className="control-label" htmlFor={this.uid("name")}>Name*</label>
@@ -223,6 +242,11 @@ var DeviceInfo = React.createClass({
                         type="text"
                         id={this.uid("id")} />
                     {this.errMsg("id")}
+                </div>
+                <div className={this.addErr("form-group", "type")}>
+                    <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
+                    <DeviceTypePicker type={this.state.type} changed={this.typeChanged}/>
+                    {this.errMsg('type')}
                 </div>
                 <div className={this.addErr("form-group", "description")}>
                     <label className="control-label" htmlFor={this.uid("description")}>Description</label>

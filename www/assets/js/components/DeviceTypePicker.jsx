@@ -1,6 +1,6 @@
  var React = require('react');
 
-var ZoneTypePicker = React.createClass({
+var DeviceTypePicker = React.createClass({
     getInitialState: function() {
         return {
             value: this.props.type || 'unknown'
@@ -27,16 +27,18 @@ var ZoneTypePicker = React.createClass({
     render: function() {
         var types = [
             { str: "Unknown", val:"unknown" },
-            { str: "Light", val:"light" },
+            { str: "Dimmer", val:"dimmer" },
+            { str: "Shade", val:"shade" },
             { str: "Switch", val:"switch" },
-            { str: "Shade", val:"shade" }
+            { str: "Hub", val:"hub" },
+            { str: "Remote", val:"remote" }
         ];
         var self = this;
         var nodes = types.map(function(type) {
             return <option value={type.val} key={type.val}>{type.str}</option>
         });
         return (
-            <div className="cmp-ZoneTypePicker">
+            <div className="cmp-DeviceTypePicker">
                 <select
                     className="form-control"
                     onChange={this.selected}
@@ -47,4 +49,4 @@ var ZoneTypePicker = React.createClass({
         );
     }
 });
-module.exports = ZoneTypePicker;
+module.exports = DeviceTypePicker;

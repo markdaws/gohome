@@ -31,6 +31,10 @@ module.exports = function(state, action) {
             if (action.clientId && (device.clientId === action.clientId)) {
                 return action.data;
             }
+
+            if (device.id === action.data.id) {
+                return action.data;
+            }
             return device;
         });
 

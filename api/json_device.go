@@ -17,6 +17,7 @@ type jsonDevice struct {
 	ClientID        string        `json:"clientId,omitempty"`
 	Zones           []jsonZone    `json:"zones"`
 	ConnPool        *jsonConnPool `json:"connPool"`
+	Type            string        `json:"type"`
 }
 type devices []jsonDevice
 

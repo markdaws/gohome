@@ -116,6 +116,13 @@ button.disabled {
     margin-bottom: 8px;
 }
 
+.cmp-System .header {
+    left: 0;
+    right: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
+}
 .cmp-System .btnExitImport {
     margin-bottom: 12px;
 }
@@ -317,9 +324,41 @@ button.disabled {
     font-size: 16px;
 }
 
-.cmp-DeviceList .header {
-    margin-bottom: 12px;
+.cmp-SystemDeviceList h2 {
+    margin-top: 12px;
+    text-transform: uppercase;
+    font-weight: 200;
+    text-align: center;
 }
+.cmp-SystemDeviceListGridCell {
+    pointer-events: none;
+    position: relative;
+    height: 100%;
+    font-size: 0px;
+}
+.cmp-SystemDeviceListGridCell .name{
+    display: block;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    pointer-events: none;
+    text-transform: uppercase;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto 8px auto;
+}
+.cmp-SystemDeviceListGridCell .icon {
+    pointer-events: none;
+    font-size: 50px;
+    text-align: center;
+    color: #555;
+    padding-top: 12px;
+}
+
 
 .cmp-DeviceInfo label {
     font-size: 12px;

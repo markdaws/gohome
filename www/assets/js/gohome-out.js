@@ -50,9 +50,9 @@
 	var ReactDOM = __webpack_require__(34);
 	var ControlApp = __webpack_require__(172);
 	var Provider = __webpack_require__(173).Provider;
-	var store = __webpack_require__(261);
+	var store = __webpack_require__(253);
 
-	var Testr = __webpack_require__(269);
+	var Testr = __webpack_require__(262);
 
 	//TODO: Remove - testing
 	/*
@@ -21446,14 +21446,14 @@
 	var ReactDOM = __webpack_require__(34);
 	var ReactRedux = __webpack_require__(173);
 	var System = __webpack_require__(201);
-	var SceneList = __webpack_require__(220);
-	var ZoneList = __webpack_require__(242);
-	var Logging = __webpack_require__(246);
-	var RecipeApp = __webpack_require__(248);
-	var Constants = __webpack_require__(209);
-	var SceneActions = __webpack_require__(231);
-	var SystemActions = __webpack_require__(217);
-	var ZoneActions = __webpack_require__(216);
+	var SceneList = __webpack_require__(202);
+	var ZoneList = __webpack_require__(232);
+	var Logging = __webpack_require__(237);
+	var RecipeApp = __webpack_require__(239);
+	var Constants = __webpack_require__(206);
+	var SceneActions = __webpack_require__(221);
+	var SystemActions = __webpack_require__(252);
+	var ZoneActions = __webpack_require__(235);
 
 	var ControlApp = React.createClass({
 	    displayName: 'ControlApp',
@@ -23348,8 +23348,9 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Import = __webpack_require__(202);
-	var SystemDeviceList = __webpack_require__(219);
+	var ReactRedux = __webpack_require__(173);
+	var Import = __webpack_require__(263);
+	var SystemDeviceList = __webpack_require__(272);
 
 	var System = React.createClass({
 	    displayName: 'System',
@@ -23358,6 +23359,10 @@
 	        return {
 	            importing: false
 	        };
+	    },
+
+	    newClicked: function newClicked() {
+	        this.props.deviceNew();
 	    },
 
 	    importProduct: function importProduct() {
@@ -23369,10 +23374,10 @@
 	    },
 
 	    render: function render() {
-	        var body, importBtn;
+	        var body, header;
 	        if (this.state.importing) {
 	            body = React.createElement(Import, null);
-	            importBtn = React.createElement(
+	            header = React.createElement(
 	                'button',
 	                { className: 'btn btn-danger pull-right btnExitImport', onClick: this.cancelImport },
 	                'Exit Import'
@@ -23388,20 +23393,35 @@
 	                body = React.createElement(SystemDeviceList, { devices: this.props.devices });
 	            }
 
-	            importBtn = React.createElement(
-	                'button',
-	                { className: 'btn btn-primary', onClick: this.importProduct },
-	                'Import'
+	            header = React.createElement(
+	                'div',
+	                { className: 'header clearfix' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-default pull-right', onClick: this.importProduct },
+	                    React.createElement('i', { className: 'ion-arrow-down-c' })
+	                )
 	            );
 	        }
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-System' },
-	            importBtn,
+	            header,
 	            body
 	        );
 	    }
 	});
+
+	/*
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        deviceNew: function() {
+	            dispatch(SystemActions.deviceNew());
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(System);
+	*/
 	module.exports = System;
 
 /***/ },
@@ -23411,192 +23431,174 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var DiscoverDevices = __webpack_require__(203);
-	var ImportTCP600GWB = __webpack_require__(218);
+	var ReactDOM = __webpack_require__(34);
+	var Redux = __webpack_require__(180);
+	var ReactRedux = __webpack_require__(173);
+	var SceneListGridCell = __webpack_require__(203);
+	var SceneControl = __webpack_require__(204);
+	var SceneInfo = __webpack_require__(208);
+	var UniqueIdMixin = __webpack_require__(211);
+	var SceneActions = __webpack_require__(221);
+	var Grid = __webpack_require__(223);
 
-	var Import = React.createClass({
-	    displayName: 'Import',
+	var SceneList = React.createClass({
+	    displayName: 'SceneList',
+
+	    mixins: [UniqueIdMixin],
 
 	    getInitialState: function getInitialState() {
-	        return { selectedProduct: null };
+	        return {
+	            editMode: false
+	        };
 	    },
 
-	    productSelected: function productSelected(evt) {
-	        this.setState({ selectedProduct: evt.target.value });
+	    _onChange: function _onChange() {
+	        this.forceUpdate();
+	    },
+
+	    edit: function edit() {
+	        this.setState({ editMode: true });
+	    },
+
+	    endEdit: function endEdit() {
+	        this.setState({ editMode: false });
 	    },
 
 	    render: function render() {
-	        //TODO: Should get this list from the server, generate drop down automatically from
-	        //registered extensions
-
 	        var body;
-	        switch (this.state.selectedProduct) {
-	            case 'tcp600gwb':
-	            case 'fluxwifi':
-	            case 'f7c029v2':
-	            case 'f7c043fc':
-	                body = React.createElement(DiscoverDevices, { modelNumber: this.state.selectedProduct });
-	                break;
-	            default:
-	                body = null;
+	        var btns;
+
+	        var scenes = this.props.scenes.items;
+	        var gridCells = [];
+	        if (this.state.editMode) {
+	            body = scenes.map(function (scene) {
+	                var saveState;
+
+	                // Check for input validation errors from the server
+	                saveState = this.props.scenes.saveState[scene.clientId || scene.id] || {};
+
+	                return React.createElement(SceneInfo, {
+	                    zones: this.props.zones,
+	                    buttons: this.props.buttons,
+	                    scenes: this.props.scenes.items,
+	                    scene: scene,
+	                    readOnlyFields: 'id',
+	                    key: scene.id || scene.clientId,
+	                    errors: (saveState.err || {}).validationErrors,
+	                    saveScene: this.props.saveScene,
+	                    updateScene: this.props.updateScene,
+	                    deleteScene: this.props.deleteScene,
+	                    addCommand: this.props.addCommand,
+	                    saveStatus: saveState.status });
+	            }.bind(this));
+	            btns = React.createElement(
+	                'div',
+	                { className: 'clearfix buttonWrapper' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-primary btnNew pull-left', onClick: this.props.newClientScene },
+	                    'New'
+	                ),
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
+	                    'Done'
+	                )
+	            );
+	        } else {
+
+	            var gridCells = scenes.map(function (scene) {
+	                return {
+	                    cell: React.createElement(SceneListGridCell, { scene: scene }),
+	                    content: React.createElement(SceneControl, { scene: scene, key: scene.id || scene.clientId })
+	                };
+	            });
+	            btns = React.createElement(
+	                'div',
+	                { className: 'clearfix buttonWrapper' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-default btnEdit pull-right', onClick: this.edit },
+	                    React.createElement('i', { className: 'fa fa-cog', 'aria-hidden': 'true' })
+	                )
+	            );
+
+	            body = React.createElement(Grid, { cells: gridCells });
 	        }
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-Import' },
+	            { className: 'cmp-SceneList' },
 	            React.createElement(
-	                'h3',
+	                'h2',
 	                null,
-	                'Select a product to import'
+	                'Scenes'
 	            ),
-	            React.createElement(
-	                'select',
-	                { className: 'form-control', onChange: this.productSelected, value: this.state.selectedProduct },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Choose ...'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'f7c029v2' },
-	                    'Belkin WeMo Insight'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'f7c043fc' },
-	                    'Belkin WeMo Maker'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'l-bdgpro2-wh' },
-	                    'Lutron'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'tcp600gwb' },
-	                    'Connected By TCP Hub'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'fluxwifi' },
-	                    'Flux WIFI Bulb'
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'content' },
-	                body
-	            )
+	            btns,
+	            body
 	        );
 	    }
 	});
-	module.exports = Import;
 
-	/*
-	//TODO: Delete
-	                body = <ImportTCP600GWB />
-	            break;
-	*/
+	function mapStateToProps(state) {
+	    return {};
+	}
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        newClientScene: function newClientScene() {
+	            dispatch(SceneActions.newClient());
+	        },
+	        saveScene: function saveScene(sceneJson) {
+	            dispatch(SceneActions.create(sceneJson));
+	        },
+	        updateScene: function updateScene(sceneJson) {
+	            dispatch(SceneActions.update(sceneJson));
+	        },
+	        deleteScene: function deleteScene(clientId, id) {
+	            if (clientId) {
+	                dispatch(SceneActions.destroyClient(clientId));
+	            } else {
+	                dispatch(SceneActions.destroy(id));
+	            }
+	        },
+	        addCommand: function addCommand(sceneId, cmdType) {
+	            dispatch(SceneActions.addCommand(sceneId, cmdType));
+	        }
+	    };
+	}
+
+	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
 
 /***/ },
 /* 203 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	"use strict";
 
 	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(173);
-	var DeviceInfo = __webpack_require__(204);
-	var Api = __webpack_require__(208);
-	var SystemActions = __webpack_require__(217);
 
-	var DiscoverDevices = React.createClass({
-	    displayName: 'DiscoverDevices',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            discovering: false,
-	            devices: null
-	        };
-	    },
-
-	    discover: function discover() {
-	        this.setState({
-	            discovering: true,
-	            devices: null
-	        });
-
-	        Api.discoverDevice(this.props.modelNumber, function (err, data) {
-	            this.setState({
-	                discovering: false,
-	                devices: data || []
-	            });
-	        }.bind(this));
-	    },
+	var SceneListGridCell = React.createClass({
+	    displayName: "SceneListGridCell",
 
 	    render: function render() {
-	        var devices;
-	        if (this.state.devices && this.state.devices.length > 0) {
-	            devices = this.state.devices.map(function (device) {
-	                return React.createElement(DeviceInfo, {
-	                    name: device.name,
-	                    description: device.description,
-	                    address: device.address,
-	                    modelNumber: device.modelNumber,
-	                    connectionPool: device.connPool,
-	                    cmdBuilder: device.cmdBuilder,
-	                    id: device.id,
-	                    clientId: device.clientId,
-	                    readOnlyFields: 'id, modelNumber',
-	                    key: device.id || device.clientId,
-	                    savedDevice: this.props.importedDevice,
-	                    showZones: true,
-	                    zones: device.zones });
-	            }.bind(this));
-	        }
-
-	        var importBody;
-	        importBody = React.createElement(
-	            'div',
-	            null,
-	            React.createElement(
-	                'button',
-	                { className: "btn btn-primary" + (this.state.discovering ? " disabled" : ""),
-	                    onClick: this.discover },
-	                'Discover Devices'
-	            ),
-	            React.createElement('i', { className: "fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden") }),
-	            React.createElement(
-	                'h3',
-	                { className: this.state.devices ? "" : " hidden" },
-	                this.state.devices && this.state.devices.length,
-	                ' device(s) found'
-	            ),
-	            React.createElement(
-	                'p',
-	                { className: this.state.devices && this.state.devices.length > 0 ? "" : " hidden" },
-	                'Click "Save" on each device you wish to add to your system.'
-	            ),
-	            devices
-	        );
 	        return React.createElement(
-	            'div',
-	            { className: 'cmp-DiscoverDevices' },
-	            importBody
+	            "div",
+	            { className: "cmp-SceneListGridCell" },
+	            React.createElement(
+	                "div",
+	                { className: "icon" },
+	                React.createElement("i", { className: "icon ion-ios-settings" })
+	            ),
+	            React.createElement(
+	                "div",
+	                { className: "name" },
+	                this.props.scene.name
+	            )
 	        );
 	    }
 	});
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        importedDevice: function importedDevice(clientId, deviceJson) {
-	            dispatch(SystemActions.importedDevice(deviceJson));
-	        }
-	    };
-	}
-
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DiscoverDevices);
+	module.exports = SceneListGridCell;
 
 /***/ },
 /* 204 */
@@ -23605,508 +23607,54 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(173);
-	var UniqueIdMixin = __webpack_require__(205);
-	var InputValidationMixin = __webpack_require__(206);
-	var SaveBtn = __webpack_require__(207);
-	var Api = __webpack_require__(208);
-	var ZoneInfo = __webpack_require__(211);
-	var Classnames = __webpack_require__(215);
-	var ZoneActions = __webpack_require__(216);
+	var Api = __webpack_require__(205);
 
-	var DeviceInfo = React.createClass({
-	    displayName: 'DeviceInfo',
+	var SceneControl = React.createClass({
+	    displayName: 'SceneControl',
 
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        //TODO: need state?
-	        return {
-	            name: this.props.name || '',
-	            description: this.props.description || '',
-	            address: this.props.address,
-	            id: this.props.id,
-	            clientId: this.props.clientId,
-	            modelNumber: this.props.modelNumber || '',
-	            token: this.props.token,
-	            showToken: false,
-	            errors: null,
-	            saveButtonStatus: '',
-	            dirty: !this.props.id,
-	            connectionPool: this.props.connectionPool,
-	            cmdBuilder: this.props.cmdBuilder
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            zones: [],
-	            showZones: false
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        var s = this.state;
-	        return {
-	            clientId: this.props.clientId,
-	            name: s.name,
-	            description: s.description,
-	            address: s.address,
-	            modelNumber: s.modelNumber,
-	            token: s.token,
-	            id: s.id,
-	            connPool: this.props.connectionPool,
-	            cmdBuilder: this.props.cmdBuilder
-	        };
-	    },
-
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        var device = this.state.device;
-	        if (nextProps.name != "") {
-	            this.setState({ name: nextProps.name });
-	        }
-	        if (nextProps.description != "") {
-	            this.setState({ description: nextProps.description });
-	        }
-	        if (nextProps.address != "") {
-	            this.setState({ address: nextProps.address });
-	        }
-	        if (nextProps.token != "") {
-	            this.setState({ token: nextProps.token });
-	        }
-	        if (nextProps.id != "") {
-	            this.setState({ id: nextProps.id });
-	        }
-	        if (nextProps.clientId != "") {
-	            this.setState({ clientId: nextProps.clientId });
-	        }
-	    },
-
-	    testConnection: function testConnection() {
-	        //TODO: How to know what to call
-	    },
-
-	    save: function save() {
-	        this.setState({ errors: null });
-
-	        Api.deviceCreate(this.toJson(), function (err, deviceData) {
+	    handleClick: function handleClick(event) {
+	        Api.sceneActivate(this.props.scene.id, function (err, data) {
 	            if (err) {
-	                this.setState({
-	                    saveButtonStatus: 'error',
-	                    errors: err.validationErrors
-	                });
-	                return;
+	                //TODO: Show error/success
+	                console.error(err);
 	            }
-
-	            // Let callers know the device has been saved
-	            this.props.savedDevice(this.state.clientId, deviceData);
-
-	            // Now we need to loop through each of the zones and save them
-	            function saveZone(index) {
-	                if (index >= this.props.zones.length) {
-	                    this.setState({ saveButtonStatus: 'success' });
-	                    return;
-	                }
-
-	                // Now the device has an id, we need to bind the zone to it
-	                var zoneInfo = this.refs["zoneInfo_" + this.props.zones[index].clientId];
-	                var zone = Object.assign({}, zoneInfo.toJson());
-	                zone.deviceId = deviceData.id;
-	                Api.zoneCreate(zone, function (err, zoneData) {
-	                    if (err) {
-	                        zoneInfo.setErrors(err.validationErrors);
-	                        this.setState({
-	                            saveButtonStatus: 'error'
-	                        });
-	                        return;
-	                    }
-
-	                    this.props.savedZone(zoneData);
-	                    saveZone.bind(this)(index + 1);
-	                }.bind(this));
-	            }
-	            saveZone.bind(this)(0);
-	        }.bind(this));
-	    },
-
-	    deleteDevice: function deleteDevice() {
-	        this.props.deviceDelete(this.state.id, this.state.clientId);
-	    },
-
-	    _changed: function _changed(evt) {
-	        this.setState({ saveButtonStatus: '' });
-
-	        if (evt) {
-	            this.changed(evt);
-	        }
-	    },
-
-	    _zoneChanged: function _zoneChanged() {
-	        this._changed();
+	        });
 	    },
 
 	    render: function render() {
-	        var device = this.state.device;
-
-	        var token;
-	        if (this.props.showToken) {
-	            token = React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "token") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("token") },
-	                    'Security Token'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.token,
-	                    'data-statepath': 'token',
-	                    onChange: this._changed,
-	                    className: 'token form-control',
-	                    type: 'text',
-	                    id: this.uid("token") }),
-	                this.errMsg('token')
-	            );
-	        }
-
-	        var saveBtn;
-	        if (this.state.dirty) {
-	            saveBtn = React.createElement(SaveBtn, {
-	                clicked: this.save,
-	                text: 'Save',
-	                status: this.state.saveButtonStatus });
-	        }
-
-	        var deleteBtn;
-	        if (this.props.deleteDevice) {
-	            deleteBtn = React.createElement(
-	                'button',
-	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteDevice },
-	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
-	            );
-	        }
-
-	        var zones;
-	        if (this.props.zones.length === 0) {
-	            zones = React.createElement(
-	                'h4',
-	                null,
-	                '0 zones found'
-	            );
-	        } else {
-	            zones = this.props.zones.map(function (zone) {
-	                return React.createElement(ZoneInfo, {
-	                    ref: "zoneInfo_" + zone.clientId,
-	                    readOnlyFields: 'deviceId',
-	                    key: zone.id || zone.clientId,
-	                    clientId: zone.clientId,
-	                    name: zone.name,
-	                    description: zone.description,
-	                    address: zone.address,
-	                    type: zone.type,
-	                    output: zone.output,
-	                    deviceId: this.state.id || this.state.clientId,
-	                    devices: [this.toJson()],
-	                    changed: this._zoneChanged });
-	            }.bind(this));
-	        }
-
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-DeviceInfo well well-sm' },
-	            deleteBtn,
+	            { className: 'cmp-SceneControl' },
 	            React.createElement(
 	                'div',
-	                { className: this.addErr("form-group", "name") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("name") },
-	                    'Name*'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.name,
-	                    'data-statepath': 'name',
-	                    onChange: this._changed,
-	                    className: 'name form-control',
-	                    type: 'text',
-	                    id: this.uid("name") }),
-	                this.errMsg("name")
+	                { className: 'name' },
+	                this.props.scene.name
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: this.addErr("form-group", "id") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("id") },
-	                    'ID'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.id,
-	                    readOnly: this.isReadOnly("id"),
-	                    'data-statepath': 'id',
-	                    onChange: this._changed,
-	                    className: 'id form-control',
-	                    type: 'text',
-	                    id: this.uid("id") }),
-	                this.errMsg("id")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "description") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("description") },
-	                    'Description'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.description,
-	                    'data-statepath': 'description',
-	                    onChange: this._changed,
-	                    className: 'description form-control',
-	                    type: 'text',
-	                    id: this.uid("description") }),
-	                this.errMsg("description")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "modelNumber") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("modelNumber") },
-	                    'Model Number'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.modelNumber,
-	                    readOnly: this.isReadOnly("modelNumber"),
-	                    'data-statepath': 'modelNumber',
-	                    onChange: this._changed,
-	                    className: 'modelNumber form-control',
-	                    type: 'text',
-	                    id: this.uid("modelNumber") }),
-	                this.errMsg("modelNumber")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "address") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("address") },
-	                    'Address'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.address,
-	                    'data-statepath': 'address',
-	                    onChange: this._changed,
-	                    className: 'address form-control',
-	                    type: 'text',
-	                    id: this.uid("address") }),
-	                this.errMsg("address")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: Classnames({ clearfix: true, hidden: !this.props.showZones }) },
+	                { className: 'activateWrapper' },
 	                React.createElement(
 	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("zones") },
-	                    'Zones',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                    { role: 'button', className: 'btn btn-primary scene', onClick: this.handleClick },
+	                    React.createElement(
+	                        'span',
+	                        { className: 'name' },
+	                        'Activate'
+	                    )
 	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse zones', id: this.uid("zones") },
-	                zones
-	            ),
-	            token,
-	            React.createElement(
-	                'div',
-	                { className: 'pull-right' },
-	                saveBtn
-	            ),
-	            React.createElement('div', { style: { clear: "both" } })
+	            )
 	        );
 	    }
 	});
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        savedZone: function savedZone(zoneJson) {
-	            dispatch(ZoneActions.importedZone(zoneJson));
-	        }
-	    };
-	}
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceInfo);
+	module.exports = SceneControl;
 
 /***/ },
 /* 205 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	var _current = 0;
-
-	module.exports = {
-	    getNextIdAndIncrement: function getNextIdAndIncrement() {
-	        _current += 1;
-	        return _current;
-	    },
-
-	    getCurrentId: function getCurrentId() {
-	        return _current;
-	    }
-	};
-
-/***/ },
-/* 206 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	module.exports = {
-	    uid: function uid(field) {
-	        var id = !this.state.clientId ? this.state.id : this.state.clientId;
-	        return id + '_' + field;
-	    },
-
-	    getErr: function getErr(field) {
-	        var errors = this.state.errors;
-	        if (!errors) {
-	            return null;
-	        }
-	        return errors[this.uid(field)];
-	    },
-
-	    hasErr: function hasErr(field) {
-	        return this.getErr(field) != null;
-	    },
-
-	    errMsg: function errMsg(field) {
-	        var err = this.getErr(field);
-	        if (!err) {
-	            return;
-	        }
-	        return React.createElement(
-	            "span",
-	            { className: "help-block" },
-	            "Error - " + err.message
-	        );
-	    },
-
-	    addErr: function addErr(classes, field) {
-	        if (this.hasErr(field)) {
-	            return classes + " has-error";
-	        }
-	        return classes;
-	    },
-
-	    changed: function changed(evt) {
-	        var statePath = evt.target.getAttribute('data-statepath');
-	        var s = {};
-	        s[statePath] = evt.target.value;
-	        s.dirty = true;
-
-	        var errors = this.state['errors'] || {};
-	        delete errors[this.uid(statePath)];
-	        s.errors = errors;
-	        this.setState(s);
-	    },
-
-	    isReadOnly: function isReadOnly(field) {
-	        var fields = this.props.readOnlyFields || '';
-	        var items = fields.split(',');
-	        for (var i = 0; i < items.length; ++i) {
-	            if (items[i] === field) {
-	                return true;
-	            }
-	        }
-	        return false;
-	    }
-	};
-
-/***/ },
-/* 207 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var React = __webpack_require__(1);
-
-	var SaveBtn = React.createClass({
-	    displayName: 'SaveBtn',
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            status: 'default'
-	        };
-	    },
-
-	    clicked: function clicked() {
-	        this.props.clicked();
-	    },
-
-	    render: function render() {
-	        var btnType, body;
-	        var disabled = true;
-
-	        switch (this.props.status) {
-	            case SaveBtn.STATUS.Saving:
-	                btnType = 'btn-primary';
-	                body = React.createElement(
-	                    'div',
-	                    null,
-	                    React.createElement('i', { className: 'fa fa-spinner fa-spin' })
-	                );
-	                break;
-	            case SaveBtn.STATUS.Error:
-	                btnType = "btn-danger";
-	                body = React.createElement(
-	                    'div',
-	                    null,
-	                    'Error'
-	                );
-	                break;
-	            case SaveBtn.STATUS.Success:
-	                btnType = "btn-success";
-	                body = React.createElement(
-	                    'div',
-	                    null,
-	                    React.createElement('span', { className: 'glyphicon glyphicon-ok' })
-	                );
-	                break;
-	            default:
-	                btnType = "btn-primary";
-	                body = React.createElement(
-	                    'div',
-	                    null,
-	                    this.props.text
-	                );
-	                disabled = false;
-	                break;
-	        }
-
-	        var disabledClass = disabled ? " disabled" : "";
-	        return React.createElement(
-	            'button',
-	            { className: "cmp-SaveBtn btn " + btnType + disabledClass, onClick: this.clicked },
-	            body
-	        );
-	    }
-	});
-
-	SaveBtn.STATUS = {
-	    Default: 'default',
-	    Saving: 'saving',
-	    Success: 'success',
-	    Error: 'error'
-	};
-	module.exports = SaveBtn;
-
-/***/ },
-/* 208 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 
 	var BASE = '//' + window.location.hostname + ':5000';
 
@@ -24425,12 +23973,12 @@
 	module.exports = API;
 
 /***/ },
-/* 209 */
+/* 206 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var keyMirror = __webpack_require__(210);
+	var keyMirror = __webpack_require__(207);
 
 	/*
 	 The pattern here is that you have a actionType e.g. SCENE_DESTROY, responses from the
@@ -24522,7 +24070,7 @@
 	});
 
 /***/ },
-/* 210 */
+/* 207 */
 /***/ function(module, exports) {
 
 	/**
@@ -24581,903 +24129,19 @@
 
 
 /***/ },
-/* 211 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var UniqueIdMixin = __webpack_require__(205);
-	var InputValidationMixin = __webpack_require__(206);
-	var SaveBtn = __webpack_require__(207);
-	var DevicePicker = __webpack_require__(212);
-	var ZoneOutputPicker = __webpack_require__(213);
-	var ZoneTypePicker = __webpack_require__(214);
-
-	var ZoneInfo = React.createClass({
-	    displayName: 'ZoneInfo',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        return {
-	            clientId: this.props.clientId,
-	            name: this.props.name,
-	            description: this.props.description,
-	            address: this.props.address,
-	            deviceId: this.props.deviceId,
-	            type: this.props.type,
-	            output: this.props.output,
-	            errors: null
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        var s = this.state;
-	        return {
-	            clientId: s.clientId,
-	            name: s.name,
-	            description: s.description,
-	            address: s.address,
-	            deviceId: s.deviceId,
-	            type: s.type,
-	            output: s.output
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    _changed: function _changed(evt) {
-	        this.props.changed && this.props.changed();
-	        this.changed(evt);
-	    },
-
-	    devicePickerChanged: function devicePickerChanged(deviceId) {
-	        this.setState({ deviceId: deviceId });
-	    },
-
-	    typeChanged: function typeChanged(type) {
-	        this.setState({ type: type });
-	    },
-
-	    outputChanged: function outputChanged(output) {
-	        this.setState({ output: output });
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneInfo well' },
-	            React.createElement(
-	                'div',
-	                { className: this.addErr('form-group', 'name') },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid('name') },
-	                    'Name*'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.name,
-	                    'data-statepath': 'name',
-	                    onChange: this._changed,
-	                    className: 'name form-control',
-	                    type: 'text',
-	                    id: this.uid('name') }),
-	                this.errMsg('name')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", 'description') },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("description") },
-	                    'Description'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.description,
-	                    'data-statepath': 'description',
-	                    onChange: this._changed,
-	                    className: 'description form-control',
-	                    type: 'text',
-	                    id: this.uid("description") }),
-	                this.errMsg('description')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "address") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("address") },
-	                    'Address'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.address,
-	                    'data-statepath': 'address',
-	                    onChange: this._changed,
-	                    className: 'address form-control',
-	                    type: 'text',
-	                    id: this.uid("address") }),
-	                this.errMsg('address')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "deviceId") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("deviceId") },
-	                    'Device*'
-	                ),
-	                React.createElement(DevicePicker, {
-	                    disabled: this.isReadOnly("deviceId"),
-	                    defaultId: this.props.deviceId,
-	                    devices: this.props.devices,
-	                    changed: this.devicePickerChanged }),
-	                this.errMsg('deviceId')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "type") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("type") },
-	                    'Type*'
-	                ),
-	                React.createElement(ZoneTypePicker, { type: this.props.type, changed: this.typeChanged }),
-	                this.errMsg('type')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "output") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("output") },
-	                    'Output*'
-	                ),
-	                React.createElement(ZoneOutputPicker, { output: this.props.output, changed: this.outputChanged }),
-	                this.errMsg('output')
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneInfo;
-
-/***/ },
-/* 212 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var React = __webpack_require__(1);
-
-	var DevicePicker = React.createClass({
-	    displayName: "DevicePicker",
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            devices: []
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.defaultId
-	        };
-	    },
-
-	    //TODO: If only one item in the list, select by default on load
-	    //TODO: if output or type is unknown need to update zone control to be
-	    //able to handle those values
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.devices.forEach(function (device) {
-	            var id = device.id || device.clientId;
-	            options.push(React.createElement(
-	                "option",
-	                { key: id, value: id },
-	                device.name
-	            ));
-	        });
-	        return React.createElement(
-	            "div",
-	            { className: "cmp-DevicePicker" },
-	            React.createElement(
-	                "select",
-	                {
-	                    disabled: this.props.disabled,
-	                    className: "form-control",
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    "option",
-	                    { value: "" },
-	                    "Select a device..."
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = DevicePicker;
-
-/***/ },
-/* 213 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ZoneOutputPicker = React.createClass({
-	    displayName: 'ZoneOutputPicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.output || 'continuous'
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        // If a value wasn't passed in, raise a changed notification so callers
-	        // can set their value accordingly since we default to unknown
-	        if (this.state.value === 'continuous') {
-	            this.props.changed && this.props.changed(this.state.value);
-	        }
-	    },
-
-	    selected: function selected(evt) {
-	        this.setOutput(evt.target.value);
-	    },
-
-	    setOutput: function setOutput(output) {
-	        this.setState({ value: output });
-	        this.props.changed && this.props.changed(output);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneOutputPicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: 'unknown' },
-	                    'Unknown'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'continuous' },
-	                    'Continuous'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'binary' },
-	                    'Binary'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'rgb' },
-	                    'RGB'
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneOutputPicker;
-
-/***/ },
-/* 214 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ZoneTypePicker = React.createClass({
-	    displayName: 'ZoneTypePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.type || 'unknown'
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        // If a value wasn't passed in, raise a changed notification so callers
-	        // can set their value accordingly since we default to unknown
-	        if (this.state.value === 'unknown') {
-	            this.props.changed && this.props.changed(this.state.value);
-	        }
-	    },
-
-	    selected: function selected(evt) {
-	        this.setType(evt.target.value);
-	    },
-
-	    setType: function setType(type) {
-	        this.setState({ value: type });
-	        this.props.changed && this.props.changed(type);
-	    },
-
-	    render: function render() {
-	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Switch", val: "switch" }, { str: "Shade", val: "shade" }];
-	        var self = this;
-	        var nodes = types.map(function (type) {
-	            return React.createElement(
-	                'option',
-	                { value: type.val, key: type.val },
-	                type.str
-	            );
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneTypePicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                nodes
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneTypePicker;
-
-/***/ },
-/* 215 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-	  Copyright (c) 2016 Jed Watson.
-	  Licensed under the MIT License (MIT), see
-	  http://jedwatson.github.io/classnames
-	*/
-	/* global define */
-
-	(function () {
-		'use strict';
-
-		var hasOwn = {}.hasOwnProperty;
-
-		function classNames () {
-			var classes = [];
-
-			for (var i = 0; i < arguments.length; i++) {
-				var arg = arguments[i];
-				if (!arg) continue;
-
-				var argType = typeof arg;
-
-				if (argType === 'string' || argType === 'number') {
-					classes.push(arg);
-				} else if (Array.isArray(arg)) {
-					classes.push(classNames.apply(null, arg));
-				} else if (argType === 'object') {
-					for (var key in arg) {
-						if (hasOwn.call(arg, key) && arg[key]) {
-							classes.push(key);
-						}
-					}
-				}
-			}
-
-			return classes.join(' ');
-		}
-
-		if (typeof module !== 'undefined' && module.exports) {
-			module.exports = classNames;
-		} else if (true) {
-			// register as 'classnames', consistent with npm package name
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
-				return classNames;
-			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-		} else {
-			window.classNames = classNames;
-		}
-	}());
-
-
-/***/ },
-/* 216 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(208);
-
-	var ZoneActions = {
-	    loadAll: function loadAll() {
-	        return function (dispatch) {
-	            dispatch({
-	                type: Constants.ZONE_LOAD_ALL
-	            });
-
-	            Api.zoneLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.ZONE_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-
-	                dispatch({ type: Constants.ZONE_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    },
-
-	    importedZone: function importedZone(zoneJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zoneJson });
-	        };
-	    }
-
-	};
-	module.exports = ZoneActions;
-
-/***/ },
-/* 217 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(208);
-
-	var SystemActions = {
-	    deviceNew: function deviceNew() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_NEW_CLIENT });
-	        };
-	    },
-
-	    deviceDelete: function deviceDelete(id, clientId) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_DESTROY });
-	            if (!id) {
-	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, clientId: clientId });
-	                return;
-	            }
-
-	            Api.deviceDestroy(id, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, clientId: clientId, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, clientId: clientId, data: data });
-	            });
-	        };
-	    },
-
-	    savedDevice: function savedDevice(clientId, deviceJson, append) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
-	        };
-	    },
-
-	    importedDevice: function importedDevice(deviceJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_IMPORT_RAW, data: deviceJson });
-	        };
-	    },
-
-	    loadAllDevices: function loadAllDevices() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
-
-	            Api.deviceLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.DEVICE_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.DEVICE_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    },
-
-	    loadAllButtons: function loadAllButtons() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.BUTTON_LOAD_ALL });
-
-	            Api.buttonLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    }
-	};
-	module.exports = SystemActions;
-
-/***/ },
-/* 218 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var DeviceInfo = __webpack_require__(204);
-
-	var ImportTCP600GWB = React.createClass({
-	    displayName: 'ImportTCP600GWB',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            location: "",
-	            locationFailed: false,
-	            discoveryInProgress: false,
-	            tokenInProgress: false,
-	            token: '',
-	            tokenError: false,
-	            tokenMissingAddress: false
-	        };
-	    },
-
-	    autoDiscover: function autoDiscover() {
-	        var self = this;
-	        this.setState({ discoveryInProgress: true });
-
-	        //TODO: use API
-	        $.ajax({
-	            url: '/api/v1/discovery/TCP600GWB',
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                self.setState({
-	                    location: data.location,
-	                    discoveryInProgress: false
-	                });
-	            },
-	            error: function error(xhr, status, err) {
-	                self.setState({
-	                    locationFailed: true,
-	                    discoveryInProgress: false
-	                });
-	            }
-	        });
-	    },
-
-	    getToken: function getToken() {
-	        var device = this.refs.devInfo.toJson();
-	        this.setState({
-	            tokenMissingAddress: false,
-	            tokenInProgress: true
-	        });
-
-	        if (device.address === '') {
-	            this.setState({
-	                tokenMissingAddress: true,
-	                tokenInProgress: false
-	            });
-	            return;
-	        }
-
-	        //TODO: Use API
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/discovery/TCP600GWB/token?address=' + device.address,
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                self.setState({
-	                    tokenInProgress: false,
-	                    token: data.token,
-	                    tokenError: data.unauthorized
-	                });
-	            },
-	            error: function error(xhr, status, err) {
-	                self.setState({
-	                    tokenError: true,
-	                    tokenInProgress: false
-	                });
-	            }
-	        });
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ImportTCP600GWB' },
-	            React.createElement(
-	                'p',
-	                null,
-	                'Click to automatically retrieve the network address for this device'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'form-group has-error' },
-	                React.createElement(
-	                    'button',
-	                    { className: "btn btn-primary" + (this.state.discoveryInProgress ? " disabled" : ""), onClick: this.autoDiscover },
-	                    'Discover Address'
-	                ),
-	                React.createElement('i', { className: "fa fa-spinner fa-spin" + (this.state.discoveryInProgress ? "" : " hidden") }),
-	                React.createElement(
-	                    'span',
-	                    { className: "help-block" + (this.state.locationFailed ? "" : " hidden") },
-	                    'Error - Auto discovery failed, verify your TCP device is connected to the same network. If this continues to fail, use the official TCP app to get the device address'
-	                )
-	            ),
-	            React.createElement(
-	                'p',
-	                null,
-	                'Click to retrive the security token. Only click this after pressing the "sync" button on your physical ConnectedByTCP hub'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'form-group has-error' },
-	                React.createElement(
-	                    'button',
-	                    { className: "btn btn-primary" + (this.state.tokenInProgress ? " disabled" : ""), onClick: this.getToken },
-	                    'Get Token'
-	                ),
-	                React.createElement('i', { className: "fa fa-spinner fa-spin" + (this.state.tokenInProgress ? "" : " hidden") }),
-	                React.createElement(
-	                    'span',
-	                    { className: "help-block" + (this.state.tokenError ? "" : " hidden") },
-	                    'Error - unable to get the token, make sure you press the physical "sync" button on the TCP hub device before clicking the "Get Token" button otherwise this will fail'
-	                ),
-	                React.createElement(
-	                    'span',
-	                    { className: "help-block" + (this.state.tokenMissingAddress ? "" : " hidden") },
-	                    'Error - you must put a valid network address in the "Address" field first before clicking this button'
-	                )
-	            ),
-	            React.createElement(DeviceInfo, { modelNumber: 'TCP600GWB', readOnlyFields: 'modelNumber', showToken: 'true', token: this.state.token, tokenError: this.state.tokenError, address: this.state.location, ref: 'devInfo' })
-	        );
-	    }
-	});
-	module.exports = ImportTCP600GWB;
-
-/***/ },
-/* 219 */
+/* 208 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var DeviceInfo = __webpack_require__(204);
-	var SystemActions = __webpack_require__(217);
-
-	var SystemDeviceList = React.createClass({
-	    displayName: 'SystemDeviceList',
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            devices: []
-	        };
-	    },
-
-	    newClicked: function newClicked() {
-	        this.props.deviceNew();
-	    },
-
-	    render: function render() {
-	        var deviceNodes = this.props.devices.map(function (device) {
-	            return React.createElement(DeviceInfo, {
-	                name: device.name,
-	                description: device.description,
-	                address: device.address,
-	                modelNumber: device.modelNumber,
-	                id: device.id,
-	                clientId: device.clientId,
-	                readOnlyFields: 'id',
-	                key: device.id || device.clientId,
-	                deviceDelete: this.props.deviceDelete,
-	                savedDevice: this.props.savedDevice });
-	        }.bind(this));
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-DeviceList' },
-	            React.createElement(
-	                'h2',
-	                { className: this.props.devices.length > 0 ? "" : " hidden" },
-	                'Devices'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'header clearfix' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-primary pull-right', onClick: this.newClicked },
-	                    'New Device'
-	                )
-	            ),
-	            deviceNodes
-	        );
-	    }
-	});
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        deviceNew: function deviceNew() {
-	            dispatch(SystemActions.deviceNew());
-	        },
-	        deviceDelete: function deviceDelete(id, clientId) {
-	            dispatch(SystemActions.deviceDelete(id, clientId));
-	        },
-	        savedDevice: function savedDevice(clientId, data) {
-	            dispatch(SystemActions.savedDevice(clientId, data));
-	        }
-	    };
-	}
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(SystemDeviceList);
-
-/***/ },
-/* 220 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
-	var Redux = __webpack_require__(180);
-	var ReactRedux = __webpack_require__(173);
-	var SceneListGridCell = __webpack_require__(271);
-	var SceneControl = __webpack_require__(272);
-	var SceneInfo = __webpack_require__(222);
-	var UniqueIdMixin = __webpack_require__(205);
-	var SceneActions = __webpack_require__(231);
-	var Grid = __webpack_require__(233);
-
-	var SceneList = React.createClass({
-	    displayName: 'SceneList',
-
-	    mixins: [UniqueIdMixin],
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            editMode: false
-	        };
-	    },
-
-	    _onChange: function _onChange() {
-	        this.forceUpdate();
-	    },
-
-	    edit: function edit() {
-	        this.setState({ editMode: true });
-	    },
-
-	    endEdit: function endEdit() {
-	        this.setState({ editMode: false });
-	    },
-
-	    render: function render() {
-	        var body;
-	        var btns;
-
-	        var scenes = this.props.scenes.items;
-	        var gridCells = [];
-	        if (this.state.editMode) {
-	            body = scenes.map(function (scene) {
-	                var saveState;
-
-	                // Check for input validation errors from the server
-	                saveState = this.props.scenes.saveState[scene.clientId || scene.id] || {};
-
-	                return React.createElement(SceneInfo, {
-	                    zones: this.props.zones,
-	                    buttons: this.props.buttons,
-	                    scenes: this.props.scenes.items,
-	                    scene: scene,
-	                    readOnlyFields: 'id',
-	                    key: scene.id || scene.clientId,
-	                    errors: (saveState.err || {}).validationErrors,
-	                    saveScene: this.props.saveScene,
-	                    updateScene: this.props.updateScene,
-	                    deleteScene: this.props.deleteScene,
-	                    addCommand: this.props.addCommand,
-	                    saveStatus: saveState.status });
-	            }.bind(this));
-	            btns = React.createElement(
-	                'div',
-	                { className: 'clearfix buttonWrapper' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-primary btnNew pull-left', onClick: this.props.newClientScene },
-	                    'New'
-	                ),
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
-	                    'Done'
-	                )
-	            );
-	        } else {
-
-	            var gridCells = scenes.map(function (scene) {
-	                return {
-	                    cell: React.createElement(SceneListGridCell, { scene: scene }),
-	                    content: React.createElement(SceneControl, { scene: scene, key: scene.id || scene.clientId })
-	                };
-	            });
-	            btns = React.createElement(
-	                'div',
-	                { className: 'clearfix buttonWrapper' },
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-default btnEdit pull-right', onClick: this.edit },
-	                    React.createElement('i', { className: 'fa fa-cog', 'aria-hidden': 'true' })
-	                )
-	            );
-
-	            body = React.createElement(Grid, { cells: gridCells });
-	        }
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-SceneList' },
-	            React.createElement(
-	                'h2',
-	                null,
-	                'Scenes'
-	            ),
-	            btns,
-	            body
-	        );
-	    }
-	});
-
-	function mapStateToProps(state) {
-	    return {};
-	}
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        newClientScene: function newClientScene() {
-	            dispatch(SceneActions.newClient());
-	        },
-	        saveScene: function saveScene(sceneJson) {
-	            dispatch(SceneActions.create(sceneJson));
-	        },
-	        updateScene: function updateScene(sceneJson) {
-	            dispatch(SceneActions.update(sceneJson));
-	        },
-	        deleteScene: function deleteScene(clientId, id) {
-	            if (clientId) {
-	                dispatch(SceneActions.destroyClient(clientId));
-	            } else {
-	                dispatch(SceneActions.destroy(id));
-	            }
-	        },
-	        addCommand: function addCommand(sceneId, cmdType) {
-	            dispatch(SceneActions.addCommand(sceneId, cmdType));
-	        }
-	    };
-	}
-
-	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
-
-/***/ },
-/* 221 */,
-/* 222 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(173);
-	var SaveBtn = __webpack_require__(207);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
-	var CommandInfo = __webpack_require__(223);
-	var CommandTypePicker = __webpack_require__(232);
-	var SceneActions = __webpack_require__(231);
+	var SaveBtn = __webpack_require__(209);
+	var InputValidationMixin = __webpack_require__(210);
+	var UniqueIdMixin = __webpack_require__(211);
+	var CommandInfo = __webpack_require__(212);
+	var CommandTypePicker = __webpack_require__(222);
+	var SceneActions = __webpack_require__(221);
 
 	var SceneInfo = React.createClass({
 	    displayName: 'SceneInfo',
@@ -25703,21 +24367,185 @@
 	module.exports = SceneInfo;
 
 /***/ },
-/* 223 */
+/* 209 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var SaveBtn = React.createClass({
+	    displayName: 'SaveBtn',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            status: 'default'
+	        };
+	    },
+
+	    clicked: function clicked() {
+	        this.props.clicked();
+	    },
+
+	    render: function render() {
+	        var btnType, body;
+	        var disabled = true;
+
+	        switch (this.props.status) {
+	            case SaveBtn.STATUS.Saving:
+	                btnType = 'btn-primary';
+	                body = React.createElement(
+	                    'div',
+	                    null,
+	                    React.createElement('i', { className: 'fa fa-spinner fa-spin' })
+	                );
+	                break;
+	            case SaveBtn.STATUS.Error:
+	                btnType = "btn-danger";
+	                body = React.createElement(
+	                    'div',
+	                    null,
+	                    'Error'
+	                );
+	                break;
+	            case SaveBtn.STATUS.Success:
+	                btnType = "btn-success";
+	                body = React.createElement(
+	                    'div',
+	                    null,
+	                    React.createElement('span', { className: 'glyphicon glyphicon-ok' })
+	                );
+	                break;
+	            default:
+	                btnType = "btn-primary";
+	                body = React.createElement(
+	                    'div',
+	                    null,
+	                    this.props.text
+	                );
+	                disabled = false;
+	                break;
+	        }
+
+	        var disabledClass = disabled ? " disabled" : "";
+	        return React.createElement(
+	            'button',
+	            { className: "cmp-SaveBtn btn " + btnType + disabledClass, onClick: this.clicked },
+	            body
+	        );
+	    }
+	});
+
+	SaveBtn.STATUS = {
+	    Default: 'default',
+	    Saving: 'saving',
+	    Success: 'success',
+	    Error: 'error'
+	};
+	module.exports = SaveBtn;
+
+/***/ },
+/* 210 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = {
+	    uid: function uid(field) {
+	        var id = !this.state.clientId ? this.state.id : this.state.clientId;
+	        return id + '_' + field;
+	    },
+
+	    getErr: function getErr(field) {
+	        var errors = this.state.errors;
+	        if (!errors) {
+	            return null;
+	        }
+	        return errors[this.uid(field)];
+	    },
+
+	    hasErr: function hasErr(field) {
+	        return this.getErr(field) != null;
+	    },
+
+	    errMsg: function errMsg(field) {
+	        var err = this.getErr(field);
+	        if (!err) {
+	            return;
+	        }
+	        return React.createElement(
+	            "span",
+	            { className: "help-block" },
+	            "Error - " + err.message
+	        );
+	    },
+
+	    addErr: function addErr(classes, field) {
+	        if (this.hasErr(field)) {
+	            return classes + " has-error";
+	        }
+	        return classes;
+	    },
+
+	    changed: function changed(evt) {
+	        var statePath = evt.target.getAttribute('data-statepath');
+	        var s = {};
+	        s[statePath] = evt.target.value;
+	        s.dirty = true;
+
+	        var errors = this.state['errors'] || {};
+	        delete errors[this.uid(statePath)];
+	        s.errors = errors;
+	        this.setState(s);
+	    },
+
+	    isReadOnly: function isReadOnly(field) {
+	        var fields = this.props.readOnlyFields || '';
+	        var items = fields.split(',');
+	        for (var i = 0; i < items.length; ++i) {
+	            if (items[i] === field) {
+	                return true;
+	            }
+	        }
+	        return false;
+	    }
+	};
+
+/***/ },
+/* 211 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	var _current = 0;
+
+	module.exports = {
+	    getNextIdAndIncrement: function getNextIdAndIncrement() {
+	        _current += 1;
+	        return _current;
+	    },
+
+	    getCurrentId: function getCurrentId() {
+	        return _current;
+	    }
+	};
+
+/***/ },
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var ZoneSetLevelCommand = __webpack_require__(224);
-	var SceneSetCommand = __webpack_require__(226);
-	var SaveBtn = __webpack_require__(207);
-	var ButtonPressCommand = __webpack_require__(228);
-	var ButtonReleaseCommand = __webpack_require__(230);
-	var Api = __webpack_require__(208);
-	var Constants = __webpack_require__(209);
-	var SceneActions = __webpack_require__(231);
+	var ZoneSetLevelCommand = __webpack_require__(213);
+	var SceneSetCommand = __webpack_require__(216);
+	var SaveBtn = __webpack_require__(209);
+	var ButtonPressCommand = __webpack_require__(218);
+	var ButtonReleaseCommand = __webpack_require__(220);
+	var Api = __webpack_require__(205);
+	var Constants = __webpack_require__(206);
+	var SceneActions = __webpack_require__(221);
 
 	var CommandInfo = React.createClass({
 	    displayName: 'CommandInfo',
@@ -25822,16 +24650,16 @@
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(CommandInfo);
 
 /***/ },
-/* 224 */
+/* 213 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
-	var ZonePicker = __webpack_require__(225);
-	var Api = __webpack_require__(208);
+	var InputValidationMixin = __webpack_require__(210);
+	var UniqueIdMixin = __webpack_require__(211);
+	var ZonePicker = __webpack_require__(214);
+	var Api = __webpack_require__(205);
 	var ClassNames = __webpack_require__(215);
 
 	var ZoneSetLevelCommand = module.exports = React.createClass({
@@ -26032,7 +24860,7 @@
 	module.exports = ZoneSetLevelCommand;
 
 /***/ },
-/* 225 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26091,15 +24919,69 @@
 	module.exports = ZonePicker;
 
 /***/ },
-/* 226 */
+/* 215 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = [];
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+
+			return classes.join(' ');
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
+
+
+/***/ },
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
-	var ScenePicker = __webpack_require__(227);
+	var InputValidationMixin = __webpack_require__(210);
+	var UniqueIdMixin = __webpack_require__(211);
+	var ScenePicker = __webpack_require__(217);
 
 	var SceneSetCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -26169,7 +25051,7 @@
 	module.exports = SceneSetCommand;
 
 /***/ },
-/* 227 */
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26233,15 +25115,15 @@
 	module.exports = ScenePicker;
 
 /***/ },
-/* 228 */
+/* 218 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
-	var ButtonPicker = __webpack_require__(229);
+	var InputValidationMixin = __webpack_require__(210);
+	var UniqueIdMixin = __webpack_require__(211);
+	var ButtonPicker = __webpack_require__(219);
 
 	var ButtonPressCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -26310,7 +25192,7 @@
 	module.exports = ButtonPressCommand;
 
 /***/ },
-/* 229 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26363,15 +25245,15 @@
 	module.exports = ButtonPicker;
 
 /***/ },
-/* 230 */
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
-	var ButtonPicker = __webpack_require__(229);
+	var InputValidationMixin = __webpack_require__(210);
+	var UniqueIdMixin = __webpack_require__(211);
+	var ButtonPicker = __webpack_require__(219);
 
 	var ButtonReleaseCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -26439,13 +25321,13 @@
 	module.exports = ButtonReleaseCommand;
 
 /***/ },
-/* 231 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(208);
+	var Constants = __webpack_require__(206);
+	var Api = __webpack_require__(205);
 
 	var SceneActions = {
 
@@ -26558,7 +25440,7 @@
 	module.exports = SceneActions;
 
 /***/ },
-/* 232 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26618,14 +25500,14 @@
 	module.exports = CommandTypePicker;
 
 /***/ },
-/* 233 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var ReactCSSTransitionGroup = __webpack_require__(234);
-	var ReactTransitionGroup = __webpack_require__(241);
+	var ReactCSSTransitionGroup = __webpack_require__(224);
+	var ReactTransitionGroup = __webpack_require__(231);
 	var ReactDOM = __webpack_require__(34);
 	var ClassNames = __webpack_require__(215);
 
@@ -26836,13 +25718,13 @@
 	module.exports = Grid;
 
 /***/ },
-/* 234 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(235);
+	module.exports = __webpack_require__(225);
 
 /***/ },
-/* 235 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -26862,8 +25744,8 @@
 
 	var React = __webpack_require__(2);
 
-	var ReactTransitionGroup = __webpack_require__(236);
-	var ReactCSSTransitionGroupChild = __webpack_require__(238);
+	var ReactTransitionGroup = __webpack_require__(226);
+	var ReactCSSTransitionGroupChild = __webpack_require__(228);
 
 	function createTransitionTimeoutPropValidator(transitionType) {
 	  var timeoutPropName = 'transition' + transitionType + 'Timeout';
@@ -26934,7 +25816,7 @@
 	module.exports = ReactCSSTransitionGroup;
 
 /***/ },
-/* 236 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
@@ -26954,7 +25836,7 @@
 
 	var React = __webpack_require__(2);
 	var ReactInstanceMap = __webpack_require__(119);
-	var ReactTransitionChildMapping = __webpack_require__(237);
+	var ReactTransitionChildMapping = __webpack_require__(227);
 
 	var emptyFunction = __webpack_require__(12);
 
@@ -27186,7 +26068,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 237 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
@@ -27295,7 +26177,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 238 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -27314,8 +26196,8 @@
 	var React = __webpack_require__(2);
 	var ReactDOM = __webpack_require__(35);
 
-	var CSSCore = __webpack_require__(239);
-	var ReactTransitionEvents = __webpack_require__(240);
+	var CSSCore = __webpack_require__(229);
+	var ReactTransitionEvents = __webpack_require__(230);
 
 	var onlyChild = __webpack_require__(33);
 
@@ -27467,7 +26349,7 @@
 	module.exports = ReactCSSTransitionGroupChild;
 
 /***/ },
-/* 239 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -27594,7 +26476,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 240 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -27672,13 +26554,13 @@
 	module.exports = ReactTransitionEvents;
 
 /***/ },
-/* 241 */
+/* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(236);
+	module.exports = __webpack_require__(226);
 
 /***/ },
-/* 242 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27686,10 +26568,10 @@
 	var ClassNames = __webpack_require__(215);
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var ZoneControl = __webpack_require__(243);
-	var ZoneActions = __webpack_require__(216);
-	var Grid = __webpack_require__(233);
-	var ZoneListGridCell = __webpack_require__(245);
+	var ZoneControl = __webpack_require__(233);
+	var ZoneActions = __webpack_require__(235);
+	var Grid = __webpack_require__(223);
+	var ZoneListGridCell = __webpack_require__(236);
 
 	var ZoneList = React.createClass({
 	    displayName: 'ZoneList',
@@ -27776,7 +26658,7 @@
 	module.exports = ZoneList;
 
 /***/ },
-/* 243 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27784,8 +26666,8 @@
 	var ClassNames = __webpack_require__(215);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var CssMixin = __webpack_require__(244);
-	var Api = __webpack_require__(208);
+	var CssMixin = __webpack_require__(234);
+	var Api = __webpack_require__(205);
 	var ClassNames = __webpack_require__(215);
 
 	var ZoneControl = React.createClass({
@@ -27979,7 +26861,7 @@
 	module.exports = ZoneControl;
 
 /***/ },
-/* 244 */
+/* 234 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -27991,7 +26873,43 @@
 	};
 
 /***/ },
-/* 245 */
+/* 235 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(206);
+	var Api = __webpack_require__(205);
+
+	var ZoneActions = {
+	    loadAll: function loadAll() {
+	        return function (dispatch) {
+	            dispatch({
+	                type: Constants.ZONE_LOAD_ALL
+	            });
+
+	            Api.zoneLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.ZONE_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+
+	                dispatch({ type: Constants.ZONE_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    },
+
+	    importedZone: function importedZone(zoneJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zoneJson });
+	        };
+	    }
+
+	};
+	module.exports = ZoneActions;
+
+/***/ },
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28044,14 +26962,14 @@
 	module.exports = ZoneListGridCell;
 
 /***/ },
-/* 246 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var LogLine = __webpack_require__(247);
+	var LogLine = __webpack_require__(238);
 
 	var Logging = React.createClass({
 	    displayName: 'Logging',
@@ -28187,7 +27105,7 @@
 	module.exports = Logging;
 
 /***/ },
-/* 247 */
+/* 238 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -28232,14 +27150,14 @@
 	module.exports = LogLine;
 
 /***/ },
-/* 248 */
+/* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var NewRecipe = __webpack_require__(249);
-	var RecipeList = __webpack_require__(259);
+	var NewRecipe = __webpack_require__(240);
+	var RecipeList = __webpack_require__(250);
 
 	var RecipeApp = React.createClass({
 	    displayName: 'RecipeApp',
@@ -28306,16 +27224,16 @@
 	module.exports = RecipeApp;
 
 /***/ },
-/* 249 */
+/* 240 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var IngredientList = __webpack_require__(250);
-	var TriggerList = __webpack_require__(252);
-	var ActionList = __webpack_require__(254);
-	var CookBookList = __webpack_require__(256);
+	var IngredientList = __webpack_require__(241);
+	var TriggerList = __webpack_require__(243);
+	var ActionList = __webpack_require__(245);
+	var CookBookList = __webpack_require__(247);
 
 	var NewRecipe = React.createClass({
 	    displayName: 'NewRecipe',
@@ -28599,13 +27517,13 @@
 	module.exports = NewRecipe;
 
 /***/ },
-/* 250 */
+/* 241 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Ingredient = __webpack_require__(251);
+	var Ingredient = __webpack_require__(242);
 
 	var IngredientList = React.createClass({
 	    displayName: 'IngredientList',
@@ -28642,13 +27560,13 @@
 	module.exports = IngredientList;
 
 /***/ },
-/* 251 */
+/* 242 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var UniqueIdMixin = __webpack_require__(205);
+	var UniqueIdMixin = __webpack_require__(211);
 
 	var Ingredient = React.createClass({
 	    displayName: 'Ingredient',
@@ -28739,13 +27657,13 @@
 	module.exports = Ingredient;
 
 /***/ },
-/* 252 */
+/* 243 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Trigger = __webpack_require__(253);
+	var Trigger = __webpack_require__(244);
 
 	var TriggerList = React.createClass({
 	    displayName: 'TriggerList',
@@ -28770,7 +27688,7 @@
 	module.exports = TriggerList;
 
 /***/ },
-/* 253 */
+/* 244 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -28810,13 +27728,13 @@
 	module.exports = Trigger;
 
 /***/ },
-/* 254 */
+/* 245 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Action = __webpack_require__(255);
+	var Action = __webpack_require__(246);
 
 	var ActionList = React.createClass({
 	    displayName: 'ActionList',
@@ -28840,7 +27758,7 @@
 	module.exports = ActionList;
 
 /***/ },
-/* 255 */
+/* 246 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -28880,13 +27798,13 @@
 	module.exports = Action;
 
 /***/ },
-/* 256 */
+/* 247 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var CookBook = __webpack_require__(257);
+	var CookBook = __webpack_require__(248);
 
 	var CookBookList = React.createClass({
 	    displayName: 'CookBookList',
@@ -28910,13 +27828,13 @@
 	module.exports = CookBookList;
 
 /***/ },
-/* 257 */
+/* 248 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var AssetsMixin = __webpack_require__(258);
+	var AssetsMixin = __webpack_require__(249);
 
 	var CookBook = React.createClass({
 	    displayName: 'CookBook',
@@ -28944,7 +27862,7 @@
 	module.exports = CookBook;
 
 /***/ },
-/* 258 */
+/* 249 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -28956,7 +27874,7 @@
 	};
 
 /***/ },
-/* 259 */
+/* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28964,7 +27882,7 @@
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	var React = __webpack_require__(1);
-	var RecipeInfo = __webpack_require__(260);
+	var RecipeInfo = __webpack_require__(251);
 
 	var RecipeList = React.createClass({
 	    displayName: 'RecipeList',
@@ -29032,7 +27950,7 @@
 	module.exports = RecipeList;
 
 /***/ },
-/* 260 */
+/* 251 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29126,19 +28044,95 @@
 	module.exports = RecipeInfo;
 
 /***/ },
-/* 261 */
+/* 252 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(206);
+	var Api = __webpack_require__(205);
+
+	var SystemActions = {
+	    deviceNew: function deviceNew() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_NEW_CLIENT });
+	        };
+	    },
+
+	    deviceDelete: function deviceDelete(id, clientId) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_DESTROY });
+	            if (!id) {
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, clientId: clientId });
+	                return;
+	            }
+
+	            Api.deviceDestroy(id, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, clientId: clientId, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, clientId: clientId, data: data });
+	            });
+	        };
+	    },
+
+	    savedDevice: function savedDevice(clientId, deviceJson, append) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+	        };
+	    },
+
+	    importedDevice: function importedDevice(deviceJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_IMPORT_RAW, data: deviceJson });
+	        };
+	    },
+
+	    loadAllDevices: function loadAllDevices() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
+
+	            Api.deviceLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.DEVICE_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.DEVICE_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    },
+
+	    loadAllButtons: function loadAllButtons() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.BUTTON_LOAD_ALL });
+
+	            Api.buttonLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    }
+	};
+	module.exports = SystemActions;
+
+/***/ },
+/* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Redux = __webpack_require__(180);
-	var thunk = __webpack_require__(262).default;
-	var initialState = __webpack_require__(263);
-	var buttonReducer = __webpack_require__(264);
-	var systemReducer = __webpack_require__(265);
-	var scenesReducer = __webpack_require__(266);
-	var zonesReducer = __webpack_require__(268);
-	var loadStatusReducer = __webpack_require__(273);
+	var thunk = __webpack_require__(254).default;
+	var initialState = __webpack_require__(255);
+	var buttonReducer = __webpack_require__(256);
+	var systemReducer = __webpack_require__(257);
+	var scenesReducer = __webpack_require__(258);
+	var zonesReducer = __webpack_require__(260);
+	var loadStatusReducer = __webpack_require__(261);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
@@ -29151,7 +28145,7 @@
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
 
 /***/ },
-/* 262 */
+/* 254 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -29179,7 +28173,7 @@
 	exports['default'] = thunk;
 
 /***/ },
-/* 263 */
+/* 255 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -29221,13 +28215,13 @@
 	};
 
 /***/ },
-/* 264 */
+/* 256 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(263);
+	var Constants = __webpack_require__(206);
+	var initialState = __webpack_require__(255);
 
 	module.exports = function (state, action) {
 	    var newState = [];
@@ -29252,13 +28246,13 @@
 	};
 
 /***/ },
-/* 265 */
+/* 257 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(263);
+	var Constants = __webpack_require__(206);
+	var initialState = __webpack_require__(255);
 
 	var _clientId = 1;
 	module.exports = function (state, action) {
@@ -29288,6 +28282,10 @@
 	        case Constants.DEVICE_CREATE_RAW:
 	            newState.devices = newState.devices.map(function (device) {
 	                if (action.clientId && device.clientId === action.clientId) {
+	                    return action.data;
+	                }
+
+	                if (device.id === action.data.id) {
 	                    return action.data;
 	                }
 	                return device;
@@ -29339,14 +28337,14 @@
 	};
 
 /***/ },
-/* 266 */
+/* 258 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(263);
-	var CommandsReducer = __webpack_require__(267);
+	var Constants = __webpack_require__(206);
+	var initialState = __webpack_require__(255);
+	var CommandsReducer = __webpack_require__(259);
 
 	var _clientId = 1;
 
@@ -29476,12 +28474,12 @@
 	};
 
 /***/ },
-/* 267 */
+/* 259 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -29514,13 +28512,13 @@
 	};
 
 /***/ },
-/* 268 */
+/* 260 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(263);
+	var Constants = __webpack_require__(206);
+	var initialState = __webpack_require__(255);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -29559,7 +28557,39 @@
 	};
 
 /***/ },
-/* 269 */
+/* 261 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(206);
+
+	module.exports = function (state, action) {
+	    var newState = Object.assign({}, state);
+
+	    switch (action.type) {
+	        case Constants.SCENE_LOAD_ALL_RAW:
+	            newState.scenesLoaded = true;
+	            break;
+
+	        case Constants.ZONE_LOAD_ALL_RAW:
+	            newState.zonesLoaded = true;
+	            break;
+
+	        case Constants.DEVICE_LOAD_ALL_RAW:
+	            newState.devicesLoaded = true;
+	            break;
+
+	        case Constants.BUTTON_LOAD_ALL:
+	            newState.buttonsLoaded = true;
+	            break;
+	    }
+
+	    return newState;
+	};
+
+/***/ },
+/* 262 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29685,35 +28715,1121 @@
 	module.exports = Testr;
 
 /***/ },
-/* 270 */,
-/* 271 */
+/* 263 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var DiscoverDevices = __webpack_require__(264);
+	var ImportTCP600GWB = __webpack_require__(271);
+
+	var Import = React.createClass({
+	    displayName: 'Import',
+
+	    getInitialState: function getInitialState() {
+	        return { selectedProduct: null };
+	    },
+
+	    productSelected: function productSelected(evt) {
+	        this.setState({ selectedProduct: evt.target.value });
+	    },
+
+	    render: function render() {
+	        //TODO: Should get this list from the server, generate drop down automatically from
+	        //registered extensions
+
+	        var body;
+	        switch (this.state.selectedProduct) {
+	            case 'tcp600gwb':
+	            case 'fluxwifi':
+	            case 'f7c029v2':
+	            case 'f7c043fc':
+	                body = React.createElement(DiscoverDevices, { modelNumber: this.state.selectedProduct });
+	                break;
+	            default:
+	                body = null;
+	        }
+
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-Import' },
+	            React.createElement(
+	                'h3',
+	                null,
+	                'Select a product to import'
+	            ),
+	            React.createElement(
+	                'select',
+	                { className: 'form-control', onChange: this.productSelected, value: this.state.selectedProduct },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Choose ...'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'f7c029v2' },
+	                    'Belkin WeMo Insight'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'f7c043fc' },
+	                    'Belkin WeMo Maker'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'l-bdgpro2-wh' },
+	                    'Lutron'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'tcp600gwb' },
+	                    'Connected By TCP Hub'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'fluxwifi' },
+	                    'Flux WIFI Bulb'
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'content' },
+	                body
+	            )
+	        );
+	    }
+	});
+	module.exports = Import;
+
+	/*
+	//TODO: Delete
+	                body = <ImportTCP600GWB />
+	            break;
+	*/
+
+/***/ },
+/* 264 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(173);
+	var DeviceInfo = __webpack_require__(265);
+	var Api = __webpack_require__(205);
+	var SystemActions = __webpack_require__(252);
+
+	var DiscoverDevices = React.createClass({
+	    displayName: 'DiscoverDevices',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            discovering: false,
+	            devices: null
+	        };
+	    },
+
+	    discover: function discover() {
+	        this.setState({
+	            discovering: true,
+	            devices: null
+	        });
+
+	        Api.discoverDevice(this.props.modelNumber, function (err, data) {
+	            this.setState({
+	                discovering: false,
+	                devices: data || []
+	            });
+	        }.bind(this));
+	    },
+
+	    render: function render() {
+	        var devices;
+	        if (this.state.devices && this.state.devices.length > 0) {
+	            devices = this.state.devices.map(function (device) {
+	                return React.createElement(DeviceInfo, {
+	                    name: device.name,
+	                    description: device.description,
+	                    address: device.address,
+	                    modelNumber: device.modelNumber,
+	                    connectionPool: device.connPool,
+	                    cmdBuilder: device.cmdBuilder,
+	                    id: device.id,
+	                    clientId: device.clientId,
+	                    readOnlyFields: 'id, modelNumber',
+	                    key: device.id || device.clientId,
+	                    savedDevice: this.props.importedDevice,
+	                    showZones: true,
+	                    zones: device.zones });
+	            }.bind(this));
+	        }
+
+	        var importBody;
+	        importBody = React.createElement(
+	            'div',
+	            null,
+	            React.createElement(
+	                'button',
+	                { className: "btn btn-primary" + (this.state.discovering ? " disabled" : ""),
+	                    onClick: this.discover },
+	                'Discover Devices'
+	            ),
+	            React.createElement('i', { className: "fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden") }),
+	            React.createElement(
+	                'h3',
+	                { className: this.state.devices ? "" : " hidden" },
+	                this.state.devices && this.state.devices.length,
+	                ' device(s) found'
+	            ),
+	            React.createElement(
+	                'p',
+	                { className: this.state.devices && this.state.devices.length > 0 ? "" : " hidden" },
+	                'Click "Save" on each device you wish to add to your system.'
+	            ),
+	            devices
+	        );
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-DiscoverDevices' },
+	            importBody
+	        );
+	    }
+	});
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        importedDevice: function importedDevice(clientId, deviceJson) {
+	            dispatch(SystemActions.importedDevice(deviceJson));
+	        }
+	    };
+	}
+
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DiscoverDevices);
+
+/***/ },
+/* 265 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(173);
+	var UniqueIdMixin = __webpack_require__(211);
+	var InputValidationMixin = __webpack_require__(210);
+	var SaveBtn = __webpack_require__(209);
+	var Api = __webpack_require__(205);
+	var ZoneInfo = __webpack_require__(266);
+	var Classnames = __webpack_require__(215);
+	var ZoneActions = __webpack_require__(235);
+	var DeviceTypePicker = __webpack_require__(270);
+
+	var DeviceInfo = React.createClass({
+	    displayName: 'DeviceInfo',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        //TODO: need state?
+	        return {
+	            name: this.props.name || '',
+	            description: this.props.description || '',
+	            address: this.props.address,
+	            id: this.props.id,
+	            clientId: this.props.clientId,
+	            modelNumber: this.props.modelNumber || '',
+	            token: this.props.token,
+	            showToken: false,
+	            errors: null,
+	            saveButtonStatus: '',
+	            dirty: !this.props.id,
+	            connectionPool: this.props.connectionPool,
+	            cmdBuilder: this.props.cmdBuilder,
+	            type: this.props.type
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            zones: [],
+	            showZones: false
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        var s = this.state;
+	        return {
+	            clientId: this.props.clientId,
+	            name: s.name,
+	            description: s.description,
+	            address: s.address,
+	            modelNumber: s.modelNumber,
+	            token: s.token,
+	            id: s.id,
+	            connPool: this.props.connectionPool,
+	            cmdBuilder: this.props.cmdBuilder,
+	            type: s.type
+	        };
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        //TODO: Needed?
+	        var device = this.state.device;
+	        if (nextProps.name != "") {
+	            this.setState({ name: nextProps.name });
+	        }
+	        if (nextProps.description != "") {
+	            this.setState({ description: nextProps.description });
+	        }
+	        if (nextProps.address != "") {
+	            this.setState({ address: nextProps.address });
+	        }
+	        if (nextProps.type != "") {
+	            this.setState({ type: nextProps.type });
+	        }
+	        if (nextProps.token != "") {
+	            this.setState({ token: nextProps.token });
+	        }
+	        if (nextProps.id != "") {
+	            this.setState({ id: nextProps.id });
+	        }
+	        if (nextProps.clientId != "") {
+	            this.setState({ clientId: nextProps.clientId });
+	        }
+	    },
+
+	    testConnection: function testConnection() {
+	        //TODO: How to know what to call
+	    },
+
+	    save: function save() {
+	        this.setState({ errors: null });
+
+	        Api.deviceCreate(this.toJson(), function (err, deviceData) {
+	            if (err) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validationErrors
+	                });
+	                return;
+	            }
+
+	            // Let callers know the device has been saved
+	            this.props.savedDevice(this.state.clientId, deviceData);
+
+	            // Now we need to loop through each of the zones and save them
+	            function saveZone(index) {
+	                if (index >= this.props.zones.length) {
+	                    this.setState({ saveButtonStatus: 'success' });
+	                    return;
+	                }
+
+	                // Now the device has an id, we need to bind the zone to it
+	                var zoneInfo = this.refs["zoneInfo_" + this.props.zones[index].clientId];
+	                var zone = Object.assign({}, zoneInfo.toJson());
+	                zone.deviceId = deviceData.id;
+	                Api.zoneCreate(zone, function (err, zoneData) {
+	                    if (err) {
+	                        zoneInfo.setErrors(err.validationErrors);
+	                        this.setState({
+	                            saveButtonStatus: 'error'
+	                        });
+	                        return;
+	                    }
+
+	                    this.props.savedZone(zoneData);
+	                    saveZone.bind(this)(index + 1);
+	                }.bind(this));
+	            }
+	            saveZone.bind(this)(0);
+	        }.bind(this));
+	    },
+
+	    deleteDevice: function deleteDevice() {
+	        this.props.deviceDelete(this.state.id, this.state.clientId);
+	    },
+
+	    typeChanged: function typeChanged(type) {
+	        //this.setState({ type: type });
+	        this.changed({
+	            target: {
+	                getAttribute: function getAttribute() {
+	                    return 'type';
+	                },
+	                value: type
+	            }
+	        });
+	    },
+
+	    _changed: function _changed(evt) {
+	        this.setState({ saveButtonStatus: '' });
+
+	        if (evt) {
+	            this.changed(evt);
+	        }
+	    },
+
+	    _zoneChanged: function _zoneChanged() {
+	        this._changed();
+	    },
+
+	    render: function render() {
+	        var device = this.state.device;
+
+	        var token;
+	        if (this.props.showToken) {
+	            token = React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "token") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("token") },
+	                    'Security Token'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.token,
+	                    'data-statepath': 'token',
+	                    onChange: this._changed,
+	                    className: 'token form-control',
+	                    type: 'text',
+	                    id: this.uid("token") }),
+	                this.errMsg('token')
+	            );
+	        }
+
+	        var saveBtn;
+	        if (this.state.dirty) {
+	            saveBtn = React.createElement(SaveBtn, {
+	                clicked: this.save,
+	                text: 'Save',
+	                status: this.state.saveButtonStatus });
+	        }
+
+	        var deleteBtn;
+	        if (this.props.deleteDevice) {
+	            deleteBtn = React.createElement(
+	                'button',
+	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteDevice },
+	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
+	            );
+	        }
+
+	        var zones;
+	        if (this.props.zones.length === 0) {
+	            zones = React.createElement(
+	                'h4',
+	                null,
+	                '0 zones found'
+	            );
+	        } else {
+	            zones = this.props.zones.map(function (zone) {
+	                return React.createElement(ZoneInfo, {
+	                    ref: "zoneInfo_" + zone.clientId,
+	                    readOnlyFields: 'deviceId',
+	                    key: zone.id || zone.clientId,
+	                    clientId: zone.clientId,
+	                    name: zone.name,
+	                    description: zone.description,
+	                    address: zone.address,
+	                    type: zone.type,
+	                    output: zone.output,
+	                    deviceId: this.state.id || this.state.clientId,
+	                    devices: [this.toJson()],
+	                    changed: this._zoneChanged });
+	            }.bind(this));
+	        }
+
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-DeviceInfo well-sm' },
+	            deleteBtn,
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "name") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("name") },
+	                    'Name*'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this._changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid("name") }),
+	                this.errMsg("name")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "id") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("id") },
+	                    'ID'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.id,
+	                    readOnly: this.isReadOnly("id"),
+	                    'data-statepath': 'id',
+	                    onChange: this._changed,
+	                    className: 'id form-control',
+	                    type: 'text',
+	                    id: this.uid("id") }),
+	                this.errMsg("id")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "type") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("type") },
+	                    'Type*'
+	                ),
+	                React.createElement(DeviceTypePicker, { type: this.state.type, changed: this.typeChanged }),
+	                this.errMsg('type')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "description") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("description") },
+	                    'Description'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.description,
+	                    'data-statepath': 'description',
+	                    onChange: this._changed,
+	                    className: 'description form-control',
+	                    type: 'text',
+	                    id: this.uid("description") }),
+	                this.errMsg("description")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "modelNumber") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("modelNumber") },
+	                    'Model Number'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.modelNumber,
+	                    readOnly: this.isReadOnly("modelNumber"),
+	                    'data-statepath': 'modelNumber',
+	                    onChange: this._changed,
+	                    className: 'modelNumber form-control',
+	                    type: 'text',
+	                    id: this.uid("modelNumber") }),
+	                this.errMsg("modelNumber")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "address") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("address") },
+	                    'Address'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this._changed,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
+	                this.errMsg("address")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: Classnames({ clearfix: true, hidden: !this.props.showZones }) },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("zones") },
+	                    'Zones',
+	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse zones', id: this.uid("zones") },
+	                zones
+	            ),
+	            token,
+	            React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                saveBtn
+	            ),
+	            React.createElement('div', { style: { clear: "both" } })
+	        );
+	    }
+	});
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        savedZone: function savedZone(zoneJson) {
+	            dispatch(ZoneActions.importedZone(zoneJson));
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceInfo);
+
+/***/ },
+/* 266 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var UniqueIdMixin = __webpack_require__(211);
+	var InputValidationMixin = __webpack_require__(210);
+	var SaveBtn = __webpack_require__(209);
+	var DevicePicker = __webpack_require__(267);
+	var ZoneOutputPicker = __webpack_require__(268);
+	var ZoneTypePicker = __webpack_require__(269);
+
+	var ZoneInfo = React.createClass({
+	    displayName: 'ZoneInfo',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            clientId: this.props.clientId,
+	            name: this.props.name,
+	            description: this.props.description,
+	            address: this.props.address,
+	            deviceId: this.props.deviceId,
+	            type: this.props.type,
+	            output: this.props.output,
+	            errors: null
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        var s = this.state;
+	        return {
+	            clientId: s.clientId,
+	            name: s.name,
+	            description: s.description,
+	            address: s.address,
+	            deviceId: s.deviceId,
+	            type: s.type,
+	            output: s.output
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    _changed: function _changed(evt) {
+	        this.props.changed && this.props.changed();
+	        this.changed(evt);
+	    },
+
+	    devicePickerChanged: function devicePickerChanged(deviceId) {
+	        this.setState({ deviceId: deviceId });
+	    },
+
+	    typeChanged: function typeChanged(type) {
+	        this.setState({ type: type });
+	    },
+
+	    outputChanged: function outputChanged(output) {
+	        this.setState({ output: output });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZoneInfo well' },
+	            React.createElement(
+	                'div',
+	                { className: this.addErr('form-group', 'name') },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid('name') },
+	                    'Name*'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this._changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid('name') }),
+	                this.errMsg('name')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", 'description') },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("description") },
+	                    'Description'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.description,
+	                    'data-statepath': 'description',
+	                    onChange: this._changed,
+	                    className: 'description form-control',
+	                    type: 'text',
+	                    id: this.uid("description") }),
+	                this.errMsg('description')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "address") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("address") },
+	                    'Address'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this._changed,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
+	                this.errMsg('address')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "deviceId") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("deviceId") },
+	                    'Device*'
+	                ),
+	                React.createElement(DevicePicker, {
+	                    disabled: this.isReadOnly("deviceId"),
+	                    defaultId: this.props.deviceId,
+	                    devices: this.props.devices,
+	                    changed: this.devicePickerChanged }),
+	                this.errMsg('deviceId')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "type") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("type") },
+	                    'Type*'
+	                ),
+	                React.createElement(ZoneTypePicker, { type: this.props.type, changed: this.typeChanged }),
+	                this.errMsg('type')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "output") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("output") },
+	                    'Output*'
+	                ),
+	                React.createElement(ZoneOutputPicker, { output: this.props.output, changed: this.outputChanged }),
+	                this.errMsg('output')
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneInfo;
+
+/***/ },
+/* 267 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var React = __webpack_require__(1);
 
-	var SceneListGridCell = React.createClass({
-	    displayName: "SceneListGridCell",
+	var DevicePicker = React.createClass({
+	    displayName: "DevicePicker",
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            devices: []
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.defaultId
+	        };
+	    },
+
+	    //TODO: If only one item in the list, select by default on load
+	    //TODO: if output or type is unknown need to update zone control to be
+	    //able to handle those values
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
 
 	    render: function render() {
+	        var options = [];
+	        this.props.devices.forEach(function (device) {
+	            var id = device.id || device.clientId;
+	            options.push(React.createElement(
+	                "option",
+	                { key: id, value: id },
+	                device.name
+	            ));
+	        });
 	        return React.createElement(
 	            "div",
-	            { className: "cmp-SceneListGridCell" },
+	            { className: "cmp-DevicePicker" },
 	            React.createElement(
-	                "div",
-	                { className: "icon" },
-	                React.createElement("i", { className: "icon ion-ios-settings" })
-	            ),
-	            React.createElement(
-	                "div",
-	                { className: "name" },
-	                this.props.scene.name
+	                "select",
+	                {
+	                    disabled: this.props.disabled,
+	                    className: "form-control",
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    "option",
+	                    { value: "" },
+	                    "Select a device..."
+	                ),
+	                options
 	            )
 	        );
 	    }
 	});
-	module.exports = SceneListGridCell;
+	module.exports = DevicePicker;
+
+/***/ },
+/* 268 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ZoneOutputPicker = React.createClass({
+	    displayName: 'ZoneOutputPicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.output || 'continuous'
+	        };
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        // If a value wasn't passed in, raise a changed notification so callers
+	        // can set their value accordingly since we default to unknown
+	        if (this.state.value === 'continuous') {
+	            this.props.changed && this.props.changed(this.state.value);
+	        }
+	    },
+
+	    selected: function selected(evt) {
+	        this.setOutput(evt.target.value);
+	    },
+
+	    setOutput: function setOutput(output) {
+	        this.setState({ value: output });
+	        this.props.changed && this.props.changed(output);
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZoneOutputPicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: 'unknown' },
+	                    'Unknown'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'continuous' },
+	                    'Continuous'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'binary' },
+	                    'Binary'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'rgb' },
+	                    'RGB'
+	                )
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneOutputPicker;
+
+/***/ },
+/* 269 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ZoneTypePicker = React.createClass({
+	    displayName: 'ZoneTypePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.type || 'unknown'
+	        };
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        // If a value wasn't passed in, raise a changed notification so callers
+	        // can set their value accordingly since we default to unknown
+	        if (this.state.value === 'unknown') {
+	            this.props.changed && this.props.changed(this.state.value);
+	        }
+	    },
+
+	    selected: function selected(evt) {
+	        this.setType(evt.target.value);
+	    },
+
+	    setType: function setType(type) {
+	        this.setState({ value: type });
+	        this.props.changed && this.props.changed(type);
+	    },
+
+	    render: function render() {
+	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Switch", val: "switch" }, { str: "Shade", val: "shade" }];
+	        var self = this;
+	        var nodes = types.map(function (type) {
+	            return React.createElement(
+	                'option',
+	                { value: type.val, key: type.val },
+	                type.str
+	            );
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZoneTypePicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                nodes
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneTypePicker;
+
+/***/ },
+/* 270 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var DeviceTypePicker = React.createClass({
+	    displayName: 'DeviceTypePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.type || 'unknown'
+	        };
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        // If a value wasn't passed in, raise a changed notification so callers
+	        // can set their value accordingly since we default to unknown
+	        if (this.state.value === 'unknown') {
+	            this.props.changed && this.props.changed(this.state.value);
+	        }
+	    },
+
+	    selected: function selected(evt) {
+	        this.setType(evt.target.value);
+	    },
+
+	    setType: function setType(type) {
+	        this.setState({ value: type });
+	        this.props.changed && this.props.changed(type);
+	    },
+
+	    render: function render() {
+	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Dimmer", val: "dimmer" }, { str: "Shade", val: "shade" }, { str: "Switch", val: "switch" }, { str: "Hub", val: "hub" }, { str: "Remote", val: "remote" }];
+	        var self = this;
+	        var nodes = types.map(function (type) {
+	            return React.createElement(
+	                'option',
+	                { value: type.val, key: type.val },
+	                type.str
+	            );
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-DeviceTypePicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                nodes
+	            )
+	        );
+	    }
+	});
+	module.exports = DeviceTypePicker;
+
+/***/ },
+/* 271 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var DeviceInfo = __webpack_require__(265);
+
+	var ImportTCP600GWB = React.createClass({
+	    displayName: 'ImportTCP600GWB',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            location: "",
+	            locationFailed: false,
+	            discoveryInProgress: false,
+	            tokenInProgress: false,
+	            token: '',
+	            tokenError: false,
+	            tokenMissingAddress: false
+	        };
+	    },
+
+	    autoDiscover: function autoDiscover() {
+	        var self = this;
+	        this.setState({ discoveryInProgress: true });
+
+	        //TODO: use API
+	        $.ajax({
+	            url: '/api/v1/discovery/TCP600GWB',
+	            dataType: 'json',
+	            cache: false,
+	            success: function success(data) {
+	                self.setState({
+	                    location: data.location,
+	                    discoveryInProgress: false
+	                });
+	            },
+	            error: function error(xhr, status, err) {
+	                self.setState({
+	                    locationFailed: true,
+	                    discoveryInProgress: false
+	                });
+	            }
+	        });
+	    },
+
+	    getToken: function getToken() {
+	        var device = this.refs.devInfo.toJson();
+	        this.setState({
+	            tokenMissingAddress: false,
+	            tokenInProgress: true
+	        });
+
+	        if (device.address === '') {
+	            this.setState({
+	                tokenMissingAddress: true,
+	                tokenInProgress: false
+	            });
+	            return;
+	        }
+
+	        //TODO: Use API
+	        var self = this;
+	        $.ajax({
+	            url: '/api/v1/discovery/TCP600GWB/token?address=' + device.address,
+	            dataType: 'json',
+	            cache: false,
+	            success: function success(data) {
+	                self.setState({
+	                    tokenInProgress: false,
+	                    token: data.token,
+	                    tokenError: data.unauthorized
+	                });
+	            },
+	            error: function error(xhr, status, err) {
+	                self.setState({
+	                    tokenError: true,
+	                    tokenInProgress: false
+	                });
+	            }
+	        });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ImportTCP600GWB' },
+	            React.createElement(
+	                'p',
+	                null,
+	                'Click to automatically retrieve the network address for this device'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'form-group has-error' },
+	                React.createElement(
+	                    'button',
+	                    { className: "btn btn-primary" + (this.state.discoveryInProgress ? " disabled" : ""), onClick: this.autoDiscover },
+	                    'Discover Address'
+	                ),
+	                React.createElement('i', { className: "fa fa-spinner fa-spin" + (this.state.discoveryInProgress ? "" : " hidden") }),
+	                React.createElement(
+	                    'span',
+	                    { className: "help-block" + (this.state.locationFailed ? "" : " hidden") },
+	                    'Error - Auto discovery failed, verify your TCP device is connected to the same network. If this continues to fail, use the official TCP app to get the device address'
+	                )
+	            ),
+	            React.createElement(
+	                'p',
+	                null,
+	                'Click to retrive the security token. Only click this after pressing the "sync" button on your physical ConnectedByTCP hub'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'form-group has-error' },
+	                React.createElement(
+	                    'button',
+	                    { className: "btn btn-primary" + (this.state.tokenInProgress ? " disabled" : ""), onClick: this.getToken },
+	                    'Get Token'
+	                ),
+	                React.createElement('i', { className: "fa fa-spinner fa-spin" + (this.state.tokenInProgress ? "" : " hidden") }),
+	                React.createElement(
+	                    'span',
+	                    { className: "help-block" + (this.state.tokenError ? "" : " hidden") },
+	                    'Error - unable to get the token, make sure you press the physical "sync" button on the TCP hub device before clicking the "Get Token" button otherwise this will fail'
+	                ),
+	                React.createElement(
+	                    'span',
+	                    { className: "help-block" + (this.state.tokenMissingAddress ? "" : " hidden") },
+	                    'Error - you must put a valid network address in the "Address" field first before clicking this button'
+	                )
+	            ),
+	            React.createElement(DeviceInfo, { modelNumber: 'TCP600GWB', readOnlyFields: 'modelNumber', showToken: 'true', token: this.state.token, tokenError: this.state.tokenError, address: this.state.location, ref: 'devInfo' })
+	        );
+	    }
+	});
+	module.exports = ImportTCP600GWB;
 
 /***/ },
 /* 272 */
@@ -29722,78 +29838,175 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Api = __webpack_require__(208);
+	var ReactRedux = __webpack_require__(173);
+	var DeviceInfo = __webpack_require__(265);
+	var SystemActions = __webpack_require__(252);
+	var Grid = __webpack_require__(223);
+	var SystemDeviceListGridCell = __webpack_require__(273);
 
-	var SceneControl = React.createClass({
-	    displayName: 'SceneControl',
+	var SystemDeviceList = React.createClass({
+	    displayName: 'SystemDeviceList',
 
-	    handleClick: function handleClick(event) {
-	        Api.sceneActivate(this.props.scene.id, function (err, data) {
-	            if (err) {
-	                //TODO: Show error/success
-	                console.error(err);
-	            }
-	        });
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            devices: []
+	        };
 	    },
 
 	    render: function render() {
+	        var switches = [],
+	            shades = [],
+	            dimmers = [],
+	            hubs = [],
+	            remotes = [],
+	            unknown = [];
+	        this.props.devices.forEach(function (device) {
+	            var cell = {
+	                cell: React.createElement(SystemDeviceListGridCell, { device: device }),
+	                content: React.createElement(DeviceInfo, {
+	                    name: device.name,
+	                    description: device.description,
+	                    address: device.address,
+	                    modelNumber: device.modelNumber,
+	                    id: device.id,
+	                    clientId: device.clientId,
+	                    readOnlyFields: 'id',
+	                    key: device.id || device.clientId,
+	                    type: device.type,
+	                    deviceDelete: this.props.deviceDelete,
+	                    savedDevice: this.props.savedDevice })
+	            };
+
+	            switch (device.type) {
+	                case 'dimmer':
+	                    dimmers.push(cell);
+	                    break;
+	                case 'switch':
+	                    switches.push(cell);
+	                    break;
+	                case 'shade':
+	                    shades.push(cell);
+	                    break;
+	                case 'hub':
+	                    hubs.push(cell);
+	                    break;
+	                case 'remote':
+	                    remotes.push(cell);
+	                    break;
+	                default:
+	                    unknown.push(cell);
+	                    break;
+	            }
+	        }.bind(this));
+
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-SceneControl' },
+	            { className: 'cmp-SystemDeviceList' },
 	            React.createElement(
 	                'div',
-	                { className: 'name' },
-	                this.props.scene.name
+	                { className: dimmers.length > 0 ? "" : " hidden" },
+	                React.createElement(
+	                    'h2',
+	                    null,
+	                    'Dimmers'
+	                ),
+	                React.createElement(Grid, { cells: dimmers })
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: 'activateWrapper' },
+	                { className: switches.length > 0 ? "" : " hidden" },
 	                React.createElement(
-	                    'a',
-	                    { role: 'button', className: 'btn btn-primary scene', onClick: this.handleClick },
-	                    React.createElement(
-	                        'span',
-	                        { className: 'name' },
-	                        'Activate'
-	                    )
-	                )
+	                    'h2',
+	                    null,
+	                    'Switches'
+	                ),
+	                React.createElement(Grid, { cells: switches })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: shades.length > 0 ? "" : " hidden" },
+	                React.createElement(
+	                    'h2',
+	                    null,
+	                    'Shades'
+	                ),
+	                React.createElement(Grid, { cells: shades })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: hubs.length > 0 ? "" : " hidden" },
+	                React.createElement(
+	                    'h2',
+	                    null,
+	                    'Hubs'
+	                ),
+	                React.createElement(Grid, { cells: hubs })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: remotes.length > 0 ? "" : " hidden" },
+	                React.createElement(
+	                    'h2',
+	                    null,
+	                    'Remotes'
+	                ),
+	                React.createElement(Grid, { cells: remotes })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: unknown.length > 0 ? "" : " hidden" },
+	                React.createElement(
+	                    'h2',
+	                    null,
+	                    'Devices'
+	                ),
+	                React.createElement(Grid, { cells: unknown })
 	            )
 	        );
 	    }
 	});
-	module.exports = SceneControl;
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        deviceDelete: function deviceDelete(id, clientId) {
+	            dispatch(SystemActions.deviceDelete(id, clientId));
+	        },
+	        savedDevice: function savedDevice(clientId, data) {
+	            dispatch(SystemActions.savedDevice(clientId, data));
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(SystemDeviceList);
 
 /***/ },
 /* 273 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	"use strict";
 
-	var Constants = __webpack_require__(209);
+	var React = __webpack_require__(1);
 
-	module.exports = function (state, action) {
-	    var newState = Object.assign({}, state);
+	var SystemDeviceListGridCell = React.createClass({
+	    displayName: "SystemDeviceListGridCell",
 
-	    switch (action.type) {
-	        case Constants.SCENE_LOAD_ALL_RAW:
-	            newState.scenesLoaded = true;
-	            break;
-
-	        case Constants.ZONE_LOAD_ALL_RAW:
-	            newState.zonesLoaded = true;
-	            break;
-
-	        case Constants.DEVICE_LOAD_ALL_RAW:
-	            newState.devicesLoaded = true;
-	            break;
-
-	        case Constants.BUTTON_LOAD_ALL:
-	            newState.buttonsLoaded = true;
-	            break;
+	    render: function render() {
+	        return React.createElement(
+	            "div",
+	            { className: "cmp-SystemDeviceListGridCell" },
+	            React.createElement(
+	                "div",
+	                { className: "icon" },
+	                React.createElement("i", { className: "icon ion-ios-settings" })
+	            ),
+	            React.createElement(
+	                "div",
+	                { className: "name" },
+	                this.props.device.name
+	            )
+	        );
 	    }
-
-	    return newState;
-	};
+	});
+	module.exports = SystemDeviceListGridCell;
 
 /***/ }
 /******/ ]);

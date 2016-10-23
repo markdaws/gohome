@@ -2,6 +2,8 @@ var React = require('react');
 var ReactRedux = require('react-redux');
 var DeviceInfo = require('./DeviceInfo.jsx');
 var SystemActions = require('../actions/SystemActions.js');
+var Grid = require('./Grid.jsx');
+var SystemDeviceListGridCell = require('./SystemDeviceListGridCell.jsx')
 
 var SystemDeviceList = React.createClass({
     getDefaultProps: function() {
@@ -10,34 +12,74 @@ var SystemDeviceList = React.createClass({
         }
     },
 
-    newClicked: function() {
-        this.props.deviceNew();
-    },
-
     render: function() {
-        var deviceNodes = this.props.devices.map(function(device) {
-            return (
-                <DeviceInfo
-                name={device.name}
-                description={device.description}
-                address={device.address}
-                modelNumber={device.modelNumber}
-                id={device.id}
-                clientId={device.clientId}
-                readOnlyFields="id"
-                key={device.id || device.clientId}
-                deviceDelete={this.props.deviceDelete}
-                savedDevice={this.props.savedDevice} />
-            );
+        var switches = [], shades = [], dimmers = [], hubs = [], remotes = [], unknown = [];
+        this.props.devices.forEach(function(device) {
+            var cell = {
+                cell: <SystemDeviceListGridCell device={device} />,
+                content: <DeviceInfo
+                             name={device.name}
+                             description={device.description}
+                             address={device.address}
+                             modelNumber={device.modelNumber}
+                             id={device.id}
+                             clientId={device.clientId}
+                             readOnlyFields="id"
+                             key={device.id || device.clientId}
+                             type={device.type}
+                             deviceDelete={this.props.deviceDelete}
+                             savedDevice={this.props.savedDevice} />
+            };
+
+            switch (device.type) {
+                case 'dimmer':
+                    dimmers.push(cell)
+                    break;
+                case 'switch':
+                    switches.push(cell)
+                    break;
+                case 'shade':
+                    shades.push(cell);
+                    break;
+                case 'hub':
+                    hubs.push(cell)
+                    break;
+                case 'remote':
+                    remotes.push(cell)
+                    break;
+                default:
+                    unknown.push(cell)
+                    break;
+            }
         }.bind(this));
 
         return (
-            <div className="cmp-DeviceList">
-                <h2 className={this.props.devices.length > 0 ? "" : " hidden"}>Devices</h2>
-                <div className="header clearfix">
-                    <button className="btn btn-primary pull-right" onClick={this.newClicked}>New Device</button>
+            <div className="cmp-SystemDeviceList">
+                <div className={dimmers.length > 0 ? "" : " hidden"}>
+                    <h2>Dimmers</h2>
+                    <Grid cells={dimmers} />
                 </div>
-                {deviceNodes}
+
+                <div className={switches.length > 0 ? "" : " hidden"}>
+                    <h2>Switches</h2>
+                    <Grid cells={switches} />
+                </div>
+                <div className={shades.length > 0 ? "" : " hidden"}>
+                    <h2>Shades</h2>
+                    <Grid cells={shades} />
+                </div>
+                <div className={hubs.length > 0 ? "" : " hidden"}>
+                    <h2>Hubs</h2>
+                    <Grid cells={hubs} />
+                </div>
+                <div className={remotes.length > 0 ? "" : " hidden"}>
+                    <h2>Remotes</h2>
+                    <Grid cells={remotes} />
+                </div>
+                <div className={unknown.length > 0 ? "" : " hidden"}>
+                    <h2>Devices</h2>
+                    <Grid cells={unknown} />
+                </div>
             </div>
         );
     }
@@ -45,9 +87,6 @@ var SystemDeviceList = React.createClass({
 
 function mapDispatchToProps(dispatch) {
     return {
-        deviceNew: function() {
-            dispatch(SystemActions.deviceNew());
-        },
         deviceDelete: function(id, clientId) {
             dispatch(SystemActions.deviceDelete(id, clientId));
         },

@@ -29,8 +29,6 @@ func ListenAndServe(
 	return server.listenAndServe(port)
 }
 
-//TODO: Clean all these up and unify naming
-
 func (s *apiServer) listenAndServe(port string) error {
 
 	r := mux.NewRouter()

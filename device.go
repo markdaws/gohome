@@ -10,6 +10,17 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+type DeviceType string
+
+const (
+	DTDimmer  DeviceType = "dimmer"
+	DTSwitch             = "switch"
+	DTShade              = "shade"
+	DTHub                = "hub"
+	DTRemote             = "remote"
+	DTUnknown            = "unknown"
+)
+
 type Device struct {
 	Address         string
 	ID              string
@@ -25,6 +36,7 @@ type Device struct {
 	Connections     *pool.ConnectionPool
 	Auth            *Auth
 	Hub             *Device
+	Type            DeviceType
 
 	//TODO: delete?
 	producesEvents bool
