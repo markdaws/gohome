@@ -33,7 +33,8 @@ func (s *apiServer) listenAndServe(port string) error {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/v1/events/ws", s.eventLogger.HTTPHandler())
+	//TODO: re-enable
+	//r.HandleFunc("/api/v1/events/ws", s.eventLogger.HTTPHandler())
 
 	RegisterSceneHandlers(r, s)
 	RegisterButtonHandlers(r, s)

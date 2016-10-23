@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	eventExt "github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/api"
-	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/store"
@@ -28,13 +28,13 @@ func main() {
 		APIPort:           ":5000",
 	}
 
-	// Processes all commands in the system in an async fashion
+	// Processes all commands in the system in an async fashion, init with
+	// 3 parallel workers and capacity to store up to 1000 commands to be processed
 	cp := gohome.NewCommandProcessor(3, 1000)
 	cp.Start()
 
-	// Processes events
-	eb := event.NewBroker()
-	eb.Init()
+	// Start the event bus
+	eb := eventExt.NewBus(1000, 100)
 
 	// Handles recipe management
 	rm := gohome.NewRecipeManager(eb)
@@ -86,10 +86,9 @@ func main() {
 
 	sys.SavePath = config.StartupConfigPath
 	cp.SetSystem(sys)
+	sys.EvtBus = eb
 
 	log.V("Initing devices...")
-	sys.EventBroker = eb
-
 	sys.InitDevices()
 
 	log.V("Starting recipes...")
@@ -97,9 +96,11 @@ func main() {
 		rm.RegisterAndStart(recipe)
 	}
 
+	/* TODO:
 	// Event logger used to log event to UI clients via websockets
 	wsLogger := gohome.NewWSEventLogger(sys)
-	eb.AddConsumer(wsLogger)
+	eb.AddConsumer(wsLogger)*/
+	var wsLogger gohome.WSEventLogger
 
 	done := make(chan bool)
 

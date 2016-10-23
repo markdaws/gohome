@@ -1,22 +1,13 @@
 package gohome
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strconv"
-	"time"
-
-	"github.com/go-home-iot/gouuid"
-	"github.com/gorilla/websocket"
-	"github.com/markdaws/gohome/event"
-)
+import "net/http"
 
 type WSEventLogger interface {
 	HTTPHandler() func(http.ResponseWriter, *http.Request)
-	event.Consumer
+	//	event.Consumer
 }
 
+/*
 var upgrader websocket.Upgrader
 
 type wsEventLogger struct {
@@ -180,3 +171,4 @@ func (c *connection) readLoop(l *wsEventLogger) {
 		}
 	}
 }
+*/

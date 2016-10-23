@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/go-home-iot/connection-pool"
+	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
 
+// DeviceType explains the type of a device e.g. Dimmer or Shade
 type DeviceType string
 
 const (
@@ -26,6 +28,7 @@ type Device struct {
 	ID              string
 	Name            string
 	Description     string
+	Type            DeviceType
 	ModelName       string
 	ModelNumber     string
 	SoftwareVersion string
@@ -36,7 +39,8 @@ type Device struct {
 	Connections     *pool.ConnectionPool
 	Auth            *Auth
 	Hub             *Device
-	Type            DeviceType
+
+	evtBus *evtbus.Bus
 
 	//TODO: delete?
 	producesEvents bool
@@ -89,11 +93,6 @@ func (d *Device) SetConnPoolCfg(cfg pool.Config) {
 	d.Connections = pool.NewPool(cfg)
 }
 
-//TODO: Delete
-func (d *Device) StartProducingEvents() (<-chan event.Event, <-chan bool) {
-	return nil, nil
-}
-
 func (d *Device) Validate() *validation.Errors {
 	errors := &validation.Errors{}
 
@@ -105,10 +104,6 @@ func (d *Device) Validate() *validation.Errors {
 		return errors
 	}
 	return nil
-}
-
-func (d *Device) ProducesEvents() bool {
-	return d.producesEvents
 }
 
 func (d *Device) String() string {
@@ -138,3 +133,24 @@ func (d *Device) AddDevice(cd *Device) error {
 	d.Devices[cd.Address] = cd
 	return nil
 }
+
+//TODO: delete?
+func (d *Device) ProducesEvents() bool {
+	return d.producesEvents
+}
+
+// ==== evtbus.Producer interface
+
+func (d *Device) ProducerName() string {
+	return d.String()
+}
+
+func (d *Device) StartProducing(b *evtbus.Bus) {
+	d.evtBus = b
+}
+
+func (d *Device) StopProducing() {
+	d.evtBus = nil
+}
+
+// ====================

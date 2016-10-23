@@ -6,20 +6,20 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/markdaws/gohome/event"
+	"github.com/go-home-iot/event-bus"
 )
 
 type RecipeManager struct {
 	CookBooks      []*CookBook
 	System         *System
-	eventBroker    event.Broker
+	evtBus         *evtbus.Bus
 	triggerFactory map[string]func() Trigger
 	actionFactory  map[string]func() Action
 }
 
-func NewRecipeManager(eb event.Broker) *RecipeManager {
+func NewRecipeManager(eb *evtbus.Bus) *RecipeManager {
 	rm := &RecipeManager{}
-	rm.eventBroker = eb
+	rm.evtBus = eb
 	rm.CookBooks = loadCookBooks()
 	rm.triggerFactory = buildTriggerFactory(rm.CookBooks)
 	rm.actionFactory = buildActionFactory(rm.CookBooks)
@@ -57,12 +57,12 @@ func (e ErrUnmarshalRecipe) Error() string {
 
 func (rm *RecipeManager) RegisterAndStart(r *Recipe) {
 	rm.System.Recipes[r.ID] = r
-	rm.eventBroker.AddConsumer(r)
+	rm.evtBus.AddConsumer(r)
 }
 
 func (rm *RecipeManager) UnregisterAndStop(r *Recipe) {
 	delete(rm.System.Recipes, r.ID)
-	rm.eventBroker.RemoveConsumer(r)
+	rm.evtBus.RemoveConsumer(r)
 }
 
 func (rm *RecipeManager) RecipeByID(id string) *Recipe {

@@ -3,7 +3,7 @@ package gohome
 import (
 	"strconv"
 
-	"github.com/markdaws/gohome/event"
+	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
@@ -18,12 +18,11 @@ type System struct {
 	Zones       map[string]*zone.Zone
 	Buttons     map[string]*Button
 	Recipes     map[string]*Recipe
-
-	Extensions *Extensions
+	Extensions  *Extensions
 
 	//TODO: Remove this, actions should not have execute or pass in cmdproc to Execute
 	CmdProcessor CommandProcessor
-	EventBroker  event.Broker
+	EvtBus       *evtbus.Bus
 
 	nextGlobalID int
 }
@@ -58,13 +57,13 @@ func (s *System) PeekNextGlobalID() int {
 
 func (s *System) InitDevices() {
 	for _, d := range s.Devices {
-		d := d
-		go s.InitDevice(d)
+		s.InitDevice(d)
 	}
 }
 
 func (s *System) InitDevice(d *Device) error {
 	log.V("Init Device: %s", d)
+
 	// If the device requires a connection pool, init all of the connections
 	if d.Connections != nil {
 		log.V("%s init connections", d)
@@ -73,8 +72,8 @@ func (s *System) InitDevice(d *Device) error {
 		log.V("%s connected", d)
 	}
 
-	if s.EventBroker != nil {
-		s.EventBroker.AddProducer(d)
+	if s.EvtBus != nil {
+		s.EvtBus.AddProducer(d)
 	}
 	return nil
 }
