@@ -52,6 +52,23 @@ button.disabled {
     padding: 0;
 }
 
+.cmp-SensorMonitor {
+    padding: 24px;
+    padding-left: 12px;
+    padding-right: 12px;
+    text-align: center;
+}
+
+.cmp-SensorMonitor .name {
+    text-transform: uppercase;
+    font-size: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 370px;
+    margin-top: 3px;
+}
+
 .cmp-ZoneControl {
     padding: 24px;
     padding-left: 12px;
@@ -97,11 +114,11 @@ button.disabled {
     text-align: center;
 }
 
-.cmp-ZoneList {
+.cmp-ZoneSensorList {
     width: 100%;
     background-color: #fff;
 }
-.cmp-ZoneList h2 {
+.cmp-ZoneSensorList h2 {
     margin-top: 12px;
     text-transform: uppercase;
     font-weight: 200;
@@ -209,13 +226,13 @@ button.disabled {
     color: #eee;
 }
 
-.cmp-ZoneListGridCell {
+.cmp-ZoneSensorListGridCell {
     pointer-events: none;
     position: relative;
     height: 100%;
     font-size: 0px;
 }
-.cmp-ZoneListGridCell .name{
+.cmp-ZoneSensorListGridCell .name{
     display: block;
     font-size: 12px;
     overflow: hidden;
@@ -230,7 +247,7 @@ button.disabled {
     right: 0;
     margin: 0 auto 8px auto;
 }
-.cmp-ZoneListGridCell .icon {
+.cmp-ZoneSensorListGridCell .icon {
     pointer-events: none;
     font-size: 57px;
     text-align: center;
@@ -304,6 +321,11 @@ button.disabled {
     max-width: 296px;
     margin-top: 3px;
     margin-bottom: 12px;
+}
+
+.cmp-SensorInfo label {
+    font-size: 12px;
+    font-weight: normal;
 }
 
 .cmp-ZoneInfo label {

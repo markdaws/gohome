@@ -2,20 +2,23 @@ var ClassNames = require('classnames');
 var React = require('react');
 var ReactRedux = require('react-redux');
 var ZoneControl = require('./ZoneControl.jsx');
+var SensorMonitor = require('./SensorMonitor.jsx');
 var ZoneActions = require('../actions/ZoneActions.js');
 var Grid = require('./Grid.jsx');
-var ZoneListGridCell = require('./ZoneListGridCell.jsx');
+var SensorMonitor = require('./SensorMonitor.jsx');
+var ZoneSensorListGridCell = require('./ZoneSensorListGridCell.jsx');
 
-var ZoneList = React.createClass({
+var ZoneSensorList = React.createClass({
     render: function() {
         var lightZones = [];
         var shadeZones = [];
         var switchZones = [];
         var otherZones = [];
+        var sensors = [];
         this.props.zones.forEach(function(zone) {
 
             var cmpZone = {
-                cell: <ZoneListGridCell zone={zone} />,
+                cell: <ZoneSensorListGridCell zone={zone} />,
                 content: <ZoneControl
                              id={zone.id}
                              name={zone.name}
@@ -39,10 +42,18 @@ var ZoneList = React.createClass({
                     otherZones.push(cmpZone);
                     break;
             }
-        })
+        });
+
+        this.props.sensors.forEach(function(sensor) {
+            var cmpSensor = {
+                cell: <ZoneSensorListGridCell sensor={sensor} />,
+                content: <SensorMonitor sensor={sensor} />
+            };
+            sensors.push(cmpSensor);
+        });
 
         return (
-            <div className="cmp-ZoneList">
+            <div className="cmp-ZoneSensorList">
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': lightZones.length === 0})}>Lights</h2>
                     <Grid cells={lightZones} />
@@ -59,8 +70,12 @@ var ZoneList = React.createClass({
                     <h2 className={ClassNames({ 'hidden': otherZones.length === 0})}>Other Zones</h2>
                     <Grid cells={otherZones} />
                 </div>
+                <div className="clearfix">
+                    <h2 className={ClassNames({ 'hidden': sensors.length === 0})}>Sensors</h2>
+                    <Grid cells={sensors} />
+                </div>
             </div>
         );
     }
 });
-module.exports = ZoneList;
+module.exports = ZoneSensorList;

@@ -28,7 +28,7 @@ func NewPool(config Config) *ConnectionPool {
 }
 
 // Init should be called before using the pool, the call is non blocking, but you
-// can wait in the returned channel if you want to know when all of the underlying
+// can wait on the returned channel if you want to know when all of the underlying
 // connections have been created and are ready to use
 func (p *ConnectionPool) Init() chan bool {
 
@@ -49,7 +49,7 @@ func (p *ConnectionPool) Init() chan bool {
 }
 
 // Close closes all of the underlying connections, this is non blocking but you can
-// wait on the returned channel if you need to know all the connections closed
+// wait on the returned channel if you need to know all the connections have closed
 func (p *ConnectionPool) Close() chan bool {
 	done := make(chan bool)
 	go func() {
@@ -64,7 +64,7 @@ func (p *ConnectionPool) Close() chan bool {
 }
 
 // Get is a blocking function that waits to get an available connection.  If after the
-// timeout duration a connection could not get fetch, the function returns with an error
+// timeout duration a connection could not be fetched, the function returns with ErrTimeout
 func (p *ConnectionPool) Get(timeout time.Duration) (*Connection, error) {
 
 	expire := time.Now().Add(timeout)
@@ -73,12 +73,12 @@ func (p *ConnectionPool) Get(timeout time.Duration) (*Connection, error) {
 		return conn, nil
 
 	case <-time.After(expire.Sub(time.Now())):
-		// Couldn't get the mutex to try to get a connection in the alloted time
 		return nil, ErrTimeout
 	}
 }
 
-// Release returns the connection back to the pool
+// Release returns the connection back to the pool. Is the connections IsBad field has been
+// set to true, the pool throws the connection away and attempts to create a new one
 func (p *ConnectionPool) Release(c *Connection) {
 	if c == nil {
 		return

@@ -6,7 +6,6 @@ import (
 	"github.com/go-home-iot/connection-pool"
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/event"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
@@ -35,20 +34,14 @@ type Device struct {
 	Buttons         map[string]*Button
 	Devices         map[string]*Device
 	Zones           map[string]*zone.Zone
+	Sensors         map[string]*Sensor
 	CmdBuilder      cmd.Builder
 	Connections     *pool.ConnectionPool
 	Auth            *Auth
 	Hub             *Device
 
-	evtBus *evtbus.Bus
-
-	//TODO: delete?
-	producesEvents bool
-
 	//TODO: Needed? Clean up
-	Stream  bool
-	evpDone chan bool
-	evpFire chan event.Event
+	Stream bool
 }
 
 func NewDevice(
@@ -77,6 +70,7 @@ func NewDevice(
 		Buttons:         make(map[string]*Button),
 		Devices:         make(map[string]*Device),
 		Zones:           make(map[string]*zone.Zone),
+		Sensors:         make(map[string]*Sensor),
 		Stream:          stream,
 		Auth:            auth,
 		CmdBuilder:      cmdBuilder,
@@ -129,14 +123,16 @@ func (d *Device) AddDevice(cd *Device) error {
 	if _, ok := d.Devices[cd.Address]; ok {
 		return fmt.Errorf("device with address: %s already added to parent device", cd.Address)
 	}
-
 	d.Devices[cd.Address] = cd
 	return nil
 }
 
-//TODO: delete?
-func (d *Device) ProducesEvents() bool {
-	return d.producesEvents
+func (d *Device) AddSensor(s *Sensor) error {
+	if _, ok := d.Sensors[s.Address]; ok {
+		return fmt.Errorf("sensor with address: %s already added to device", s.Address)
+	}
+	d.Sensors[s.Address] = s
+	return nil
 }
 
 // ==== evtbus.Producer interface
@@ -146,11 +142,10 @@ func (d *Device) ProducerName() string {
 }
 
 func (d *Device) StartProducing(b *evtbus.Bus) {
-	d.evtBus = b
+	//TODO: Raise events like zone added? sensor added, lost connection etc
 }
 
 func (d *Device) StopProducing() {
-	d.evtBus = nil
 }
 
 // ====================

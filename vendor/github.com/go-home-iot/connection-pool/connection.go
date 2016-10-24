@@ -7,6 +7,8 @@ type Connection struct {
 	net.Conn
 	owner         *ConnectionPool
 	returnOnClose bool
+	
+	// IsBad should be set to true if the connection is not invalid
 	IsBad         bool
 }
 

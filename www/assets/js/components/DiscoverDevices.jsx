@@ -43,7 +43,9 @@ var DiscoverDevices = React.createClass({
                            key={device.id || device.clientId}
                            savedDevice={this.props.importedDevice}
                            showZones={true}
-                           zones={device.zones}/>
+                           showSensors={true}
+                           zones={device.zones}
+                           sensors={device.sensors}/>
             }.bind(this));
         }
 

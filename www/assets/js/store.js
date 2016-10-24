@@ -4,6 +4,7 @@ var initialState = require('./initialState.js');
 var buttonReducer = require('./reducers/buttonReducer.js');
 var systemReducer = require('./reducers/systemReducer.js');
 var scenesReducer = require('./reducers/scenesReducer.js');
+var sensorReducer = require('./reducers/sensorReducer.js');
 var zonesReducer = require('./reducers/zonesReducer.js');
 var loadStatusReducer = require('./reducers/loadStatusReducer.js');
 
@@ -13,6 +14,7 @@ var rootReducer = Redux.combineReducers({
     scenes: scenesReducer,
     zones: zonesReducer,
     buttons: buttonReducer,
+    sensors: sensorReducer,
     appLoadStatus: loadStatusReducer
 });
 

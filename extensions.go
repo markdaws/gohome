@@ -4,9 +4,13 @@ import (
 	"net"
 
 	"github.com/go-home-iot/connection-pool"
+	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/cmd"
 )
 
+//TODO: Should be a test suite that all extensions have to go through
+//such as simulating network failure and other types of issues and make
+//sure that the extension code functions as expected
 //TODO: Ping mechanism
 //TODO: Check connection is bad don't put back in the pool
 //TODO: Set write, read timeouts for connections
@@ -41,9 +45,17 @@ type Importer interface {
 	FromString(sys *System, data string, modelNumber string) error
 }
 
+type ExtEvents struct {
+	Consumer evtbus.Consumer
+	Producer evtbus.Producer
+}
+
 // Extension represents the interface any extension has to implement in order to
 // be added to the system
 type Extension interface {
+
+	// Name returns a friendly name for the extension
+	Name() string
 
 	// BuilderForDevice should return a cmd.Builder if the extension exports a builder
 	// for the device that was passed in to the function, nil otherwise
@@ -57,8 +69,7 @@ type Extension interface {
 	// for the device that was passed in to the function, nil otherwise
 	ImporterForDevice(*System, *Device) Importer
 
-	// Name returns a friendly name for the extension
-	Name() string
+	EventsForDevice(sys *System, d *Device) *ExtEvents
 }
 
 // Extensions contains references to all of the loaded extensions in a system
@@ -90,6 +101,16 @@ func (e *Extensions) FindNetwork(sys *System, d *Device) Network {
 		network := ext.NetworkForDevice(sys, d)
 		if network != nil {
 			return network
+		}
+	}
+	return nil
+}
+
+func (e *Extensions) FindEvents(sys *System, d *Device) *ExtEvents {
+	for _, ext := range e.extensions {
+		events := ext.EventsForDevice(sys, d)
+		if events != nil {
+			return events
 		}
 	}
 	return nil

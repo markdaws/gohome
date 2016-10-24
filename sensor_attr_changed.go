@@ -1,5 +1,9 @@
 package gohome
 
+import "fmt"
+
+//TODO: Move to event package
+
 // SensorAttrChanged represents an event when the attributes of a sensor have
 // changed state
 type SensorAttrChanged struct {
@@ -9,11 +13,15 @@ type SensorAttrChanged struct {
 	// SensorName is the name of the sensor whos values have changed
 	SensorName string
 
-	// Attrs if a slice of attributes that have changed
-	Attrs []SensorAttr
+	// Information on the attribute that changed
+	Attr SensorAttr
 }
 
-//TODO: ZoneSetLevel
-//TODO: ButtonPress
-//TODO: ButtonRelease
+func (e *SensorAttrChanged) String() string {
+	return fmt.Sprintf("SensorAttrChanged, Sensor Name:%s, ID:%s, %s", e.SensorName, e.SensorID, e.Attr.String())
+}
+
+//TODO: ZoneLevelChanged
+//TODO: ButtonPressed
+//TODO: ButtonReleased
 //TODO: SceneSet

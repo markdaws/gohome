@@ -40,6 +40,7 @@ func (s *apiServer) listenAndServe(port string) error {
 	RegisterButtonHandlers(r, s)
 	RegisterZoneHandlers(r, s)
 	RegisterDeviceHandlers(r, s)
+	RegisterSensorHandlers(r, s)
 	RegisterDiscoveryHandlers(r, s)
 	RegisterCookBookHandlers(r, s)
 	RegisterRecipeHandlers(r, s)

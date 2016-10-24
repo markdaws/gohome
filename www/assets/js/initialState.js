@@ -24,12 +24,16 @@ module.exports = function() {
         // An array of all the button items
         buttons: [],
 
+        // An array of all the sensors in the system
+        sensors: [],
+
         // Initial load of the app
         appLoadStatus: {
             devicesLoaded: false,
             zonesLoaded: false,
             scenesLoaded: false,
-            buttonsLoaded: false
+            buttonsLoaded: false,
+            sensorsLoaded: false
         }
     };
 };

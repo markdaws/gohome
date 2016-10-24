@@ -5,7 +5,9 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
-type extension struct{}
+type extension struct {
+	gohome.NullExtension
+}
 
 func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.Builder {
 	switch d.ModelNumber {

@@ -1,5 +1,14 @@
 package gohome
 
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/validation"
+)
+
+//TODO: Monitoring - sometimes only want to monitor when the UI is activly viewing
+//the sensor, but other times always want to monitor e.g. fridge temperature, flags?
+
 type SensorDataType string
 
 const (
@@ -16,6 +25,32 @@ type SensorAttr struct {
 	UnitOfMeasure string
 }
 
+func (a SensorAttr) String() string {
+	return fmt.Sprintf("SensorAttr - Name:%s, Value:%s, DataType:%s", a.Name, a.Value, a.DataType)
+}
+
 type Sensor struct {
-	Attrs []SensorAttr
+	ID          string
+	Name        string
+	Description string
+	Address     string
+	DeviceID    string
+	Attrs       []SensorAttr
+}
+
+func (s *Sensor) Validate() *validation.Errors {
+	errors := &validation.Errors{}
+
+	if s.Name == "" {
+		errors.Add("required field", "Name")
+	}
+
+	if s.DeviceID == "" {
+		errors.Add("required field", "DeviceID")
+	}
+
+	if errors.Has() {
+		return errors
+	}
+	return nil
 }

@@ -230,10 +230,6 @@ type Lbdgpro2whDevice struct {
 	pool comm.ConnectionPool
 }
 
-func (d *Lbdgpro2whDevice) ModelNumber() string {
-	return "L-BDGPRO2-WH"
-}
-
 func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan event.Event, <-chan bool) {
 	d.evpDone = make(chan bool)
 	d.evpFire = make(chan event.Event)
@@ -242,42 +238,6 @@ func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan event.Event, <-chan bo
 		go d.startStreaming()
 	}
 	return d.evpFire, d.evpDone
-}
-
-func (d *Lbdgpro2whDevice) Authenticate(c comm.Connection) error {
-	r := bufio.NewReader(c)
-	_, err := r.ReadString(':')
-	if err != nil {
-		return fmt.Errorf("authenticate login failed: %s", err)
-	}
-
-	_, err = c.Write([]byte(d.auth.Login + "\r\n"))
-	if err != nil {
-		return fmt.Errorf("authenticate write login failed: %s", err)
-	}
-
-	_, err = r.ReadString(':')
-	if err != nil {
-		return fmt.Errorf("authenticate password failed: %s", err)
-	}
-
-	_, err = c.Write([]byte(d.auth.Password + "\r\n"))
-	if err != nil {
-		return fmt.Errorf("authenticate password failed: %s", err)
-	}
-	return nil
-}
-
-func (d *Lbdgpro2whDevice) Connect() (comm.Connection, error) {
-	c := d.pool.Get()
-	if c == nil {
-		return nil, fmt.Errorf("%s - connect failed, no connection available", d)
-	}
-	return c, nil
-}
-
-func (d *Lbdgpro2whDevice) ReleaseConnection(c comm.Connection) {
-	d.pool.Release(c)
 }
 
 func (d *Lbdgpro2whDevice) startStreaming() {
@@ -438,3 +398,13 @@ func (d *Lbdgpro2whDevice) parseZoneCommand(command string) cmd.Command {
 	return finalCmd
 }
 */
+
+
+
+
+
+1. Discover device
+2. Get list of sensors
+3. Extension register?
+4. subscribe to device notifications
+5. get event then raise that on the event bus

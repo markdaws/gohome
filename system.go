@@ -4,10 +4,17 @@ import (
 	"strconv"
 
 	"github.com/go-home-iot/event-bus"
+	"github.com/go-home-iot/upnp"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 )
+
+// SystemServices is a collection of services that devices can access
+// such as UPNP notification and discovery
+type SystemServices struct {
+	UPNP *upnp.SubServer
+}
 
 type System struct {
 	Name        string
@@ -17,12 +24,15 @@ type System struct {
 	Scenes      map[string]*Scene
 	Zones       map[string]*zone.Zone
 	Buttons     map[string]*Button
+	Sensors     map[string]*Sensor
 	Recipes     map[string]*Recipe
 	Extensions  *Extensions
+	Services    SystemServices
 
 	//TODO: Remove this, actions should not have execute or pass in cmdproc to Execute
 	CmdProcessor CommandProcessor
-	EvtBus       *evtbus.Bus
+	//TODO: Make sense here?
+	EvtBus *evtbus.Bus
 
 	nextGlobalID int
 }
@@ -34,6 +44,7 @@ func NewSystem(name, desc string, cmdProcessor CommandProcessor, nextGlobalID in
 		Devices:      make(map[string]*Device),
 		Scenes:       make(map[string]*Scene),
 		Zones:        make(map[string]*zone.Zone),
+		Sensors:      make(map[string]*Sensor),
 		Buttons:      make(map[string]*Button),
 		Recipes:      make(map[string]*Recipe),
 		CmdProcessor: cmdProcessor,
@@ -41,7 +52,6 @@ func NewSystem(name, desc string, cmdProcessor CommandProcessor, nextGlobalID in
 	}
 
 	s.Extensions = NewExtensions()
-
 	return s
 }
 
@@ -65,15 +75,12 @@ func (s *System) InitDevice(d *Device) error {
 	log.V("Init Device: %s", d)
 
 	// If the device requires a connection pool, init all of the connections
+	var done chan bool
 	if d.Connections != nil {
 		log.V("%s init connections", d)
-		done := d.Connections.Init()
+		done = d.Connections.Init()
 		_ = done
 		log.V("%s connected", d)
-	}
-
-	if s.EvtBus != nil {
-		s.EvtBus.AddProducer(d)
 	}
 	return nil
 }
@@ -83,11 +90,27 @@ func (s *System) AddButton(b *Button) {
 	s.Buttons[b.ID] = b
 }
 
+func (s *System) AddSensor(sen *Sensor) error {
+	errors := sen.Validate()
+	if errors != nil {
+		return errors
+	}
+
+	if sen.ID == "" {
+		sen.ID = s.NextGlobalID()
+	}
+
+	s.Sensors[sen.ID] = sen
+	return nil
+}
+
 func (s *System) AddDevice(d *Device) error {
 	errors := d.Validate()
 	if errors != nil {
 		return errors
 	}
+
+	//Should we add an id here, like we do in AddZone - consistency...
 
 	//TODO: What about address, allow duplicates?
 	s.Devices[d.ID] = d
@@ -111,6 +134,7 @@ func (s *System) AddZone(z *zone.Zone) error {
 		z.ID = s.NextGlobalID()
 	}
 
+	//TODO: Don't do this here, confusing or make consistent across AddButton, AddSensor etc
 	err := d.AddZone(z)
 	if err != nil {
 		return err

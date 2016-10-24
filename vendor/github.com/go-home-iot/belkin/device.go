@@ -3,21 +3,29 @@ package belkin
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"html"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/go-home-iot/gossdp"
 )
 
+// BinaryState represents a binary state on or off
 type BinaryState int
 
 const (
-	BSOff     BinaryState = 0
-	BSOn                  = 1
-	BSUnknown             = 2
+	// BSOff is the off state
+	BSOff BinaryState = 0
+
+	// BSOn is the on state
+	BSOn = 1
+
+	// BSUnknown indicates we do not know the current binary state
+	BSUnknown = 2
 )
 
 // Device contains information about a device that has been found on the network
@@ -226,6 +234,7 @@ type attribute struct {
 	Value int    `xml:"value"`
 }
 
+// FetchAttributes fetches the attributes of the device, such as switch state, sensor state etc
 func (d *Device) FetchAttributes() (*DeviceAttributes, error) {
 	if d.Scan.SearchType != "urn:Belkin:device:Maker:1" {
 		return nil, ErrUnsupportedAction
@@ -275,29 +284,50 @@ func (d *Device) FetchAttributes() (*DeviceAttributes, error) {
 			</s:Body>
 		</s:Envelope>*/
 
+	r := regexp.MustCompile(`(<attributeList>.*</attributeList>)`)
+	attrList := r.FindStringSubmatch(body)
+	if attrList == nil || len(attrList) == 0 {
+		return nil, errors.New("attributeList element not found in response from device")
+	}
+
+	attrs := ParseAttributeList(attrList[0])
+	return attrs, nil
+}
+
+// ParseAttributeList parses the xml attributeList response from the device e.g.
+// <attributeList><attribute><name>...</name><value>...</value></attribute>...</attributeList>
+// the body must be the open and close attributeList element.  If a valid input is not
+// found the function will return nil
+func ParseAttributeList(body string) *DeviceAttributes {
+
 	attrs := struct {
-		List []attribute `xml:"Body>GetAttributesResponse>attributeList>attribute"`
+		List []attribute `xml:"attribute"`
 	}{}
 
-	err = xml.Unmarshal([]byte(body), &attrs)
+	err := xml.Unmarshal([]byte(body), &attrs)
 	if err != nil {
-		return nil, err
+		return nil
+	}
+
+	if len(attrs.List) == 0 {
+		return nil
 	}
 
 	var da DeviceAttributes
 	for _, attr := range attrs.List {
+		attr := attr
 		switch attr.Name {
 		case "Switch":
-			da.Switch = attr.Value
+			da.Switch = &attr.Value
 		case "Sensor":
-			da.Sensor = attr.Value
+			da.Sensor = &attr.Value
 		case "SwitchMode":
-			da.SwitchMode = attr.Value
+			da.SwitchMode = &attr.Value
 		case "SensorPresent":
-			da.SensorPresent = attr.Value
+			da.SensorPresent = &attr.Value
 		}
 	}
-	return &da, nil
+	return &da
 }
 
 // FetchBinaryState fetches the latest binary state value from the device
@@ -393,7 +423,7 @@ type belkinListener struct {
 	Responses *[]ScanResponse
 }
 
-func (t belkinListener) Response(m gossdp.ResponseMessage) {
+func (l belkinListener) Response(m gossdp.ResponseMessage) {
 	// example response
 	// urn:Belkin:device:insight:1
 	//{MaxAge:86400 SearchType:urn:Belkin:device:insight:1 DeviceId:Insight-1_0-231550K1200093 Usn:uuid:Insight-1_0-231550K1200093::urn:Belkin:device:insight:1 Location:http://10.22.22.1:49152/setup.xml Server:Unspecified, UPnP/1.0, Unspecified RawResponse:0xc208072120 Urn:urn:Belkin:device:insight:1}
@@ -401,11 +431,11 @@ func (t belkinListener) Response(m gossdp.ResponseMessage) {
 	//urn:Belkin:service:basicevent:1
 	//{MaxAge:86400 SearchType:urn:Belkin:service:basicevent:1 DeviceId:Insight-1_0-231550K1200093 Usn:uuid:Insight-1_0-231550K1200093::urn:Belkin:service:basicevent:1 Location:http://10.22.22.1:49152/setup.xml Server:Unspecified, UPnP/1.0, Unspecified RawResponse:0xc208072120 Urn:urn:Belkin:service:basicevent:1}
 
-	if m.SearchType != t.URN {
+	if m.SearchType != l.URN {
 		return
 	}
 
-	*t.Responses = append(*t.Responses, ScanResponse{
+	*l.Responses = append(*l.Responses, ScanResponse{
 		MaxAge:     m.MaxAge,
 		SearchType: m.SearchType,
 		DeviceID:   m.DeviceId,

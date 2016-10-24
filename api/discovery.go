@@ -27,6 +27,7 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
+		//TODO: This shouldn't be model number, should be some unique importer generated ID
 		modelNumber := vars["modelNumber"]
 
 		//TODO: fix, This is blocking
@@ -63,6 +64,23 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 				j++
 			}
 
+			jsonSensors := make(sensors, len(device.Sensors))
+			j = 0
+			for _, sen := range device.Sensors {
+				jsonSensors[j] = jsonSensor{
+					ID:          sen.ID,
+					Name:        sen.Name,
+					Description: sen.Description,
+					Address:     sen.Address,
+
+					//TODO: Shouldn't be setting ClientID here
+					ClientID: modelNumber + "_sensor_" + strconv.Itoa(j),
+
+					//TODO: Attrs
+				}
+				j++
+			}
+
 			var connPoolJSON *jsonConnPool
 			if device.Connections != nil {
 				connCfg := device.Connections.Config
@@ -80,6 +98,7 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 				Token:       "",
 				ClientID:    modelNumber + "_" + strconv.Itoa(i),
 				Zones:       jsonZones,
+				Sensors:     jsonSensors,
 				ConnPool:    connPoolJSON,
 			}
 		}

@@ -2,10 +2,8 @@ var React = require('react');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 var InputValidationMixin = require('./InputValidationMixin.jsx')
 var DevicePicker = require('./DevicePicker.jsx');
-var ZoneOutputPicker = require('./ZoneOutputPicker.jsx');
-var ZoneTypePicker = require('./ZoneTypePicker.jsx');
 
-var ZoneInfo = React.createClass({
+var SensorInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         return {
@@ -14,8 +12,6 @@ var ZoneInfo = React.createClass({
             description: this.props.description,
             address: this.props.address,
             deviceId: this.props.deviceId,
-            type: this.props.type,
-            output: this.props.output,
             errors: null,
         }
     },
@@ -28,8 +24,6 @@ var ZoneInfo = React.createClass({
             description: s.description,
             address: s.address,
             deviceId: s.deviceId,
-            type: s.type,
-            output: s.output,
         }
     },
 
@@ -46,17 +40,9 @@ var ZoneInfo = React.createClass({
         this.setState({ deviceId: deviceId });
     },
 
-    typeChanged: function(type) {
-        this.setState({ type: type });
-    },
-
-    outputChanged: function(output) {
-        this.setState({ output: output });
-    },
-
     render: function() {
         return (
-            <div className="cmp-ZoneInfo well">
+            <div className="cmp-DeviceInfo well">
               <div className={this.addErr('form-group', 'name')}>
                 <label className="control-label" htmlFor={this.uid('name')}>Name*</label>
                 <input
@@ -99,18 +85,8 @@ var ZoneInfo = React.createClass({
                     changed={this.devicePickerChanged}/>
                 {this.errMsg('deviceId')}
               </div>
-              <div className={this.addErr("form-group", "type")}>
-                <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
-                <ZoneTypePicker type={this.props.type} changed={this.typeChanged}/>
-                {this.errMsg('type')}
-              </div>
-              <div className={this.addErr("form-group", "output")}>
-                <label className="control-label" htmlFor={this.uid("output")}>Output*</label>
-                <ZoneOutputPicker output={this.props.output} changed={this.outputChanged}/>
-                {this.errMsg('output')}
-              </div>
             </div>
         );
     }
 });
-module.exports = ZoneInfo;
+module.exports = SensorInfo;

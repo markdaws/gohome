@@ -3,11 +3,12 @@ var ReactDOM = require('react-dom');
 var ReactRedux = require('react-redux');
 var System = require('./System.jsx');
 var SceneList = require('./SceneList.jsx');
-var ZoneList = require('./ZoneList.jsx');
+var ZoneSensorList = require('./ZoneSensorList.jsx');
 var Logging = require('./Logging.jsx');
 var RecipeApp = require('./RecipeApp.jsx');
 var Constants = require('../constants.js');
 var SceneActions = require('../actions/SceneActions.js');
+var SensorActions = require('../actions/SensorActions.js');
 var SystemActions = require('../actions/SystemActions.js');
 var ZoneActions = require('../actions/ZoneActions.js');
 
@@ -17,6 +18,7 @@ var ControlApp = React.createClass({
             buttons: [],
             devices: [],
             zones: [],
+            sensors: [],
 
             //TODO: Change to array
             scenes: { items: [] }
@@ -29,6 +31,7 @@ var ControlApp = React.createClass({
         this.props.loadAllZones();
         this.props.loadAllScenes();
         this.props.loadAllButtons();
+        this.props.loadAllSensors();
     },
 
     render: function() {
@@ -39,7 +42,7 @@ var ControlApp = React.createClass({
                 <h5 className="emptyMessage">You don't have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>
             );
         } else {
-            zoneBody = <ZoneList zones={this.props.zones}/>;
+            zoneBody = <ZoneSensorList sensors={this.props.sensors} zones={this.props.zones}/>;
         }
 
         var emptySceneBody;
@@ -117,6 +120,7 @@ function mapStateToProps(state) {
         zones: state.zones,
         scenes: state.scenes,
         buttons: state.buttons,
+        sensors: state.sensors,
         appLoadStatus: state.appLoadStatus
     };
 }
@@ -134,6 +138,9 @@ function mapDispatchToProps(dispatch) {
         },
         loadAllZones: function() {
             dispatch(ZoneActions.loadAll());
+        },
+        loadAllSensors: function() {
+            dispatch(SensorActions.loadAll());
         }
     }
 }

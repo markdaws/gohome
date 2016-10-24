@@ -5,8 +5,10 @@ var InputValidationMixin = require('./InputValidationMixin.jsx')
 var SaveBtn = require('./SaveBtn.jsx');
 var Api = require('../utils/API.js');
 var ZoneInfo = require('./ZoneInfo.jsx')
+var SensorInfo = require('./SensorInfo.jsx')
 var Classnames = require('classnames')
 var ZoneActions = require('../actions/ZoneActions.js');
+var SensorActions = require('../actions/SensorActions.js');
 var DeviceTypePicker = require('./DeviceTypePicker.jsx');
 
 var DeviceInfo = React.createClass({
@@ -34,7 +36,9 @@ var DeviceInfo = React.createClass({
     getDefaultProps: function() {
         return {
             zones: [],
+            sensors: [],
             showZones: false,
+            showSensors: false
         };
     },
 
@@ -102,7 +106,7 @@ var DeviceInfo = React.createClass({
             // Now we need to loop through each of the zones and save them
             function saveZone(index) {
                 if (index >= this.props.zones.length) {
-                    this.setState({ saveButtonStatus: 'success' });
+                    saveSensor.bind(this)(0)
                     return;
                 }
 
@@ -124,6 +128,32 @@ var DeviceInfo = React.createClass({
                 }.bind(this));
             }
             saveZone.bind(this)(0);
+
+            // Loop through sensors saving
+            function saveSensor(index) {
+                if (index >= this.props.sensors.length) {
+                    this.setState({ saveButtonStatus: 'success' });
+                    return;
+                }
+
+                // Now the device has an id, we need to bind the sensor to it
+                var sensorInfo = this.refs["sensorInfo_" + this.props.sensors[index].clientId];
+                var sensor = Object.assign({}, sensorInfo.toJson());
+                sensor.deviceId = deviceData.id;
+                Api.sensorCreate(sensor, function(err, sensorData) {
+                    if (err) {
+                        sensorInfo.setErrors(err.validationErrors);
+                        this.setState({
+                            saveButtonStatus: 'error'
+                        });
+                        return;
+                    }
+
+                    this.props.savedSensor(sensorData);
+                    saveSensor.bind(this)(index+1);
+                }.bind(this));
+            }
+
         }.bind(this));
     },
 
@@ -154,7 +184,11 @@ var DeviceInfo = React.createClass({
     _zoneChanged: function() {
         this._changed();
     },
-    
+
+    _sensorChanged: function() {
+        this._changed();
+    },
+
     render: function() {
         var device = this.state.device;
 
@@ -213,6 +247,27 @@ var DeviceInfo = React.createClass({
                         deviceId={this.state.id || this.state.clientId}
                         devices={[ this.toJson() ]}
                         changed={this._zoneChanged} />
+                );
+            }.bind(this));
+        }
+
+        var sensors;
+        if (this.props.sensors.length === 0) {
+            sensors = <h4>0 sensors found</h4>
+        } else {
+            sensors = this.props.sensors.map(function(sensor) {
+                return (
+                    <SensorInfo
+                        ref={"sensorInfo_" + sensor.clientId}
+                        readOnlyFields="deviceId"
+                        key={sensor.id || sensor.clientId}
+                        clientId={sensor.clientId}
+                        name={sensor.name}
+                        description={sensor.description}
+                        address={sensor.address}
+                        deviceId={this.state.id || this.state.clientId}
+                        devices={[ this.toJson() ]}
+                        changed={this._sensorChanged} />
                 );
             }.bind(this));
         }
@@ -291,6 +346,15 @@ var DeviceInfo = React.createClass({
                 <div className="collapse zones" id={this.uid("zones")}>
                     {zones}
                 </div>
+                <div className={Classnames({clearfix: true, hidden: !this.props.showSensors})}>
+                    <a data-toggle="collapse" href={"#" + this.uid("sensors")}>
+                        Sensors
+                        <i className="glyphicon glyphicon-menu-down"></i>
+                    </a>
+                </div>
+                <div className="collapse sensors" id={this.uid("sensors")}>
+                    {sensors}
+                </div>
                 {token}
                 {/*
                 <button className="btn btn-primary" onClick={this.testConnection}>Test Connection</button>
@@ -308,6 +372,9 @@ function mapDispatchToProps(dispatch) {
     return {
         savedZone: function(zoneJson) {
             dispatch(ZoneActions.importedZone(zoneJson));
+        },
+        savedSensor: function(sensorJson) {
+            dispatch(SensorActions.importedSensor(sensorJson));
         }
     };
 }

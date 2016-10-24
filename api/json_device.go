@@ -18,6 +18,7 @@ type jsonDevice struct {
 	Zones           []jsonZone    `json:"zones"`
 	ConnPool        *jsonConnPool `json:"connPool"`
 	Type            string        `json:"type"`
+	Sensors         []jsonSensor  `json:"sensors"`
 }
 type devices []jsonDevice
 

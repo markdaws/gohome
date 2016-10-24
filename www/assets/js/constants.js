@@ -73,6 +73,16 @@ module.exports = keyMirror({
     SCENE_COMMAND_DELETE_RAW: null,
     SCENE_COMMAND_DELETE_FAIL: null,
 
+    // Load all of the sensors from the server
+    SENSOR_LOAD_ALL: null,
+    SENSOR_LOAD_ALL_RAW: null,
+    SENSOR_LOAD_ALL_FAIL: null,
+
+    // When a sensor is being imported
+    SENSOR_IMPORT: null,
+    SENSOR_IMPORT_RAW: null,
+    SENSOR_IMPORT_FAIL: null,
+    
     // Load all of the zones from the server
     ZONE_LOAD_ALL: null,
     ZONE_LOAD_ALL_RAW: null,

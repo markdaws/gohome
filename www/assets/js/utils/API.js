@@ -212,6 +212,47 @@ var API = {
         });
     },
 
+    // sensorLoadAll loads all of the sensors from the backing store
+    sensorLoadAll: function(callback) {
+        $.ajax({
+            url: BASE + '/api/v1/sensors',
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err,
+                    status: status,
+                    xhr: xhr,
+                });
+            }
+        });
+    },
+
+    // sensorCreate creates a new sensor on the server
+    sensorCreate: function(sensorJson, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/sensors',
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(sensorJson),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = (xhr.responseJSON || {}).errors;
+                callback({
+                    err: err,
+                    status: status,
+                    validationErrors: errors
+                });
+            }
+        });
+    },
+
     // zoneLoadAll loads all of the zones from the backing store
     zoneLoadAll: function(callback) {
         $.ajax({
@@ -243,7 +284,6 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                debugger;
                 var errors = (xhr.responseJSON || {}).errors;
                 callback({
                     err: err,

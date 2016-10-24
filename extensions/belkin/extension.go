@@ -5,7 +5,35 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
-type extension struct{}
+type extension struct {
+	gohome.NullExtension
+}
+
+func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohome.ExtEvents {
+	switch d.ModelNumber {
+	//WeMo Maker
+	case "f7c043fc":
+		// A device may have been created but not have any sensors make sure we have them
+		if len(d.Sensors) == 0 {
+			return nil
+		}
+
+		//TODO: Get the sensor out of the device that we own, how to know?
+		evts := &gohome.ExtEvents{}
+		evts.Producer = &makerProducer{
+			Name:   d.Name,
+			System: sys,
+			Device: d,
+
+			// Maker only has one sensor, we just hard code the address to 1 when we create it
+			// in the extension scan code
+			Sensor: d.Sensors["1"],
+		}
+		return evts
+	default:
+		return nil
+	}
+}
 
 func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.Builder {
 	// Given the device we can return different builds for different devices and even
