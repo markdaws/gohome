@@ -13,7 +13,8 @@ import (
 // SystemServices is a collection of services that devices can access
 // such as UPNP notification and discovery
 type SystemServices struct {
-	UPNP *upnp.SubServer
+	UPNP    *upnp.SubServer
+	Monitor *Monitor
 }
 
 type System struct {
@@ -82,6 +83,19 @@ func (s *System) InitDevice(d *Device) error {
 		_ = done
 		log.V("%s connected", d)
 	}
+
+	evts := s.Extensions.FindEvents(s, d)
+	if evts != nil {
+		if evts.Producer != nil {
+			log.V("%s - added event producer", d)
+			s.EvtBus.AddProducer(evts.Producer)
+		}
+		if evts.Consumer != nil {
+			log.V("%s - added event consumer", d)
+			s.EvtBus.AddConsumer(evts.Consumer)
+		}
+	}
+
 	return nil
 }
 

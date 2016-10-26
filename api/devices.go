@@ -104,9 +104,8 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			system.NextGlobalID(),
 			data.Name,
 			data.Description,
-			//TODO: Hub
 			nil,
-			false, //TODO: stream?
+			false,
 			nil,
 			nil,
 			auth,

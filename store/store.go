@@ -253,6 +253,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 				},
 			}
 
+			dev.AddSensor(sensor)
 			err := sys.AddSensor(sensor)
 			if err != nil {
 				log.V("failed to add sensor: %s", err)

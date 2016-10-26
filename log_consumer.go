@@ -6,6 +6,7 @@ import (
 )
 
 // LogConsumer consumes events from the event bus and prints them to the log
+// TODO: Log as json objects so we can replay everything that happens in the system
 type LogConsumer struct{}
 
 func (c *LogConsumer) ConsumerName() string {
@@ -25,4 +26,5 @@ func (c *LogConsumer) StartConsuming(ch chan evtbus.Event) {
 
 func (c *LogConsumer) StopConsuming() {
 	log.V("LogConsumer - stop consuming events")
+	//TODO:
 }

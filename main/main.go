@@ -120,6 +120,13 @@ func main() {
 		}
 	}()
 
+	// Monitor is responsible for keeping track of all the current state values
+	// for zones and sensors.  It listens on the event bus for changes so that
+	// it can get the latest values
+	monitor := gohome.NewMonitor(sys, sys.EvtBus, nil)
+	monitor.Start()
+	sys.Services.Monitor = monitor
+
 	// Init does things like connecting the gohome server to
 	// all of the devices.
 	log.V("Initing devices...")

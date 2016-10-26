@@ -91,7 +91,7 @@ func apiAddSensorHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 
 		errors := system.AddSensor(sensor)
 
-		//TODO: Remove, testing only
+		// Subscribe to events from the sensor
 		evts := system.Extensions.FindEvents(system, dev)
 		if evts != nil {
 			if evts.Producer != nil {

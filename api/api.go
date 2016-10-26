@@ -44,6 +44,7 @@ func (s *apiServer) listenAndServe(port string) error {
 	RegisterDiscoveryHandlers(r, s)
 	RegisterCookBookHandlers(r, s)
 	RegisterRecipeHandlers(r, s)
+	RegisterMonitorHandlers(r, s)
 
 	return http.ListenAndServe(
 		port,
