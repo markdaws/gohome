@@ -23908,6 +23908,7 @@
 	                    name: sensor.name,
 	                    description: sensor.description,
 	                    address: sensor.address,
+	                    attr: sensor.attr,
 	                    deviceId: this.state.id || this.state.clientId,
 	                    devices: [this.toJson()],
 	                    changed: this._sensorChanged });
@@ -25150,7 +25151,8 @@
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
-	            deviceId: s.deviceId
+	            deviceId: s.deviceId,
+	            attr: this.props.attr
 	        };
 	    },
 

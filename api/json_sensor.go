@@ -1,13 +1,20 @@
 package api
 
+type jsonSensorAttr struct {
+	Name string `json:"name"`
+	//TODO: Remove value
+	Value    string `json:"value"`
+	DataType string `json:"dataType"`
+}
+
 type jsonSensor struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Address     string `json:"address"`
-	DeviceID    string `json:"deviceId"`
-	ClientID    string `json:"clientId"`
-	//TODO: attributes
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Address     string         `json:"address"`
+	DeviceID    string         `json:"deviceId"`
+	ClientID    string         `json:"clientId"`
+	Attr        jsonSensorAttr `json:"attr"`
 }
 type sensors []jsonSensor
 

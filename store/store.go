@@ -66,10 +66,26 @@ type deviceJSON struct {
 	HubID           string        `json:"hubId"`
 	Buttons         []buttonJSON  `json:"buttons"`
 	Zones           []zoneJSON    `json:"zones"`
+	Sensors         []sensorJSON  `json:"sensors"`
 	DeviceIDs       []string      `json:"deviceIds"`
 	Auth            *authJSON     `json:"auth"`
 	Stream          bool          `json:"stream"`
 	ConnPool        *connPoolJSON `json:"connPool"`
+}
+
+type sensorAttrJSON struct {
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	DataType string `json:"dataType"`
+}
+
+type sensorJSON struct {
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Address     string         `json:"address"`
+	DeviceID    string         `json:"deviceId"`
+	Attr        sensorAttrJSON `json:"attr"`
 }
 
 type authJSON struct {
@@ -220,6 +236,31 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 
 			log.V("loaded Zone: ID:%s, Name:%s, Address:%s, Type:%s, Output:%s",
 				zn.ID, zn.Name, zn.Address, zn.Type, zn.Output,
+			)
+		}
+
+		for _, sen := range d.Sensors {
+			sensor := &gohome.Sensor{
+				Address:     sen.Address,
+				ID:          sen.ID,
+				Name:        sen.Name,
+				Description: sen.Description,
+				DeviceID:    sen.DeviceID,
+				Attr: gohome.SensorAttr{
+					Name:     sen.Attr.Name,
+					Value:    sen.Attr.Value,
+					DataType: gohome.SensorDataType(sen.Attr.DataType),
+				},
+			}
+
+			err := sys.AddSensor(sensor)
+			if err != nil {
+				log.V("failed to add sensor: %s", err)
+				return nil, err
+			}
+
+			log.V("loaded Sensor: ID:%s, Name:%s, Address:%s, DeviceID:%s",
+				sensor.ID, sensor.Name, sensor.Address, sensor.DeviceID,
 			)
 		}
 	}
@@ -432,6 +473,24 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 				Output:      z.Output.ToString(),
 			}
 			zi++
+		}
+
+		d.Sensors = make([]sensorJSON, len(device.Sensors))
+		si := 0
+		for _, sen := range device.Sensors {
+			d.Sensors[si] = sensorJSON{
+				Address:     sen.Address,
+				ID:          sen.ID,
+				Name:        sen.Name,
+				Description: sen.Description,
+				DeviceID:    sen.DeviceID,
+				Attr: sensorAttrJSON{
+					Name:     sen.Attr.Name,
+					Value:    sen.Attr.Value,
+					DataType: string(sen.Attr.DataType),
+				},
+			}
+			si++
 		}
 
 		d.DeviceIDs = make([]string, len(device.Devices))

@@ -88,7 +88,11 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 				Address:     "1",
 				Name:        devInfo.FriendlyName + " - sensor",
 				Description: "",
-				//TODO: Attrs
+				Attr: gohome.SensorAttr{
+					Name:     "sensor",
+					Value:    "-1",
+					DataType: gohome.SDTInt,
+				},
 			}
 			dev.AddSensor(sensor)
 		}

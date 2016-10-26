@@ -35,7 +35,7 @@ type Sensor struct {
 	Description string
 	Address     string
 	DeviceID    string
-	Attrs       []SensorAttr
+	Attr        SensorAttr
 }
 
 func (s *Sensor) Validate() *validation.Errors {

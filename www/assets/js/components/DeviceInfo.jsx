@@ -265,6 +265,7 @@ var DeviceInfo = React.createClass({
                         name={sensor.name}
                         description={sensor.description}
                         address={sensor.address}
+                        attr={sensor.attr}
                         deviceId={this.state.id || this.state.clientId}
                         devices={[ this.toJson() ]}
                         changed={this._sensorChanged} />

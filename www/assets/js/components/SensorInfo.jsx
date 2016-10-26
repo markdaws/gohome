@@ -24,6 +24,7 @@ var SensorInfo = React.createClass({
             description: s.description,
             address: s.address,
             deviceId: s.deviceId,
+            attr: this.props.attr
         }
     },
 

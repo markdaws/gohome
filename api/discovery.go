@@ -76,7 +76,10 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 					//TODO: Shouldn't be setting ClientID here
 					ClientID: modelNumber + "_sensor_" + strconv.Itoa(j),
 
-					//TODO: Attrs
+					Attr: jsonSensorAttr{
+						Name:     sen.Attr.Name,
+						DataType: string(sen.Attr.DataType),
+					},
 				}
 				j++
 			}

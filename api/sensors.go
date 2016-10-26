@@ -35,6 +35,10 @@ func apiSensorsHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 				Name:        sensor.Name,
 				Description: sensor.Description,
 				DeviceID:    sensor.DeviceID,
+				Attr: jsonSensorAttr{
+					Name:     sensor.Attr.Name,
+					DataType: string(sensor.Attr.DataType),
+				},
 			}
 			i++
 		}
@@ -62,12 +66,15 @@ func apiAddSensorHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			return
 		}
 
-		//TODO: attrs
 		sensor := &gohome.Sensor{
 			Name:        data.Name,
 			Description: data.Description,
 			Address:     data.Address,
 			DeviceID:    data.DeviceID,
+			Attr: gohome.SensorAttr{
+				Name:     data.Attr.Name,
+				DataType: gohome.SensorDataType(data.Attr.DataType),
+			},
 		}
 
 		//Add the sensor to the owner device
