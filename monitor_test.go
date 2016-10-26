@@ -14,7 +14,7 @@ type MockChangeHandler struct {
 	ChangeBatches []*gohome.ChangeBatch
 }
 
-func (h *MockChangeHandler) Update(cb *gohome.ChangeBatch) {
+func (h *MockChangeHandler) Update(monitorID string, cb *gohome.ChangeBatch) {
 	h.ChangeBatches = append(h.ChangeBatches, cb)
 
 	fmt.Printf("got update callback %+v\n", cb)

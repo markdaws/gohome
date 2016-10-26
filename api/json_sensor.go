@@ -1,8 +1,7 @@
 package api
 
 type jsonSensorAttr struct {
-	Name string `json:"name"`
-	//TODO: Remove value
+	Name     string `json:"name"`
 	Value    string `json:"value"`
 	DataType string `json:"dataType"`
 }

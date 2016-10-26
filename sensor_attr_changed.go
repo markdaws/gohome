@@ -1,6 +1,10 @@
 package gohome
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/cmd"
+)
 
 //TODO: Move to event package
 
@@ -18,7 +22,18 @@ type SensorAttrChanged struct {
 }
 
 func (e *SensorAttrChanged) String() string {
-	return fmt.Sprintf("SensorAttrChanged, Sensor Name:%s, ID:%s, %s", e.SensorName, e.SensorID, e.Attr.String())
+	return fmt.Sprintf("SensorAttrChanged, Name:%s, ID:%s, %s", e.SensorName, e.SensorID, e.Attr.String())
+}
+
+//TODO: Move
+type ZoneLevelChanged struct {
+	ZoneID   string
+	ZoneName string
+	Level    cmd.Level
+}
+
+func (e *ZoneLevelChanged) String() string {
+	return fmt.Sprintf("ZoneLevelChanged, Name:%s, ID:%s %s", e.ZoneName, e.ZoneID, e.Level.String())
 }
 
 //TODO: Different file
@@ -52,6 +67,36 @@ func (sr *SensorsReporting) Add(sensorID string, attr SensorAttr) {
 
 func (sr *SensorsReporting) String() string {
 	return fmt.Sprintf("SensorsReporting, contains %d sensors", len(sr.Sensors))
+}
+
+type ZonesReport struct {
+	ZoneIDs map[string]bool
+}
+
+func (zr *ZonesReport) Add(zoneID string) {
+	if zr.ZoneIDs == nil {
+		zr.ZoneIDs = make(map[string]bool)
+	}
+	zr.ZoneIDs[zoneID] = true
+}
+
+func (zr *ZonesReport) String() string {
+	return fmt.Sprintf("ZonesReport, contains %d zones", len(zr.ZoneIDs))
+}
+
+type ZonesReporting struct {
+	Zones map[string]cmd.Level
+}
+
+func (zr *ZonesReporting) Add(zoneID string, level cmd.Level) {
+	if zr.Zones == nil {
+		zr.Zones = make(map[string]cmd.Level)
+	}
+	zr.Zones[zoneID] = level
+}
+
+func (zr *ZonesReporting) String() string {
+	return fmt.Sprintf("ZonesReporting, contains %d zones", len(zr.Zones))
 }
 
 //TODO: ZoneLevelChanged

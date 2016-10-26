@@ -71,7 +71,6 @@ func (p *makerProducer) StartProducing(b *evtbus.Bus) {
 		// The make has a sensor and a switch state, need to notify these changes
 		// to the event bus
 		sid, err := p.System.Services.UPNP.Subscribe(
-			//TODO: Device should expose service end points?
 			p.Device.Address+"/upnp/event/basicevent1",
 			"",
 			300,

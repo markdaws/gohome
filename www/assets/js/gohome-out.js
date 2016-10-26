@@ -24454,6 +24454,27 @@
 	        });
 	    },
 
+	    // monitorSubscribe requests to subscribe to sensor and zone changes
+	    monitorSubscribe: function monitorSubscribe(group, callback) {
+	        $.ajax({
+	            url: BASE + '/api/v1/monitor/groups',
+	            type: 'POST',
+	            dataType: 'json',
+	            data: JSON.stringify(group),
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    status: status
+	                });
+	            }
+	        });
+	    },
+
 	    // sensorLoadAll loads all of the sensors from the backing store
 	    sensorLoadAll: function sensorLoadAll(callback) {
 	        $.ajax({
@@ -28275,6 +28296,7 @@
 	var Grid = __webpack_require__(223);
 	var SensorMonitor = __webpack_require__(250);
 	var ZoneSensorListGridCell = __webpack_require__(251);
+	var Api = __webpack_require__(208);
 
 	var ZoneSensorList = React.createClass({
 	    displayName: 'ZoneSensorList',
@@ -28285,6 +28307,14 @@
 	        var switchZones = [];
 	        var otherZones = [];
 	        var sensors = [];
+
+	        //TODO: In wrong place - only do once, mounted added and re-rendered multiple times...
+	        var monitorGroup = {
+	            timeoutInSeconds: 200,
+	            sensorIds: [],
+	            zoneIds: []
+	        };
+
 	        this.props.zones.forEach(function (zone) {
 
 	            var cmpZone = {
@@ -28296,6 +28326,8 @@
 	                    output: zone.output,
 	                    key: zone.id })
 	            };
+
+	            monitorGroup.zoneIds.push(zone.id);
 
 	            switch (zone.type) {
 	                case 'light':
@@ -28319,7 +28351,57 @@
 	                content: React.createElement(SensorMonitor, { sensor: sensor })
 	            };
 	            sensors.push(cmpSensor);
+
+	            monitorGroup.sensorIds.push(sensor.id);
 	        });
+
+	        //TODO: Remove
+	        Api.monitorSubscribe(monitorGroup, function (err, data) {
+	            if (err != null) {
+	                console.log('failed to sub to monitor');
+	                console.log(err);
+	                return;
+	            }
+	            console.log('subscribed to monitor');
+	            console.log(data);
+
+	            reconnect(data.monitorId);
+	        });
+
+	        function reconnect(monitorId) {
+	            /*var oldConn = this.state.conn;
+	            if (oldConn) {
+	                oldConn.close();
+	            }*/
+
+	            var conn = new WebSocket("ws://" + window.location.hostname + ":5000/api/v1/monitor/groups/" + monitorId);
+	            var self = this;
+	            conn.onopen = function (evt) {
+	                /*
+	                self.setState({
+	                    connectionStatus: 'connected'
+	                });*/
+	            };
+	            conn.onclose = function (evt) {
+	                conn = null;
+	                /*
+	                self.setState({
+	                    conn: null,
+	                    items: [],
+	                    connectionStatus: 'disconnected'
+	                });*/
+	            };
+	            conn.onmessage = function (evt) {
+	                var item = JSON.parse(evt.data);
+	                console.log('got monitor message');
+	                console.log(item);
+	            };
+	            /*
+	            this.setState({
+	                conn: conn,
+	                connectionStatus: 'connecting'
+	            });*/
+	        }
 
 	        return React.createElement(
 	            'div',

@@ -7,6 +7,7 @@ var ZoneActions = require('../actions/ZoneActions.js');
 var Grid = require('./Grid.jsx');
 var SensorMonitor = require('./SensorMonitor.jsx');
 var ZoneSensorListGridCell = require('./ZoneSensorListGridCell.jsx');
+var Api = require('../utils/API.js');
 
 var ZoneSensorList = React.createClass({
     render: function() {
@@ -15,6 +16,14 @@ var ZoneSensorList = React.createClass({
         var switchZones = [];
         var otherZones = [];
         var sensors = [];
+
+        //TODO: In wrong place - only do once, mounted added and re-rendered multiple times...
+        var monitorGroup = {
+            timeoutInSeconds: 200,
+            sensorIds: [],
+            zoneIds: []
+        };
+
         this.props.zones.forEach(function(zone) {
 
             var cmpZone = {
@@ -27,7 +36,8 @@ var ZoneSensorList = React.createClass({
                              key={zone.id}/>
             };
                 
-
+            monitorGroup.zoneIds.push(zone.id);
+            
             switch(zone.type) {
                 case 'light':
                     lightZones.push(cmpZone);
@@ -50,7 +60,57 @@ var ZoneSensorList = React.createClass({
                 content: <SensorMonitor sensor={sensor} />
             };
             sensors.push(cmpSensor);
+
+            monitorGroup.sensorIds.push(sensor.id)
         });
+
+        //TODO: Remove
+        Api.monitorSubscribe(monitorGroup, function(err, data) {
+            if (err != null) {
+                console.log('failed to sub to monitor');
+                console.log(err);
+                return;
+            }
+            console.log('subscribed to monitor');
+            console.log(data);
+
+            reconnect(data.monitorId);
+        });
+
+        function reconnect(monitorId) {
+            /*var oldConn = this.state.conn;
+            if (oldConn) {
+                oldConn.close();
+            }*/
+
+            var conn = new WebSocket("ws://" + window.location.hostname + ":5000/api/v1/monitor/groups/" + monitorId);
+            var self = this;
+            conn.onopen = function(evt) {
+                /*
+                self.setState({
+                    connectionStatus: 'connected'
+                });*/
+            };
+            conn.onclose = function(evt) {
+                conn = null;
+                /*
+                self.setState({
+                    conn: null,
+                    items: [],
+                    connectionStatus: 'disconnected'
+                });*/
+            };
+            conn.onmessage = function(evt) {
+                var item = JSON.parse(evt.data);
+                console.log('got monitor message');
+                console.log(item);
+            };
+            /*
+            this.setState({
+                conn: conn,
+                connectionStatus: 'connecting'
+            });*/
+        }
 
         return (
             <div className="cmp-ZoneSensorList">

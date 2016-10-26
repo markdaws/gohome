@@ -4,55 +4,17 @@ import (
 	"strconv"
 
 	"github.com/go-home-iot/event-bus"
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/log"
 )
 
-//TODO:Delete
-/*
-// This example creates a PriorityQueue with some items, adds and manipulates an item,
-// and then removes the items in priority order.
-func main() {
-	// Some items and their priorities.
-	items := map[string]int{
-		"banana": 3, "apple": 2, "pear": 4,
-	}
-
-	// Create a priority queue, put the items in it, and
-	// establish the priority queue (heap) invariants.
-	pq := make(PriorityQueue, len(items))
-	i := 0
-	for value, priority := range items {
-		pq[i] = &Item{
-			value:    value,
-			priority: priority,
-			index:    i,
-		}
-		i++
-	}
-	heap.Init(&pq)
-
-	// Insert a new item and then modify its priority.
-	item := &Item{
-		value:    "orange",
-		priority: 1,
-	}
-	heap.Push(&pq, item)
-	pq.update(item, item.value, 5)
-
-	// Take the items out; they arrive in decreasing priority order.
-	for pq.Len() > 0 {
-		item := heap.Pop(&pq).(*Item)
-		fmt.Printf("%.2d:%s ", item.priority, item.value)
-	}
-}
-*/ //TODO: Put back item, item should point to monitorgroup??
-
 type ChangeHandler interface {
-	Update(b *ChangeBatch)
+	Update(monitorID string, b *ChangeBatch)
 }
 
 type ChangeBatch struct {
 	Sensors map[string]SensorAttr
+	Zones   map[string]cmd.Level
 }
 
 type MonitorGroup struct {
@@ -65,24 +27,36 @@ type MonitorGroup struct {
 type Monitor struct {
 	system         *System
 	nextID         int
-	groups         map[string]*MonitorGroup
+	Groups         map[string]*MonitorGroup
 	evtBus         *evtbus.Bus
 	sensorToGroups map[string]map[string]bool
+	zoneToGroups   map[string]map[string]bool
 	sensorValues   map[string]SensorAttr
+	zoneValues     map[string]cmd.Level
 }
 
-func NewMonitor(sys *System, evtBus *evtbus.Bus, sensorValues map[string]SensorAttr) *Monitor {
+func NewMonitor(
+	sys *System,
+	evtBus *evtbus.Bus,
+	sensorValues map[string]SensorAttr,
+	zoneValues map[string]cmd.Level,
+) *Monitor {
 
 	//Callers can pass in initial values if they know what they are
 	if sensorValues == nil {
 		sensorValues = make(map[string]SensorAttr)
 	}
+	if zoneValues == nil {
+		zoneValues = make(map[string]cmd.Level)
+	}
 	m := &Monitor{
 		system:         sys,
 		nextID:         1,
-		groups:         make(map[string]*MonitorGroup),
+		Groups:         make(map[string]*MonitorGroup),
 		sensorToGroups: make(map[string]map[string]bool),
+		zoneToGroups:   make(map[string]map[string]bool),
 		sensorValues:   sensorValues,
+		zoneValues:     zoneValues,
 		evtBus:         evtBus,
 	}
 
@@ -100,14 +74,13 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 
 	monitorID := strconv.Itoa(m.nextID)
 	m.nextID++
-	m.groups[monitorID] = g
-
-	//TODO: Zones
+	m.Groups[monitorID] = g
 
 	var changeBatch = &ChangeBatch{
 		Sensors: make(map[string]SensorAttr),
+		Zones:   make(map[string]cmd.Level),
 	}
-	var report = &SensorsReport{}
+	var sensorReport = &SensorsReport{}
 	for sensorID := range g.Sensors {
 		// Get the monitor groups that are listening to this sensor
 		groups, ok := m.sensorToGroups[sensorID]
@@ -128,25 +101,41 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 			if ok {
 				changeBatch.Sensors[sensorID] = val
 			} else {
-				report.Add(sensorID)
-				//m.valueRequester.RequestSensor(sensorID, attr, func(attr SensorAttr) {
-				//m.sensorAttrChanged(sensorID, attr)
-				//})
+				sensorReport.Add(sensorID)
 			}
 		}
 	}
-	if len(changeBatch.Sensors) > 0 {
-		g.Handler.Update(changeBatch)
+	var zoneReport = &ZonesReport{}
+	for zoneID := range g.Zones {
+		groups, ok := m.zoneToGroups[zoneID]
+		if !ok {
+			groups = make(map[string]bool)
+			m.zoneToGroups[zoneID] = groups
+		}
+		groups[monitorID] = true
+
+		if refresh {
+			val, ok := m.zoneValues[zoneID]
+			if ok {
+				changeBatch.Zones[zoneID] = val
+			} else {
+				zoneReport.Add(zoneID)
+			}
+		}
 	}
-	if len(report.SensorIDs) > 0 {
-		m.evtBus.Enqueue(report)
+
+	if len(changeBatch.Sensors) > 0 || len(changeBatch.Zones) > 0 {
+		g.Handler.Update(monitorID, changeBatch)
 	}
+	if len(sensorReport.SensorIDs) > 0 {
+		m.evtBus.Enqueue(sensorReport)
+	}
+	if len(zoneReport.ZoneIDs) > 0 {
+		m.evtBus.Enqueue(zoneReport)
+	}
+
 	// TODO: Where to set timeout, heap with timeout, set timer for smallest time
 	// TODO: expirationHeap
-
-	//TODO: Go through each of the inputs, if we have a value for them, send them out, then request updates
-	//TODO: How to update, some things can push, others we will have to poll for
-
 	return monitorID
 }
 
@@ -169,14 +158,42 @@ func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
 
 	//fmt.Printf("got updated sensor[%s] value: %+v\n", sensorID, attr)
 	for groupID := range groups {
-		group := m.groups[groupID]
+		group := m.Groups[groupID]
 		//TODO: Don't make blocking...
 		//TODO: Batch?
 		cb := &ChangeBatch{
 			Sensors: make(map[string]SensorAttr),
 		}
 		cb.Sensors[sensorID] = attr
-		group.Handler.Update(cb)
+		group.Handler.Update(groupID, cb)
+	}
+}
+
+func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
+	groups, ok := m.zoneToGroups[zoneID]
+	if !ok {
+		return
+	}
+
+	// Is this value different to what we already know?
+	currentVal, ok := m.zoneValues[zoneID]
+	if ok {
+		// No change, don't refresh clients
+		if currentVal == val {
+			return
+		}
+	}
+	m.zoneValues[zoneID] = val
+
+	for groupID := range groups {
+		group := m.Groups[groupID]
+		//TODO: Don't make blocking...
+		//TODO: Batch?
+		cb := &ChangeBatch{
+			Zones: make(map[string]cmd.Level),
+		}
+		cb.Zones[zoneID] = val
+		group.Handler.Update(groupID, cb)
 	}
 }
 
@@ -199,7 +216,16 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 				for sensorID, attr := range evt.Sensors {
 					m.sensorAttrChanged(sensorID, attr)
 				}
+
+			case *ZonesReporting:
+				for zoneID, val := range evt.Zones {
+					m.zoneLevelChanged(zoneID, val)
+				}
+
+			case *ZoneLevelChanged:
+				m.zoneLevelChanged(evt.ZoneID, evt.Level)
 			}
+
 		}
 		log.V("Monitor - event channel has closed")
 	}()
@@ -217,6 +243,7 @@ func (m *Monitor) ProducerName() string {
 }
 
 func (m *Monitor) StartProducing(evtBus *evtbus.Bus) {
+	//TODO: Delete?
 }
 
 func (m *Monitor) StopProducing() {

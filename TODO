@@ -207,48 +207,9 @@ errInfo: function(errors, inputid, msg) {
 
 
 
-package gohome
-
-/*
-import (
-	"bufio"
-	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
-
-	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/comm"
-	"github.com/markdaws/gohome/event"
-	"github.com/markdaws/gohome/log"
-)
-
-//TODO: make lutron package
 type Lbdgpro2whDevice struct {
 	device
 	pool comm.ConnectionPool
-}
-
-func (d *Lbdgpro2whDevice) StartProducingEvents() (<-chan event.Event, <-chan bool) {
-	d.evpDone = make(chan bool)
-	d.evpFire = make(chan event.Event)
-
-	if d.Stream() {
-		go d.startStreaming()
-	}
-	return d.evpFire, d.evpDone
-}
-
-func (d *Lbdgpro2whDevice) startStreaming() {
-	//TODO: Stop?
-	for {
-		err := d.stream()
-		if err != nil {
-			log.E("%s streaming failed: %s", d, err)
-		}
-		time.Sleep(10 * time.Second)
-	}
 }
 
 func (d *Lbdgpro2whDevice) stream() error {
@@ -306,97 +267,6 @@ func (d *Lbdgpro2whDevice) stream() error {
 	//}
 }
 
-func (d *Lbdgpro2whDevice) parseCommandString(cmd string) cmd.Command {
-	switch {
-	case strings.HasPrefix(cmd, "~OUTPUT"),
-		strings.HasPrefix(cmd, "#OUTPUT"):
-		return d.parseZoneCommand(cmd)
-
-	case strings.HasPrefix(cmd, "~DEVICE"),
-		strings.HasPrefix(cmd, "#DEVICE"):
-		return d.parseDeviceCommand(cmd)
-	default:
-		// Ignore commands we don't care about
-		return nil
-	}
-}
-
-func (d *Lbdgpro2whDevice) parseDeviceCommand(command string) cmd.Command {
-	matches := regexp.MustCompile("[~|#]DEVICE,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(command)
-	if matches == nil || len(matches) != 4 {
-		return nil
-	}
-
-	deviceID := matches[1]
-	componentID := matches[2]
-	cmdID := matches[3]
-	sourceDevice := d.Devices()[deviceID]
-	if sourceDevice == nil {
-		return nil
-	}
-
-	var finalCmd cmd.Command
-	switch cmdID {
-	case "3":
-		if btn := sourceDevice.Buttons()[componentID]; btn != nil {
-			finalCmd = &cmd.ButtonPress{
-				ButtonAddress: btn.Address,
-				ButtonID:      btn.ID,
-				DeviceName:    d.Name(),
-				DeviceAddress: d.Address(),
-				DeviceID:      d.ID(),
-			}
-		}
-	case "4":
-		if btn := sourceDevice.Buttons()[componentID]; btn != nil {
-			finalCmd = &cmd.ButtonRelease{
-				ButtonAddress: btn.Address,
-				ButtonID:      btn.ID,
-				DeviceName:    d.Name(),
-				DeviceAddress: d.Address(),
-				DeviceID:      d.ID(),
-			}
-		}
-	default:
-		return nil
-	}
-
-	return finalCmd
-}
-
-func (d *Lbdgpro2whDevice) parseZoneCommand(command string) cmd.Command {
-	matches := regexp.MustCompile("[~|?]OUTPUT,([^,]+),([^,]+),(.+)\r\n").FindStringSubmatch(command)
-	if matches == nil || len(matches) != 4 {
-		return nil
-	}
-
-	zoneID := matches[1]
-	cmdID := matches[2]
-	level, err := strconv.ParseFloat(matches[3], 64)
-	if err != nil {
-		return nil
-	}
-
-	z := d.Zones()[zoneID]
-	if z == nil {
-		return nil
-	}
-
-	var finalCmd cmd.Command
-	switch cmdID {
-	case "1":
-		finalCmd = &cmd.ZoneSetLevel{
-			ZoneAddress: z.Address,
-			ZoneID:      z.ID,
-			ZoneName:    z.Name,
-			Level:       cmd.Level{Value: float32(level)},
-		}
-	default:
-		return nil
-	}
-
-	return finalCmd
-}
 */
 
 

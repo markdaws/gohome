@@ -212,6 +212,27 @@ var API = {
         });
     },
 
+    // monitorSubscribe requests to subscribe to sensor and zone changes
+    monitorSubscribe: function(group, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/monitor/groups',
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify(group),
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    status: status
+                });
+            }
+        });        
+    },
+    
     // sensorLoadAll loads all of the sensors from the backing store
     sensorLoadAll: function(callback) {
         $.ajax({

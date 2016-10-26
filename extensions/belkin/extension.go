@@ -18,7 +18,6 @@ func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohom
 			return nil
 		}
 
-		//TODO: Get the sensor out of the device that we own, how to know?
 		evts := &gohome.ExtEvents{}
 		evts.Producer = &makerProducer{
 			Name:   d.Name,
@@ -29,6 +28,8 @@ func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohom
 			// in the extension scan code
 			Sensor: d.Sensors["1"],
 		}
+
+		//TODO: Need a conusmer to listen for sensorsreport event
 		return evts
 	default:
 		return nil

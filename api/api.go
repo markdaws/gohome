@@ -49,7 +49,7 @@ func (s *apiServer) listenAndServe(port string) error {
 	return http.ListenAndServe(
 		port,
 		handlers.CORS(
-			handlers.AllowedMethods([]string{"PUT", "POST", "DELETE", "GET", "OPTIONS"}),
+			handlers.AllowedMethods([]string{"PUT", "POST", "DELETE", "GET", "OPTIONS", "UPGRADE"}),
 			handlers.AllowedOrigins([]string{"*"}),
 			handlers.AllowedHeaders([]string{"content-type"}),
 		)(r))
