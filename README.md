@@ -38,6 +38,7 @@ I have a roadmap for where I would like to go with this project:
 ###Buttons
 ###Commands
 ###Devices
+###[Events](docs/events.md)
 ###Recipes
 ###[Scenes](docs/scene.md)
 ###[Zones](docs/zone.md)
