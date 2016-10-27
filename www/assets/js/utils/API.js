@@ -230,7 +230,29 @@ var API = {
                     status: status
                 });
             }
-        });        
+        });
+    },
+
+    // monitorUnsubscribe unsubscribe the specified monitor id so the client will
+    // no longer receive updates when values associated with it change
+    monitorUnsubscribe: function(monitorId, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/monitor/groups/' + monitorId,
+            type: 'DELETE',
+            dataType: 'json',
+            data: null,
+            cache: false,
+            success: function(data) {
+                callback && callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback && callback({
+                    err: err,
+                    xhr: xhr,
+                    status: status
+                });
+            }
+        });
     },
     
     // sensorLoadAll loads all of the sensors from the backing store

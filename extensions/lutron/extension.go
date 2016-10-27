@@ -23,6 +23,11 @@ func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohom
 			System: sys,
 			Device: d,
 		}
+		evts.Consumer = &eventConsumer{
+			Name:   d.Name,
+			System: sys,
+			Device: d,
+		}
 		return evts
 	default:
 		return nil

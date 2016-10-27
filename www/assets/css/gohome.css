@@ -232,6 +232,11 @@ button.disabled {
     height: 100%;
     font-size: 0px;
 }
+.cmp-ZoneSensorListGridCell svg {
+    position: absolute;
+    left: 0;
+    z-index: 1;
+}
 .cmp-ZoneSensorListGridCell .name{
     display: block;
     font-size: 12px;
@@ -252,6 +257,10 @@ button.disabled {
     font-size: 57px;
     text-align: center;
     color: #555;
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
 }
 
 .cmp-SceneList {

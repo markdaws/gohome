@@ -8,10 +8,60 @@ import (
 	"time"
 
 	"github.com/go-home-iot/event-bus"
+	lutronExt "github.com/go-home-iot/lutron"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/log"
 )
+
+type eventConsumer struct {
+	Name   string
+	System *gohome.System
+	Device *gohome.Device
+}
+
+func (p *eventConsumer) ConsumerName() string {
+	return "LutronEventConsumer"
+}
+func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
+	go func() {
+		for e := range ch {
+			switch evt := e.(type) {
+			case *gohome.ZonesReport:
+				log.V("got zones report")
+				// The system wants zones to report their current status, check if
+				// we own any of these zones, if so report them
+				dev, err := lutronExt.DeviceFromModelNumber(p.Device.ModelNumber)
+				if err != nil {
+					log.V("unsupported device")
+					continue
+				}
+
+				for zoneID := range evt.ZoneIDs {
+					log.V("calling zone %s", zoneID)
+					if zn, ok := p.System.Zones[zoneID]; ok {
+						conn, err := p.Device.Connections.Get(time.Second * 10)
+						if err != nil {
+							log.V("unable to get connection to device: %s, timeout", p.Device)
+							continue
+						}
+						err = dev.RequestLevel(zn.Address, conn)
+						if err != nil {
+							log.V("Failed to request level for lutron, zoneID:%s, %s", zoneID, err)
+						}
+						p.Device.Connections.Release(conn)
+					}
+				}
+				_ = evt
+
+				// TODO:Really no such thing as a poducer ...
+			}
+		}
+	}()
+}
+func (p *eventConsumer) StopConsuming() {
+	//TODO:
+}
 
 type eventProducer struct {
 	Name   string
@@ -20,7 +70,7 @@ type eventProducer struct {
 }
 
 func (p *eventProducer) ProducerName() string {
-	return "LutronEventProducer"
+	return "LutronEventProducer: " + p.Name
 }
 
 func (p *eventProducer) StartProducing(b *evtbus.Bus) {
@@ -45,6 +95,7 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 
 				//Match first instance of ~OUTPUT|~DEVICE.*\r\n
 				str := string(data[0:])
+				log.V("From lutron: " + str)
 				indices := regexp.MustCompile("[~|#][OUTPUT|DEVICE].+\r\n").FindStringIndex(str)
 
 				//TODO: Don't let input grow forever - remove beginning chars after reaching max length
@@ -82,6 +133,7 @@ func (p *eventProducer) StopProducing() {
 	//TODO:
 }
 
+//TODO: Move all this parsing to go-home-iot/lutron
 func (p *eventProducer) parseCommandString(cmd string) evtbus.Event {
 	switch {
 	case strings.HasPrefix(cmd, "~OUTPUT"),

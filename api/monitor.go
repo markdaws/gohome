@@ -39,7 +39,7 @@ func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.Re
 			return
 		}
 
-		if len(groupJSON.SensorIDs) == 0 {
+		if len(groupJSON.SensorIDs) == 0 && len(groupJSON.ZoneIDs) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -100,6 +100,7 @@ func (l *WSHelper) unregister(c *connection) {
 
 func (h *WSHelper) Update(monitorID string, b *gohome.ChangeBatch) {
 	//TODO: Index connections by monitor id -> could be multiple connections per monitor id
+	//TODO: Bad connections should be cleaned out ...
 	for conn := range h.connections {
 		if conn.monitorID == monitorID {
 			evt := jsonMonitorGroupResponse{
@@ -147,7 +148,14 @@ func (h *WSHelper) HTTPHandler() func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
+		//TODO: Check monitorID, if not valid send bad response
 		monitorID := mux.Vars(r)["monitorID"]
+		if _, ok := h.monitor.Groups[monitorID]; !ok {
+			c.Close()
+			return
+
+		}
+
 		conn := &connection{
 			monitorID: monitorID,
 			ws:        c,
@@ -155,6 +163,11 @@ func (h *WSHelper) HTTPHandler() func(http.ResponseWriter, *http.Request) {
 			readChan:  make(chan bool),
 		}
 		h.register(conn)
+
+		// When a connetion registers, we need to ask the monitor to refresh all
+		// values associated with it. Since we could have subscribed but not connected
+		// yet and missed previous updates
+		h.monitor.Refresh(monitorID)
 		go conn.writeLoop(h)
 		conn.readLoop(h)
 	}
@@ -216,4 +229,7 @@ func (c *connection) readLoop(l *WSHelper) {
 			break
 		}
 	}
+
+	//TODO: Are we responsible for doing something when the client closes
+	//a request
 }

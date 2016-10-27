@@ -68,6 +68,48 @@ func NewMonitor(
 func (m *Monitor) Start() {
 }
 
+func (m *Monitor) Refresh(monitorID string) {
+	group, ok := m.Groups[monitorID]
+	if !ok {
+		// bad id, or expired ignore
+		return
+	}
+
+	var changeBatch = &ChangeBatch{
+		Sensors: make(map[string]SensorAttr),
+		Zones:   make(map[string]cmd.Level),
+	}
+
+	var sensorReport = &SensorsReport{}
+	for sensorID := range group.Sensors {
+		val, ok := m.sensorValues[sensorID]
+		if ok {
+			changeBatch.Sensors[sensorID] = val
+		} else {
+			sensorReport.Add(sensorID)
+		}
+	}
+
+	var zoneReport = &ZonesReport{}
+	for zoneID := range group.Zones {
+		val, ok := m.zoneValues[zoneID]
+		if ok {
+			changeBatch.Zones[zoneID] = val
+		} else {
+			zoneReport.Add(zoneID)
+		}
+	}
+	if len(changeBatch.Sensors) > 0 || len(changeBatch.Zones) > 0 {
+		group.Handler.Update(monitorID, changeBatch)
+	}
+	if len(sensorReport.SensorIDs) > 0 {
+		m.evtBus.Enqueue(sensorReport)
+	}
+	if len(zoneReport.ZoneIDs) > 0 {
+		m.evtBus.Enqueue(zoneReport)
+	}
+}
+
 func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 
 	//TODO: Called in multiple go routines?, mutex it
@@ -76,11 +118,9 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 	m.nextID++
 	m.Groups[monitorID] = g
 
-	var changeBatch = &ChangeBatch{
-		Sensors: make(map[string]SensorAttr),
-		Zones:   make(map[string]cmd.Level),
-	}
-	var sensorReport = &SensorsReport{}
+	// Make sure we map from the zone and sensor ids back to this new group,
+	// so that if any zones/snesor change in the future we know that we
+	// need to alert this group
 	for sensorID := range g.Sensors {
 		// Get the monitor groups that are listening to this sensor
 		groups, ok := m.sensorToGroups[sensorID]
@@ -88,24 +128,8 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 			groups = make(map[string]bool)
 			m.sensorToGroups[sensorID] = groups
 		}
-
 		groups[monitorID] = true
-
-		// Need to subscribe to the changes if we haven't already ...
-		// TODO: How to say subscribe to the sensor events?
-		// pass in functions to subscribe to certain objects, so this knows nothing about the system ...
-
-		// Caller wants to get values if we have them, or if not request
-		if refresh {
-			val, ok := m.sensorValues[sensorID]
-			if ok {
-				changeBatch.Sensors[sensorID] = val
-			} else {
-				sensorReport.Add(sensorID)
-			}
-		}
 	}
-	var zoneReport = &ZonesReport{}
 	for zoneID := range g.Zones {
 		groups, ok := m.zoneToGroups[zoneID]
 		if !ok {
@@ -113,25 +137,10 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 			m.zoneToGroups[zoneID] = groups
 		}
 		groups[monitorID] = true
-
-		if refresh {
-			val, ok := m.zoneValues[zoneID]
-			if ok {
-				changeBatch.Zones[zoneID] = val
-			} else {
-				zoneReport.Add(zoneID)
-			}
-		}
 	}
 
-	if len(changeBatch.Sensors) > 0 || len(changeBatch.Zones) > 0 {
-		g.Handler.Update(monitorID, changeBatch)
-	}
-	if len(sensorReport.SensorIDs) > 0 {
-		m.evtBus.Enqueue(sensorReport)
-	}
-	if len(zoneReport.ZoneIDs) > 0 {
-		m.evtBus.Enqueue(zoneReport)
+	if refresh {
+		m.Refresh(monitorID)
 	}
 
 	// TODO: Where to set timeout, heap with timeout, set timer for smallest time

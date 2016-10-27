@@ -55,12 +55,12 @@ var ControlApp = React.createClass({
         return (
             <div className="cmp-ControlApp">
                 <ul className="nav nav-tabs" role="tablist">
-                    <li role="presentation" className="active">
+                    <li role="presentation" className="">
                         <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">
                             <i className="fa fa-sliders"></i>
                         </a>
                     </li>
-                    <li role="presentation" className="">
+                    <li role="presentation" className="active">
                         <a href="#zones" role="tab" aria-controls="zones" data-toggle="tab">
                             <i className="fa fa-code-fork"></i>
                         </a>
@@ -81,14 +81,14 @@ var ControlApp = React.createClass({
                     */}
                 </ul>
                 <div className="tab-content">
-                    <div role="tabpanel" className="tab-pane active" id="scenes">
+                    <div role="tabpanel" className="tab-pane fade" id="scenes">
                         <div className={(this.props.appLoadStatus.scenesLoaded ? "" : "hideTabContent")}>
                             <SceneList scenes={this.props.scenes} buttons={this.props.buttons} zones={this.props.zones} />
                             {emptySceneBody}
                         </div>
                         <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
                     </div>
-                    <div role="tabpanel" className="tab-pane fade" id="zones">
+                    <div role="tabpanel" className="tab-pane active" id="zones">
                         <div className={(this.props.appLoadStatus.zonesLoaded ? "" : "hideTabContent")}>
                             {zoneBody}
                         </div>

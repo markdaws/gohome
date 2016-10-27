@@ -31,6 +31,8 @@ module.exports = function(state, action) {
         break;
         
     default:
+        //console.log(action.type);
+        //console.log(state);
         newState = state || initialState().zones;
     }
 

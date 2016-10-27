@@ -27,9 +27,14 @@ func (e *SensorAttrChanged) String() string {
 
 //TODO: Move
 type ZoneLevelChanged struct {
-	ZoneID   string
+	// ZoneID is the ID of the zone whos value has changed
+	ZoneID string
+
+	// ZoneName is the name of the zone whos value changed
 	ZoneName string
-	Level    cmd.Level
+
+	// Level contains the current zone level information
+	Level cmd.Level
 }
 
 func (e *ZoneLevelChanged) String() string {

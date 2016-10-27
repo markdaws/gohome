@@ -2,7 +2,7 @@ var Constants = require('../constants.js');
 var initialState = require('../initialState.js');
 
 module.exports = function(state, action) {
-    var newState = [];
+    var newState = state;
 
     switch(action.type) {
     case Constants.SENSOR_LOAD_ALL:

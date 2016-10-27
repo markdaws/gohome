@@ -21510,7 +21510,7 @@
 	                { className: 'nav nav-tabs', role: 'tablist' },
 	                React.createElement(
 	                    'li',
-	                    { role: 'presentation', className: 'active' },
+	                    { role: 'presentation', className: '' },
 	                    React.createElement(
 	                        'a',
 	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
@@ -21519,7 +21519,7 @@
 	                ),
 	                React.createElement(
 	                    'li',
-	                    { role: 'presentation', className: '' },
+	                    { role: 'presentation', className: 'active' },
 	                    React.createElement(
 	                        'a',
 	                        { href: '#zones', role: 'tab', 'aria-controls': 'zones', 'data-toggle': 'tab' },
@@ -21541,7 +21541,7 @@
 	                { className: 'tab-content' },
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane active', id: 'scenes' },
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
 	                    React.createElement(
 	                        'div',
 	                        { className: this.props.appLoadStatus.scenesLoaded ? "" : "hideTabContent" },
@@ -21552,7 +21552,7 @@
 	                ),
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'zones' },
+	                    { role: 'tabpanel', className: 'tab-pane active', id: 'zones' },
 	                    React.createElement(
 	                        'div',
 	                        { className: this.props.appLoadStatus.zonesLoaded ? "" : "hideTabContent" },
@@ -24467,6 +24467,28 @@
 	            },
 	            error: function error(xhr, status, err) {
 	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    status: status
+	                });
+	            }
+	        });
+	    },
+
+	    // monitorUnsubscribe unsubscribe the specified monitor id so the client will
+	    // no longer receive updates when values associated with it change
+	    monitorUnsubscribe: function monitorUnsubscribe(monitorId, callback) {
+	        $.ajax({
+	            url: BASE + '/api/v1/monitor/groups/' + monitorId,
+	            type: 'DELETE',
+	            dataType: 'json',
+	            data: null,
+	            cache: false,
+	            success: function success(data) {
+	                callback && callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback && callback({
 	                    err: err,
 	                    xhr: xhr,
 	                    status: status
@@ -28301,6 +28323,163 @@
 	var ZoneSensorList = React.createClass({
 	    displayName: 'ZoneSensorList',
 
+	    getInitialState: function getInitialState() {
+	        this._monitorDataChanged = false;
+	        this._monitorId = '';
+	        this._connection = null;
+	        this._lastSubscribeId = 1;
+	        this._monitorData = null;
+	        this._keepRefreshingConnection = true;
+	        return null;
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            sensors: [],
+	            zones: []
+	        };
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        var shouldRefreshMonitor = false;
+	        if (nextProps.zones && this.props.zones !== nextProps.zones) {
+	            shouldRefreshMonitor = true;
+	        }
+	        if (nextProps.sensors && this.props.sensors !== nextProps.sensors) {
+	            shouldRefreshMonitor = true;
+	        }
+	        if (shouldRefreshMonitor) {
+	            this._monitorDataChanged = true;
+	        }
+	    },
+
+	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        if (this.props.zones !== nextProps.zones) {
+	            return true;
+	        }
+	        if (this.props.sensors !== nextProps.sensors) {
+	            return true;
+	        }
+	        return false;
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        // Need this function since componentDidUpdate is not called on the initial render
+	        if (this._monitorDataChanged) {
+	            this.refreshMonitoring(this.props.zones, this.props.sensors);
+	        }
+	    },
+
+	    componentWillUnmount: function componentWillUnmount() {
+	        if (this._monitorId !== '') {
+	            Api.monitorUnsubscribe(this._monitorId);
+	        }
+	        if (this._connection) {
+	            this._connection.close();
+	        }
+	        this._keepRefreshingConnection = false;
+	    },
+
+	    componentDidUpdate: function componentDidUpdate() {
+	        if (this._monitorDataChanged) {
+	            this.refreshMonitoring(this.props.zones, this.props.sensors);
+	        }
+	    },
+
+	    refreshMonitoring: function refreshMonitoring(zones, sensors) {
+	        this._monitorDataChanged = false;
+
+	        if (zones.length === 0 && sensors.length === 0) {
+	            return;
+	        }
+
+	        // Unsub from an old monitor group
+	        if (this._monitorId) {
+	            Api.monitorUnsubscribe(this._monitorId);
+	            this._monitorId = '';
+	        }
+
+	        //TODO: Up to caller to refresh monitoring
+	        var monitorGroup = {
+	            timeoutInSeconds: 200,
+	            sensorIds: [],
+	            zoneIds: []
+	        };
+
+	        zones.forEach(function (zone) {
+	            monitorGroup.zoneIds.push(zone.id);
+	        });
+	        sensors.forEach(function (sensor) {
+	            monitorGroup.sensorIds.push(sensor.id);
+	        });
+
+	        var subscribeId = ++this._lastSubscribeId;
+	        Api.monitorSubscribe(monitorGroup, function (err, data) {
+	            if (err != null) {
+	                //TODO: Need to retry again here ...?
+	                console.log('failed to sub to monitor');
+	                console.log(err);
+	                return;
+	            }
+	            //console.log('subscribed to monitor:' + this._monitorId);
+	            //console.log(data);
+
+	            if (subscribeId !== this._lastSubscribeId) {
+	                // This is an old callback we subscribed to before the most recent, unsub
+	                Api.monitorUnsubscribe(data.monitorId);
+	                return;
+	            }
+
+	            this._monitorId = data.monitorId;
+	            this.refreshWebSocket(this._monitorId);
+	        }.bind(this));
+	    },
+
+	    getCurrentZoneLevel: function getCurrentZoneLevel(zoneId) {
+	        if (!this._monitorData) {
+	            return null;
+	        }
+	        return this._monitorData.zones[zoneId];
+	    },
+
+	    refreshWebSocket: function refreshWebSocket(monitorId) {
+	        if (this._connection) {
+	            this._connection.close();
+	            this._connection = null;
+	        }
+
+	        var conn = new WebSocket("ws://" + window.location.hostname + ":5000/api/v1/monitor/groups/" + monitorId);
+	        conn.onopen = function (evt) {};
+	        conn.onclose = function (evt) {
+	            conn = null;
+	            this._connection = null;
+	            if (this._keepRefreshingConnection) {
+	                this.refreshWebSocket(monitorId);
+	            }
+	        }.bind(this);
+	        conn.onmessage = function (evt) {
+	            var resp = JSON.parse(evt.data);
+	            console.log('got monitor message');
+	            console.log(resp);
+
+	            this._monitorData = resp;
+	            Object.keys(resp.zones || {}).forEach(function (zoneId) {
+	                var cmp = this.refs['cell_zone_' + zoneId];
+	                if (cmp) {
+	                    cmp.setLevel(resp.zones[zoneId].value);
+	                }
+	            }.bind(this));
+	            Object.keys(resp.sensors || {}).forEach(function (sensorId) {
+	                var cmp = this.refs['cell_sensor_' + sensorId];
+	                if (!cmp) {
+	                    return;
+	                }
+	                //TODO: Set attribute...cmp.setLevel(resp.sensors[sensorId].value);
+	            }.bind(this));
+	        }.bind(this);
+	        this._connection = conn;
+	    },
+
 	    render: function render() {
 	        var lightZones = [];
 	        var shadeZones = [];
@@ -28308,27 +28487,17 @@
 	        var otherZones = [];
 	        var sensors = [];
 
-	        //TODO: In wrong place - only do once, mounted added and re-rendered multiple times...
-	        var monitorGroup = {
-	            timeoutInSeconds: 200,
-	            sensorIds: [],
-	            zoneIds: []
-	        };
-
 	        this.props.zones.forEach(function (zone) {
-
 	            var cmpZone = {
-	                cell: React.createElement(ZoneSensorListGridCell, { zone: zone }),
+	                cell: React.createElement(ZoneSensorListGridCell, { ref: "cell_zone_" + zone.id, zone: zone }),
 	                content: React.createElement(ZoneControl, {
 	                    id: zone.id,
+	                    getZoneLevel: this.getCurrentZoneLevel,
 	                    name: zone.name,
 	                    type: zone.type,
 	                    output: zone.output,
 	                    key: zone.id })
 	            };
-
-	            monitorGroup.zoneIds.push(zone.id);
-
 	            switch (zone.type) {
 	                case 'light':
 	                    lightZones.push(cmpZone);
@@ -28343,65 +28512,16 @@
 	                    otherZones.push(cmpZone);
 	                    break;
 	            }
-	        });
+	        }.bind(this));
 
 	        this.props.sensors.forEach(function (sensor) {
+	            //TODO: Sensors ...
 	            var cmpSensor = {
-	                cell: React.createElement(ZoneSensorListGridCell, { sensor: sensor }),
+	                cell: React.createElement(ZoneSensorListGridCell, { ref: "cell_sensor_" + sensor.id, sensor: sensor }),
 	                content: React.createElement(SensorMonitor, { sensor: sensor })
 	            };
 	            sensors.push(cmpSensor);
-
-	            monitorGroup.sensorIds.push(sensor.id);
 	        });
-
-	        //TODO: Remove
-	        Api.monitorSubscribe(monitorGroup, function (err, data) {
-	            if (err != null) {
-	                console.log('failed to sub to monitor');
-	                console.log(err);
-	                return;
-	            }
-	            console.log('subscribed to monitor');
-	            console.log(data);
-
-	            reconnect(data.monitorId);
-	        });
-
-	        function reconnect(monitorId) {
-	            /*var oldConn = this.state.conn;
-	            if (oldConn) {
-	                oldConn.close();
-	            }*/
-
-	            var conn = new WebSocket("ws://" + window.location.hostname + ":5000/api/v1/monitor/groups/" + monitorId);
-	            var self = this;
-	            conn.onopen = function (evt) {
-	                /*
-	                self.setState({
-	                    connectionStatus: 'connected'
-	                });*/
-	            };
-	            conn.onclose = function (evt) {
-	                conn = null;
-	                /*
-	                self.setState({
-	                    conn: null,
-	                    items: [],
-	                    connectionStatus: 'disconnected'
-	                });*/
-	            };
-	            conn.onmessage = function (evt) {
-	                var item = JSON.parse(evt.data);
-	                console.log('got monitor message');
-	                console.log(item);
-	            };
-	            /*
-	            this.setState({
-	                conn: conn,
-	                connectionStatus: 'connecting'
-	            });*/
-	        }
 
 	        return React.createElement(
 	            'div',
@@ -28565,6 +28685,15 @@
 	    },
 
 	    componentDidMount: function componentDidMount() {
+	        var level = this.props.getZoneLevel(this.props.id);
+	        if (level) {
+	            this.setState({
+	                value: level.value,
+	                r: level.r,
+	                g: level.g,
+	                b: level.b
+	            });
+	        }
 	        var slider = this.initSlider();
 	        this.initSwitch(slider);
 	        this.initRGB();
@@ -28724,9 +28853,30 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
 
 	var ZoneSensorListGridCell = React.createClass({
 	    displayName: 'ZoneSensorListGridCell',
+
+	    setLevel: function setLevel(val) {
+	        var $this = $(ReactDOM.findDOMNode(this));
+	        //TODO: Clip rect is not updating on ios safari, so just change the
+	        //opacity of the bulb for now
+	        //var y = parseInt(30 + (55 * ((100-val)/100)));
+	        //$this.find('.clipRect').attr('y', y);
+
+	        $this.find('.light').css('opacity', val / 100);
+	    },
+
+	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        if (nextProps.zone && this.props.zone && this.props.zone.name !== nextProps.zone.name) {
+	            return true;
+	        }
+	        if (nextProps.sensor && this.props.sensor && this.props.sensor.name !== nextProps.sensor.name) {
+	            return true;
+	        }
+	        return false;
+	    },
 
 	    render: function render() {
 	        var icon1, icon2, name;
@@ -28766,6 +28916,30 @@
 	                { className: 'icon' },
 	                icon1Cmp,
 	                icon2Cmp
+	            ),
+	            React.createElement(
+	                'svg',
+	                {
+	                    viewBox: '0 0 200 200',
+	                    xmlns: 'http://www.w3.org/2000/svg',
+	                    xlinkHref: 'http://www.w3.org/1999/xlink' },
+	                React.createElement(
+	                    'g',
+	                    null,
+	                    React.createElement(
+	                        'clipPath',
+	                        { id: 'lightClip' },
+	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '30', width: '200', height: '65' })
+	                    )
+	                ),
+	                React.createElement('circle', {
+	                    className: 'light',
+	                    cx: '100',
+	                    cy: '55',
+	                    r: '25',
+	                    fill: 'yellow',
+	                    clipPath: 'url(#lightClip)',
+	                    style: { 'opacity': 0, 'clipPath': 'url(#lightClip)' } })
 	            ),
 	            React.createElement(
 	                'div',
@@ -30267,7 +30441,7 @@
 	var initialState = __webpack_require__(269);
 
 	module.exports = function (state, action) {
-	    var newState = [];
+	    var newState = state;
 
 	    switch (action.type) {
 	        case Constants.SENSOR_LOAD_ALL:
@@ -30335,6 +30509,8 @@
 	            break;
 
 	        default:
+	            //console.log(action.type);
+	            //console.log(state);
 	            newState = state || initialState().zones;
 	    }
 

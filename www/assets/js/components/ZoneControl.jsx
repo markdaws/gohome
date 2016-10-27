@@ -103,6 +103,15 @@ var ZoneControl = React.createClass({
     },
 
     componentDidMount: function() {
+        var level = this.props.getZoneLevel(this.props.id);
+        if (level) {
+            this.setState({
+                value: level.value,
+                r : level.r,
+                g: level.g,
+                b: level.b
+            });
+        }
         var slider = this.initSlider();
         this.initSwitch(slider);
         this.initRGB();

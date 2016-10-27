@@ -14,6 +14,6 @@ type jsonZoneLevel struct {
 	B     byte    `json:"b"`
 }
 type jsonMonitorGroupResponse struct {
-	Sensors map[string]jsonSensorAttr
-	Zones   map[string]jsonZoneLevel
+	Sensors map[string]jsonSensorAttr `json:"sensors"`
+	Zones   map[string]jsonZoneLevel  `json:"zones"`
 }

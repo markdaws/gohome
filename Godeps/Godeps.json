@@ -41,7 +41,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/lutron",
-			"Rev": "d835d7fcb7528058c9d6d1dcab5bea872698a16a"
+			"Rev": "1b1e9bdbc5109359aa6d79dee81fc93c80835739"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/upnp",
@@ -56,6 +56,11 @@
 			"ImportPath": "github.com/gorilla/mux",
 			"Comment": "v1.1-13-g9fa818a",
 			"Rev": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.0.0-12-ga687089",
+			"Rev": "a68708917c6a4f06314ab4e52493cc61359c9d42"
 		},
 		{
 			"ImportPath": "github.com/pmezard/go-difflib/difflib",
