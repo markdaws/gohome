@@ -581,6 +581,7 @@ func TestUnsubscribe(t *testing.T) {
 	// Processing is async, small delay to let event bus process
 	time.Sleep(time.Millisecond * 100)
 
+	//TODO: Finish past this point ...
 
 	// Should have got an event asking for certain zones to report their status
 	// our zone should be included in that

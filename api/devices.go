@@ -21,9 +21,9 @@ func RegisterDeviceHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/devices",
 		apiDevicesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/devices",
-		apiAddDeviceHandler(s.system, s.recipeManager)).Methods("POST")
+		apiAddDeviceHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/devices/{id}",
-		apiDeviceHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+		apiDeviceHandlerDelete(s.systemSavePath, s.system, s.recipeManager)).Methods("DELETE")
 }
 
 func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
@@ -50,7 +50,10 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 	}
 }
 
-func apiDeviceHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiDeviceHandlerDelete(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -61,7 +64,7 @@ func apiDeviceHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeM
 			return
 		}
 		system.DeleteDevice(device)
-		err := store.SaveSystem(system, recipeManager)
+		err := store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -72,7 +75,10 @@ func apiDeviceHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeM
 	}
 }
 
-func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiAddDeviceHandler(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -149,7 +155,7 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			log.E("Failed to init device on add: %s", err)
 		}
 
-		err = store.SaveSystem(system, recipeManager)
+		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

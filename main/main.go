@@ -40,6 +40,7 @@ func main() {
 
 	// Processes all commands in the system in an async fashion, init with
 	// 3 parallel workers and capacity to store up to 1000 commands to be processed
+	log.V("Command Processor - starting")
 	cp := gohome.NewCommandProcessor(3, 1000)
 	cp.Start()
 
@@ -49,6 +50,7 @@ func main() {
 	eb := eventExt.NewBus(1000, 100)
 
 	// Log all of the events on the bus to the system log
+	// TODO: Remove or json values so we can play back
 	lc := &gohome.LogConsumer{}
 	eb.AddConsumer(lc)
 
@@ -74,8 +76,7 @@ func main() {
 			panic("Failed to import: " + err.Error())
 		}
 
-		system.SavePath = config.StartupConfigPath
-		err = store.SaveSystem(system, rm)
+		err = store.SaveSystem(config.StartupConfigPath, system, rm)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -92,8 +93,7 @@ func main() {
 		// but we are initing afterwards ...
 		intg.RegisterExtensions(system)
 
-		system.SavePath = config.StartupConfigPath
-		err = store.SaveSystem(system, rm)
+		err = store.SaveSystem(config.StartupConfigPath, system, rm)
 		if err != nil {
 			panic("Failed to save initial system: " + err.Error())
 		}
@@ -101,8 +101,6 @@ func main() {
 	} else if err != nil {
 		panic("Failed to load system: " + err.Error())
 	}
-
-	sys.SavePath = config.StartupConfigPath
 
 	//TODO: Seems janky setting these here, fix
 	cp.SetSystem(sys)
@@ -153,7 +151,7 @@ func main() {
 	go func() {
 		for {
 			log.V("API Server starting, listening on %s", config.APIAddr)
-			err := api.ListenAndServe(config.APIAddr, sys, rm, wsLogger)
+			err := api.ListenAndServe(config.StartupConfigPath, config.APIAddr, sys, rm, wsLogger)
 			log.E("error with API server, shutting down: %s\n", err)
 		}
 	}()

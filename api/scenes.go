@@ -22,15 +22,15 @@ func RegisterSceneHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/scenes",
 		apiScenesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/scenes/{id}",
-		apiSceneHandlerUpdate(s.system, s.recipeManager)).Methods("PUT")
+		apiSceneHandlerUpdate(s.systemSavePath, s.system, s.recipeManager)).Methods("PUT")
 	r.HandleFunc("/api/v1/scenes",
-		apiSceneHandlerCreate(s.system, s.recipeManager)).Methods("POST")
+		apiSceneHandlerCreate(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/scenes/{sceneId}/commands/{index}",
-		apiSceneHandlerCommandDelete(s.system, s.recipeManager)).Methods("DELETE")
+		apiSceneHandlerCommandDelete(s.systemSavePath, s.system, s.recipeManager)).Methods("DELETE")
 	r.HandleFunc("/api/v1/scenes/{sceneId}/commands",
-		apiSceneHandlerCommandAdd(s.system, s.recipeManager)).Methods("POST")
+		apiSceneHandlerCommandAdd(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/scenes/{id}",
-		apiSceneHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+		apiSceneHandlerDelete(s.systemSavePath, s.system, s.recipeManager)).Methods("DELETE")
 	r.HandleFunc("/api/v1/scenes/active",
 		apiActiveScenesHandler(s.system)).Methods("POST")
 }
@@ -137,7 +137,10 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 	}
 }
 
-func apiSceneHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerDelete(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		sceneID := mux.Vars(r)["id"]
@@ -147,7 +150,7 @@ func apiSceneHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeMa
 			return
 		}
 		system.DeleteScene(scene)
-		err := store.SaveSystem(system, recipeManager)
+		err := store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -158,7 +161,10 @@ func apiSceneHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeMa
 	}
 }
 
-func apiSceneHandlerCommandDelete(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerCommandDelete(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		sceneID := mux.Vars(r)["sceneId"]
@@ -180,7 +186,7 @@ func apiSceneHandlerCommandDelete(system *gohome.System, recipeManager *gohome.R
 			return
 		}
 
-		err = store.SaveSystem(system, recipeManager)
+		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -191,7 +197,10 @@ func apiSceneHandlerCommandDelete(system *gohome.System, recipeManager *gohome.R
 	}
 }
 
-func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerCommandAdd(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -408,7 +417,7 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 			return
 		}
 
-		err = store.SaveSystem(system, recipeManager)
+		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -418,7 +427,10 @@ func apiSceneHandlerCommandAdd(system *gohome.System, recipeManager *gohome.Reci
 	}
 }
 
-func apiSceneHandlerUpdate(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerUpdate(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sceneID := mux.Vars(r)["id"]
 		scene, ok := system.Scenes[sceneID]
@@ -464,7 +476,7 @@ func apiSceneHandlerUpdate(system *gohome.System, recipeManager *gohome.RecipeMa
 
 		system.Scenes[sceneID] = &updatedScene
 
-		err = store.SaveSystem(system, recipeManager)
+		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -475,7 +487,7 @@ func apiSceneHandlerUpdate(system *gohome.System, recipeManager *gohome.RecipeMa
 	}
 }
 
-func apiSceneHandlerCreate(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerCreate(savePath string, system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
 		if err != nil {
@@ -509,7 +521,7 @@ func apiSceneHandlerCreate(system *gohome.System, recipeManager *gohome.RecipeMa
 			return
 		}
 
-		err = store.SaveSystem(system, recipeManager)
+		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

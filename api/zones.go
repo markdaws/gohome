@@ -22,7 +22,7 @@ func RegisterZoneHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/zones",
 		apiZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/zones",
-		apiAddZoneHandler(s.system, s.recipeManager)).Methods("POST")
+		apiAddZoneHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/zones/{id}",
 		apiZoneHandler(s.system)).Methods("PUT")
 }
@@ -122,7 +122,10 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 	}
 }
 
-func apiAddZoneHandler(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiAddZoneHandler(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -161,7 +164,7 @@ func apiAddZoneHandler(system *gohome.System, recipeManager *gohome.RecipeManage
 			return
 		}
 
-		err = store.SaveSystem(system, recipeManager)
+		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

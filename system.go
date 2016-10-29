@@ -21,7 +21,6 @@ type SystemServices struct {
 type System struct {
 	Name        string
 	Description string
-	SavePath    string
 	Devices     map[string]*Device
 	Scenes      map[string]*Scene
 	Zones       map[string]*zone.Zone

@@ -16,16 +16,19 @@ import (
 // RegisterRecipeHandlers registers all of the recipe specific API REST routes
 func RegisterRecipeHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/recipes",
-		apiRecipesHandlerPost(s.system, s.recipeManager)).Methods("POST")
+		apiRecipesHandlerPost(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/recipes/{id}",
-		apiRecipeHandler(s.system, s.recipeManager)).Methods("POST")
+		apiRecipeHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/recipes/{id}",
-		apiRecipeHandlerDelete(s.system, s.recipeManager)).Methods("DELETE")
+		apiRecipeHandlerDelete(s.systemSavePath, s.system, s.recipeManager)).Methods("DELETE")
 	r.HandleFunc("/api/v1/recipes",
 		apiRecipesHandlerGet(s.system, s.recipeManager)).Methods("GET")
 }
 
-func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiRecipesHandlerPost(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
@@ -57,7 +60,7 @@ func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeMa
 		}
 
 		recipeManager.RegisterAndStart(recipe)
-		err = store.SaveSystem(system, recipeManager)
+		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -71,7 +74,10 @@ func apiRecipesHandlerPost(system *gohome.System, recipeManager *gohome.RecipeMa
 	}
 }
 
-func apiRecipeHandler(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiRecipeHandler(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
@@ -100,7 +106,7 @@ func apiRecipeHandler(system *gohome.System, recipeManager *gohome.RecipeManager
 			return
 		}
 
-		store.SaveSystem(system, recipeManager)
+		store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -111,7 +117,10 @@ func apiRecipeHandler(system *gohome.System, recipeManager *gohome.RecipeManager
 	}
 }
 
-func apiRecipeHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiRecipeHandlerDelete(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		recipeID := mux.Vars(r)["id"]
@@ -126,7 +135,7 @@ func apiRecipeHandlerDelete(system *gohome.System, recipeManager *gohome.RecipeM
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 
-		store.SaveSystem(system, recipeManager)
+		store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

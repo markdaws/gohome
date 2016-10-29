@@ -339,13 +339,8 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 	return sys, nil
 }
 
-// SaveSystem saves the specified system to disk, at the s.SavePath location
-func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
-	//TODO: Why is SavePath on system, seems wrong, just pass it in
-	if s.SavePath == "" {
-		return fmt.Errorf("SavePath is not set")
-	}
-
+// SaveSystem saves the specified system to disk
+func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeManager) error {
 	out := systemJSON{
 		Version:      "0.1.0",
 		Name:         s.Name,
@@ -514,6 +509,6 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(s.SavePath, b, 0644)
+	err = ioutil.WriteFile(savePath, b, 0644)
 	return err
 }

@@ -19,7 +19,7 @@ func RegisterSensorHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/sensors",
 		apiSensorsHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/sensors",
-		apiAddSensorHandler(s.system, s.recipeManager)).Methods("POST")
+		apiAddSensorHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
 }
 
 func apiSensorsHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
@@ -49,7 +49,10 @@ func apiSensorsHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 	}
 }
 
-func apiAddSensorHandler(system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiAddSensorHandler(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -114,7 +117,7 @@ func apiAddSensorHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			return
 		}
 
-		err = store.SaveSystem(system, recipeManager)
+		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
