@@ -57,7 +57,7 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 		switch x.CMD {
 		case "setLevel":
 			desc := fmt.Sprintf("Zone[%s] set level v:%f, r:%d, g:%d, b:%d", zone.Name, x.Value, x.R, x.G, x.B)
-			err = system.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.ZoneSetLevel{
+			err = system.Services.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.ZoneSetLevel{
 				ZoneAddress: zone.Address,
 				ZoneID:      zone.ID,
 				ZoneName:    zone.Name,
@@ -70,14 +70,14 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 			}))
 		case "turnOn":
 			desc := fmt.Sprintf("Zone[%s] turn on", zone.Name)
-			err = system.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.ZoneTurnOn{
+			err = system.Services.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.ZoneTurnOn{
 				ZoneAddress: zone.Address,
 				ZoneID:      zone.ID,
 				ZoneName:    zone.Name,
 			}))
 		case "turnOff":
 			desc := fmt.Sprintf("Zone[%s] turn off", zone.Name)
-			err = system.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.ZoneTurnOff{
+			err = system.Services.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.ZoneTurnOff{
 				ZoneAddress: zone.Address,
 				ZoneID:      zone.ID,
 				ZoneName:    zone.Name,

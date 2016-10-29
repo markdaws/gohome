@@ -42,7 +42,7 @@ func (a *SceneSetAction) Execute(s *System) error {
 	}
 
 	desc := fmt.Sprintf("Set Scene: %s", scene.Name)
-	return s.CmdProcessor.Enqueue(NewCommandGroup(desc, &cmd.SceneSet{
+	return s.Services.CmdProcessor.Enqueue(NewCommandGroup(desc, &cmd.SceneSet{
 		SceneID:   scene.ID,
 		SceneName: scene.Name,
 	}))

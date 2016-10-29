@@ -13,30 +13,27 @@ import (
 // SystemServices is a collection of services that devices can access
 // such as UPNP notification and discovery
 type SystemServices struct {
-	UPNP    *upnp.SubServer
-	Monitor *Monitor
-	EvtBus  *evtbus.Bus
+	UPNP         *upnp.SubServer
+	Monitor      *Monitor
+	EvtBus       *evtbus.Bus
+	CmdProcessor CommandProcessor
 }
 
 type System struct {
-	Name        string
-	Description string
-	Devices     map[string]*Device
-	Scenes      map[string]*Scene
-	Zones       map[string]*zone.Zone
-	Buttons     map[string]*Button
-	Sensors     map[string]*Sensor
-	Recipes     map[string]*Recipe
-	Extensions  *Extensions
-	Services    SystemServices
-
-	//TODO: Remove this, actions should not have execute or pass in cmdproc to Execute
-	CmdProcessor CommandProcessor
-
+	Name         string
+	Description  string
+	Devices      map[string]*Device
+	Scenes       map[string]*Scene
+	Zones        map[string]*zone.Zone
+	Buttons      map[string]*Button
+	Sensors      map[string]*Sensor
+	Recipes      map[string]*Recipe
+	Extensions   *Extensions
+	Services     SystemServices
 	nextGlobalID int
 }
 
-func NewSystem(name, desc string, cmdProcessor CommandProcessor, nextGlobalID int) *System {
+func NewSystem(name, desc string, nextGlobalID int) *System {
 	s := &System{
 		Name:         name,
 		Description:  desc,
@@ -46,7 +43,6 @@ func NewSystem(name, desc string, cmdProcessor CommandProcessor, nextGlobalID in
 		Sensors:      make(map[string]*Sensor),
 		Buttons:      make(map[string]*Button),
 		Recipes:      make(map[string]*Recipe),
-		CmdProcessor: cmdProcessor,
 		nextGlobalID: nextGlobalID,
 	}
 

@@ -67,7 +67,7 @@ func (a *SceneSetToggleAction) Execute(s *System) error {
 	}
 
 	desc := fmt.Sprintf("Toggle Scene: %s", scene.Name)
-	return s.CmdProcessor.Enqueue(NewCommandGroup(desc, &cmd.SceneSet{
+	return s.Services.CmdProcessor.Enqueue(NewCommandGroup(desc, &cmd.SceneSet{
 		SceneID:   scene.ID,
 		SceneName: scene.Name,
 	}))

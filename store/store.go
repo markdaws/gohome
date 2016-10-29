@@ -102,7 +102,7 @@ type commandJSON struct {
 var ErrFileNotFound = errors.New("file not found")
 
 // LoadSystem loads a gohome data file from the specified path
-func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor gohome.CommandProcessor) (*gohome.System, error) {
+func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.System, error) {
 
 	log.V("loading system from %s", path)
 
@@ -118,7 +118,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 		return nil, err
 	}
 
-	sys := gohome.NewSystem(s.Name, s.Description, cmdProcessor, s.NextGlobalID)
+	sys := gohome.NewSystem(s.Name, s.Description, s.NextGlobalID)
 	intg.RegisterExtensions(sys)
 
 	recipeManager.System = sys

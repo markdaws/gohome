@@ -38,12 +38,6 @@ func main() {
 		UPNPNotifyAddr:    addr + ":8001",
 	}
 
-	// Processes all commands in the system in an async fashion, init with
-	// 3 parallel workers and capacity to store up to 1000 commands to be processed
-	log.V("Command Processor - starting")
-	cp := gohome.NewCommandProcessor(3, 1000)
-	cp.Start()
-
 	// The event bus is the backbone of the app.  It allows device to post events
 	// and other devices can list for events and act upon them.
 	log.V("Event Bus - starting")
@@ -59,7 +53,7 @@ func main() {
 	//TODO: Remove, simulate user importing lutron information on load
 	reset := true
 	if reset {
-		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cp, 1)
+		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", 1)
 		intg.RegisterExtensions(system)
 
 		bytes, err := ioutil.ReadFile("main/ip.json")
@@ -82,12 +76,12 @@ func main() {
 		}
 	}
 
-	sys, err := store.LoadSystem(config.StartupConfigPath, rm, cp)
+	sys, err := store.LoadSystem(config.StartupConfigPath, rm)
 	if err == store.ErrFileNotFound {
 		log.V("startup file not found at: %s, creating new system", config.StartupConfigPath)
 
 		// First time running the system, create a new blank system, save it
-		system := gohome.NewSystem("My goHOME system", "", cp, 1)
+		system := gohome.NewSystem("My goHOME system", "", 1)
 
 		//TODO: RegisterExtensions expects that we have valid connections to the device
 		// but we are initing afterwards ...
@@ -102,9 +96,18 @@ func main() {
 		panic("Failed to load system: " + err.Error())
 	}
 
-	//TODO: Seems janky setting these here, fix
-	cp.SetSystem(sys)
+	// Processes all commands in the system in an async fashion, init with
+	// 3 parallel workers and capacity to store up to 1000 commands to be processed
+	log.V("Command Processor - starting")
+	cp := gohome.NewCommandProcessor(3, 1000)
+	cp.Start()
+
+	sys.Services.CmdProcessor = cp
 	sys.Services.EvtBus = eb
+
+	//TODO: Seems janky setting these here, fix - need to fix command processor to
+	//be able to get executing devices without having to know about system
+	cp.SetSystem(sys)
 
 	go func() {
 		for {

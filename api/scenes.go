@@ -58,7 +58,7 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 		}
 
 		desc := fmt.Sprintf("Set scene: %s", scene.Name)
-		err = system.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.SceneSet{
+		err = system.Services.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.SceneSet{
 			SceneID:   scene.ID,
 			SceneName: scene.Name,
 		}))
