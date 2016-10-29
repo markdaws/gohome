@@ -16,6 +16,7 @@ var SystemDeviceList = React.createClass({
         var switches = [], shades = [], dimmers = [], hubs = [], remotes = [], unknown = [];
         this.props.devices.forEach(function(device) {
             var cell = {
+                key: device.id,
                 cell: <SystemDeviceListGridCell device={device} />,
                 content: <DeviceInfo
                              name={device.name}

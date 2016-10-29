@@ -25720,6 +25720,7 @@
 	            unknown = [];
 	        this.props.devices.forEach(function (device) {
 	            var cell = {
+	                key: device.id,
 	                cell: React.createElement(SystemDeviceListGridCell, { device: device }),
 	                content: React.createElement(DeviceInfo, {
 	                    name: device.name,
@@ -25858,7 +25859,7 @@
 	    },
 
 	    componentWillUnmount: function componentWillUnmount() {
-	        this.props.unmounted();
+	        this.props.unmounted && this.props.unmounted();
 	    },
 
 	    render: function render() {
@@ -25978,12 +25979,22 @@
 	        });
 	    },
 
+	    expanderWillMount: function expanderWillMount(content) {
+	        this.props.expanderWillMount && this.props.expanderWillMount(content);
+	    },
+
 	    render: function render() {
 	        function makeCellWrapper(index, selectedIndex, cell) {
+	            var content = cell.cell;
+	            if (cell.cmpFunc) {
+	                console.log('aaa');
+	                content = cell.cmpFunc(cell.key);
+	            }
+
 	            return React.createElement(
 	                'div',
 	                {
-	                    key: index,
+	                    key: cell.key,
 	                    ref: "cellWrapper-" + index,
 	                    onClick: this.cellClicked,
 	                    className: 'cellWrapper pull-left',
@@ -25992,7 +26003,7 @@
 	                        width: this.state.cellWidth,
 	                        height: this.state.cellHeight
 	                    } },
-	                cell.cell,
+	                content,
 	                React.createElement('i', { className: ClassNames({
 	                        "fa": true,
 	                        "fa-caret-up": true,
@@ -27011,6 +27022,7 @@
 
 	            var gridCells = scenes.map(function (scene) {
 	                return {
+	                    key: scene.id,
 	                    cell: React.createElement(SceneListGridCell, { scene: scene }),
 	                    content: React.createElement(SceneControl, { scene: scene, key: scene.id || scene.clientId })
 	                };
@@ -28328,9 +28340,10 @@
 	        this._monitorId = '';
 	        this._connection = null;
 	        this._lastSubscribeId = 1;
-	        this._monitorData = null;
 	        this._keepRefreshingConnection = true;
-	        return null;
+	        return {
+	            monitorData: null
+	        };
 	    },
 
 	    getDefaultProps: function getDefaultProps() {
@@ -28435,13 +28448,6 @@
 	        }.bind(this));
 	    },
 
-	    getCurrentZoneLevel: function getCurrentZoneLevel(zoneId) {
-	        if (!this._monitorData) {
-	            return null;
-	        }
-	        return this._monitorData.zones[zoneId];
-	    },
-
 	    refreshWebSocket: function refreshWebSocket(monitorId) {
 	        if (this._connection) {
 	            this._connection.close();
@@ -28459,14 +28465,14 @@
 	        }.bind(this);
 	        conn.onmessage = function (evt) {
 	            var resp = JSON.parse(evt.data);
-	            console.log('got monitor message');
-	            console.log(resp);
 
-	            this._monitorData = resp;
+	            this.setState({ monitorData: resp });
 	            Object.keys(resp.zones || {}).forEach(function (zoneId) {
 	                var cmp = this.refs['cell_zone_' + zoneId];
+	                console.log('xxx');
 	                if (cmp) {
-	                    cmp.setLevel(resp.zones[zoneId].value);
+	                    console.log('yyy');
+	                    cmp.setLevel(resp.zones[zoneId]);
 	                }
 	            }.bind(this));
 	            Object.keys(resp.sensors || {}).forEach(function (sensorId) {
@@ -28476,8 +28482,15 @@
 	                }
 	                //TODO: Set attribute...cmp.setLevel(resp.sensors[sensorId].value);
 	            }.bind(this));
+
+	            this._gridContent && this._gridContent.monitorData(resp);
 	        }.bind(this);
 	        this._connection = conn;
+	    },
+
+	    zoneExpanderMounted: function zoneExpanderMounted(content) {
+	        this._gridContent = content;
+	        this._gridContent.monitorData(this.state.monitorData);
 	    },
 
 	    render: function render() {
@@ -28489,14 +28502,23 @@
 
 	        this.props.zones.forEach(function (zone) {
 	            var cmpZone = {
-	                cell: React.createElement(ZoneSensorListGridCell, { ref: "cell_zone_" + zone.id, zone: zone }),
-	                content: React.createElement(ZoneControl, {
-	                    id: zone.id,
-	                    getZoneLevel: this.getCurrentZoneLevel,
-	                    name: zone.name,
-	                    type: zone.type,
-	                    output: zone.output,
-	                    key: zone.id })
+	                key: zone.id, /*
+	                              cmpFunc: (function(key) {
+	                              var level;
+	                              if (this.state.monitorData) {
+	                              level = this.state.monitorData.zones[zone.id];
+	                              }
+	                              console.log(level)
+	                              return (
+	                              <ZoneSensorListGridCell
+	                              key={zone.id}
+	                              ref={"cell_zone_" + zone.id}
+	                              zone={zone}
+	                              level={level} />
+	                              );
+	                              }).bind(this),*/
+	                cell: React.createElement(ZoneSensorListGridCell, { key: zone.id, ref: "cell_zone_" + zone.id, zone: zone }),
+	                content: React.createElement(ZoneControl, { id: zone.id, didMount: this.zoneExpanderMounted, name: zone.name, type: zone.type, output: zone.output, key: zone.id })
 	            };
 	            switch (zone.type) {
 	                case 'light':
@@ -28515,8 +28537,8 @@
 	        }.bind(this));
 
 	        this.props.sensors.forEach(function (sensor) {
-	            //TODO: Sensors ...
 	            var cmpSensor = {
+	                key: 'sensor_' + sensor.id,
 	                cell: React.createElement(ZoneSensorListGridCell, { ref: "cell_sensor_" + sensor.id, sensor: sensor }),
 	                content: React.createElement(SensorMonitor, { sensor: sensor })
 	            };
@@ -28534,7 +28556,7 @@
 	                    { className: ClassNames({ 'hidden': lightZones.length === 0 }) },
 	                    'Lights'
 	                ),
-	                React.createElement(Grid, { cells: lightZones })
+	                React.createElement(Grid, { cells: lightZones, expanderWillMount: this.zoneExpanderWillMount })
 	            ),
 	            React.createElement(
 	                'div',
@@ -28544,7 +28566,7 @@
 	                    { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
 	                    'Shades'
 	                ),
-	                React.createElement(Grid, { cells: shadeZones })
+	                React.createElement(Grid, { cells: shadeZones, expanderWillMount: this.zoneExpanderWillMount })
 	            ),
 	            React.createElement(
 	                'div',
@@ -28554,7 +28576,7 @@
 	                    { className: ClassNames({ 'hidden': switchZones.length === 0 }) },
 	                    'Switches'
 	                ),
-	                React.createElement(Grid, { cells: switchZones })
+	                React.createElement(Grid, { cells: switchZones, expanderWillMount: this.zoneExpanderWillMount })
 	            ),
 	            React.createElement(
 	                'div',
@@ -28564,7 +28586,7 @@
 	                    { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
 	                    'Other Zones'
 	                ),
-	                React.createElement(Grid, { cells: otherZones })
+	                React.createElement(Grid, { cells: otherZones, expanderWillMount: this.zoneExpanderWillMount })
 	            ),
 	            React.createElement(
 	                'div',
@@ -28685,18 +28707,11 @@
 	    },
 
 	    componentDidMount: function componentDidMount() {
-	        var level = this.props.getZoneLevel(this.props.id);
-	        if (level) {
-	            this.setState({
-	                value: level.value,
-	                r: level.r,
-	                g: level.g,
-	                b: level.b
-	            });
-	        }
-	        var slider = this.initSlider();
-	        this.initSwitch(slider);
+	        this._slider = this.initSlider();
+	        this.initSwitch(this._slider);
 	        this.initRGB();
+
+	        this.props.didMount && this.props.didMount(this);
 	    },
 
 	    setValue: function setValue(cmd, value, r, g, b, callback) {
@@ -28738,6 +28753,22 @@
 	        Api.zoneSetLevel(this.props.id, data.cmd, data.value, data.r, data.g, data.b, function (err, data) {
 	            callback(err, data);
 	        });
+	    },
+
+	    monitorData: function monitorData(data) {
+	        if (!data || !data.zones) {
+	            return;
+	        }
+	        var val = data.zones[this.props.id];
+	        if (val == undefined) {
+	            return;
+	        }
+
+	        this.setState({ value: Math.round(val.value) });
+	        this._slider && this._slider.set(Math.round(val.value));
+
+	        console.log(val);
+	        //console.log(data);
 	    },
 
 	    render: function render() {
@@ -28858,14 +28889,23 @@
 	var ZoneSensorListGridCell = React.createClass({
 	    displayName: 'ZoneSensorListGridCell',
 
-	    setLevel: function setLevel(val) {
+	    getInitialState: function getInitialState() {
+	        return {
+	            level: this.props.level
+	        };
+	    },
+
+	    setLevel: function setLevel(level) {
+	        this.setState({ level: level });
+
+	        /*
 	        var $this = $(ReactDOM.findDOMNode(this));
 	        //TODO: Clip rect is not updating on ios safari, so just change the
 	        //opacity of the bulb for now
 	        //var y = parseInt(30 + (55 * ((100-val)/100)));
 	        //$this.find('.clipRect').attr('y', y);
-
-	        $this.find('.light').css('opacity', val / 100);
+	        */
+	        //$this.find('.light').css('opacity', val/100);
 	    },
 
 	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
@@ -28873,6 +28913,9 @@
 	            return true;
 	        }
 	        if (nextProps.sensor && this.props.sensor && this.props.sensor.name !== nextProps.sensor.name) {
+	            return true;
+	        }
+	        if (nextState.level && nextState.level !== this.state.level) {
 	            return true;
 	        }
 	        return false;
@@ -28908,6 +28951,11 @@
 	        if (icon2) {
 	            icon2Cmp = React.createElement('i', { className: icon2 });
 	        }
+
+	        var val = 0;
+	        if (this.state.level) {
+	            val = this.state.level.value / 100;
+	        }
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ZoneSensorListGridCell' },
@@ -28939,11 +28987,12 @@
 	                    r: '25',
 	                    fill: 'yellow',
 	                    clipPath: 'url(#lightClip)',
-	                    style: { 'opacity': 0, 'clipPath': 'url(#lightClip)' } })
+	                    style: { 'opacity': val, 'clipPath': 'url(#lightClip)' } })
 	            ),
 	            React.createElement(
 	                'div',
 	                { className: 'name' },
+	                val,
 	                name
 	            )
 	        );

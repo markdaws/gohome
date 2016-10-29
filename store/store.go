@@ -69,7 +69,6 @@ type deviceJSON struct {
 	Sensors         []sensorJSON  `json:"sensors"`
 	DeviceIDs       []string      `json:"deviceIds"`
 	Auth            *authJSON     `json:"auth"`
-	Stream          bool          `json:"stream"`
 	ConnPool        *connPoolJSON `json:"connPool"`
 }
 
@@ -146,7 +145,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager, cmdProcessor g
 			d.Name,
 			d.Description,
 			nil,
-			d.Stream,
 			nil,
 			nil,
 			auth)
@@ -436,7 +434,6 @@ func SaveSystem(s *gohome.System, recipeManager *gohome.RecipeManager) error {
 			ModelNumber:     device.ModelNumber,
 			ModelName:       device.ModelName,
 			SoftwareVersion: device.SoftwareVersion,
-			Stream:          device.Stream,
 			ConnPool:        poolJSON,
 		}
 

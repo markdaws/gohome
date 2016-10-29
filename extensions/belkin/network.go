@@ -59,7 +59,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			devInfo.FriendlyName,
 			devInfo.ModelDescription,
 			nil,
-			false,
 			nil,
 			nil,
 			nil,

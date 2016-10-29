@@ -2,14 +2,23 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 
 var ZoneSensorListGridCell = React.createClass({
-    setLevel: function(val) {
+    getInitialState: function() {
+        return {
+            level: this.props.level
+        };
+    },
+    
+    setLevel: function(level) {
+        this.setState({ level: level });
+
+        /*
         var $this = $(ReactDOM.findDOMNode(this));
         //TODO: Clip rect is not updating on ios safari, so just change the
         //opacity of the bulb for now
         //var y = parseInt(30 + (55 * ((100-val)/100)));
         //$this.find('.clipRect').attr('y', y);
-
-        $this.find('.light').css('opacity', val/100);
+        */
+        //$this.find('.light').css('opacity', val/100);
     },
 
     shouldComponentUpdate: function(nextProps, nextState) {
@@ -17,6 +26,9 @@ var ZoneSensorListGridCell = React.createClass({
             return true;
         }
         if (nextProps.sensor && this.props.sensor && (this.props.sensor.name !== nextProps.sensor.name)) {
+            return true;
+        }
+        if (nextState.level && (nextState.level !== this.state.level)) {
             return true;
         }
         return false;
@@ -52,6 +64,11 @@ var ZoneSensorListGridCell = React.createClass({
         if (icon2) {
             icon2Cmp = <i className={icon2}></i>
         }
+
+        var val = 0;
+        if (this.state.level) {
+            val = this.state.level.value / 100;
+        }
         return (
         <div className="cmp-ZoneSensorListGridCell">
             <div className="icon">
@@ -74,10 +91,10 @@ var ZoneSensorListGridCell = React.createClass({
                     r="25"
                     fill="yellow"
                     clipPath="url(#lightClip)"
-                    style={{'opacity': 0, 'clipPath':'url(#lightClip)'}}/>
+                    style={{'opacity': val, 'clipPath':'url(#lightClip)'}}/>
             </svg>
             <div className="name">
-                {name}
+                {val}{name}
             </div>
         </div>
         );

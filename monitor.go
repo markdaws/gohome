@@ -2,39 +2,49 @@ package gohome
 
 import (
 	"strconv"
+	"sync"
 
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/log"
 )
 
-type ChangeHandler interface {
+// Updater is the interface for receiving updates values from the monitor
+type Updater interface {
 	Update(monitorID string, b *ChangeBatch)
 }
 
+// MonitorGroup represents a group of zones and sensors that a client wishes to
+// receive updates for.
+type MonitorGroup struct {
+	Zones            map[string]bool
+	Sensors          map[string]bool
+	Handler          Updater
+	TimeoutInSeconds int
+}
+
+// ChangeBatch contains a list of sensors and zones whos values have changed
 type ChangeBatch struct {
 	Sensors map[string]SensorAttr
 	Zones   map[string]cmd.Level
 }
 
-type MonitorGroup struct {
-	Zones            map[string]bool
-	Sensors          map[string]bool
-	Handler          ChangeHandler
-	TimeoutInSeconds int
-}
-
+// Monitor keeps track of the current zone and sensor values in the system and reports
+// updates to clients
 type Monitor struct {
+	Groups map[string]*MonitorGroup
+
 	system         *System
 	nextID         int
-	Groups         map[string]*MonitorGroup
 	evtBus         *evtbus.Bus
 	sensorToGroups map[string]map[string]bool
 	zoneToGroups   map[string]map[string]bool
 	sensorValues   map[string]SensorAttr
 	zoneValues     map[string]cmd.Level
+	mutex          sync.RWMutex
 }
 
+// NewMonitor returns an initialzed Monitor instance
 func NewMonitor(
 	sys *System,
 	evtBus *evtbus.Bus,
@@ -42,7 +52,8 @@ func NewMonitor(
 	zoneValues map[string]cmd.Level,
 ) *Monitor {
 
-	//Callers can pass in initial values if they know what they are
+	// Callers can pass in initial values if they know what they are
+	// at the time of creating the monitor
 	if sensorValues == nil {
 		sensorValues = make(map[string]SensorAttr)
 	}
@@ -59,19 +70,19 @@ func NewMonitor(
 		zoneValues:     zoneValues,
 		evtBus:         evtBus,
 	}
-
 	evtBus.AddConsumer(m)
 	evtBus.AddProducer(m)
 	return m
 }
 
-func (m *Monitor) Start() {
-}
-
+// Refresh causes the monitor to report the current values for any item in the
+// monitor group, specified by the monitorID parameter
 func (m *Monitor) Refresh(monitorID string) {
+	m.mutex.RLock()
 	group, ok := m.Groups[monitorID]
+	m.mutex.RUnlock()
+
 	if !ok {
-		// bad id, or expired ignore
 		return
 	}
 
@@ -80,6 +91,8 @@ func (m *Monitor) Refresh(monitorID string) {
 		Zones:   make(map[string]cmd.Level),
 	}
 
+	// Build a list of sensors that need to report their values. If we
+	// already have a value for a sensor we can just return that
 	var sensorReport = &SensorsReport{}
 	for sensorID := range group.Sensors {
 		val, ok := m.sensorValues[sensorID]
@@ -99,21 +112,29 @@ func (m *Monitor) Refresh(monitorID string) {
 			zoneReport.Add(zoneID)
 		}
 	}
+
 	if len(changeBatch.Sensors) > 0 || len(changeBatch.Zones) > 0 {
+		// We have some values already cached for certain items, return
 		group.Handler.Update(monitorID, changeBatch)
 	}
 	if len(sensorReport.SensorIDs) > 0 {
+		// Need to request these sensor values
 		m.evtBus.Enqueue(sensorReport)
 	}
 	if len(zoneReport.ZoneIDs) > 0 {
+		// Need to request these zone values
 		m.evtBus.Enqueue(zoneReport)
 	}
 }
 
+// Subscribe requests that the monitor keep track of updates for all of the zones
+// and sensors listed in the MonitorGroup parameter. If refresh == true, the monitor
+// will go and request values for all items in the monitor group, if false it won't
+// until the caller calls the Subscribe method.  The function returns a monitorID value
+// that can be passed into other functions, such as Unsubscribe and Refresh.
 func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 
-	//TODO: Called in multiple go routines?, mutex it
-
+	m.mutex.Lock()
 	monitorID := strconv.Itoa(m.nextID)
 	m.nextID++
 	m.Groups[monitorID] = g
@@ -138,6 +159,7 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 		}
 		groups[monitorID] = true
 	}
+	m.mutex.Unlock()
 
 	if refresh {
 		m.Refresh(monitorID)
@@ -146,6 +168,38 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 	// TODO: Where to set timeout, heap with timeout, set timer for smallest time
 	// TODO: expirationHeap
 	return monitorID
+}
+
+// Unsubscribe removes all references and updates for the specified monitorID
+func (m *Monitor) Unsubscribe(monitorID string) {
+	if _, ok := m.Groups[monitorID]; !ok {
+		return
+	}
+
+	m.mutex.Lock()
+	delete(m.Groups, monitorID)
+	for sensorID, groups := range m.sensorToGroups {
+		if _, ok := groups[monitorID]; ok {
+			delete(groups, monitorID)
+			if len(groups) == 0 {
+				delete(m.sensorToGroups, sensorID)
+				delete(m.sensorValues, sensorID)
+			}
+		}
+	}
+	for zoneID, groups := range m.zoneToGroups {
+		if _, ok := groups[monitorID]; ok {
+			delete(groups, monitorID)
+
+			// If there are no groups pointed to by the zone, clean up
+			// any refs to it
+			if len(groups) == 0 {
+				delete(m.zoneToGroups, zoneID)
+				delete(m.zoneValues, zoneID)
+			}
+		}
+	}
+	m.mutex.Unlock()
 }
 
 func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
@@ -165,11 +219,8 @@ func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
 	}
 	m.sensorValues[sensorID] = attr
 
-	//fmt.Printf("got updated sensor[%s] value: %+v\n", sensorID, attr)
 	for groupID := range groups {
 		group := m.Groups[groupID]
-		//TODO: Don't make blocking...
-		//TODO: Batch?
 		cb := &ChangeBatch{
 			Sensors: make(map[string]SensorAttr),
 		}
@@ -196,8 +247,6 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
 
 	for groupID := range groups {
 		group := m.Groups[groupID]
-		//TODO: Don't make blocking...
-		//TODO: Batch?
 		cb := &ChangeBatch{
 			Zones: make(map[string]cmd.Level),
 		}
@@ -207,6 +256,7 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
 }
 
 // ======= evtbus.Consumer interface
+
 func (m *Monitor) ConsumerName() string {
 	return "Monitor"
 }
@@ -256,7 +306,8 @@ func (m *Monitor) StartProducing(evtBus *evtbus.Bus) {
 }
 
 func (m *Monitor) StopProducing() {
-	//TODO:
+	//TODO: if a producer stops producing, do we need to invalidate all of the
+	//values it is responsible for since they will not longer be updated??
 }
 
 // ==================================

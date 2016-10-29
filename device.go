@@ -39,9 +39,6 @@ type Device struct {
 	Connections     *pool.ConnectionPool
 	Auth            *Auth
 	Hub             *Device
-
-	//TODO: Needed? Clean up
-	Stream bool
 }
 
 func NewDevice(
@@ -53,7 +50,6 @@ func NewDevice(
 	name,
 	description string,
 	hub *Device,
-	stream bool,
 	cmdBuilder cmd.Builder,
 	connPoolCfg *pool.Config,
 	auth *Auth) (*Device, error) {
@@ -71,7 +67,6 @@ func NewDevice(
 		Devices:         make(map[string]*Device),
 		Zones:           make(map[string]*zone.Zone),
 		Sensors:         make(map[string]*Sensor),
-		Stream:          stream,
 		Auth:            auth,
 		CmdBuilder:      cmdBuilder,
 	}

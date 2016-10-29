@@ -105,7 +105,6 @@ func apiAddDeviceHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 			data.Name,
 			data.Description,
 			nil,
-			false,
 			nil,
 			nil,
 			auth,

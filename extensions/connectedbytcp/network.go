@@ -33,7 +33,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			"ConnectedByTcp - ID: "+info.DeviceID,
 			"",
 			nil,
-			false,
 			nil,
 			nil,
 			nil,

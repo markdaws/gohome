@@ -69,6 +69,7 @@ var SceneList = React.createClass({
 
             var gridCells = scenes.map(function(scene) {
                 return {
+                    key: scene.id,
                     cell: <SceneListGridCell scene={scene} />,
                     content: <SceneControl scene={scene} key={scene.id || scene.clientId}/>
                 };

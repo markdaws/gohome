@@ -95,10 +95,10 @@ func apiAddSensorHandler(system *gohome.System, recipeManager *gohome.RecipeMana
 		evts := system.Extensions.FindEvents(system, dev)
 		if evts != nil {
 			if evts.Producer != nil {
-				system.EvtBus.AddProducer(evts.Producer)
+				system.Services.EvtBus.AddProducer(evts.Producer)
 			}
 			if evts.Consumer != nil {
-				system.EvtBus.AddConsumer(evts.Consumer)
+				system.Services.EvtBus.AddConsumer(evts.Consumer)
 			}
 		}
 

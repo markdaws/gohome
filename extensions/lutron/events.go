@@ -48,6 +48,7 @@ func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 						err = dev.RequestLevel(zn.Address, conn)
 						if err != nil {
 							log.V("Failed to request level for lutron, zoneID:%s, %s", zoneID, err)
+							conn.IsBad = true
 						}
 						p.Device.Connections.Release(conn)
 					}
@@ -85,10 +86,6 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 				continue
 			}
 
-			defer func() {
-				p.Device.Connections.Release(conn)
-			}()
-
 			log.V("%s streaming events", p.Device)
 			scanner := bufio.NewScanner(conn)
 			split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -116,11 +113,13 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 			for scanner.Scan() {
 				orig := scanner.Text()
 				if evt := p.parseCommandString(orig); evt != nil {
-					p.System.EvtBus.Enqueue(evt)
+					p.System.Services.EvtBus.Enqueue(evt)
 				}
 			}
 
 			log.V("%s stopped streaming events", p.Device)
+			conn.IsBad = true
+			p.Device.Connections.Release(conn)
 			if err := scanner.Err(); err != nil {
 				log.V("%s error streaming events, streaming stopped: %s", p.Device, err)
 			}

@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -15,14 +16,28 @@ import (
 
 // RegisterMonitorHandlers registers all of the monitor specific REST API routes
 func RegisterMonitorHandlers(r *mux.Router, s *apiServer) {
-	// Web Socket helper
 	wsHelper := NewWSHelper(s.system.Services.Monitor)
 
-	r.HandleFunc("/api/v1/monitor/groups/{monitorID}", wsHelper.HTTPHandler())
+	// Clients call to subscribe to items, api returns a monitorID that can then be used
+	// to subscribe and unsubscribe to notifications
 	r.HandleFunc("/api/v1/monitor/groups", apiSubscribeHandler(s.system, wsHelper)).Methods("POST")
 
-	//TODO:
-	//r.HandleFunc("/api/v1/monitor/groups/{monitorID}", apiUnsubscribeHandler(s.system)).Methods("DELETE")
+	// web socket for receiving new events
+	r.HandleFunc("/api/v1/monitor/groups/{monitorID}", wsHelper.HTTPHandler())
+
+	// TODO: Support refresh of monitorID
+
+	r.HandleFunc("/api/v1/monitor/groups/{monitorID}", apiUnsubscribeHandler(s.system, wsHelper)).Methods("DELETE")
+}
+
+func apiUnsubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		monitorID := mux.Vars(r)["monitorID"]
+		if _, ok := system.Services.Monitor.Groups[monitorID]; !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
 }
 
 func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.ResponseWriter, *http.Request) {
@@ -58,6 +73,7 @@ func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.Re
 		}
 
 		mID := system.Services.Monitor.Subscribe(group, true)
+
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(struct {
@@ -66,15 +82,14 @@ func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.Re
 	}
 }
 
-//TODO: Move
 // Need check origin to allow cross-domain calls
 var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
 type WSHelper struct {
-	//index connetions by monitor id
 	monitor     *gohome.Monitor
 	connections map[*connection]bool
 	conn        *websocket.Conn
+	mutex       sync.Mutex
 }
 
 func NewWSHelper(monitor *gohome.Monitor) *WSHelper {
@@ -85,19 +100,26 @@ func NewWSHelper(monitor *gohome.Monitor) *WSHelper {
 	return &h
 }
 
-func (l *WSHelper) register(c *connection) {
-	l.connections[c] = true
+func (h *WSHelper) register(c *connection) {
+	h.mutex.Lock()
+	h.connections[c] = true
+	h.mutex.Unlock()
 }
-func (l *WSHelper) unregister(c *connection) {
-	//TODO: goroutine safe
-	if _, ok := l.connections[c]; ok {
-		delete(l.connections, c)
+
+func (h *WSHelper) unregister(c *connection) {
+
+	h.mutex.Lock()
+	if _, ok := h.connections[c]; ok {
+		delete(h.connections, c)
 		c.ws.Close()
 		close(c.writeChan)
 		close(c.readChan)
 	}
+	h.mutex.Unlock()
 }
 
+// Update is the callback to the monitor service, it will get change notifications
+// when zones and sensors update
 func (h *WSHelper) Update(monitorID string, b *gohome.ChangeBatch) {
 	//TODO: Index connections by monitor id -> could be multiple connections per monitor id
 	//TODO: Bad connections should be cleaned out ...
@@ -114,7 +136,7 @@ func (h *WSHelper) Update(monitorID string, b *gohome.ChangeBatch) {
 					DataType: string(attr.DataType),
 				}
 			}
-			fmt.Println("ws here")
+
 			for zoneID, level := range b.Zones {
 				evt.Zones[zoneID] = jsonZoneLevel{
 					Value: level.Value,
@@ -168,6 +190,7 @@ func (h *WSHelper) HTTPHandler() func(http.ResponseWriter, *http.Request) {
 		// values associated with it. Since we could have subscribed but not connected
 		// yet and missed previous updates
 		h.monitor.Refresh(monitorID)
+
 		go conn.writeLoop(h)
 		conn.readLoop(h)
 	}

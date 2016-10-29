@@ -44,7 +44,6 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 		deviceMap map[string]interface{},
 		hub *gohome.Device,
 		sys *gohome.System,
-		stream bool,
 		auth *gohome.Auth) *gohome.Device {
 
 		device, _ := gohome.NewDevice(
@@ -56,7 +55,6 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 			name,
 			"",
 			hub,
-			stream,
 			nil,
 			nil,
 			auth)
@@ -154,7 +152,6 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 				device,
 				nil,
 				system,
-				true,
 				&gohome.Auth{
 					Login:    "lutron",
 					Password: "integration",
@@ -190,7 +187,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 			// first is the IP address to talk to it, but then it also have the DeviceID which is needed
 			// to press the buttons, so here, we make another device and assign the buttons to this
 			// new device and use the lutron hub solely for communicating to.
-			sbpSceneDevice := makeDevice("", "Smart Bridge - Phantom Buttons", deviceID, device, sbp, system, false, nil)
+			sbpSceneDevice := makeDevice("", "Smart Bridge - Phantom Buttons", deviceID, device, sbp, system, nil)
 			system.AddDevice(sbpSceneDevice)
 			sbp.AddDevice(sbpSceneDevice)
 			makeScenes(device, sbpSceneDevice)
@@ -217,7 +214,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 			continue
 		}
 		var deviceName string = device["Name"].(string)
-		gohomeDevice := makeDevice("", deviceName, deviceID, device, sbp, system, false, nil)
+		gohomeDevice := makeDevice("", deviceName, deviceID, device, sbp, system, nil)
 		//TODO: Errors
 		system.AddDevice(gohomeDevice)
 		sbp.AddDevice(gohomeDevice)

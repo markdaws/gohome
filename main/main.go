@@ -55,7 +55,7 @@ func main() {
 	rm := gohome.NewRecipeManager(eb)
 
 	//TODO: Remove, simulate user importing lutron information on load
-	reset := false
+	reset := true
 	if reset {
 		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", cp, 1)
 		intg.RegisterExtensions(system)
@@ -106,7 +106,7 @@ func main() {
 
 	//TODO: Seems janky setting these here, fix
 	cp.SetSystem(sys)
-	sys.EvtBus = eb
+	sys.Services.EvtBus = eb
 
 	go func() {
 		for {
@@ -123,8 +123,7 @@ func main() {
 	// Monitor is responsible for keeping track of all the current state values
 	// for zones and sensors.  It listens on the event bus for changes so that
 	// it can get the latest values
-	monitor := gohome.NewMonitor(sys, sys.EvtBus, nil, nil)
-	monitor.Start()
+	monitor := gohome.NewMonitor(sys, sys.Services.EvtBus, nil, nil)
 	sys.Services.Monitor = monitor
 
 	// Init does things like connecting the gohome server to

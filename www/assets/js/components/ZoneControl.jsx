@@ -103,18 +103,11 @@ var ZoneControl = React.createClass({
     },
 
     componentDidMount: function() {
-        var level = this.props.getZoneLevel(this.props.id);
-        if (level) {
-            this.setState({
-                value: level.value,
-                r : level.r,
-                g: level.g,
-                b: level.b
-            });
-        }
-        var slider = this.initSlider();
-        this.initSwitch(slider);
+        this._slider = this.initSlider();
+        this.initSwitch(this._slider);
         this.initRGB();
+
+        this.props.didMount && this.props.didMount(this);
     },
 
     setValue: function(cmd, value, r, g, b, callback) {
@@ -165,6 +158,22 @@ var ZoneControl = React.createClass({
             });
     },
 
+    monitorData: function(data) {
+        if (!data || !data.zones) {
+            return;
+        }
+        var val = data.zones[this.props.id];
+        if (val == undefined) {
+            return;
+        }
+
+        this.setState({ value: Math.round(val.value) });
+        this._slider && this._slider.set(Math.round(val.value));
+
+        console.log(val);
+        //console.log(data);
+    },
+    
     render: function() {
         var sliderCmp;
         if (this.props.output === 'continuous') {

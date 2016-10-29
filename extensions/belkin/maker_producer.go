@@ -55,7 +55,7 @@ func (p *makerProducer) UPNPNotify(e upnp.NotifyEvent) {
 				DataType: gohome.SDTInt,
 			},
 		}
-		p.System.EvtBus.Enqueue(evt)
+		p.System.Services.EvtBus.Enqueue(evt)
 	}
 }
 

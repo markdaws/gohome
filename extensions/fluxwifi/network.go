@@ -34,7 +34,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			name,
 			"",
 			nil,
-			false,
 			nil,
 			&pool.Config{
 				Name: name,

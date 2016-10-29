@@ -15,9 +15,10 @@ var ZoneSensorList = React.createClass({
         this._monitorId = '';
         this._connection = null;
         this._lastSubscribeId = 1;
-        this._monitorData = null;
         this._keepRefreshingConnection = true;
-        return null;
+        return {
+            monitorData: null
+        }
     },
     
     getDefaultProps: function() {
@@ -122,13 +123,6 @@ var ZoneSensorList = React.createClass({
         }.bind(this));
     },
 
-    getCurrentZoneLevel: function(zoneId) {
-        if (!this._monitorData) {
-            return null;
-        }
-        return this._monitorData.zones[zoneId];
-    },
-
     refreshWebSocket: function(monitorId) {
         if (this._connection) {
             this._connection.close();
@@ -146,14 +140,14 @@ var ZoneSensorList = React.createClass({
         }.bind(this);
         conn.onmessage = (function(evt) {
             var resp = JSON.parse(evt.data);
-            console.log('got monitor message');
-            console.log(resp);
 
-            this._monitorData = resp;
+            this.setState({ monitorData: resp });
             Object.keys(resp.zones || {}).forEach(function(zoneId) {
                 var cmp = this.refs['cell_zone_' + zoneId];
+                console.log('xxx');
                 if (cmp) {
-                    cmp.setLevel(resp.zones[zoneId].value);
+                    console.log('yyy');
+                    cmp.setLevel(resp.zones[zoneId]);
                 }
             }.bind(this));
             Object.keys(resp.sensors || {}).forEach(function(sensorId) {
@@ -163,8 +157,16 @@ var ZoneSensorList = React.createClass({
                 }
                 //TODO: Set attribute...cmp.setLevel(resp.sensors[sensorId].value);
             }.bind(this));
+
+            this._gridContent && this._gridContent.monitorData(resp);
+
         }).bind(this);
         this._connection = conn;
+    },
+
+    zoneExpanderMounted: function(content) {
+        this._gridContent = content;
+        this._gridContent.monitorData(this.state.monitorData);
     },
     
     render: function() {
@@ -176,14 +178,23 @@ var ZoneSensorList = React.createClass({
 
         this.props.zones.forEach(function(zone) {
             var cmpZone = {
-                cell: <ZoneSensorListGridCell ref={"cell_zone_" + zone.id} zone={zone} />,
-                content: <ZoneControl
-                             id={zone.id}
-                             getZoneLevel={this.getCurrentZoneLevel}
-                             name={zone.name}
-                             type={zone.type}
-                             output={zone.output}
-                             key={zone.id}/>
+                key: zone.id,/*
+                cmpFunc: (function(key) {
+                    var level;
+                    if (this.state.monitorData) {
+                        level = this.state.monitorData.zones[zone.id];
+                    }
+                    console.log(level)
+                    return (
+                        <ZoneSensorListGridCell
+                            key={zone.id}
+                            ref={"cell_zone_" + zone.id}
+                            zone={zone}
+                            level={level} />
+                    );
+                }).bind(this),*/
+                cell: <ZoneSensorListGridCell key={zone.id} ref={"cell_zone_" + zone.id} zone={zone} />,
+                content: <ZoneControl id={zone.id} didMount={this.zoneExpanderMounted} name={zone.name} type={zone.type} output={zone.output} key={zone.id}/>
             };
             switch(zone.type) {
                 case 'light':
@@ -202,8 +213,8 @@ var ZoneSensorList = React.createClass({
         }.bind(this));
 
         this.props.sensors.forEach(function(sensor) {
-            //TODO: Sensors ...
             var cmpSensor = {
+                key: 'sensor_' + sensor.id,
                 cell: <ZoneSensorListGridCell ref={"cell_sensor_" + sensor.id} sensor={sensor} />,
                 content: <SensorMonitor sensor={sensor} />
             };
@@ -214,19 +225,19 @@ var ZoneSensorList = React.createClass({
             <div className="cmp-ZoneSensorList">
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': lightZones.length === 0})}>Lights</h2>
-                    <Grid cells={lightZones} />
+                    <Grid cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
                 </div>
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': shadeZones.length === 0})}>Shades</h2>
-                    <Grid cells={shadeZones} />
+                    <Grid cells={shadeZones} expanderWillMount={this.zoneExpanderWillMount}/>
                 </div>
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': switchZones.length === 0})}>Switches</h2>
-                    <Grid cells={switchZones} />
+                    <Grid cells={switchZones} expanderWillMount={this.zoneExpanderWillMount}/>
                 </div>
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': otherZones.length === 0})}>Other Zones</h2>
-                    <Grid cells={otherZones} />
+                    <Grid cells={otherZones} expanderWillMount={this.zoneExpanderWillMount}/>
                 </div>
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': sensors.length === 0})}>Sensors</h2>

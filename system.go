@@ -15,6 +15,7 @@ import (
 type SystemServices struct {
 	UPNP    *upnp.SubServer
 	Monitor *Monitor
+	EvtBus  *evtbus.Bus
 }
 
 type System struct {
@@ -32,8 +33,6 @@ type System struct {
 
 	//TODO: Remove this, actions should not have execute or pass in cmdproc to Execute
 	CmdProcessor CommandProcessor
-	//TODO: Make sense here?
-	EvtBus *evtbus.Bus
 
 	nextGlobalID int
 }
@@ -88,11 +87,11 @@ func (s *System) InitDevice(d *Device) error {
 	if evts != nil {
 		if evts.Producer != nil {
 			log.V("%s - added event producer", d)
-			s.EvtBus.AddProducer(evts.Producer)
+			s.Services.EvtBus.AddProducer(evts.Producer)
 		}
 		if evts.Consumer != nil {
 			log.V("%s - added event consumer", d)
-			s.EvtBus.AddConsumer(evts.Consumer)
+			s.Services.EvtBus.AddConsumer(evts.Consumer)
 		}
 	}
 

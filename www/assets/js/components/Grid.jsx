@@ -12,7 +12,7 @@ var ExpanderWrapper = React.createClass({
     },
 
     componentWillUnmount: function() {
-        this.props.unmounted();
+        this.props.unmounted && this.props.unmounted();
     },
 
     render: function() {
@@ -131,12 +131,22 @@ var Grid = React.createClass({
             selectedIndex: -1,
         });
     },
+
+    expanderWillMount: function(content) {
+        this.props.expanderWillMount && this.props.expanderWillMount(content);
+    },
     
     render: function() {
         function makeCellWrapper(index, selectedIndex, cell) {
+            var content = cell.cell;
+            if (cell.cmpFunc) {
+                console.log('aaa');
+                content = cell.cmpFunc(cell.key);
+            }
+            
             return (
                 <div
-                    key={index}
+                    key={cell.key}
                     ref={"cellWrapper-" + index}
                     onClick={this.cellClicked}
                     className="cellWrapper pull-left"
@@ -147,7 +157,7 @@ var Grid = React.createClass({
                         //marginRight: this.props.spacingH,
                         //marginBottom: this.props.spacingV
                     }}>
-                    {cell.cell}
+                    {content}
                     <i className={ClassNames({
                                  "fa": true,
                                  "fa-caret-up": true,
