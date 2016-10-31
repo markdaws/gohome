@@ -71,7 +71,7 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 		dev.CmdBuilder = cmdBuilder
 
 		z := &zone.Zone{
-			Address:     "",
+			Address:     "1",
 			Name:        devInfo.FriendlyName,
 			Description: devInfo.ModelDescription,
 			DeviceID:    "",

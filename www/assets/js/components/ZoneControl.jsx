@@ -59,6 +59,8 @@ var ZoneControl = React.createClass({
         sw.on('switchChange.bootstrapSwitch', function(event, state) {
             this.toggleOn(slider);
         }.bind(this));
+
+        return sw;
     },
 
     initRGB: function() {
@@ -121,7 +123,7 @@ var ZoneControl = React.createClass({
 
     componentDidMount: function() {
         this._slider = this.initSlider();
-        this.initSwitch(this._slider);
+        this._switch = this.initSwitch(this._slider);
         this.initRGB();
 
         this.props.didMount && this.props.didMount(this);
@@ -156,7 +158,6 @@ var ZoneControl = React.createClass({
         slider && slider.set(targetValue);
         this.setValue(cmd, targetValue, 0, 0, 0, function(err) {
             if (err) {
-                //TODO: error
                 console.error(err);
             }
         });
@@ -185,7 +186,13 @@ var ZoneControl = React.createClass({
         }
 
         this.setState({ level: this.makeLevel(Math.round(val.value), 0, 0, 0) });
-        this._slider && this._slider.set(Math.round(val.value));
+
+        switch(this.props.output) {
+            case 'continuous':
+                this._slider && this._slider.set(Math.round(val.value));
+                break;
+        }
+        this._switch && this._switch.bootstrapSwitch('state', val.value > 0, true);
     },
 
     render: function() {

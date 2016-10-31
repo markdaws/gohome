@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net"
 
 	eventExt "github.com/go-home-iot/event-bus"
@@ -48,32 +50,31 @@ func main() {
 
 	rm := gohome.NewRecipeManager(eb)
 
-	/*
-		//TODO: Remove, simulate user importing lutron information on load
-		reset := true
-		if reset {
-			system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", 1)
-			intg.RegisterExtensions(system)
+	//TODO: Remove, simulate user importing lutron information on load
+	reset := false
+	if reset {
+		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", 1)
+		intg.RegisterExtensions(system)
 
-			bytes, err := ioutil.ReadFile("main/ip.json")
-			if err != nil {
-				panic("Could not read ip.json")
-			}
+		bytes, err := ioutil.ReadFile("main/ip.json")
+		if err != nil {
+			panic("Could not read ip.json")
+		}
 
-			importer := system.Extensions.FindImporter(system, &gohome.Device{ModelNumber: "l-bdgpro2-wh"})
-			if importer == nil {
-				panic("Failed to import: " + err.Error())
-			}
-			err = importer.FromString(system, string(bytes[:]), "l-bdgpro2-wh")
-			if err != nil {
-				panic("Failed to import: " + err.Error())
-			}
+		importer := system.Extensions.FindImporter(system, &gohome.Device{ModelNumber: "l-bdgpro2-wh"})
+		if importer == nil {
+			panic("Failed to import: " + err.Error())
+		}
+		err = importer.FromString(system, string(bytes[:]), "l-bdgpro2-wh")
+		if err != nil {
+			panic("Failed to import: " + err.Error())
+		}
 
-			err = store.SaveSystem(config.StartupConfigPath, system, rm)
-			if err != nil {
-				fmt.Println(err)
-			}
-		}*/
+		err = store.SaveSystem(config.StartupConfigPath, system, rm)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 
 	sys, err := store.LoadSystem(config.StartupConfigPath, rm)
 	if err == store.ErrFileNotFound {
@@ -108,12 +109,12 @@ func main() {
 	//be able to get executing devices without having to know about system
 	cp.SetSystem(sys)
 
+	upnpService := upnp.NewSubServer()
+	sys.Services.UPNP = upnpService
 	go func() {
 		for {
 			//TODO: What happens if this crashes and all devices are waiting
 			//for events, need to notify them to resubscribe ...
-			upnpService := upnp.NewSubServer()
-			sys.Services.UPNP = upnpService
 			log.V("UPNP Service - listening on %s", config.UPNPNotifyAddr)
 			err := upnpService.Start(config.UPNPNotifyAddr)
 			log.E("upnp service crashed:" + err.Error())

@@ -1,6 +1,7 @@
 package belkin
 
 import (
+	"fmt"
 	"html"
 	"regexp"
 	"strconv"
@@ -10,19 +11,52 @@ import (
 	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/log"
+	"github.com/markdaws/gohome/zone"
 )
+
+type makerConsumer struct {
+	System *gohome.System
+	Device *gohome.Device
+	Sensor *gohome.Sensor
+	Zone   *zone.Zone
+	Name   string
+}
+
+func (c *makerConsumer) ConsumerName() string {
+	return c.Name
+}
+func (c *makerConsumer) StartConsuming(ch chan evtbus.Event) {
+	go func() {
+		for e := range ch {
+			switch evt := e.(type) {
+			case *gohome.ZonesReportEvt:
+				_ = evt
+				//TODO:
+			case *gohome.SensorsReportEvt:
+				//TODO:
+			}
+		}
+	}()
+}
+func (c *makerConsumer) StopConsuming() {
+	//TODO:
+}
 
 type makerProducer struct {
 	System    *gohome.System
 	Device    *gohome.Device
 	Sensor    *gohome.Sensor
+	Zone      *zone.Zone
 	Name      string
 	SID       string
 	Producing bool
 }
 
 var attrRegexp = regexp.MustCompile(`(<attributeList>.*</attributeList>)`)
+
+//==================== upnp.Subscriber interface ========================
 
 func (p *makerProducer) UPNPNotify(e upnp.NotifyEvent) {
 	if !p.Producing {
@@ -42,11 +76,12 @@ func (p *makerProducer) UPNPNotify(e upnp.NotifyEvent) {
 		return
 	}
 
+	fmt.Printf("%+v\n", attrs)
 	//TODO: If this is a switch state change then we need to log
 	//      that as a seperate event type
 
 	if attrs.Sensor != nil {
-		evt := &gohome.SensorAttrChangedEvt{
+		p.System.Services.EvtBus.Enqueue(&gohome.SensorAttrChangedEvt{
 			SensorID:   p.Sensor.ID,
 			SensorName: p.Sensor.Name,
 			Attr: gohome.SensorAttr{
@@ -54,10 +89,17 @@ func (p *makerProducer) UPNPNotify(e upnp.NotifyEvent) {
 				Value:    strconv.Itoa(*attrs.Sensor),
 				DataType: gohome.SDTInt,
 			},
-		}
-		p.System.Services.EvtBus.Enqueue(evt)
+		})
+	} else if attrs.Switch != nil {
+		p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+			ZoneName: p.Zone.Name,
+			ZoneID:   p.Zone.ID,
+			Level:    cmd.Level{Value: float32(*attrs.Switch)},
+		})
 	}
 }
+
+//=======================================================================
 
 func (p *makerProducer) ProducerName() string {
 	return p.Name
@@ -66,30 +108,31 @@ func (p *makerProducer) ProducerName() string {
 func (p *makerProducer) StartProducing(b *evtbus.Bus) {
 	log.V("producer [%s] start producing", p.ProducerName())
 
-	p.Producing = true
-	for p.Producing {
-		// The make has a sensor and a switch state, need to notify these changes
-		// to the event bus
-		sid, err := p.System.Services.UPNP.Subscribe(
-			p.Device.Address+"/upnp/event/basicevent1",
-			"",
-			300,
-			true,
-			p)
+	go func() {
+		p.Producing = true
+		for p.Producing {
+			//TODO: What about if we lose connection to this device or need a new SID?
 
-		if err != nil {
-			// log failure, keep trying to subscribe to the target device
-			// there may be network issues
-			log.V("[%s] failed to subscribe to upnp: %s", p.ProducerName(), err)
-			time.Sleep(time.Second * 10)
-		} else {
-			p.SID = sid
-			break
+			// The make has a sensor and a switch state, need to notify these changes
+			// to the event bus
+			sid, err := p.System.Services.UPNP.Subscribe(
+				p.Device.Address+"/upnp/event/basicevent1",
+				"",
+				300,
+				true,
+				p)
+
+			if err != nil {
+				// log failure, keep trying to subscribe to the target device
+				// there may be network issues
+				log.V("[%s] failed to subscribe to upnp: %s", p.ProducerName(), err)
+				time.Sleep(time.Second * 10)
+			} else {
+				p.SID = sid
+				break
+			}
 		}
-	}
-
-	//TODO: Switch change event ...
-
+	}()
 }
 
 func (p *makerProducer) StopProducing() {

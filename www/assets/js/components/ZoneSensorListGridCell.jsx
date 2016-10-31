@@ -71,10 +71,20 @@ var ZoneSensorListGridCell = React.createClass({
             icon2Cmp = <i className={icon2}></i>
         }
 
-        var val = 0;
+        var val = '';
+        var opacity = 0;
         if (this.state.level) {
-            val = this.state.level.value / 100;
-                              }
+            opacity = this.state.level.value / 100;
+            val = this.state.level.value + '%';
+        
+            if (this.props.zone && this.props.zone.type === 'switch') {
+                if (this.state.level.value === 0) {
+                    val = 'off';
+                } else {
+                    val = 'on';
+                }
+            }
+        }
 
         var typeClass = {};
         typeClass[type] = true;
@@ -101,10 +111,10 @@ var ZoneSensorListGridCell = React.createClass({
                     r="25"
                     fill="yellow"
                     clipPath="url(#lightClip)"
-                    style={{'opacity': val, 'clipPath':'url(#lightClip)'}}/>
+                    style={{'opacity': opacity, 'clipPath':'url(#lightClip)'}}/>
             </svg>
             <div className="level">
-                {this.state.level.value}%
+                {val}
             </div>
             <div className="name">
                 {name}

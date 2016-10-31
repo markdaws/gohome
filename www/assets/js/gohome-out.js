@@ -27884,7 +27884,10 @@
 	        this._retryDuration = 5000;
 	        this._monitorTimeout = 120;
 	        this._refreshTimeoutId = -1;
-	        this._monitorData = null;
+	        this._monitorData = {
+	            zones: {},
+	            sensors: {}
+	        };
 	        return null;
 	    },
 
@@ -28021,14 +28024,20 @@
 	            }.bind(this), 5000);
 	        }.bind(this);
 	        conn.onmessage = function (evt) {
-	            this._monitorData = JSON.parse(evt.data);
-	            Object.keys(this._monitorData.zones || {}).forEach(function (zoneId) {
+	            var resp = JSON.parse(evt.data);
+	            Object.keys(resp.zones || {}).forEach(function (zoneId) {
+	                // Need to update our local data, since we can get back updates at any time
+	                // for any zone, we have to merge all the values into our one source of truth
+	                this._monitorData.zones[zoneId] = resp.zones[zoneId];
+
 	                var cmp = this.refs['cell_zone_' + zoneId];
 	                if (cmp) {
 	                    cmp.setLevel(this._monitorData.zones[zoneId]);
 	                }
 	            }.bind(this));
-	            Object.keys(this._monitorData.sensors || {}).forEach(function (sensorId) {
+	            Object.keys(resp.sensors || {}).forEach(function (sensorId) {
+	                this._monitorData.sensors[sensorId] = resp.sensors[sensorId];
+
 	                var cmp = this.refs['cell_sensor_' + sensorId];
 	                if (!cmp) {
 	                    return;
@@ -28036,6 +28045,7 @@
 	                //TODO: Set attribute...cmp.setLevel(this._monitorData.sensors[sensorId].value);
 	            }.bind(this));
 
+	            //TODO: Need to merge values from all updates otherwise have missing values
 	            this._gridContent && this._gridContent.monitorData(this._monitorData);
 	        }.bind(this);
 	        this._connection = conn;
@@ -28093,11 +28103,19 @@
 	        this.props.sensors.forEach(function (sensor) {
 	            var cmpSensor = {
 	                key: 'sensor_' + sensor.id,
-	                cell: React.createElement(ZoneSensorListGridCell, { ref: "cell_sensor_" + sensor.id, sensor: sensor }),
-	                content: React.createElement(SensorMonitor, { sensor: sensor })
+	                cell: React.createElement(ZoneSensorListGridCell, {
+	                    key: sensor.id,
+	                    ref: "cell_sensor_" + sensor.id,
+	                    sensor: sensor }),
+	                content: React.createElement(SensorMonitor, {
+	                    id: sensor.id,
+	                    didMount: this.expanderMounted,
+	                    willUnmount: this.expanderUnmounted,
+	                    key: sensor.id,
+	                    sensor: sensor })
 	            };
 	            sensors.push(cmpSensor);
-	        });
+	        }.bind(this));
 
 	        return React.createElement(
 	            'div',
@@ -28224,6 +28242,8 @@
 	        sw.on('switchChange.bootstrapSwitch', function (event, state) {
 	            this.toggleOn(slider);
 	        }.bind(this));
+
+	        return sw;
 	    },
 
 	    initRGB: function initRGB() {
@@ -28279,7 +28299,7 @@
 
 	    componentDidMount: function componentDidMount() {
 	        this._slider = this.initSlider();
-	        this.initSwitch(this._slider);
+	        this._switch = this.initSwitch(this._slider);
 	        this.initRGB();
 
 	        this.props.didMount && this.props.didMount(this);
@@ -28314,7 +28334,6 @@
 	        slider && slider.set(targetValue);
 	        this.setValue(cmd, targetValue, 0, 0, 0, function (err) {
 	            if (err) {
-	                //TODO: error
 	                console.error(err);
 	            }
 	        });
@@ -28336,7 +28355,13 @@
 	        }
 
 	        this.setState({ level: this.makeLevel(Math.round(val.value), 0, 0, 0) });
-	        this._slider && this._slider.set(Math.round(val.value));
+
+	        switch (this.props.output) {
+	            case 'continuous':
+	                this._slider && this._slider.set(Math.round(val.value));
+	                break;
+	        }
+	        this._switch && this._switch.bootstrapSwitch('state', val.value > 0, true);
 	    },
 
 	    render: function render() {
@@ -28427,7 +28452,27 @@
 	        };
 	    },
 
+	    componentDidMount: function componentDidMount() {
+	        this.props.didMount && this.props.didMount(this);
+	    },
+
+	    componentWillUnmount: function componentWillUnmount() {
+	        this.props.willUnmount && this.props.willUnmount();
+	    },
+
+	    monitorData: function monitorData(data) {
+	        if (!data || !data.sensors) {
+	            return;
+	        }
+	        var val = data.sensors[this.props.id];
+	        if (val == undefined) {
+	            return;
+	        }
+	        this.setState({ value: val });
+	    },
+
 	    render: function render() {
+	        console.log(this.state.value);
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SensorMonitor' },
@@ -28526,9 +28571,19 @@
 	            icon2Cmp = React.createElement('i', { className: icon2 });
 	        }
 
-	        var val = 0;
+	        var val = '';
+	        var opacity = 0;
 	        if (this.state.level) {
-	            val = this.state.level.value / 100;
+	            opacity = this.state.level.value / 100;
+	            val = this.state.level.value + '%';
+
+	            if (this.props.zone && this.props.zone.type === 'switch') {
+	                if (this.state.level.value === 0) {
+	                    val = 'off';
+	                } else {
+	                    val = 'on';
+	                }
+	            }
 	        }
 
 	        var typeClass = {};
@@ -28565,13 +28620,12 @@
 	                    r: '25',
 	                    fill: 'yellow',
 	                    clipPath: 'url(#lightClip)',
-	                    style: { 'opacity': val, 'clipPath': 'url(#lightClip)' } })
+	                    style: { 'opacity': opacity, 'clipPath': 'url(#lightClip)' } })
 	            ),
 	            React.createElement(
 	                'div',
 	                { className: 'level' },
-	                this.state.level.value,
-	                '%'
+	                val
 	            ),
 	            React.createElement(
 	                'div',

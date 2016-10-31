@@ -2,6 +2,7 @@ package lutron
 
 import (
 	"bufio"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -38,7 +39,8 @@ func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 				}
 
 				for zoneID := range evt.ZoneIDs {
-					log.V("calling zone %s", zoneID)
+					log.V("calling zone TODO: Should index zones by id not address %s", zoneID)
+					//TODO: this should be p.Device.Zones but zones is indexed by address ... what to do
 					if zn, ok := p.System.Zones[zoneID]; ok {
 						conn, err := p.Device.Connections.Get(time.Second * 10)
 						if err != nil {
@@ -51,6 +53,8 @@ func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 							conn.IsBad = true
 						}
 						p.Device.Connections.Release(conn)
+					} else {
+						fmt.Println("not owned: " + zoneID)
 					}
 				}
 				_ = evt

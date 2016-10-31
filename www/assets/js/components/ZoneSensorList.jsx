@@ -19,7 +19,10 @@ var ZoneSensorList = React.createClass({
         this._retryDuration = 5000;
         this._monitorTimeout = 120;
         this._refreshTimeoutId = -1;
-        this._monitorData = null;
+        this._monitorData = {
+            zones: {},
+            sensors: {}
+        };
         return null;
     },
     
@@ -156,14 +159,20 @@ var ZoneSensorList = React.createClass({
             }.bind(this), 5000);
         }.bind(this);
         conn.onmessage = (function(evt) {
-            this._monitorData = JSON.parse(evt.data);
-            Object.keys(this._monitorData.zones || {}).forEach(function(zoneId) {
+            var resp = JSON.parse(evt.data);
+            Object.keys(resp.zones || {}).forEach(function(zoneId) {
+                // Need to update our local data, since we can get back updates at any time
+                // for any zone, we have to merge all the values into our one source of truth
+                this._monitorData.zones[zoneId] = resp.zones[zoneId];
+                
                 var cmp = this.refs['cell_zone_' + zoneId];
                 if (cmp) {
                     cmp.setLevel(this._monitorData.zones[zoneId]);
                 }
             }.bind(this));
-            Object.keys(this._monitorData.sensors || {}).forEach(function(sensorId) {
+            Object.keys(resp.sensors || {}).forEach(function(sensorId) {
+                this._monitorData.sensors[sensorId] = resp.sensors[sensorId];
+                
                 var cmp = this.refs['cell_sensor_' + sensorId];
                 if (!cmp) {
                     return;
@@ -171,9 +180,8 @@ var ZoneSensorList = React.createClass({
                 //TODO: Set attribute...cmp.setLevel(this._monitorData.sensors[sensorId].value);
             }.bind(this));
 
-            
+            //TODO: Need to merge values from all updates otherwise have missing values
             this._gridContent && this._gridContent.monitorData(this._monitorData);
-
         }).bind(this);
         this._connection = conn;
     },
@@ -230,11 +238,19 @@ var ZoneSensorList = React.createClass({
         this.props.sensors.forEach(function(sensor) {
             var cmpSensor = {
                 key: 'sensor_' + sensor.id,
-                cell: <ZoneSensorListGridCell ref={"cell_sensor_" + sensor.id} sensor={sensor} />,
-                content: <SensorMonitor sensor={sensor} />
+                cell: <ZoneSensorListGridCell
+                          key={sensor.id}
+                          ref={"cell_sensor_" + sensor.id}
+                          sensor={sensor} />,
+                content: <SensorMonitor
+                             id={sensor.id}
+                             didMount={this.expanderMounted}
+                             willUnmount={this.expanderUnmounted}
+                             key={sensor.id}
+                             sensor={sensor} />
             };
             sensors.push(cmpSensor);
-        });
+        }.bind(this));
 
         return (
             <div className="cmp-ZoneSensorList">

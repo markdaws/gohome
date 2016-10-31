@@ -13,7 +13,27 @@ var SensorMonitor = React.createClass({
         }
     },
 
+    componentDidMount: function() {
+        this.props.didMount && this.props.didMount(this);
+    },
+
+    componentWillUnmount: function() {
+        this.props.willUnmount && this.props.willUnmount();
+    },
+
+    monitorData: function(data) {
+        if (!data || !data.sensors) {
+            return;
+        }
+        var val = data.sensors[this.props.id];
+        if (val == undefined) {
+            return;
+        }
+        this.setState({ value: val });
+    },
+
     render: function() {
+        console.log(this.state.value);
         return (
             <div className="cmp-SensorMonitor">
                 <div className="clearfix">
