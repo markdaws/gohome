@@ -175,9 +175,3 @@ func (s *System) DeleteDevice(d *Device) {
 func (s *System) AddRecipe(r *Recipe) {
 	s.Recipes[r.ID] = r
 }
-
-//TODO: Still needed?
-func (s *System) FromID(ID string) *Device {
-	dev := s.Devices[ID]
-	return dev
-}

@@ -107,3 +107,6 @@ func (zr *ZonesReportingEvt) Add(zoneID string, level cmd.Level) {
 func (zr *ZonesReportingEvt) String() string {
 	return fmt.Sprintf("ZonesReporting, contains %d zones", len(zr.Zones))
 }
+
+type XXXEvt struct {
+}
