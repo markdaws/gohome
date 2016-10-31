@@ -16,6 +16,9 @@ var ZoneSensorList = React.createClass({
         this._connection = null;
         this._lastSubscribeId = 1;
         this._keepRefreshingConnection = true;
+        this._retryDuration = 5000;
+        this._monitorTimeout = 10;
+        this._refreshTimeoutId = -1;
         return {
             monitorData: null
         }
@@ -46,6 +49,9 @@ var ZoneSensorList = React.createClass({
             return true;
         }
         if (this.props.sensors !== nextProps.sensors) {
+            return true;
+        }
+        if (this.state.monitorData != nextState.monitorData) {
             return true;
         }
         return false;
@@ -87,9 +93,8 @@ var ZoneSensorList = React.createClass({
             this._monitorId = '';
         }
 
-        //TODO: Up to caller to refresh monitoring
         var monitorGroup = {
-            timeoutInSeconds: 200,
+            timeoutInSeconds: this._monitorTimeout,
             sensorIds: [],
             zoneIds: []
         };
@@ -104,13 +109,13 @@ var ZoneSensorList = React.createClass({
         var subscribeId = ++this._lastSubscribeId;
         Api.monitorSubscribe(monitorGroup, function(err, data) {
             if (err != null) {
-                //TODO: Need to retry again here ...?
-                console.log('failed to sub to monitor');
-                console.log(err);
+                setTimeout(function() {
+                    if (this._keepRefreshingConnection) {
+                        this.refreshMonitoring(this.props.zones, this.props.sensors);
+                    }
+                }.bind(this), this._retryDuration);
                 return;
             }
-            //console.log('subscribed to monitor:' + this._monitorId);
-            //console.log(data);
 
             if (subscribeId !== this._lastSubscribeId) {
                 // This is an old callback we subscribed to before the most recent, unsub
@@ -129,24 +134,47 @@ var ZoneSensorList = React.createClass({
             this._connection = null;
         }
 
+        console.log('attempting refresh')
         var conn = new WebSocket("ws://" + window.location.hostname + ":5000/api/v1/monitor/groups/" + monitorId);
-        conn.onopen = function(evt) { };
+        conn.onopen = (function(evt) {
+            console.log('connection opened');
+            function renew() {
+                this._refreshTimeoutId = setTimeout(function() {
+                    console.log('renewing subscription');
+                    if (this._monitorId === '') {
+                        return;
+                    }
+                    Api.monitorSubscribeRenew(this._monitorId);
+                    renew.bind(this)();
+                }.bind(this), parseInt(this._monitorTimeout * 1000 * 0.75, 10));
+            }
+            renew.bind(this)();
+        }).bind(this);
         conn.onclose = function(evt) {
+            console.log('connection closed');
+            clearTimeout(this._refreshTimeoutId);
             conn = null;
             this._connection = null;
-            if (this._keepRefreshingConnection) {
-                this.refreshWebSocket(monitorId);
-            }
+            this._monitorId = '';
+
+            //TODO: Need to renew the subscription
+            setTimeout(function() {
+                if (this._keepRefreshingConnection) {
+                    this.refreshMonitoring(this.props.zones, this.props.sensors);
+                }
+            }.bind(this), 5000);
         }.bind(this);
         conn.onmessage = (function(evt) {
             var resp = JSON.parse(evt.data);
 
+            console.log('monitorData updated');
             this.setState({ monitorData: resp });
+
+            //TODO :Needed?
+            /*
             Object.keys(resp.zones || {}).forEach(function(zoneId) {
                 var cmp = this.refs['cell_zone_' + zoneId];
-                console.log('xxx');
                 if (cmp) {
-                    console.log('yyy');
                     cmp.setLevel(resp.zones[zoneId]);
                 }
             }.bind(this));
@@ -157,6 +185,7 @@ var ZoneSensorList = React.createClass({
                 }
                 //TODO: Set attribute...cmp.setLevel(resp.sensors[sensorId].value);
             }.bind(this));
+            */
 
             this._gridContent && this._gridContent.monitorData(resp);
 
@@ -164,10 +193,12 @@ var ZoneSensorList = React.createClass({
         this._connection = conn;
     },
 
+    //TODO: This should come from the grid
+    /*
     zoneExpanderMounted: function(content) {
         this._gridContent = content;
         this._gridContent.monitorData(this.state.monitorData);
-    },
+    },*/
     
     render: function() {
         var lightZones = [];
@@ -176,25 +207,30 @@ var ZoneSensorList = React.createClass({
         var otherZones = [];
         var sensors = [];
 
+        console.log('zone sensor list rendering');
+        console.log(this.state.monitorData);
+        
         this.props.zones.forEach(function(zone) {
+            var level;
+            if (this.state.monitorData) {
+                level = this.state.monitorData.zones[zone.id];
+                //console.log('zone: ' + zone.id + ', level: ' + level.value);
+            }
             var cmpZone = {
-                key: zone.id,/*
-                cmpFunc: (function(key) {
-                    var level;
-                    if (this.state.monitorData) {
-                        level = this.state.monitorData.zones[zone.id];
-                    }
-                    console.log(level)
-                    return (
-                        <ZoneSensorListGridCell
-                            key={zone.id}
-                            ref={"cell_zone_" + zone.id}
-                            zone={zone}
-                            level={level} />
-                    );
-                }).bind(this),*/
-                cell: <ZoneSensorListGridCell key={zone.id} ref={"cell_zone_" + zone.id} zone={zone} />,
-                content: <ZoneControl id={zone.id} didMount={this.zoneExpanderMounted} name={zone.name} type={zone.type} output={zone.output} key={zone.id}/>
+                key: zone.id,
+                cell: <ZoneSensorListGridCell
+                          level={level}
+                          key={zone.id}
+                          ref={"cell_zone_" + zone.id}
+                          zone={zone} />,
+                content: <ZoneControl
+                             id={zone.id}
+                             level={level}
+                //didMount={this.zoneExpanderMounted}
+                             name={zone.name}
+                             type={zone.type}
+                             output={zone.output}
+                             key={zone.id}/>
             };
             switch(zone.type) {
                 case 'light':
@@ -225,8 +261,9 @@ var ZoneSensorList = React.createClass({
             <div className="cmp-ZoneSensorList">
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': lightZones.length === 0})}>Lights</h2>
-                    <Grid cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    <Grid name="zone grid" cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
                 </div>
+                {/*
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': shadeZones.length === 0})}>Shades</h2>
                     <Grid cells={shadeZones} expanderWillMount={this.zoneExpanderWillMount}/>
@@ -242,7 +279,7 @@ var ZoneSensorList = React.createClass({
                 <div className="clearfix">
                     <h2 className={ClassNames({ 'hidden': sensors.length === 0})}>Sensors</h2>
                     <Grid cells={sensors} />
-                </div>
+                </div>*/}
             </div>
         );
     }

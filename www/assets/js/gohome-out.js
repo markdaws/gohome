@@ -52,16 +52,17 @@
 	var Provider = __webpack_require__(173).Provider;
 	var store = __webpack_require__(267);
 
-	var Testr = __webpack_require__(277);
+	var C1 = __webpack_require__(277);
 
 	//TODO: Remove - testing
 	/*
 	ReactDOM.render(
 	    <Provider store={store}>
-	        <Testr />
+	        <C1 />
 	    </Provider>,
 	    document.getElementsByClassName('content')[0]
-	);*/
+	);
+	*/
 
 	ReactDOM.render(React.createElement(
 	    Provider,
@@ -24475,6 +24476,28 @@
 	        });
 	    },
 
+	    // monitorSubscribeRenew renews the subscription to the monitor group, this extends
+	    // the timeout for the group before the server stops sending updates
+	    monitorSubscribeRenew: function monitorSubscribeRenew(monitorId, callback) {
+	        $.ajax({
+	            url: BASE + '/api/v1/monitor/groups/' + monitorId,
+	            type: 'PUT',
+	            dataType: 'json',
+	            data: null,
+	            cache: false,
+	            success: function success(data) {
+	                callback && callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback && callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    status: status
+	                });
+	            }
+	        });
+	    },
+
 	    // monitorUnsubscribe unsubscribe the specified monitor id so the client will
 	    // no longer receive updates when values associated with it change
 	    monitorUnsubscribe: function monitorUnsubscribe(monitorId, callback) {
@@ -25853,6 +25876,7 @@
 	    displayName: 'ExpanderWrapper',
 
 	    getInitialState: function getInitialState() {
+	        console.log('ExpanderWrapper - getInitialState');
 	        return {
 	            expanded: false
 	        };
@@ -25863,13 +25887,14 @@
 	    },
 
 	    render: function render() {
+	        console.log('rendering expander wrapper');
+	        debugger;
 	        return React.createElement(
 	            'div',
 	            { className: ClassNames({
 	                    "expander": true,
-	                    "xyz": true,
 	                    "expanded": this.state.expanded }) },
-	            this.props.content
+	            this.props.children
 	        );
 	    }
 	});
@@ -25984,13 +26009,12 @@
 	    },
 
 	    render: function render() {
+	        if (this.props.name) {
+	            console.log("grid rendering: " + this.props.name);
+	        }
+
 	        function makeCellWrapper(index, selectedIndex, cell) {
 	            var content = cell.cell;
-	            if (cell.cmpFunc) {
-	                console.log('aaa');
-	                content = cell.cmpFunc(cell.key);
-	            }
-
 	            return React.createElement(
 	                'div',
 	                {
@@ -26022,12 +26046,16 @@
 	        }
 
 	        var expander;
-	        var items = [];
+	        var items;
 	        if (this.state.expanded) {
-	            items.push(React.createElement(ExpanderWrapper, {
-	                key: '1',
-	                unmounted: this.expanderUnmounted,
-	                content: this.state.expanderContent }));
+	            var key = this.props.cells[this.state.selectedIndex].key;
+	            items = React.createElement(
+	                ExpanderWrapper,
+	                {
+	                    key: key,
+	                    unmounted: this.expanderUnmounted },
+	                this.state.expanderContent
+	            );
 	        }
 
 	        expander = React.createElement(
@@ -28341,6 +28369,9 @@
 	        this._connection = null;
 	        this._lastSubscribeId = 1;
 	        this._keepRefreshingConnection = true;
+	        this._retryDuration = 5000;
+	        this._monitorTimeout = 10;
+	        this._refreshTimeoutId = -1;
 	        return {
 	            monitorData: null
 	        };
@@ -28371,6 +28402,9 @@
 	            return true;
 	        }
 	        if (this.props.sensors !== nextProps.sensors) {
+	            return true;
+	        }
+	        if (this.state.monitorData != nextState.monitorData) {
 	            return true;
 	        }
 	        return false;
@@ -28412,9 +28446,8 @@
 	            this._monitorId = '';
 	        }
 
-	        //TODO: Up to caller to refresh monitoring
 	        var monitorGroup = {
-	            timeoutInSeconds: 200,
+	            timeoutInSeconds: this._monitorTimeout,
 	            sensorIds: [],
 	            zoneIds: []
 	        };
@@ -28429,13 +28462,13 @@
 	        var subscribeId = ++this._lastSubscribeId;
 	        Api.monitorSubscribe(monitorGroup, function (err, data) {
 	            if (err != null) {
-	                //TODO: Need to retry again here ...?
-	                console.log('failed to sub to monitor');
-	                console.log(err);
+	                setTimeout(function () {
+	                    if (this._keepRefreshingConnection) {
+	                        this.refreshMonitoring(this.props.zones, this.props.sensors);
+	                    }
+	                }.bind(this), this._retryDuration);
 	                return;
 	            }
-	            //console.log('subscribed to monitor:' + this._monitorId);
-	            //console.log(data);
 
 	            if (subscribeId !== this._lastSubscribeId) {
 	                // This is an old callback we subscribed to before the most recent, unsub
@@ -28454,71 +28487,100 @@
 	            this._connection = null;
 	        }
 
+	        console.log('attempting refresh');
 	        var conn = new WebSocket("ws://" + window.location.hostname + ":5000/api/v1/monitor/groups/" + monitorId);
-	        conn.onopen = function (evt) {};
+	        conn.onopen = function (evt) {
+	            console.log('connection opened');
+	            function renew() {
+	                this._refreshTimeoutId = setTimeout(function () {
+	                    console.log('renewing subscription');
+	                    if (this._monitorId === '') {
+	                        return;
+	                    }
+	                    Api.monitorSubscribeRenew(this._monitorId);
+	                    renew.bind(this)();
+	                }.bind(this), parseInt(this._monitorTimeout * 1000 * 0.75, 10));
+	            }
+	            renew.bind(this)();
+	        }.bind(this);
 	        conn.onclose = function (evt) {
+	            console.log('connection closed');
+	            clearTimeout(this._refreshTimeoutId);
 	            conn = null;
 	            this._connection = null;
-	            if (this._keepRefreshingConnection) {
-	                this.refreshWebSocket(monitorId);
-	            }
+	            this._monitorId = '';
+
+	            //TODO: Need to renew the subscription
+	            setTimeout(function () {
+	                if (this._keepRefreshingConnection) {
+	                    this.refreshMonitoring(this.props.zones, this.props.sensors);
+	                }
+	            }.bind(this), 5000);
 	        }.bind(this);
 	        conn.onmessage = function (evt) {
 	            var resp = JSON.parse(evt.data);
 
+	            console.log('monitorData updated');
 	            this.setState({ monitorData: resp });
-	            Object.keys(resp.zones || {}).forEach(function (zoneId) {
+
+	            //TODO :Needed?
+	            /*
+	            Object.keys(resp.zones || {}).forEach(function(zoneId) {
 	                var cmp = this.refs['cell_zone_' + zoneId];
-	                console.log('xxx');
 	                if (cmp) {
-	                    console.log('yyy');
 	                    cmp.setLevel(resp.zones[zoneId]);
 	                }
 	            }.bind(this));
-	            Object.keys(resp.sensors || {}).forEach(function (sensorId) {
+	            Object.keys(resp.sensors || {}).forEach(function(sensorId) {
 	                var cmp = this.refs['cell_sensor_' + sensorId];
 	                if (!cmp) {
 	                    return;
 	                }
 	                //TODO: Set attribute...cmp.setLevel(resp.sensors[sensorId].value);
 	            }.bind(this));
+	            */
 
 	            this._gridContent && this._gridContent.monitorData(resp);
 	        }.bind(this);
 	        this._connection = conn;
 	    },
 
-	    zoneExpanderMounted: function zoneExpanderMounted(content) {
+	    //TODO: This should come from the grid
+	    /*
+	    zoneExpanderMounted: function(content) {
 	        this._gridContent = content;
 	        this._gridContent.monitorData(this.state.monitorData);
-	    },
-
-	    render: function render() {
+	    },*/render: function render() {
 	        var lightZones = [];
 	        var shadeZones = [];
 	        var switchZones = [];
 	        var otherZones = [];
 	        var sensors = [];
 
+	        console.log('zone sensor list rendering');
+	        console.log(this.state.monitorData);
+
 	        this.props.zones.forEach(function (zone) {
+	            var level;
+	            if (this.state.monitorData) {
+	                level = this.state.monitorData.zones[zone.id];
+	                //console.log('zone: ' + zone.id + ', level: ' + level.value);
+	            }
 	            var cmpZone = {
-	                key: zone.id, /*
-	                              cmpFunc: (function(key) {
-	                              var level;
-	                              if (this.state.monitorData) {
-	                              level = this.state.monitorData.zones[zone.id];
-	                              }
-	                              console.log(level)
-	                              return (
-	                              <ZoneSensorListGridCell
-	                              key={zone.id}
-	                              ref={"cell_zone_" + zone.id}
-	                              zone={zone}
-	                              level={level} />
-	                              );
-	                              }).bind(this),*/
-	                cell: React.createElement(ZoneSensorListGridCell, { key: zone.id, ref: "cell_zone_" + zone.id, zone: zone }),
-	                content: React.createElement(ZoneControl, { id: zone.id, didMount: this.zoneExpanderMounted, name: zone.name, type: zone.type, output: zone.output, key: zone.id })
+	                key: zone.id,
+	                cell: React.createElement(ZoneSensorListGridCell, {
+	                    level: level,
+	                    key: zone.id,
+	                    ref: "cell_zone_" + zone.id,
+	                    zone: zone }),
+	                content: React.createElement(ZoneControl, {
+	                    id: zone.id,
+	                    level: level
+	                    //didMount={this.zoneExpanderMounted}
+	                    , name: zone.name,
+	                    type: zone.type,
+	                    output: zone.output,
+	                    key: zone.id })
 	            };
 	            switch (zone.type) {
 	                case 'light':
@@ -28556,47 +28618,7 @@
 	                    { className: ClassNames({ 'hidden': lightZones.length === 0 }) },
 	                    'Lights'
 	                ),
-	                React.createElement(Grid, { cells: lightZones, expanderWillMount: this.zoneExpanderWillMount })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
-	                    'Shades'
-	                ),
-	                React.createElement(Grid, { cells: shadeZones, expanderWillMount: this.zoneExpanderWillMount })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': switchZones.length === 0 }) },
-	                    'Switches'
-	                ),
-	                React.createElement(Grid, { cells: switchZones, expanderWillMount: this.zoneExpanderWillMount })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
-	                    'Other Zones'
-	                ),
-	                React.createElement(Grid, { cells: otherZones, expanderWillMount: this.zoneExpanderWillMount })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': sensors.length === 0 }) },
-	                    'Sensors'
-	                ),
-	                React.createElement(Grid, { cells: sensors })
+	                React.createElement(Grid, { name: 'zone grid', cells: lightZones, expanderWillMount: this.zoneExpanderWillMount })
 	            )
 	        );
 	    }
@@ -28621,11 +28643,15 @@
 
 	    mixins: [CssMixin],
 	    getInitialState: function getInitialState() {
+	        var level = this.props.level;
+	        if (!level) {
+	            level.value = -1;
+	            level.r = 0;
+	            level.g = 0;
+	            level.b = 0;
+	        }
 	        return {
-	            value: -1,
-	            r: 0,
-	            g: 0,
-	            b: 0
+	            level: level
 	        };
 	    },
 
@@ -28693,8 +28719,17 @@
 	        }.bind(this));
 	    },
 
+	    makeLevel: function makeLevel(val, r, g, b) {
+	        return {
+	            value: val,
+	            r: r,
+	            g: g,
+	            b: b
+	        };
+	    },
+
 	    sliderChanged: function sliderChanged(slider) {
-	        this.setState({ value: parseInt(slider.get(), 10) });
+	        this.setState({ level: this.makeLevel(parseInt(slider.get(), 10), 0, 0, 0) });
 	    },
 
 	    sliderEnd: function sliderEnd(slider) {
@@ -28714,13 +28749,9 @@
 	        this.props.didMount && this.props.didMount(this);
 	    },
 
+	    //TODO: rename setLevel
 	    setValue: function setValue(cmd, value, r, g, b, callback) {
-	        this.setState({
-	            value: value,
-	            r: r,
-	            g: g,
-	            b: b
-	        });
+	        this.setState({ level: this.makeLevel(value, r, g, b) });
 	        this.send({
 	            cmd: cmd,
 	            value: parseFloat(value),
@@ -28731,17 +28762,18 @@
 	    },
 
 	    toggleOn: function toggleOn(slider) {
-	        var cmd, level;
-	        if (this.state.value !== 0 || this.state.r !== 0 || this.state.g !== 0 || this.state.b !== 0) {
+	        var cmd, targetValue;
+
+	        if (this.state.level.value !== 0 || this.state.level.r !== 0 || this.state.level.g !== 0 || this.state.level.b !== 0) {
 	            cmd = 'turnOff';
-	            level = 0;
+	            targetValue = 0;
 	        } else {
 	            cmd = 'turnOn';
-	            level = 100;
+	            targetValue = 100;
 	        }
 
-	        slider && slider.set(level);
-	        this.setValue(cmd, level, 0, 0, 0, function (err) {
+	        slider && slider.set(targetValue);
+	        this.setValue(cmd, targetValue, 0, 0, 0, function (err) {
 	            if (err) {
 	                //TODO: error
 	                console.error(err);
@@ -28755,7 +28787,9 @@
 	        });
 	    },
 
+	    //TODO: Delete
 	    monitorData: function monitorData(data) {
+	        return;
 	        if (!data || !data.zones) {
 	            return;
 	        }
@@ -28764,14 +28798,20 @@
 	            return;
 	        }
 
-	        this.setState({ value: Math.round(val.value) });
+	        this.setState({ level: this.makeLevel(Math.round(val.value), 0, 0, 0) });
 	        this._slider && this._slider.set(Math.round(val.value));
 
 	        console.log(val);
 	        //console.log(data);
 	    },
 
+	    shouldComponentUpdate: function shouldComponentUpdate() {
+	        console.log('zc shouldcomponentupdate');
+	        return true;
+	    },
 	    render: function render() {
+	        console.log('rendering zone content');
+
 	        var sliderCmp;
 	        if (this.props.output === 'continuous') {
 	            sliderCmp = React.createElement(
@@ -28782,8 +28822,8 @@
 	                    'span',
 	                    { className: ClassNames({
 	                            "value": true,
-	                            "hidden": this.state.value === -1 }) },
-	                    this.state.value,
+	                            "hidden": this.state.level.value === -1 }) },
+	                    this.state.level.value,
 	                    '%'
 	                )
 	            );
@@ -28889,11 +28929,12 @@
 	var ZoneSensorListGridCell = React.createClass({
 	    displayName: 'ZoneSensorListGridCell',
 
-	    getInitialState: function getInitialState() {
+	    /*
+	    getInitialState: function() {
 	        return {
 	            level: this.props.level
 	        };
-	    },
+	    },*/
 
 	    setLevel: function setLevel(level) {
 	        this.setState({ level: level });
@@ -28909,19 +28950,24 @@
 	    },
 
 	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        return true;
+
+	        //TODO: fix
 	        if (nextProps.zone && this.props.zone && this.props.zone.name !== nextProps.zone.name) {
 	            return true;
 	        }
 	        if (nextProps.sensor && this.props.sensor && this.props.sensor.name !== nextProps.sensor.name) {
 	            return true;
 	        }
-	        if (nextState.level && nextState.level !== this.state.level) {
+	        if (nextProps.level && this.props.level && nextProps.level.value !== this.props.level.value) {
+	            //TODO: RGB
 	            return true;
 	        }
 	        return false;
 	    },
 
 	    render: function render() {
+	        console.log('rendering cell: ' + this.props.level);
 	        var icon1, icon2, name;
 
 	        if (this.props.zone) {
@@ -28953,8 +28999,8 @@
 	        }
 
 	        var val = 0;
-	        if (this.state.level) {
-	            val = this.state.level.value / 100;
+	        if (this.props.level) {
+	            val = this.props.level.value / 100;
 	        }
 	        return React.createElement(
 	            'div',
@@ -30609,27 +30655,109 @@
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 
-	var Testr = React.createClass({
-	    displayName: 'Testr',
+	var C1 = React.createClass({
+	    displayName: 'C1',
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            items: [{ id: 1, name: 'one' }, { id: 2, name: 'two' }]
+	            count: 0
 	        };
 	    },
 
+	    click: function click() {
+	        this.setState({ count: this.state.count + 1 });
+	    },
+
+	    render: function render() {
+	        console.log('c1 - render');
+
+	        var a;
+	        //        if (this.state.count %2 == 0) {
+	        var x = React.createElement(C3, { count: this.state.count });
+	        a = React.createElement(
+	            C2,
+	            { count: this.state.count },
+	            x
+	        );
+	        //        }
+	        /*var b;
+	        if (this.state.count %2 != 0) {
+	            b = <C2 count={this.state.count}/>
+	        }*/
+
+	        return React.createElement(
+	            'div',
+	            null,
+	            a,
+	            React.createElement(
+	                'a',
+	                { onClick: this.click },
+	                'Click Me'
+	            )
+	        );
+	    }
+	});
+
+	var C2 = React.createClass({
+	    displayName: 'C2',
+
 	    componentWillMount: function componentWillMount() {
+	        console.log('c2 - componentWillMount');
+	    },
+	    componentWillUnmount: function componentWillUnmount() {
+	        console.log('c2 - componentWillUnmount');
+	    },
+	    getInitialState: function getInitialState() {
+	        console.log('c2 - getInitialState');
+	        return null;
+	    },
+	    render: function render() {
+	        console.log('c2 - render');
+	        return React.createElement(
+	            'div',
+	            null,
+	            this.props.count,
+	            this.props.children
+	        );
+	    }
+	});
+
+	var C3 = React.createClass({
+	    displayName: 'C3',
+
+	    componentWillMount: function componentWillMount() {
+	        console.log('c3 - componentWillMount');
+	    },
+	    render: function render() {
+	        console.log('c3 - render');
+	        return React.createElement(
+	            'div',
+	            null,
+	            'C3 - ',
+	            this.props.count
+	        );
+	    }
+	});
+
+	/*
+	var Testr = React.createClass({
+	    getInitialState: function() {
+	        
+	        return null;
+	    },
+
+	    componentWillMount: function() {
 	        console.log('cmpWillMount');
 
-	        setTimeout(function () {
+	        setTimeout(function() {
 	            var items = this.state.items;
 	            items.push({ id: 3, name: 'three' });
 
 	            console.log('\n\n\n\n\n');
 	            this.setState({ items: items });
 
-	            setTimeout(function () {
-	                items[items.length - 1] = { id: 10, name: 'ten' };
+	            setTimeout(function() {
+	                items[items.length-1] = { id: 10, name: 'ten' };
 
 	                console.log('\n\n\n\n\n');
 	                this.setState({ items: items });
@@ -30637,92 +30765,85 @@
 	        }.bind(this), 1000);
 	    },
 
-	    componentDidMount: function componentDidMount() {
+	    componentDidMount: function() {
 	        console.log('cmpDidMount');
 	    },
 
-	    componentWillUnmount: function componentWillUnmount() {
+	    componentWillUnmount: function() {
 	        console.log('cmpWillUnmount');
 	    },
 
-	    componentWillUpdate: function componentWillUpdate() {
+	    componentWillUpdate: function() {
 	        console.log('cmpWillUpdate');
 	    },
 
-	    /*
 	    shouldComponentUpdate: function() {
 	        console.log('shouldCmpUpdate');
 	        return true;
-	    },*/
+	    },
 
-	    componentWillReceiveProps: function componentWillReceiveProps(newProps) {
+	    componentWillReceiveProps: function(newProps) {
 	        console.log('cmpWillReceiveProps');
 	    },
 
-	    render: function render() {
+	    render: function() {
 	        console.log('cmpRender');
 
-	        var nodes = this.state.items.map(function (item) {
-	            return React.createElement(TestrChild, { key: item.id, item: item });
+	        var nodes = this.state.items.map(function(item) {
+	            return <TestrChild key={item.id} item={item}/>
 	        });
-	        return React.createElement(
-	            'div',
-	            null,
-	            React.createElement(
-	                'div',
-	                null,
-	                'hi there'
-	            ),
-	            nodes
+	        return (
+	            <div>
+	              <div>hi there</div>
+	              {nodes}
+	            </div>
 	        );
 	    }
 	});
 
 	var TestrChild = React.createClass({
-	    displayName: 'TestrChild',
-
-	    getDefaultProps: function getDefaultProps() {
+	    getDefaultProps: function() {
 	        return {
 	            item: {}
-	        };
+	        }
 	    },
 
-	    /*
 	    shouldComponentUpdate: function() {
 	        console.log('shouldCmpUpdate' + this.props.item.id);
 	        return true;
-	    },*/
+	    },
 
-	    componentWillMount: function componentWillMount() {
+	    componentWillMount: function() {
 	        console.log('c-cmpWillMount:' + this.props.item.id);
 	    },
 
-	    componentDidMount: function componentDidMount() {
+	    componentDidMount: function() {
 	        console.log('c-cmpDidMount' + this.props.item.id);
 	    },
 
-	    componentWillUnmount: function componentWillUnmount() {
+	    componentWillUnmount: function() {
 	        console.log('c-cmpWillUnmount' + this.props.item.id);
 	    },
 
-	    componentWillUpdate: function componentWillUpdate() {
+	    componentWillUpdate: function() {
 	        console.log('c-cmpWillUpdate' + this.props.item.id);
 	    },
 
-	    componentWillReceiveProps: function componentWillReceiveProps(newProps) {
+	    componentWillReceiveProps: function(newProps) {
 	        console.log('c-cmpWillReceiveProps' + this.props.item.id);
 	    },
 
-	    render: function render() {
+	    render: function() {
 	        console.log('c-cmpRender' + this.props.item.id);
-	        return React.createElement(
-	            'div',
-	            null,
-	            this.props.item.name
+	        return (
+	            <div>
+	                { this.props.item.name }
+	            </div>
 	        );
 	    }
 	});
-	module.exports = Testr;
+	module.exports = Testr;*/
+	module.exports = C1;
 
 /***/ }
 /******/ ]);

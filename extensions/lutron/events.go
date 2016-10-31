@@ -92,7 +92,7 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 
 				//Match first instance of ~OUTPUT|~DEVICE.*\r\n
 				str := string(data[0:])
-				log.V("From lutron: " + str)
+				//log.V("From lutron: " + str)
 				indices := regexp.MustCompile("[~|#][OUTPUT|DEVICE].+\r\n").FindStringIndex(str)
 
 				//TODO: Don't let input grow forever - remove beginning chars after reaching max length

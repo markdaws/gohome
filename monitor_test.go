@@ -1,7 +1,7 @@
 package gohome_test
 
 import (
-	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -14,166 +14,61 @@ import (
 
 type MockChangeHandler struct {
 	ChangeBatches []*gohome.ChangeBatch
+	ExpiredIDs    []string
 }
 
 func (h *MockChangeHandler) Update(monitorID string, cb *gohome.ChangeBatch) {
 	h.ChangeBatches = append(h.ChangeBatches, cb)
-
-	fmt.Printf("got update callback %+v\n", cb)
+}
+func (h *MockChangeHandler) Expired(monitorID string) {
+	h.ExpiredIDs = append(h.ExpiredIDs, monitorID)
+}
+func (h *MockChangeHandler) Reset() {
+	h.ChangeBatches = nil
+	h.ExpiredIDs = []string{}
 }
 
-func makeSystemWithSensors() (*gohome.System, *gohome.Sensor, *gohome.Sensor, *gohome.Sensor, *gohome.Sensor) {
-	sys := gohome.NewSystem("", "", nil, 1)
-	sensor1 := &gohome.Sensor{
-		Name:     "test sensor 1",
-		Address:  "1",
-		DeviceID: "1234",
-		Attr: gohome.SensorAttr{
-			Name:     "sensor1",
-			DataType: "int",
-			Value:    "-1",
-		},
-	}
-	sensor2 := &gohome.Sensor{
-		Name:     "test sensor 2",
-		Address:  "2",
-		DeviceID: "12345",
-		Attr: gohome.SensorAttr{
-			Name:     "sensor2",
-			DataType: "int",
-			Value:    "-1",
-		},
-	}
-	sensor3 := &gohome.Sensor{
-		Name:     "test sensor 3",
-		Address:  "3",
-		DeviceID: "123456",
-		Attr: gohome.SensorAttr{
-			Name:     "sensor3",
-			DataType: "int",
-			Value:    "-1",
-		},
-	}
-	sensor4 := &gohome.Sensor{
-		Name:     "test sensor 4",
-		Address:  "4",
-		DeviceID: "1234567",
-		Attr: gohome.SensorAttr{
-			Name:     "sensor4",
-			DataType: "int",
-			Value:    "-1",
-		},
-	}
+func makeSystemWithZonesAndSensors(nZones, nSensors int) (*gohome.System, []*zone.Zone, []*gohome.Sensor) {
 
-	sys.AddSensor(sensor1)
-	sys.AddSensor(sensor2)
-	sys.AddSensor(sensor3)
-	sys.AddSensor(sensor4)
-
-	return sys, sensor1, sensor2, sensor3, sensor4
-}
-
-func makeSystemWithZones() (*gohome.System, *zone.Zone, *zone.Zone, *zone.Zone, *zone.Zone) {
-	sys := gohome.NewSystem("", "", nil, 1)
-	zone1 := &zone.Zone{
-		ID:       "1",
-		Name:     "test zone 1",
-		Address:  "1",
-		DeviceID: "1234",
+	var zones []*zone.Zone
+	var sensors []*gohome.Sensor
+	sys := gohome.NewSystem("", "", 1)
+	dev := &gohome.Device{
+		Name:    "dev1",
+		ID:      "1234",
+		Zones:   make(map[string]*zone.Zone),
+		Sensors: make(map[string]*gohome.Sensor),
 	}
-	zone2 := &zone.Zone{
-		ID:       "2",
-		Name:     "test zone 2",
-		Address:  "2",
-		DeviceID: "1234",
-	}
-	zone3 := &zone.Zone{
-		ID:       "3",
-		Name:     "test zone 3",
-		Address:  "3",
-		DeviceID: "1234",
-	}
-	zone4 := &zone.Zone{
-		ID:       "4",
-		Name:     "test zone 4",
-		Address:  "4",
-		DeviceID: "1234",
-	}
-
-	dev := &gohome.Device{Name: "dev1", ID: "1234", Zones: make(map[string]*zone.Zone)}
 	sys.AddDevice(dev)
-	sys.AddZone(zone1)
-	sys.AddZone(zone2)
-	sys.AddZone(zone3)
-	sys.AddZone(zone4)
 
-	return sys, zone1, zone2, zone3, zone4
-}
-
-func makeSystemWithZonesAndSensors() (
-	*gohome.System, *zone.Zone, *zone.Zone, *zone.Zone,
-	*gohome.Sensor, *gohome.Sensor, *gohome.Sensor) {
-
-	sys := gohome.NewSystem("", "", nil, 1)
-	zone1 := &zone.Zone{
-		ID:       "1",
-		Name:     "test zone 1",
-		Address:  "1",
-		DeviceID: "1234",
-	}
-	zone2 := &zone.Zone{
-		ID:       "2",
-		Name:     "test zone 2",
-		Address:  "2",
-		DeviceID: "1234",
-	}
-	zone3 := &zone.Zone{
-		ID:       "3",
-		Name:     "test zone 3",
-		Address:  "3",
-		DeviceID: "1234",
-	}
-	sensor1 := &gohome.Sensor{
-		Name:     "test sensor 1",
-		Address:  "1",
-		DeviceID: "1234",
-		Attr: gohome.SensorAttr{
-			Name:     "sensor1",
-			DataType: "int",
-			Value:    "-1",
-		},
-	}
-	sensor2 := &gohome.Sensor{
-		Name:     "test sensor 2",
-		Address:  "2",
-		DeviceID: "12345",
-		Attr: gohome.SensorAttr{
-			Name:     "sensor2",
-			DataType: "int",
-			Value:    "-1",
-		},
-	}
-	sensor3 := &gohome.Sensor{
-		Name:     "test sensor 3",
-		Address:  "3",
-		DeviceID: "123456",
-		Attr: gohome.SensorAttr{
-			Name:     "sensor3",
-			DataType: "int",
-			Value:    "-1",
-		},
+	for i := 0; i < nZones; i++ {
+		var strI = strconv.Itoa(i)
+		zone := &zone.Zone{
+			ID:       strI,
+			Name:     "test zone " + strI,
+			Address:  strI,
+			DeviceID: "1234",
+		}
+		sys.AddZone(zone)
+		zones = append(zones, zone)
 	}
 
-	dev := &gohome.Device{Name: "dev1", ID: "1234", Zones: make(map[string]*zone.Zone), Sensors: make(map[string]*gohome.Sensor}
-	sys.AddDevice(dev)
-	sys.AddZone(zone1)
-	sys.AddZone(zone2)
-	sys.AddZone(zone3)
-	sys.AddSensor(sensor1)
-	sys.AddSensor(sensor2)
-	sys.AddSensor(sensor3)
-
-	return sys, zone1, zone2, zone3, sensor1, sensor2, sensor3
+	for i := 0; i < nSensors; i++ {
+		var strI = strconv.Itoa(i)
+		sensor := &gohome.Sensor{
+			Name:     "test sensor " + strI,
+			Address:  strI,
+			DeviceID: "1234",
+			Attr: gohome.SensorAttr{
+				Name:     "sensor" + strI,
+				DataType: "int",
+				Value:    "-1",
+			},
+		}
+		sys.AddSensor(sensor)
+		sensors = append(sensors, sensor)
+	}
+	return sys, zones, sensors
 }
 
 type EventConsumer struct {
@@ -204,7 +99,11 @@ func (ec *EventConsumer) StopConsuming() {
 func TestSubscribeSensors(t *testing.T) {
 
 	// System contains sensors and zones
-	sys, sensor1, sensor2, sensor3, sensor4 := makeSystemWithSensors()
+	sys, _, sensors := makeSystemWithZonesAndSensors(0, 4)
+	sensor1 := sensors[0]
+	sensor2 := sensors[1]
+	sensor3 := sensors[2]
+	sensor4 := sensors[3]
 
 	evtBus := evtbus.NewBus(100, 100)
 	evtConsumer := &EventConsumer{}
@@ -227,9 +126,9 @@ func TestSubscribeSensors(t *testing.T) {
 
 	// Request to monitor certain items
 	group := &gohome.MonitorGroup{
-		Sensors:          make(map[string]bool),
-		Handler:          mockHandler,
-		TimeoutInSeconds: 300,
+		Sensors: make(map[string]bool),
+		Handler: mockHandler,
+		Timeout: time.Duration(5) * time.Second,
 	}
 
 	// Add a sensor to the group, so we monitor it
@@ -243,7 +142,7 @@ func TestSubscribeSensors(t *testing.T) {
 	require.NotEqual(t, "", mID)
 
 	// Processing is async, small delay to let event bus process
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 
 	// Should have got an event asking for certain sensors to report their status
 	// our sensor should be included in that
@@ -275,7 +174,7 @@ func TestSubscribeSensors(t *testing.T) {
 	mockHandler.ChangeBatches = nil
 	evtBus.Enqueue(reporting)
 
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 
 	// We should have got updates with the attribute values we are expecting
 	require.Equal(t, 2, len(mockHandler.ChangeBatches))
@@ -289,7 +188,11 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 	// change
 
 	// System contains sensors and zones
-	sys, sensor1, sensor2, sensor3, sensor4 := makeSystemWithSensors()
+	sys, _, sensors := makeSystemWithZonesAndSensors(0, 4)
+	sensor1 := sensors[0]
+	sensor2 := sensors[1]
+	sensor3 := sensors[2]
+	sensor4 := sensors[3]
 
 	evtBus := evtbus.NewBus(100, 100)
 	evtConsumer := &EventConsumer{}
@@ -301,17 +204,17 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 	mockHandler2 := &MockChangeHandler{}
 
 	group1 := &gohome.MonitorGroup{
-		Sensors:          make(map[string]bool),
-		Handler:          mockHandler1,
-		TimeoutInSeconds: 300,
+		Sensors: make(map[string]bool),
+		Handler: mockHandler1,
+		Timeout: time.Duration(300) * time.Second,
 	}
 	group1.Sensors[sensor1.ID] = true
 	group1.Sensors[sensor2.ID] = true
 
 	group2 := &gohome.MonitorGroup{
-		Sensors:          make(map[string]bool),
-		Handler:          mockHandler2,
-		TimeoutInSeconds: 300,
+		Sensors: make(map[string]bool),
+		Handler: mockHandler2,
+		Timeout: time.Duration(300) * time.Second,
 	}
 	group2.Sensors[sensor2.ID] = true
 	group2.Sensors[sensor3.ID] = true
@@ -331,7 +234,7 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 		Attr:     attr1,
 	})
 
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 	require.Equal(t, 1, len(mockHandler1.ChangeBatches))
 	require.Equal(t, 1, len(mockHandler1.ChangeBatches[0].Sensors))
 	require.Equal(t, attr1, mockHandler1.ChangeBatches[0].Sensors[sensor1.ID])
@@ -346,7 +249,7 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 		Attr:     attr3,
 	})
 
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 	require.Equal(t, 1, len(mockHandler2.ChangeBatches))
 	require.Equal(t, 1, len(mockHandler2.ChangeBatches[0].Sensors))
 	require.Equal(t, attr3, mockHandler2.ChangeBatches[0].Sensors[sensor3.ID])
@@ -361,7 +264,7 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 		SensorID: sensor2.ID,
 		Attr:     attr2,
 	})
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 	require.Equal(t, 1, len(mockHandler1.ChangeBatches))
 	require.Equal(t, 1, len(mockHandler1.ChangeBatches[0].Sensors))
 	require.Equal(t, attr2, mockHandler1.ChangeBatches[0].Sensors[sensor2.ID])
@@ -373,7 +276,11 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 func TestSubscribeZones(t *testing.T) {
 
 	// System contains sensors and zones
-	sys, zone1, zone2, zone3, zone4 := makeSystemWithZones()
+	sys, zones, _ := makeSystemWithZonesAndSensors(4, 0)
+	zone1 := zones[0]
+	zone2 := zones[1]
+	zone3 := zones[2]
+	zone4 := zones[3]
 
 	evtBus := evtbus.NewBus(100, 100)
 	evtConsumer := &EventConsumer{}
@@ -396,10 +303,10 @@ func TestSubscribeZones(t *testing.T) {
 
 	// Request to monitor certain items
 	group := &gohome.MonitorGroup{
-		Sensors:          make(map[string]bool),
-		Zones:            make(map[string]bool),
-		Handler:          mockHandler,
-		TimeoutInSeconds: 300,
+		Sensors: make(map[string]bool),
+		Zones:   make(map[string]bool),
+		Handler: mockHandler,
+		Timeout: time.Duration(300) * time.Second,
 	}
 
 	// Add a zone to the group, so we monitor it
@@ -413,7 +320,7 @@ func TestSubscribeZones(t *testing.T) {
 	require.NotEqual(t, "", mID)
 
 	// Processing is async, small delay to let event bus process
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 
 	// Should have got an event asking for certain zones to report their status
 	// our zone should be included in that
@@ -443,7 +350,7 @@ func TestSubscribeZones(t *testing.T) {
 	mockHandler.ChangeBatches = nil
 	evtBus.Enqueue(reporting)
 
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 
 	// We should have got updates with the attribute values we are expecting
 	require.Equal(t, 2, len(mockHandler.ChangeBatches))
@@ -457,7 +364,11 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 	// change
 
 	// System contains zones and zones
-	sys, zone1, zone2, zone3, zone4 := makeSystemWithZones()
+	sys, zones, _ := makeSystemWithZonesAndSensors(4, 0)
+	zone1 := zones[0]
+	zone2 := zones[1]
+	zone3 := zones[2]
+	zone4 := zones[3]
 
 	evtBus := evtbus.NewBus(100, 100)
 	evtConsumer := &EventConsumer{}
@@ -469,17 +380,17 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 	mockHandler2 := &MockChangeHandler{}
 
 	group1 := &gohome.MonitorGroup{
-		Zones:            make(map[string]bool),
-		Handler:          mockHandler1,
-		TimeoutInSeconds: 300,
+		Zones:   make(map[string]bool),
+		Handler: mockHandler1,
+		Timeout: time.Duration(300) * time.Second,
 	}
 	group1.Zones[zone1.ID] = true
 	group1.Zones[zone2.ID] = true
 
 	group2 := &gohome.MonitorGroup{
-		Zones:            make(map[string]bool),
-		Handler:          mockHandler2,
-		TimeoutInSeconds: 300,
+		Zones:   make(map[string]bool),
+		Handler: mockHandler2,
+		Timeout: time.Duration(300) * time.Second,
 	}
 	group2.Zones[zone2.ID] = true
 	group2.Zones[zone3.ID] = true
@@ -498,7 +409,7 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 		Level:  lvl1,
 	})
 
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 	require.Equal(t, 1, len(mockHandler1.ChangeBatches))
 	require.Equal(t, 1, len(mockHandler1.ChangeBatches[0].Zones))
 	require.Equal(t, lvl1, mockHandler1.ChangeBatches[0].Zones[zone1.ID])
@@ -512,7 +423,7 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 		Level:  lvl3,
 	})
 
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 	require.Equal(t, 1, len(mockHandler2.ChangeBatches))
 	require.Equal(t, 1, len(mockHandler2.ChangeBatches[0].Zones))
 	require.Equal(t, lvl3, mockHandler2.ChangeBatches[0].Zones[zone3.ID])
@@ -528,7 +439,7 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 		Level:  lvl2,
 	})
 
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 	require.Equal(t, 1, len(mockHandler1.ChangeBatches))
 	require.Equal(t, 1, len(mockHandler1.ChangeBatches[0].Zones))
 	require.Equal(t, lvl2, mockHandler1.ChangeBatches[0].Zones[zone2.ID])
@@ -539,7 +450,13 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 
 func TestUnsubscribe(t *testing.T) {
 	// System contains sensors and zones
-	sys, zone1, zone2, zone3, sensor1, sensor2, sensor3 := makeSystemWithZonesAndSensors()
+	sys, zones, sensors := makeSystemWithZonesAndSensors(3, 3)
+	zone1 := zones[0]
+	zone2 := zones[1]
+	zone3 := zones[2]
+	sensor1 := sensors[0]
+	sensor2 := sensors[1]
+	sensor3 := sensors[2]
 
 	evtBus := evtbus.NewBus(100, 100)
 	m := gohome.NewMonitor(sys, evtBus, nil, nil)
@@ -549,16 +466,16 @@ func TestUnsubscribe(t *testing.T) {
 
 	// Request to monitor certain items
 	group1 := &gohome.MonitorGroup{
-		Sensors:          make(map[string]bool),
-		Zones:            make(map[string]bool),
-		Handler:          mockHandler1,
-		TimeoutInSeconds: 300,
+		Sensors: make(map[string]bool),
+		Zones:   make(map[string]bool),
+		Handler: mockHandler1,
+		Timeout: time.Duration(300) * time.Second,
 	}
 	group2 := &gohome.MonitorGroup{
-		Sensors:          make(map[string]bool),
-		Zones:            make(map[string]bool),
-		Handler:          mockHandler2,
-		TimeoutInSeconds: 300,
+		Sensors: make(map[string]bool),
+		Zones:   make(map[string]bool),
+		Handler: mockHandler2,
+		Timeout: time.Duration(300) * time.Second,
 	}
 
 	// Got two monitor groups, both contain sensor2 and zone2
@@ -579,44 +496,129 @@ func TestUnsubscribe(t *testing.T) {
 	require.NotEqual(t, "", mID2)
 
 	// Processing is async, small delay to let event bus process
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 1000)
 
-	//TODO: Finish past this point ...
+	// Clear out any previous change notifications
+	mockHandler1.ChangeBatches = nil
+	mockHandler2.ChangeBatches = nil
 
-	// Should have got an event asking for certain zones to report their status
-	// our zone should be included in that
-//	require.NotNil(t, evtConsumer.ZonesReport)
-//	require.True(t, evtConsumer.ZonesReport.ZoneIDs[zone1.ID])
-//	require.True(t, evtConsumer.ZonesReport.ZoneIDs[zone3.ID])
-//	require.False(t, evtConsumer.ZonesReport.ZoneIDs[zone2.ID])
-//	require.False(t, evtConsumer.ZonesReport.ZoneIDs[zone4.ID])
+	// zone1 change should only affect handler1
+	lvl1 := cmd.Level{Value: 10}
+	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+		ZoneID: zone1.ID,
+		Level:  lvl1,
+	})
+	time.Sleep(1000 * time.Millisecond)
 
-	
-	require.Equal(t, lvl2, mockHandler.ChangeBatches[0].Zones[zone2.ID])
-	require.Equal(t, lvl4, mockHandler.ChangeBatches[0].Zones[zone4.ID])
+	require.Equal(t, 1, len(mockHandler1.ChangeBatches))
+	require.Equal(t, 0, len(mockHandler2.ChangeBatches))
 
-	// Now respond to the request for zones 1 and 3 to report their values
-	reporting := &gohome.ZonesReporting{}
-	zone1Lvl := cmd.Level{
-		Value: 11,
-	}
-	reporting.Add(zone1.ID, zone1Lvl)
-	zone3Lvl := cmd.Level{
-		Value: 22,
-	}
-	reporting.Add(zone3.ID, zone3Lvl)
+	mockHandler1.ChangeBatches = nil
+	mockHandler2.ChangeBatches = nil
 
-	// Processing is async, small delay to let event bus process
-	mockHandler.ChangeBatches = nil
-	evtBus.Enqueue(reporting)
+	// zone3 change should only affect handler2
+	lvl3 := cmd.Level{Value: 30}
+	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+		ZoneID: zone3.ID,
+		Level:  lvl3,
+	})
+	time.Sleep(1000 * time.Millisecond)
 
-	time.Sleep(time.Millisecond * 100)
+	require.Equal(t, 1, len(mockHandler2.ChangeBatches))
+	require.Equal(t, 0, len(mockHandler1.ChangeBatches))
 
-	// We should have got updates with the attribute values we are expecting
-	require.Equal(t, 2, len(mockHandler.ChangeBatches))
-	require.Equal(t, zone1Lvl, mockHandler.ChangeBatches[0].Zones[zone1.ID])
-	require.Equal(t, zone3Lvl, mockHandler.ChangeBatches[1].Zones[zone3.ID])
+	mockHandler1.ChangeBatches = nil
+	mockHandler2.ChangeBatches = nil
 
+	// zone2 change should affect handler1 and handler2
+	lvl2 := cmd.Level{Value: 20}
+	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+		ZoneID: zone2.ID,
+		Level:  lvl2,
+	})
+	time.Sleep(1000 * time.Millisecond)
+
+	require.Equal(t, 1, len(mockHandler2.ChangeBatches))
+	require.Equal(t, 1, len(mockHandler1.ChangeBatches))
+
+	// Zone1 update should not come back to handler1 any more, also zone2 should not
+	// come back to handler1
+	m.Unsubscribe(mID1)
+	m.InvalidateValues(mID1)
+	m.InvalidateValues(mID2)
+	mockHandler1.ChangeBatches = nil
+	mockHandler2.ChangeBatches = nil
+	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+		ZoneID: zone1.ID,
+		Level:  lvl1,
+	})
+	time.Sleep(1000 * time.Millisecond)
+	require.Equal(t, 0, len(mockHandler1.ChangeBatches))
+	require.Equal(t, 0, len(mockHandler2.ChangeBatches))
+
+	mockHandler1.ChangeBatches = nil
+	mockHandler2.ChangeBatches = nil
+	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+		ZoneID: zone2.ID,
+		Level:  lvl2,
+	})
+	time.Sleep(1000 * time.Millisecond)
+	require.Equal(t, 0, len(mockHandler1.ChangeBatches))
+	require.Equal(t, 1, len(mockHandler2.ChangeBatches))
+
+	mockHandler1.ChangeBatches = nil
+	mockHandler2.ChangeBatches = nil
+	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+		ZoneID: zone3.ID,
+		Level:  lvl3,
+	})
+	time.Sleep(1000 * time.Millisecond)
+	require.Equal(t, 0, len(mockHandler1.ChangeBatches))
+	require.Equal(t, 1, len(mockHandler2.ChangeBatches))
 }
 
-//TODO: TestExpire
+func TestGroupExpires(t *testing.T) {
+	sys, zones, sensors := makeSystemWithZonesAndSensors(1, 1)
+	zone1 := zones[0]
+	sensor1 := sensors[0]
+
+	evtBus := evtbus.NewBus(100, 100)
+	m := gohome.NewMonitor(sys, evtBus, nil, nil)
+
+	mockHandler1 := &MockChangeHandler{}
+	group1 := &gohome.MonitorGroup{
+		Sensors: make(map[string]bool),
+		Zones:   make(map[string]bool),
+		Handler: mockHandler1,
+		Timeout: time.Duration(3) * time.Second,
+	}
+
+	group1.Zones[zone1.ID] = true
+	group1.Sensors[sensor1.ID] = true
+
+	mID1 := m.Subscribe(group1, true)
+	require.NotEqual(t, "", mID1)
+	require.Equal(t, 0, len(mockHandler1.ExpiredIDs))
+
+	// Group expires in 3 seconds, monitor checks every 5 so wait until after
+	time.Sleep(time.Second * 6)
+
+	require.Equal(t, mID1, mockHandler1.ExpiredIDs[0])
+
+	//Expired group should not receive any updates
+	mockHandler1.ChangeBatches = nil
+	lvl1 := cmd.Level{Value: 10}
+	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+		ZoneID: zone1.ID,
+		Level:  lvl1,
+	})
+	attr1 := sensor1.Attr
+	attr1.Value = "10"
+	evtBus.Enqueue(&gohome.SensorAttrChanged{
+		SensorID: sensor1.ID,
+		Attr:     attr1,
+	})
+
+	time.Sleep(1000 * time.Millisecond)
+	require.Equal(t, 0, len(mockHandler1.ChangeBatches))
+}

@@ -233,6 +233,28 @@ var API = {
         });
     },
 
+    // monitorSubscribeRenew renews the subscription to the monitor group, this extends
+    // the timeout for the group before the server stops sending updates
+    monitorSubscribeRenew: function(monitorId, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/monitor/groups/' + monitorId,
+            type: 'PUT',
+            dataType: 'json',
+            data: null,
+            cache: false,
+            success: function(data) {
+                callback && callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback && callback({
+                    err: err,
+                    xhr: xhr,
+                    status: status
+                });
+            }
+        });
+    },
+
     // monitorUnsubscribe unsubscribe the specified monitor id so the client will
     // no longer receive updates when values associated with it change
     monitorUnsubscribe: function(monitorId, callback) {

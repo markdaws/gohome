@@ -3,14 +3,83 @@
 var React = require('react');
 var ReactRedux = require('react-redux');
 
-var Testr = React.createClass({
+var C1 = React.createClass({
     getInitialState: function() {
         return {
-            items: [
-                { id: 1, name: 'one' },
-                { id: 2, name: 'two' }
-            ]
+            count: 0
         };
+    },
+
+    click: function() {
+        this.setState({ count: this.state.count + 1 });
+    },
+    
+    render: function() {
+        console.log('c1 - render');
+
+        var a;
+//        if (this.state.count %2 == 0) {
+            var x = <C3 count={this.state.count} />
+        a = <C2 count={this.state.count} >
+        {x}
+        </C2>
+//        }
+        /*var b;
+        if (this.state.count %2 != 0) {
+            b = <C2 count={this.state.count}/>
+        }*/
+        
+        return (
+            <div>
+                {a}
+                {/*b*/}
+                <a onClick={this.click}>Click Me</a>
+            </div>
+        )
+    }
+});
+
+var C2 = React.createClass({
+    componentWillMount: function() {
+        console.log('c2 - componentWillMount');
+    },
+    componentWillUnmount: function() {
+        console.log('c2 - componentWillUnmount');
+    },
+    getInitialState: function() {
+        console.log('c2 - getInitialState');
+        return null;
+    },
+    render: function() {
+        console.log('c2 - render');
+        return (
+            <div>
+                {this.props.count}
+                {this.props.children}
+            </div>
+        )
+    }
+});
+
+var C3 = React.createClass({
+    componentWillMount: function() {
+        console.log('c3 - componentWillMount');
+    },
+    render: function() {
+        console.log('c3 - render');
+        return (
+            <div>
+                C3 - {this.props.count}
+            </div>
+        )
+    }
+});
+
+/*
+var Testr = React.createClass({
+    getInitialState: function() {
+        
+        return null;
     },
 
     componentWillMount: function() {
@@ -44,11 +113,10 @@ var Testr = React.createClass({
         console.log('cmpWillUpdate');
     },
 
-    /*
     shouldComponentUpdate: function() {
         console.log('shouldCmpUpdate');
         return true;
-    },*/
+    },
 
     componentWillReceiveProps: function(newProps) {
         console.log('cmpWillReceiveProps');
@@ -76,11 +144,10 @@ var TestrChild = React.createClass({
         }
     },
 
-    /*
     shouldComponentUpdate: function() {
         console.log('shouldCmpUpdate' + this.props.item.id);
         return true;
-    },*/
+    },
 
     componentWillMount: function() {
         console.log('c-cmpWillMount:' + this.props.item.id);
@@ -111,4 +178,5 @@ var TestrChild = React.createClass({
         );
     }
 });
-module.exports = Testr;
+module.exports = Testr;*/
+module.exports = C1;

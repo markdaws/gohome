@@ -2,11 +2,12 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 
 var ZoneSensorListGridCell = React.createClass({
+    /*
     getInitialState: function() {
         return {
             level: this.props.level
         };
-    },
+    },*/
     
     setLevel: function(level) {
         this.setState({ level: level });
@@ -22,19 +23,24 @@ var ZoneSensorListGridCell = React.createClass({
     },
 
     shouldComponentUpdate: function(nextProps, nextState) {
+        return true;
+
+        //TODO: fix
         if (nextProps.zone && this.props.zone && (this.props.zone.name !== nextProps.zone.name)) {
             return true;
         }
         if (nextProps.sensor && this.props.sensor && (this.props.sensor.name !== nextProps.sensor.name)) {
             return true;
         }
-        if (nextState.level && (nextState.level !== this.state.level)) {
+        if (nextProps.level && this.props.level && (nextProps.level.value !== this.props.level.value)) {
+            //TODO: RGB
             return true;
         }
         return false;
     },
     
     render: function() {
+        console.log('rendering cell: ' + this.props.level)
         var icon1, icon2, name;
 
         if (this.props.zone) {
@@ -66,8 +72,8 @@ var ZoneSensorListGridCell = React.createClass({
         }
 
         var val = 0;
-        if (this.state.level) {
-            val = this.state.level.value / 100;
+        if (this.props.level) {
+            val = this.props.level.value / 100;
         }
         return (
         <div className="cmp-ZoneSensorListGridCell">

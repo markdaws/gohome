@@ -1,8 +1,11 @@
 package gohome
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/cmd"
@@ -10,30 +13,33 @@ import (
 )
 
 // Updater is the interface for receiving updates values from the monitor
-type Updater interface {
-	Update(monitorID string, b *ChangeBatch)
+type MonitorDelegate interface {
+	Update(b *ChangeBatch)
+	Expired(monitorID string)
 }
 
 // MonitorGroup represents a group of zones and sensors that a client wishes to
 // receive updates for.
 type MonitorGroup struct {
-	Zones            map[string]bool
-	Sensors          map[string]bool
-	Handler          Updater
-	TimeoutInSeconds int
+	Zones           map[string]bool
+	Sensors         map[string]bool
+	Handler         MonitorDelegate
+	Timeout         time.Duration
+	timeoutAbsolute time.Time
+	id              string
 }
 
 // ChangeBatch contains a list of sensors and zones whos values have changed
 type ChangeBatch struct {
-	Sensors map[string]SensorAttr
-	Zones   map[string]cmd.Level
+	MonitorID string
+	Sensors   map[string]SensorAttr
+	Zones     map[string]cmd.Level
 }
 
 // Monitor keeps track of the current zone and sensor values in the system and reports
 // updates to clients
 type Monitor struct {
-	Groups map[string]*MonitorGroup
-
+	groups         map[string]*MonitorGroup
 	system         *System
 	nextID         int
 	evtBus         *evtbus.Bus
@@ -63,32 +69,37 @@ func NewMonitor(
 	m := &Monitor{
 		system:         sys,
 		nextID:         1,
-		Groups:         make(map[string]*MonitorGroup),
+		groups:         make(map[string]*MonitorGroup),
 		sensorToGroups: make(map[string]map[string]bool),
 		zoneToGroups:   make(map[string]map[string]bool),
 		sensorValues:   sensorValues,
 		zoneValues:     zoneValues,
 		evtBus:         evtBus,
 	}
+
+	m.handleTimeouts()
 	evtBus.AddConsumer(m)
 	evtBus.AddProducer(m)
 	return m
 }
 
 // Refresh causes the monitor to report the current values for any item in the
-// monitor group, specified by the monitorID parameter
-func (m *Monitor) Refresh(monitorID string) {
+// monitor group, specified by the monitorID parameter.  If force is true then
+// the current cached values stored in the monitor are ignored and new values are
+// requested
+func (m *Monitor) Refresh(monitorID string, force bool) {
 	m.mutex.RLock()
-	group, ok := m.Groups[monitorID]
-	m.mutex.RUnlock()
+	group, ok := m.groups[monitorID]
 
 	if !ok {
+		m.mutex.RUnlock()
 		return
 	}
 
 	var changeBatch = &ChangeBatch{
-		Sensors: make(map[string]SensorAttr),
-		Zones:   make(map[string]cmd.Level),
+		MonitorID: monitorID,
+		Sensors:   make(map[string]SensorAttr),
+		Zones:     make(map[string]cmd.Level),
 	}
 
 	// Build a list of sensors that need to report their values. If we
@@ -96,7 +107,7 @@ func (m *Monitor) Refresh(monitorID string) {
 	var sensorReport = &SensorsReport{}
 	for sensorID := range group.Sensors {
 		val, ok := m.sensorValues[sensorID]
-		if ok {
+		if ok && !force {
 			changeBatch.Sensors[sensorID] = val
 		} else {
 			sensorReport.Add(sensorID)
@@ -106,25 +117,77 @@ func (m *Monitor) Refresh(monitorID string) {
 	var zoneReport = &ZonesReport{}
 	for zoneID := range group.Zones {
 		val, ok := m.zoneValues[zoneID]
-		if ok {
+		if ok && !force {
 			changeBatch.Zones[zoneID] = val
 		} else {
 			zoneReport.Add(zoneID)
 		}
 	}
+	m.mutex.RUnlock()
 
+	fmt.Println("refreshing ...")
 	if len(changeBatch.Sensors) > 0 || len(changeBatch.Zones) > 0 {
 		// We have some values already cached for certain items, return
-		group.Handler.Update(monitorID, changeBatch)
+		fmt.Println("short circuit")
+		group.Handler.Update(changeBatch)
 	}
 	if len(sensorReport.SensorIDs) > 0 {
 		// Need to request these sensor values
+		fmt.Println("sensors requesting")
 		m.evtBus.Enqueue(sensorReport)
 	}
 	if len(zoneReport.ZoneIDs) > 0 {
 		// Need to request these zone values
+		fmt.Println("zones requesting")
 		m.evtBus.Enqueue(zoneReport)
 	}
+}
+
+// InvalidateValues removes any cached values, for zones and sensors listed
+// in the monitor group
+func (m *Monitor) InvalidateValues(monitorID string) {
+	m.mutex.RLock()
+	group, ok := m.groups[monitorID]
+	m.mutex.RUnlock()
+
+	if !ok {
+		return
+	}
+
+	m.mutex.Lock()
+	for sensorID := range group.Sensors {
+		delete(m.sensorValues, sensorID)
+	}
+	for zoneID := range group.Zones {
+		delete(m.zoneValues, zoneID)
+	}
+	m.mutex.Unlock()
+}
+
+// Group returns the group for the specified ID if one exists
+func (m *Monitor) Group(monitorID string) (*MonitorGroup, bool) {
+	m.mutex.RLock()
+	group, ok := m.groups[monitorID]
+	m.mutex.RUnlock()
+	return group, ok
+}
+
+// SubscribeRenew updates the timeout parameter for the group to increment to now() + timeout
+// where timeout was specified in the initial call to Subscribe
+func (m *Monitor) SubscribeRenew(monitorID string) error {
+	m.mutex.RLock()
+	group, ok := m.groups[monitorID]
+	m.mutex.RUnlock()
+
+	if !ok {
+		return fmt.Errorf("invalid monitor ID: %s", monitorID)
+	}
+
+	m.mutex.Lock()
+	m.setTimeoutOnGroup(group)
+	m.mutex.Unlock()
+
+	return nil
 }
 
 // Subscribe requests that the monitor keep track of updates for all of the zones
@@ -132,12 +195,20 @@ func (m *Monitor) Refresh(monitorID string) {
 // will go and request values for all items in the monitor group, if false it won't
 // until the caller calls the Subscribe method.  The function returns a monitorID value
 // that can be passed into other functions, such as Unsubscribe and Refresh.
-func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
+func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) (string, error) {
+
+	if len(g.Sensors) == 0 && len(g.Zones) == 0 {
+		return "", errors.New("no zones or sensors listed in the monitor group")
+	}
 
 	m.mutex.Lock()
 	monitorID := strconv.Itoa(m.nextID)
 	m.nextID++
-	m.Groups[monitorID] = g
+	g.id = monitorID
+	m.groups[monitorID] = g
+
+	// store the time that this will expire
+	m.setTimeoutOnGroup(g)
 
 	// Make sure we map from the zone and sensor ids back to this new group,
 	// so that if any zones/snesor change in the future we know that we
@@ -162,22 +233,20 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) string {
 	m.mutex.Unlock()
 
 	if refresh {
-		m.Refresh(monitorID)
+		m.Refresh(monitorID, false)
 	}
 
-	// TODO: Where to set timeout, heap with timeout, set timer for smallest time
-	// TODO: expirationHeap
-	return monitorID
+	return monitorID, nil
 }
 
 // Unsubscribe removes all references and updates for the specified monitorID
 func (m *Monitor) Unsubscribe(monitorID string) {
-	if _, ok := m.Groups[monitorID]; !ok {
+	if _, ok := m.groups[monitorID]; !ok {
 		return
 	}
 
 	m.mutex.Lock()
-	delete(m.Groups, monitorID)
+	delete(m.groups, monitorID)
 	for sensorID, groups := range m.sensorToGroups {
 		if _, ok := groups[monitorID]; ok {
 			delete(groups, monitorID)
@@ -203,56 +272,113 @@ func (m *Monitor) Unsubscribe(monitorID string) {
 }
 
 func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
+	m.mutex.RLock()
 	groups, ok := m.sensorToGroups[sensorID]
+	m.mutex.RUnlock()
+
 	if !ok {
 		// Not a sensor we are monitoring, ignore
 		return
 	}
 
 	// Is this value different to what we already know?
+	m.mutex.RLock()
 	currentVal, ok := m.sensorValues[sensorID]
+	m.mutex.RUnlock()
 	if ok {
 		// No change, don't refresh clients
 		if currentVal.Value == attr.Value {
 			return
 		}
 	}
+
+	m.mutex.Lock()
 	m.sensorValues[sensorID] = attr
+	m.mutex.Unlock()
 
 	for groupID := range groups {
-		group := m.Groups[groupID]
+		m.mutex.RLock()
+		group := m.groups[groupID]
 		cb := &ChangeBatch{
-			Sensors: make(map[string]SensorAttr),
+			MonitorID: groupID,
+			Sensors:   make(map[string]SensorAttr),
 		}
 		cb.Sensors[sensorID] = attr
-		group.Handler.Update(groupID, cb)
+		m.mutex.RUnlock()
+		group.Handler.Update(cb)
 	}
 }
 
 func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
+	fmt.Println("zlc")
+	m.mutex.RLock()
 	groups, ok := m.zoneToGroups[zoneID]
+	m.mutex.RUnlock()
 	if !ok {
+		fmt.Println("zlc - exit 1")
 		return
 	}
 
 	// Is this value different to what we already know?
+	m.mutex.RLock()
 	currentVal, ok := m.zoneValues[zoneID]
+	m.mutex.RUnlock()
 	if ok {
 		// No change, don't refresh clients
 		if currentVal == val {
+			fmt.Println("zlc - exit 2")
 			return
 		}
 	}
-	m.zoneValues[zoneID] = val
 
+	m.mutex.Lock()
+	m.zoneValues[zoneID] = val
+	m.mutex.Unlock()
+
+	fmt.Println("zlc - go")
 	for groupID := range groups {
-		group := m.Groups[groupID]
+		m.mutex.RLock()
+		group := m.groups[groupID]
 		cb := &ChangeBatch{
-			Zones: make(map[string]cmd.Level),
+			MonitorID: groupID,
+			Zones:     make(map[string]cmd.Level),
 		}
 		cb.Zones[zoneID] = val
-		group.Handler.Update(groupID, cb)
+		m.mutex.RUnlock()
+		group.Handler.Update(cb)
 	}
+}
+
+// handleTimeouts watches for monitor groups that have expired and purges them
+// from the system
+func (m *Monitor) handleTimeouts() {
+	go func() {
+		for {
+			now := time.Now()
+			var expired []*MonitorGroup
+			m.mutex.RLock()
+			for _, group := range m.groups {
+				if group.timeoutAbsolute.Before(now) {
+					expired = append(expired, group)
+				}
+			}
+			m.mutex.RUnlock()
+
+			for _, group := range expired {
+				m.Unsubscribe(group.id)
+				group.Handler.Expired(group.id)
+			}
+
+			// Sleep then wake up and check again for the next expired items
+			time.Sleep(time.Second * 5)
+		}
+	}()
+}
+
+// setTimeoutOnGroup sets the time that the group will expire, once a group has
+// expired we no longer keep clients updated about changes
+func (m *Monitor) setTimeoutOnGroup(group *MonitorGroup) {
+	group.timeoutAbsolute = time.Now().Add(group.Timeout)
 }
 
 // ======= evtbus.Consumer interface
@@ -311,5 +437,3 @@ func (m *Monitor) StopProducing() {
 }
 
 // ==================================
-
-//TODO: Unsubscribe

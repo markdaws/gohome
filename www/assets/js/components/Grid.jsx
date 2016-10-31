@@ -6,6 +6,7 @@ var ClassNames = require('classnames');
 
 var ExpanderWrapper = React.createClass({
     getInitialState: function() {
+        console.log('ExpanderWrapper - getInitialState');
         return {
             expanded: false,
         };
@@ -16,12 +17,13 @@ var ExpanderWrapper = React.createClass({
     },
 
     render: function() {
+        console.log('rendering expander wrapper');
+        debugger;
         return (
             <div className={ClassNames({
                     "expander": true,
-                    "xyz": true,
                     "expanded": this.state.expanded })}>
-                {this.props.content}
+                {this.props.children}
             </div>
         );
     }
@@ -137,13 +139,12 @@ var Grid = React.createClass({
     },
     
     render: function() {
+        if (this.props.name) {
+            console.log("grid rendering: " + this.props.name);
+        }
+        
         function makeCellWrapper(index, selectedIndex, cell) {
             var content = cell.cell;
-            if (cell.cmpFunc) {
-                console.log('aaa');
-                content = cell.cmpFunc(cell.key);
-            }
-            
             return (
                 <div
                     key={cell.key}
@@ -177,12 +178,16 @@ var Grid = React.createClass({
         }
 
         var expander;
-        var items = [];
+        var items;
         if (this.state.expanded) {
-            items.push(<ExpanderWrapper
-                           key="1"
-                           unmounted={this.expanderUnmounted}
-                           content={this.state.expanderContent}/>);
+            var key = this.props.cells[this.state.selectedIndex].key;
+            items = (
+                <ExpanderWrapper
+                    key={key}
+                    unmounted={this.expanderUnmounted}>
+                    {this.state.expanderContent}
+                </ExpanderWrapper>
+            );
         }
                                                      
         expander = (

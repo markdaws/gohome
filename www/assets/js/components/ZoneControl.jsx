@@ -8,11 +8,15 @@ var ClassNames = require('classnames');
 var ZoneControl = React.createClass({
     mixins: [CssMixin],
     getInitialState: function() {
+        var level = this.props.level;
+        if (!level) {
+            level.value = -1;
+            level.r = 0;
+            level.g = 0;
+            level.b = 0
+        }
         return {
-            value: -1,
-            r: 0,
-            g: 0,
-            b: 0
+            level: level
         }
     },
 
@@ -89,8 +93,17 @@ var ZoneControl = React.createClass({
         }.bind(this));
     },
 
+    makeLevel: function(val, r, g, b) {
+        return {
+            value: val,
+            r: r,
+            g: g,
+            b: b
+        }
+    },
+    
     sliderChanged: function(slider) {
-        this.setState({ value: parseInt(slider.get(), 10) });
+        this.setState({ level: this.makeLevel(parseInt(slider.get(), 10), 0, 0, 0) });
     },
 
     sliderEnd: function(slider) {
@@ -110,13 +123,9 @@ var ZoneControl = React.createClass({
         this.props.didMount && this.props.didMount(this);
     },
 
+    //TODO: rename setLevel
     setValue: function(cmd, value, r, g, b, callback) {
-        this.setState({
-            value: value,
-            r: r,
-            g: g,
-            b: b
-        });
+        this.setState({ level: this.makeLevel(value, r, g, b) });
         this.send({
             cmd: cmd,
             value: parseFloat(value),
@@ -127,17 +136,18 @@ var ZoneControl = React.createClass({
     },
 
     toggleOn: function(slider) {
-        var cmd, level;
-        if (this.state.value !== 0 || this.state.r !== 0 || this.state.g !== 0 || this.state.b !== 0) {
+        var cmd, targetValue;
+        
+        if (this.state.level.value !== 0 || this.state.level.r !== 0 || this.state.level.g !== 0 || this.state.level.b !== 0) {
             cmd = 'turnOff';
-            level = 0;
+            targetValue = 0;
         } else {
             cmd = 'turnOn';
-            level = 100;
+            targetValue = 100;
         }
         
-        slider && slider.set(level);
-        this.setValue(cmd, level, 0, 0, 0, function(err) {
+        slider && slider.set(targetValue);
+        this.setValue(cmd, targetValue, 0, 0, 0, function(err) {
             if (err) {
                 //TODO: error
                 console.error(err);
@@ -158,7 +168,9 @@ var ZoneControl = React.createClass({
             });
     },
 
+    //TODO: Delete
     monitorData: function(data) {
+        return
         if (!data || !data.zones) {
             return;
         }
@@ -167,14 +179,20 @@ var ZoneControl = React.createClass({
             return;
         }
 
-        this.setState({ value: Math.round(val.value) });
+        this.setState({ level: this.makeLevel(Math.round(val.value), 0, 0, 0) });
         this._slider && this._slider.set(Math.round(val.value));
 
         console.log(val);
         //console.log(data);
     },
-    
+
+    shouldComponentUpdate: function() {
+        console.log('zc shouldcomponentupdate');
+        return true;
+    },
     render: function() {
+        console.log('rendering zone content');
+        
         var sliderCmp;
         if (this.props.output === 'continuous') {
             sliderCmp = (
@@ -182,7 +200,7 @@ var ZoneControl = React.createClass({
                     <div className="slider"></div>
                     <span className={ClassNames({
                         "value": true,
-                        "hidden": this.state.value === -1})}>{this.state.value}%</span>
+                        "hidden": this.state.level.value === -1})}>{this.state.level.value}%</span>
                 </div>
             );
         }
