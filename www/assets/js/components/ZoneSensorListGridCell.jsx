@@ -1,14 +1,14 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
+var Classnames = require('classnames');
 
 var ZoneSensorListGridCell = React.createClass({
-    /*
     getInitialState: function() {
         return {
-            level: this.props.level
+            level: this.props.level || { value: 0, r:0, g:0, b:0 }
         };
-    },*/
-    
+    },
+
     setLevel: function(level) {
         this.setState({ level: level });
 
@@ -23,16 +23,13 @@ var ZoneSensorListGridCell = React.createClass({
     },
 
     shouldComponentUpdate: function(nextProps, nextState) {
-        return true;
-
-        //TODO: fix
         if (nextProps.zone && this.props.zone && (this.props.zone.name !== nextProps.zone.name)) {
             return true;
         }
         if (nextProps.sensor && this.props.sensor && (this.props.sensor.name !== nextProps.sensor.name)) {
             return true;
         }
-        if (nextProps.level && this.props.level && (nextProps.level.value !== this.props.level.value)) {
+        if (nextState.level && this.state.level && (nextState.level.value !== this.state.level.value)) {
             //TODO: RGB
             return true;
         }
@@ -40,19 +37,21 @@ var ZoneSensorListGridCell = React.createClass({
     },
     
     render: function() {
-        console.log('rendering cell: ' + this.props.level)
         var icon1, icon2, name;
-
+        var type;
         if (this.props.zone) {
             switch (this.props.zone.type) {
                 case 'light':
+                    type = 'light';
                     icon1 = 'icon ion-ios-lightbulb-outline';
                     break;
                 case 'shade':
+                    type = 'shade';
                     icon1 = 'icon ion-ios-arrow-thin-up';
                     icon2 = 'icon ion-ios-arrow-thin-down';
                     break;
                 case 'switch':
+                    type = 'switch';
                     icon1 = 'icon ion-ios-bolt-outline';
                     break;
                 default:
@@ -62,6 +61,7 @@ var ZoneSensorListGridCell = React.createClass({
             name = this.props.zone.name;
         } else {
             icon1 = 'icon ion-ios-pulse';
+            type = 'sensor';
             name = this.props.sensor.name;
         }
 
@@ -72,11 +72,14 @@ var ZoneSensorListGridCell = React.createClass({
         }
 
         var val = 0;
-        if (this.props.level) {
-            val = this.props.level.value / 100;
-        }
+        if (this.state.level) {
+            val = this.state.level.value / 100;
+                              }
+
+        var typeClass = {};
+        typeClass[type] = true;
         return (
-        <div className="cmp-ZoneSensorListGridCell">
+        <div className={Classnames("cmp-ZoneSensorListGridCell", typeClass)}>
             <div className="icon">
                 {icon1Cmp}
                 {icon2Cmp}
@@ -90,6 +93,7 @@ var ZoneSensorListGridCell = React.createClass({
                         <rect className="clipRect" x="0" y="30" width="200" height="65" />
                     </clipPath>
                 </g>
+                <path className="switch" d="M105 45 L82 75 L100 75 L95 100 L120 67 L100 65" stroke="yellow" fill="yellow"></path>
                 <circle
                     className="light"
                     cx="100"
@@ -99,8 +103,11 @@ var ZoneSensorListGridCell = React.createClass({
                     clipPath="url(#lightClip)"
                     style={{'opacity': val, 'clipPath':'url(#lightClip)'}}/>
             </svg>
+            <div className="level">
+                {this.state.level.value}%
+            </div>
             <div className="name">
-                {val}{name}
+                {name}
             </div>
         </div>
         );

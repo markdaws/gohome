@@ -206,75 +206,49 @@ errInfo: function(errors, inputid, msg) {
 
 
 
+Device LifeCycle
 
-type Lbdgpro2whDevice struct {
-	device
-	pool comm.ConnectionPool
+system::InitDevice() {
+
+  dev.AddProducer ...
 }
 
-func (d *Lbdgpro2whDevice) stream() error {
-	log.V("%s attemping to stream events", d)
-	conn, err := d.Connect()
-	if err != nil {
-		return fmt.Errorf("%s unable to connect to stream events: %s", d, err)
-	}
 
-	defer func() {
-		d.ReleaseConnection(conn)
-	}()
+eventbus
+RAISE: DeviceProducingEvents
 
-	log.V("%s streaming events", d)
-	scanner := bufio.NewScanner(conn)
-	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+Monitor
+SUB: DeviceProducingEvents(d)
+d.Zones
+d.Sensors
 
-		//Match first instance of ~OUTPUT|~DEVICE.*\r\n
-		str := string(data[0:])
-		indices := regexp.MustCompile("[~|#][OUTPUT|DEVICE].+\r\n").FindStringIndex(str)
+Are there groups waiting on possible values from this device
 
-		//TODO: Don't let input grow forever - remove beginning chars after reaching max length
-
-		if indices != nil {
-			token = []byte(string([]rune(str)[indices[0]:indices[1]]))
-			advance = indices[1]
-			err = nil
-		} else {
-			advance = 0
-			token = nil
-			err = nil
-		}
-		return
-	}
-
-	scanner.Split(split)
-	for scanner.Scan() {
-		if d.evpFire != nil {
-			orig := scanner.Text()
-			if cmd := d.parseCommandString(orig); cmd != nil {
-				d.evpFire <- event.New(d.ID(), cmd, orig)
-			}
-		}
-	}
-
-	log.V("%s stopped streaming events", d)
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("%s error streaming events, streaming stopped: %s", d, err)
-	}
-	return nil
-
-	//TODO: When?
-	//if d.evpDone != nil {
-	//close(d.evpDone)
-	//}
+monitorIDs = map[string]*MonitorGroup
+foreach zone := range d.Zones {
+        g, ok := m.zoneToGroups[zID]
+        monitorIDs[g.monitorID] = g
 }
-
-*/
-
+// Same sensors
 
 
 
 
-1. Discover device
-2. Get list of sensors
-3. Extension register?
-4. subscribe to device notifications
-5. get event then raise that on the event bus
+
+
+
+
+
+
+
+Test Cases
+- Load page, zones don't get values, device is not producing, make sure device start producing, zones update ...
+
+
+Today:
+- Finish monitor class, document, and testing
+- Finish api for monitor
+- Finish efficient updating of cells
+- Finish updating of expander content
+- Test client connect/disconnect
+- Test losing connection to device, reconnect etc

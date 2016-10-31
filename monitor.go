@@ -12,7 +12,7 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
-// Updater is the interface for receiving updates values from the monitor
+// MonitorDelegate is the interface for receiving updates values from the monitor
 type MonitorDelegate interface {
 	Update(b *ChangeBatch)
 	Expired(monitorID string)
@@ -341,6 +341,40 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
 	}
 }
 
+// deviceProducing is called when a device start producing events, in the case of
+// the monitor we need to see if there are MonitorGroups that require values from
+// this device and then request the latest values
+func (m *Monitor) deviceProducing(dev *Device) {
+	groups := make(map[string]bool)
+
+	m.mutex.RLock()
+	for zoneID, _ := range dev.Zones {
+		grp, ok := m.zoneToGroups[zoneID]
+		if ok {
+			for monitorID := range grp {
+				groups[monitorID] = true
+			}
+		}
+	}
+	for sensorID, _ := range dev.Sensors {
+		grp, ok := m.sensorToGroups[sensorID]
+		if ok {
+			for monitorID := range grp {
+				groups[monitorID] = true
+			}
+		}
+	}
+	m.mutex.RUnlock()
+
+	if len(groups) == 0 {
+		return
+	}
+
+	for monitorID := range groups {
+		m.Refresh(monitorID, false)
+	}
+}
+
 // handleTimeouts watches for monitor groups that have expired and purges them
 // from the system
 func (m *Monitor) handleTimeouts() {
@@ -401,8 +435,10 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 
 			case *ZoneLevelChangedEvt:
 				m.zoneLevelChanged(evt.ZoneID, evt.Level)
-			}
 
+			case *DeviceProducingEvt:
+				m.deviceProducing(evt.Device)
+			}
 		}
 		log.V("Monitor - event channel has closed")
 	}()

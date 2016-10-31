@@ -10,10 +10,12 @@ var ZoneControl = React.createClass({
     getInitialState: function() {
         var level = this.props.level;
         if (!level) {
-            level.value = -1;
-            level.r = 0;
-            level.g = 0;
-            level.b = 0
+            level = {
+                value: -1,
+                r: 0,
+                g: 0,
+                b: 0
+            };
         }
         return {
             level: level
@@ -32,6 +34,7 @@ var ZoneControl = React.createClass({
             {
                 connect: [true, false],
                 start: 0,
+                animate: false,
                 step: 1,
                 orientation: 'horizontal',
                 range: {
@@ -39,6 +42,7 @@ var ZoneControl = React.createClass({
                     max: 100
                 }
             });
+        slider.noUiSlider.set(0);
         slider.noUiSlider.on('slide', this.sliderChanged.bind(this, slider.noUiSlider));
         slider.noUiSlider.on('change', this.sliderEnd.bind(this, slider.noUiSlider));
 
@@ -123,7 +127,10 @@ var ZoneControl = React.createClass({
         this.props.didMount && this.props.didMount(this);
     },
 
-    //TODO: rename setLevel
+    componentWillUnmount: function() {
+        this.props.willUnmount && this.props.willUnmount();
+    },
+
     setValue: function(cmd, value, r, g, b, callback) {
         this.setState({ level: this.makeLevel(value, r, g, b) });
         this.send({
@@ -168,9 +175,7 @@ var ZoneControl = React.createClass({
             });
     },
 
-    //TODO: Delete
     monitorData: function(data) {
-        return
         if (!data || !data.zones) {
             return;
         }
@@ -181,18 +186,9 @@ var ZoneControl = React.createClass({
 
         this.setState({ level: this.makeLevel(Math.round(val.value), 0, 0, 0) });
         this._slider && this._slider.set(Math.round(val.value));
-
-        console.log(val);
-        //console.log(data);
     },
 
-    shouldComponentUpdate: function() {
-        console.log('zc shouldcomponentupdate');
-        return true;
-    },
     render: function() {
-        console.log('rendering zone content');
-        
         var sliderCmp;
         if (this.props.output === 'continuous') {
             sliderCmp = (

@@ -32,6 +32,4 @@ func (z *Zone) Validate() *validation.Errors {
 		return errors
 	}
 	return nil
-
-	//TODO: Type/Output?
 }

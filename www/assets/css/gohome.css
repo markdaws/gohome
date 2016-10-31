@@ -173,48 +173,32 @@ button.disabled {
 }
 .cmp-Grid .beforeExpander {
     position: relative;
-/*    box-shadow: 0px 0px 8px #777;*/
 }
-.cmp-Grid .afterExpander {
-/*    box-shadow: 0px 0px 8px #777;*/
-}
-.cmp-Grid .expander {
+
+.cmp-ExpanderWrapper {
     background-color: #eee;
     width: 100%;
     font-size: 12px;
-    max-height: 500px;
     overflow: hidden;
+    max-height: 500px;
     position: relative;
 }
-.cmp-Grid .expander-animation-enter {
-    max-height: 0px;
+
+.cmp-ExpanderWrapper .animateWrapper {
+    margin-top: -500px;
+    transition: margin-top 550ms ease-out;
+    -webkit-transition: margin-top 550ms ease-out;
+
 }
-.cmp-Grid .expander-animation-enter.expander-animation-enter-active {
-    max-height: 500px;
-    transition: max-height 250ms ease-in-out;
-    -webkit-transition: max-height 250ms ease-in-out;
-}
-.cmp-Grid .expander-animation-leave {
-    max-height: 500px;
-}
-.cmp-Grid .expander-animation-leave.expander-animation-leave-active {
-    max-height: 0px;
-    transition: max-height 250ms ease-in-out;
-    -webkit-transition: max-height 250ms ease-in-out;
-}
+
 .cmp-Grid .cellWrapper {
     background-color: #fff;
     overflow: hidden;
     font-size: 0px;
     border: 1px solid #eee;
-    /*
-    border-bottom: none;
-    border-right: none;*/
     text-align: center;
     padding-left: 4px;
     padding-right: 4px;
-    /*margin-left: -1px;
-    margin-bottom: -1px;*/
 }
 .cmp-Grid .cellWrapper:after {
     border: 1px solid #eee;
@@ -224,6 +208,7 @@ button.disabled {
     font-size: 58px;
     margin-top: -30px;
     color: #eee;
+    pointer-events: none;
 }
 
 .cmp-ZoneSensorListGridCell {
@@ -231,6 +216,16 @@ button.disabled {
     position: relative;
     height: 100%;
     font-size: 0px;
+}
+.cmp-ZoneSensorListGridCell.shade svg,
+.cmp-ZoneSensorListGridCell.sensor svg {
+    display: none;
+}
+.cmp-ZoneSensorListGridCell.switch svg .light {
+    display: none;
+}
+.cmp-ZoneSensorListGridCell.light svg .switch {
+    display: none;
 }
 .cmp-ZoneSensorListGridCell svg {
     position: absolute;
@@ -248,6 +243,21 @@ button.disabled {
     text-transform: uppercase;
     position: absolute;
     bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto 8px auto;
+}
+.cmp-ZoneSensorListGridCell .level{
+    display: block;
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    pointer-events: none;
+    text-transform: uppercase;
+    position: absolute;
+    bottom: 30px;
     left: 0;
     right: 0;
     margin: 0 auto 8px auto;

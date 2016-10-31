@@ -25867,7 +25867,6 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var ReactCSSTransitionGroup = __webpack_require__(224);
 	var ReactTransitionGroup = __webpack_require__(231);
 	var ReactDOM = __webpack_require__(34);
 	var ClassNames = __webpack_require__(216);
@@ -25875,26 +25874,33 @@
 	var ExpanderWrapper = React.createClass({
 	    displayName: 'ExpanderWrapper',
 
-	    getInitialState: function getInitialState() {
-	        console.log('ExpanderWrapper - getInitialState');
-	        return {
-	            expanded: false
-	        };
+	    // Part of the calls for TransitionGroup, have to set the CSS property
+	    // to the initial value, then after a small delay set the end animation value
+	    componentWillAppear: function componentWillAppear(cb) {
+	        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
+	        $this.css({ 'margin-top': -500 });
+	        setTimeout(function () {
+	            cb();
+	        }, 10);
 	    },
-
-	    componentWillUnmount: function componentWillUnmount() {
-	        this.props.unmounted && this.props.unmounted();
+	    componentDidAppear: function componentDidAppear() {
+	        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
+	        $this.css({ 'margin-top': '0px' });
 	    },
-
+	    componentWillLeave: function componentWillLeave(cb) {
+	        var $this = $(ReactDOM.findDOMNode(this)).find('animateWrapper');
+	        $this.css({ 'margin-top': -500 });
+	        cb();
+	    },
 	    render: function render() {
-	        console.log('rendering expander wrapper');
-	        debugger;
 	        return React.createElement(
 	            'div',
-	            { className: ClassNames({
-	                    "expander": true,
-	                    "expanded": this.state.expanded }) },
-	            this.props.children
+	            { className: 'cmp-ExpanderWrapper' },
+	            React.createElement(
+	                'div',
+	                { className: 'animateWrapper' },
+	                this.props.children
+	            )
 	        );
 	    }
 	});
@@ -25963,24 +25969,24 @@
 
 	        var cellIndex = $target.data('cell-index');
 	        if (this.state.expanded) {
-
-	            //console.log('expanded cellindex: ' + cellIndex);
+	            // Have to take into account the expander height when calculating which
+	            // cell the user is clicking on
 	            if (cellIndex > this.state.expanderIndex - 1) {
-	                var expanderHeight = $this.find('.expander').height();
+	                var expanderHeight = $this.find('.cmp-ExpanderWrapper').height();
 	                yOffset -= expanderHeight;
 	            }
 	        }
 
 	        var cellYPos = Math.floor(yOffset / this.props.cellHeight);
-	        var expanderIndex = (cellYPos + 1) * cellsPerRow;
-
-	        //console.log('x:' + cellXPos + ', y:' + cellYPos);
-	        //console.log('expanderIndex: ' + expanderIndex);
-	        //console.log('cellsPerRow: ' + cellsPerRow);
+	        var expanderIndex = Math.min(this.props.cells.length, (cellYPos + 1) * cellsPerRow);
 
 	        if (cellXPos === this.state.cellIndices.x && cellYPos === this.state.cellIndices.y) {
 	            this.setState({
-	                expanded: false
+	                expanded: false,
+	                cellIndices: { x: -1, y: -1 },
+	                expanderIndex: -1,
+	                selectedIndex: -1,
+	                expanderContent: null
 	            });
 	        } else {
 	            this.setState({
@@ -25993,26 +25999,11 @@
 	        }
 	    },
 
-	    expanderUnmounted: function expanderUnmounted() {
-	        // Once the expander has been unmounted, we can now indicate that
-	        // we want to group all the cells back together without the
-	        // expander split
-	        this.setState({
-	            cellIndices: { x: -1, y: -1 },
-	            expanderIndex: -1,
-	            selectedIndex: -1
-	        });
-	    },
-
 	    expanderWillMount: function expanderWillMount(content) {
 	        this.props.expanderWillMount && this.props.expanderWillMount(content);
 	    },
 
 	    render: function render() {
-	        if (this.props.name) {
-	            console.log("grid rendering: " + this.props.name);
-	        }
-
 	        function makeCellWrapper(index, selectedIndex, cell) {
 	            var content = cell.cell;
 	            return React.createElement(
@@ -26035,37 +26026,33 @@
 	            );
 	        }
 
-	        var beforeCells = [];
-	        var afterCells = [];
+	        var content = [];
+	        var key = '';
+	        if (this.state.selectedIndex !== -1) {
+	            key = this.props.cells[this.state.selectedIndex].key;
+	        }
+	        var transitionGroup = React.createElement(
+	            ReactTransitionGroup,
+	            { key: key + "transition" },
+	            React.createElement(
+	                ExpanderWrapper,
+	                { key: key + 'wrapper' },
+	                this.state.expanderContent
+	            )
+	        );
+
 	        for (var i = 0; i < this.props.cells.length; ++i) {
-	            if (this.state.expanderIndex === -1 || i < this.state.expanderIndex) {
-	                beforeCells.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
-	            } else {
-	                afterCells.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
+	            content.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
+	            if (this.state.expanded && this.state.expanderIndex === i + 1) {
+	                content.push(transitionGroup);
 	            }
 	        }
 
-	        var expander;
-	        var items;
-	        if (this.state.expanded) {
-	            var key = this.props.cells[this.state.selectedIndex].key;
-	            items = React.createElement(
-	                ExpanderWrapper,
-	                {
-	                    key: key,
-	                    unmounted: this.expanderUnmounted },
-	                this.state.expanderContent
-	            );
+	        if (!this.state.expanded) {
+	            //TODO: This isn't working, looks like multiple transition groups are causing issues, revist.
+	            //This should make the expander animate closed, but seems to have some bugs
+	            //content.push(transitionGroup);
 	        }
-
-	        expander = React.createElement(
-	            ReactCSSTransitionGroup,
-	            {
-	                transitionName: 'expander-animation',
-	                transitionEnterTimeout: 250,
-	                transitionLeaveTimeout: 250 },
-	            items
-	        );
 
 	        return React.createElement(
 	            'div',
@@ -26078,14 +26065,7 @@
 	            React.createElement(
 	                'div',
 	                { className: 'beforeExpander' },
-	                beforeCells,
-	                React.createElement('div', { style: { clear: "both" } })
-	            ),
-	            expander,
-	            React.createElement(
-	                'div',
-	                { className: 'afterExpander' },
-	                afterCells,
+	                content,
 	                React.createElement('div', { style: { clear: "both" } })
 	            )
 	        );
@@ -26094,104 +26074,8 @@
 	module.exports = Grid;
 
 /***/ },
-/* 224 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(225);
-
-/***/ },
-/* 225 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule ReactCSSTransitionGroup
-	 */
-
-	'use strict';
-
-	var _assign = __webpack_require__(4);
-
-	var React = __webpack_require__(2);
-
-	var ReactTransitionGroup = __webpack_require__(226);
-	var ReactCSSTransitionGroupChild = __webpack_require__(228);
-
-	function createTransitionTimeoutPropValidator(transitionType) {
-	  var timeoutPropName = 'transition' + transitionType + 'Timeout';
-	  var enabledPropName = 'transition' + transitionType;
-
-	  return function (props) {
-	    // If the transition is enabled
-	    if (props[enabledPropName]) {
-	      // If no timeout duration is provided
-	      if (props[timeoutPropName] == null) {
-	        return new Error(timeoutPropName + ' wasn\'t supplied to ReactCSSTransitionGroup: ' + 'this can cause unreliable animations and won\'t be supported in ' + 'a future version of React. See ' + 'https://fb.me/react-animation-transition-group-timeout for more ' + 'information.');
-
-	        // If the duration isn't a number
-	      } else if (typeof props[timeoutPropName] !== 'number') {
-	          return new Error(timeoutPropName + ' must be a number (in milliseconds)');
-	        }
-	    }
-	  };
-	}
-
-	/**
-	 * An easy way to perform CSS transitions and animations when a React component
-	 * enters or leaves the DOM.
-	 * See https://facebook.github.io/react/docs/animation.html#high-level-api-reactcsstransitiongroup
-	 */
-	var ReactCSSTransitionGroup = React.createClass({
-	  displayName: 'ReactCSSTransitionGroup',
-
-	  propTypes: {
-	    transitionName: ReactCSSTransitionGroupChild.propTypes.name,
-
-	    transitionAppear: React.PropTypes.bool,
-	    transitionEnter: React.PropTypes.bool,
-	    transitionLeave: React.PropTypes.bool,
-	    transitionAppearTimeout: createTransitionTimeoutPropValidator('Appear'),
-	    transitionEnterTimeout: createTransitionTimeoutPropValidator('Enter'),
-	    transitionLeaveTimeout: createTransitionTimeoutPropValidator('Leave')
-	  },
-
-	  getDefaultProps: function () {
-	    return {
-	      transitionAppear: false,
-	      transitionEnter: true,
-	      transitionLeave: true
-	    };
-	  },
-
-	  _wrapChild: function (child) {
-	    // We need to provide this childFactory so that
-	    // ReactCSSTransitionGroupChild can receive updates to name, enter, and
-	    // leave while it is leaving.
-	    return React.createElement(ReactCSSTransitionGroupChild, {
-	      name: this.props.transitionName,
-	      appear: this.props.transitionAppear,
-	      enter: this.props.transitionEnter,
-	      leave: this.props.transitionLeave,
-	      appearTimeout: this.props.transitionAppearTimeout,
-	      enterTimeout: this.props.transitionEnterTimeout,
-	      leaveTimeout: this.props.transitionLeaveTimeout
-	    }, child);
-	  },
-
-	  render: function () {
-	    return React.createElement(ReactTransitionGroup, _assign({}, this.props, { childFactory: this._wrapChild }));
-	  }
-	});
-
-	module.exports = ReactCSSTransitionGroup;
-
-/***/ },
+/* 224 */,
+/* 225 */,
 /* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -26553,383 +26437,9 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 228 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule ReactCSSTransitionGroupChild
-	 */
-
-	'use strict';
-
-	var React = __webpack_require__(2);
-	var ReactDOM = __webpack_require__(35);
-
-	var CSSCore = __webpack_require__(229);
-	var ReactTransitionEvents = __webpack_require__(230);
-
-	var onlyChild = __webpack_require__(33);
-
-	var TICK = 17;
-
-	var ReactCSSTransitionGroupChild = React.createClass({
-	  displayName: 'ReactCSSTransitionGroupChild',
-
-	  propTypes: {
-	    name: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.shape({
-	      enter: React.PropTypes.string,
-	      leave: React.PropTypes.string,
-	      active: React.PropTypes.string
-	    }), React.PropTypes.shape({
-	      enter: React.PropTypes.string,
-	      enterActive: React.PropTypes.string,
-	      leave: React.PropTypes.string,
-	      leaveActive: React.PropTypes.string,
-	      appear: React.PropTypes.string,
-	      appearActive: React.PropTypes.string
-	    })]).isRequired,
-
-	    // Once we require timeouts to be specified, we can remove the
-	    // boolean flags (appear etc.) and just accept a number
-	    // or a bool for the timeout flags (appearTimeout etc.)
-	    appear: React.PropTypes.bool,
-	    enter: React.PropTypes.bool,
-	    leave: React.PropTypes.bool,
-	    appearTimeout: React.PropTypes.number,
-	    enterTimeout: React.PropTypes.number,
-	    leaveTimeout: React.PropTypes.number
-	  },
-
-	  transition: function (animationType, finishCallback, userSpecifiedDelay) {
-	    var node = ReactDOM.findDOMNode(this);
-
-	    if (!node) {
-	      if (finishCallback) {
-	        finishCallback();
-	      }
-	      return;
-	    }
-
-	    var className = this.props.name[animationType] || this.props.name + '-' + animationType;
-	    var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
-	    var timeout = null;
-
-	    var endListener = function (e) {
-	      if (e && e.target !== node) {
-	        return;
-	      }
-
-	      clearTimeout(timeout);
-
-	      CSSCore.removeClass(node, className);
-	      CSSCore.removeClass(node, activeClassName);
-
-	      ReactTransitionEvents.removeEndEventListener(node, endListener);
-
-	      // Usually this optional callback is used for informing an owner of
-	      // a leave animation and telling it to remove the child.
-	      if (finishCallback) {
-	        finishCallback();
-	      }
-	    };
-
-	    CSSCore.addClass(node, className);
-
-	    // Need to do this to actually trigger a transition.
-	    this.queueClassAndNode(activeClassName, node);
-
-	    // If the user specified a timeout delay.
-	    if (userSpecifiedDelay) {
-	      // Clean-up the animation after the specified delay
-	      timeout = setTimeout(endListener, userSpecifiedDelay);
-	      this.transitionTimeouts.push(timeout);
-	    } else {
-	      // DEPRECATED: this listener will be removed in a future version of react
-	      ReactTransitionEvents.addEndEventListener(node, endListener);
-	    }
-	  },
-
-	  queueClassAndNode: function (className, node) {
-	    this.classNameAndNodeQueue.push({
-	      className: className,
-	      node: node
-	    });
-
-	    if (!this.timeout) {
-	      this.timeout = setTimeout(this.flushClassNameAndNodeQueue, TICK);
-	    }
-	  },
-
-	  flushClassNameAndNodeQueue: function () {
-	    if (this.isMounted()) {
-	      this.classNameAndNodeQueue.forEach(function (obj) {
-	        CSSCore.addClass(obj.node, obj.className);
-	      });
-	    }
-	    this.classNameAndNodeQueue.length = 0;
-	    this.timeout = null;
-	  },
-
-	  componentWillMount: function () {
-	    this.classNameAndNodeQueue = [];
-	    this.transitionTimeouts = [];
-	  },
-
-	  componentWillUnmount: function () {
-	    if (this.timeout) {
-	      clearTimeout(this.timeout);
-	    }
-	    this.transitionTimeouts.forEach(function (timeout) {
-	      clearTimeout(timeout);
-	    });
-
-	    this.classNameAndNodeQueue.length = 0;
-	  },
-
-	  componentWillAppear: function (done) {
-	    if (this.props.appear) {
-	      this.transition('appear', done, this.props.appearTimeout);
-	    } else {
-	      done();
-	    }
-	  },
-
-	  componentWillEnter: function (done) {
-	    if (this.props.enter) {
-	      this.transition('enter', done, this.props.enterTimeout);
-	    } else {
-	      done();
-	    }
-	  },
-
-	  componentWillLeave: function (done) {
-	    if (this.props.leave) {
-	      this.transition('leave', done, this.props.leaveTimeout);
-	    } else {
-	      done();
-	    }
-	  },
-
-	  render: function () {
-	    return onlyChild(this.props.children);
-	  }
-	});
-
-	module.exports = ReactCSSTransitionGroupChild;
-
-/***/ },
-/* 229 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
-
-	/**
-	 * Copyright (c) 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @typechecks
-	 */
-
-	var invariant = __webpack_require__(8);
-
-	/**
-	 * The CSSCore module specifies the API (and implements most of the methods)
-	 * that should be used when dealing with the display of elements (via their
-	 * CSS classes and visibility on screen. It is an API focused on mutating the
-	 * display and not reading it as no logical state should be encoded in the
-	 * display of elements.
-	 */
-
-	/* Slow implementation for browsers that don't natively support .matches() */
-	function matchesSelector_SLOW(element, selector) {
-	  var root = element;
-	  while (root.parentNode) {
-	    root = root.parentNode;
-	  }
-
-	  var all = root.querySelectorAll(selector);
-	  return Array.prototype.indexOf.call(all, element) !== -1;
-	}
-
-	var CSSCore = {
-
-	  /**
-	   * Adds the class passed in to the element if it doesn't already have it.
-	   *
-	   * @param {DOMElement} element the element to set the class on
-	   * @param {string} className the CSS className
-	   * @return {DOMElement} the element passed in
-	   */
-	  addClass: function addClass(element, className) {
-	    !!/\s/.test(className) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'CSSCore.addClass takes only a single class name. "%s" contains ' + 'multiple classes.', className) : invariant(false) : void 0;
-
-	    if (className) {
-	      if (element.classList) {
-	        element.classList.add(className);
-	      } else if (!CSSCore.hasClass(element, className)) {
-	        element.className = element.className + ' ' + className;
-	      }
-	    }
-	    return element;
-	  },
-
-	  /**
-	   * Removes the class passed in from the element
-	   *
-	   * @param {DOMElement} element the element to set the class on
-	   * @param {string} className the CSS className
-	   * @return {DOMElement} the element passed in
-	   */
-	  removeClass: function removeClass(element, className) {
-	    !!/\s/.test(className) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'CSSCore.removeClass takes only a single class name. "%s" contains ' + 'multiple classes.', className) : invariant(false) : void 0;
-
-	    if (className) {
-	      if (element.classList) {
-	        element.classList.remove(className);
-	      } else if (CSSCore.hasClass(element, className)) {
-	        element.className = element.className.replace(new RegExp('(^|\\s)' + className + '(?:\\s|$)', 'g'), '$1').replace(/\s+/g, ' ') // multiple spaces to one
-	        .replace(/^\s*|\s*$/g, ''); // trim the ends
-	      }
-	    }
-	    return element;
-	  },
-
-	  /**
-	   * Helper to add or remove a class from an element based on a condition.
-	   *
-	   * @param {DOMElement} element the element to set the class on
-	   * @param {string} className the CSS className
-	   * @param {*} bool condition to whether to add or remove the class
-	   * @return {DOMElement} the element passed in
-	   */
-	  conditionClass: function conditionClass(element, className, bool) {
-	    return (bool ? CSSCore.addClass : CSSCore.removeClass)(element, className);
-	  },
-
-	  /**
-	   * Tests whether the element has the class specified.
-	   *
-	   * @param {DOMNode|DOMWindow} element the element to check the class on
-	   * @param {string} className the CSS className
-	   * @return {boolean} true if the element has the class, false if not
-	   */
-	  hasClass: function hasClass(element, className) {
-	    !!/\s/.test(className) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'CSS.hasClass takes only a single class name.') : invariant(false) : void 0;
-	    if (element.classList) {
-	      return !!className && element.classList.contains(className);
-	    }
-	    return (' ' + element.className + ' ').indexOf(' ' + className + ' ') > -1;
-	  },
-
-	  /**
-	   * Tests whether the element matches the selector specified
-	   *
-	   * @param {DOMNode|DOMWindow} element the element that we are querying
-	   * @param {string} selector the CSS selector
-	   * @return {boolean} true if the element matches the selector, false if not
-	   */
-	  matchesSelector: function matchesSelector(element, selector) {
-	    var matchesImpl = element.matches || element.webkitMatchesSelector || element.mozMatchesSelector || element.msMatchesSelector || function (s) {
-	      return matchesSelector_SLOW(element, s);
-	    };
-	    return matchesImpl.call(element, selector);
-	  }
-
-	};
-
-	module.exports = CSSCore;
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
-
-/***/ },
-/* 230 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule ReactTransitionEvents
-	 */
-
-	'use strict';
-
-	var ExecutionEnvironment = __webpack_require__(49);
-
-	var getVendorPrefixedEventName = __webpack_require__(109);
-
-	var endEvents = [];
-
-	function detectEvents() {
-	  var animEnd = getVendorPrefixedEventName('animationend');
-	  var transEnd = getVendorPrefixedEventName('transitionend');
-
-	  if (animEnd) {
-	    endEvents.push(animEnd);
-	  }
-
-	  if (transEnd) {
-	    endEvents.push(transEnd);
-	  }
-	}
-
-	if (ExecutionEnvironment.canUseDOM) {
-	  detectEvents();
-	}
-
-	// We use the raw {add|remove}EventListener() call because EventListener
-	// does not know how to remove event listeners and we really should
-	// clean up. Also, these events are not triggered in older browsers
-	// so we should be A-OK here.
-
-	function addEventListener(node, eventName, eventListener) {
-	  node.addEventListener(eventName, eventListener, false);
-	}
-
-	function removeEventListener(node, eventName, eventListener) {
-	  node.removeEventListener(eventName, eventListener, false);
-	}
-
-	var ReactTransitionEvents = {
-	  addEndEventListener: function (node, eventListener) {
-	    if (endEvents.length === 0) {
-	      // If CSS transitions are not supported, trigger an "end animation"
-	      // event immediately.
-	      window.setTimeout(eventListener, 0);
-	      return;
-	    }
-	    endEvents.forEach(function (endEvent) {
-	      addEventListener(node, endEvent, eventListener);
-	    });
-	  },
-
-	  removeEndEventListener: function (node, eventListener) {
-	    if (endEvents.length === 0) {
-	      return;
-	    }
-	    endEvents.forEach(function (endEvent) {
-	      removeEventListener(node, endEvent, eventListener);
-	    });
-	  }
-	};
-
-	module.exports = ReactTransitionEvents;
-
-/***/ },
+/* 228 */,
+/* 229 */,
+/* 230 */,
 /* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -28349,6 +27859,8 @@
 
 	'use strict';
 
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 	var ClassNames = __webpack_require__(216);
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
@@ -28370,11 +27882,10 @@
 	        this._lastSubscribeId = 1;
 	        this._keepRefreshingConnection = true;
 	        this._retryDuration = 5000;
-	        this._monitorTimeout = 10;
+	        this._monitorTimeout = 120;
 	        this._refreshTimeoutId = -1;
-	        return {
-	            monitorData: null
-	        };
+	        this._monitorData = null;
+	        return null;
 	    },
 
 	    getDefaultProps: function getDefaultProps() {
@@ -28402,9 +27913,6 @@
 	            return true;
 	        }
 	        if (this.props.sensors !== nextProps.sensors) {
-	            return true;
-	        }
-	        if (this.state.monitorData != nextState.monitorData) {
 	            return true;
 	        }
 	        return false;
@@ -28506,7 +28014,6 @@
 	            this._connection = null;
 	            this._monitorId = '';
 
-	            //TODO: Need to renew the subscription
 	            setTimeout(function () {
 	                if (this._keepRefreshingConnection) {
 	                    this.refreshMonitoring(this.props.zones, this.props.sensors);
@@ -28514,68 +28021,58 @@
 	            }.bind(this), 5000);
 	        }.bind(this);
 	        conn.onmessage = function (evt) {
-	            var resp = JSON.parse(evt.data);
-
-	            this.setState({ monitorData: resp });
-
-	            //TODO :Needed?
-	            /*
-	            Object.keys(resp.zones || {}).forEach(function(zoneId) {
+	            this._monitorData = JSON.parse(evt.data);
+	            Object.keys(this._monitorData.zones || {}).forEach(function (zoneId) {
 	                var cmp = this.refs['cell_zone_' + zoneId];
 	                if (cmp) {
-	                    cmp.setLevel(resp.zones[zoneId]);
+	                    cmp.setLevel(this._monitorData.zones[zoneId]);
 	                }
 	            }.bind(this));
-	            Object.keys(resp.sensors || {}).forEach(function(sensorId) {
+	            Object.keys(this._monitorData.sensors || {}).forEach(function (sensorId) {
 	                var cmp = this.refs['cell_sensor_' + sensorId];
 	                if (!cmp) {
 	                    return;
 	                }
-	                //TODO: Set attribute...cmp.setLevel(resp.sensors[sensorId].value);
+	                //TODO: Set attribute...cmp.setLevel(this._monitorData.sensors[sensorId].value);
 	            }.bind(this));
-	            */
 
-	            this._gridContent && this._gridContent.monitorData(resp);
+	            this._gridContent && this._gridContent.monitorData(this._monitorData);
 	        }.bind(this);
 	        this._connection = conn;
 	    },
 
-	    //TODO: This should come from the grid
-	    /*
-	    zoneExpanderMounted: function(content) {
+	    expanderMounted: function expanderMounted(content) {
 	        this._gridContent = content;
-	        this._gridContent.monitorData(this.state.monitorData);
-	    },*/render: function render() {
+	        this._gridContent.monitorData(this._monitorData);
+	    },
+
+	    expanderUnmounted: function expanderUnmounted() {
+	        this._gridContent = null;
+	    },
+
+	    render: function render() {
 	        var lightZones = [];
 	        var shadeZones = [];
 	        var switchZones = [];
 	        var otherZones = [];
 	        var sensors = [];
 
-	        console.log('zone sensor list rendering');
-	        console.log(this.state.monitorData);
-
 	        this.props.zones.forEach(function (zone) {
-	            var level;
-	            if (this.state.monitorData) {
-	                level = this.state.monitorData.zones[zone.id];
-	                //console.log('zone: ' + zone.id + ', level: ' + level.value);
-	            }
 	            var cmpZone = {
-	                key: zone.id,
+	                key: 'zones_' + zone.id,
 	                cell: React.createElement(ZoneSensorListGridCell, {
-	                    level: level,
 	                    key: zone.id,
 	                    ref: "cell_zone_" + zone.id,
 	                    zone: zone }),
-	                content: React.createElement(ZoneControl, {
+	                content: React.createElement(ZoneControl, _defineProperty({
+	                    key: zone.id,
 	                    id: zone.id,
-	                    level: level
-	                    //didMount={this.zoneExpanderMounted}
-	                    , name: zone.name,
+	                    didMount: this.expanderMounted,
+	                    willUnmount: this.expanderUnmounted,
+	                    name: zone.name,
 	                    type: zone.type,
-	                    output: zone.output,
-	                    key: zone.id })
+	                    output: zone.output
+	                }, 'key', zone.id))
 	            };
 	            switch (zone.type) {
 	                case 'light':
@@ -28614,6 +28111,46 @@
 	                    'Lights'
 	                ),
 	                React.createElement(Grid, { name: 'zone grid', cells: lightZones, expanderWillMount: this.zoneExpanderWillMount })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'h2',
+	                    { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
+	                    'Shades'
+	                ),
+	                React.createElement(Grid, { cells: shadeZones, expanderWillMount: this.zoneExpanderWillMount })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'h2',
+	                    { className: ClassNames({ 'hidden': switchZones.length === 0 }) },
+	                    'Switches'
+	                ),
+	                React.createElement(Grid, { cells: switchZones, expanderWillMount: this.zoneExpanderWillMount })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'h2',
+	                    { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
+	                    'Other Zones'
+	                ),
+	                React.createElement(Grid, { cells: otherZones, expanderWillMount: this.zoneExpanderWillMount })
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'h2',
+	                    { className: ClassNames({ 'hidden': sensors.length === 0 }) },
+	                    'Sensors'
+	                ),
+	                React.createElement(Grid, { cells: sensors })
 	            )
 	        );
 	    }
@@ -28640,10 +28177,12 @@
 	    getInitialState: function getInitialState() {
 	        var level = this.props.level;
 	        if (!level) {
-	            level.value = -1;
-	            level.r = 0;
-	            level.g = 0;
-	            level.b = 0;
+	            level = {
+	                value: -1,
+	                r: 0,
+	                g: 0,
+	                b: 0
+	            };
 	        }
 	        return {
 	            level: level
@@ -28660,6 +28199,7 @@
 	        noUiSlider.create(slider, {
 	            connect: [true, false],
 	            start: 0,
+	            animate: false,
 	            step: 1,
 	            orientation: 'horizontal',
 	            range: {
@@ -28667,6 +28207,7 @@
 	                max: 100
 	            }
 	        });
+	        slider.noUiSlider.set(0);
 	        slider.noUiSlider.on('slide', this.sliderChanged.bind(this, slider.noUiSlider));
 	        slider.noUiSlider.on('change', this.sliderEnd.bind(this, slider.noUiSlider));
 
@@ -28744,7 +28285,10 @@
 	        this.props.didMount && this.props.didMount(this);
 	    },
 
-	    //TODO: rename setLevel
+	    componentWillUnmount: function componentWillUnmount() {
+	        this.props.willUnmount && this.props.willUnmount();
+	    },
+
 	    setValue: function setValue(cmd, value, r, g, b, callback) {
 	        this.setState({ level: this.makeLevel(value, r, g, b) });
 	        this.send({
@@ -28782,9 +28326,7 @@
 	        });
 	    },
 
-	    //TODO: Delete
 	    monitorData: function monitorData(data) {
-	        return;
 	        if (!data || !data.zones) {
 	            return;
 	        }
@@ -28795,18 +28337,9 @@
 
 	        this.setState({ level: this.makeLevel(Math.round(val.value), 0, 0, 0) });
 	        this._slider && this._slider.set(Math.round(val.value));
-
-	        console.log(val);
-	        //console.log(data);
 	    },
 
-	    shouldComponentUpdate: function shouldComponentUpdate() {
-	        console.log('zc shouldcomponentupdate');
-	        return true;
-	    },
 	    render: function render() {
-	        console.log('rendering zone content');
-
 	        var sliderCmp;
 	        if (this.props.output === 'continuous') {
 	            sliderCmp = React.createElement(
@@ -28920,16 +28453,16 @@
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
+	var Classnames = __webpack_require__(216);
 
 	var ZoneSensorListGridCell = React.createClass({
 	    displayName: 'ZoneSensorListGridCell',
 
-	    /*
-	    getInitialState: function() {
+	    getInitialState: function getInitialState() {
 	        return {
-	            level: this.props.level
+	            level: this.props.level || { value: 0, r: 0, g: 0, b: 0 }
 	        };
-	    },*/
+	    },
 
 	    setLevel: function setLevel(level) {
 	        this.setState({ level: level });
@@ -28945,16 +28478,13 @@
 	    },
 
 	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
-	        return true;
-
-	        //TODO: fix
 	        if (nextProps.zone && this.props.zone && this.props.zone.name !== nextProps.zone.name) {
 	            return true;
 	        }
 	        if (nextProps.sensor && this.props.sensor && this.props.sensor.name !== nextProps.sensor.name) {
 	            return true;
 	        }
-	        if (nextProps.level && this.props.level && nextProps.level.value !== this.props.level.value) {
+	        if (nextState.level && this.state.level && nextState.level.value !== this.state.level.value) {
 	            //TODO: RGB
 	            return true;
 	        }
@@ -28962,19 +28492,21 @@
 	    },
 
 	    render: function render() {
-	        console.log('rendering cell: ' + this.props.level);
 	        var icon1, icon2, name;
-
+	        var type;
 	        if (this.props.zone) {
 	            switch (this.props.zone.type) {
 	                case 'light':
+	                    type = 'light';
 	                    icon1 = 'icon ion-ios-lightbulb-outline';
 	                    break;
 	                case 'shade':
+	                    type = 'shade';
 	                    icon1 = 'icon ion-ios-arrow-thin-up';
 	                    icon2 = 'icon ion-ios-arrow-thin-down';
 	                    break;
 	                case 'switch':
+	                    type = 'switch';
 	                    icon1 = 'icon ion-ios-bolt-outline';
 	                    break;
 	                default:
@@ -28984,6 +28516,7 @@
 	            name = this.props.zone.name;
 	        } else {
 	            icon1 = 'icon ion-ios-pulse';
+	            type = 'sensor';
 	            name = this.props.sensor.name;
 	        }
 
@@ -28994,12 +28527,15 @@
 	        }
 
 	        var val = 0;
-	        if (this.props.level) {
-	            val = this.props.level.value / 100;
+	        if (this.state.level) {
+	            val = this.state.level.value / 100;
 	        }
+
+	        var typeClass = {};
+	        typeClass[type] = true;
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-ZoneSensorListGridCell' },
+	            { className: Classnames("cmp-ZoneSensorListGridCell", typeClass) },
 	            React.createElement(
 	                'div',
 	                { className: 'icon' },
@@ -29021,6 +28557,7 @@
 	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '30', width: '200', height: '65' })
 	                    )
 	                ),
+	                React.createElement('path', { className: 'switch', d: 'M105 45 L82 75 L100 75 L95 100 L120 67 L100 65', stroke: 'yellow', fill: 'yellow' }),
 	                React.createElement('circle', {
 	                    className: 'light',
 	                    cx: '100',
@@ -29032,8 +28569,13 @@
 	            ),
 	            React.createElement(
 	                'div',
+	                { className: 'level' },
+	                this.state.level.value,
+	                '%'
+	            ),
+	            React.createElement(
+	                'div',
 	                { className: 'name' },
-	                val,
 	                name
 	            )
 	        );

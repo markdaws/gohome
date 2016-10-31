@@ -75,11 +75,9 @@ func (p *eventProducer) ProducerName() string {
 }
 
 func (p *eventProducer) StartProducing(b *evtbus.Bus) {
-
-	//TODO: These producers shouldn't block the bus, make bus more tolerant
 	go func() {
 		for {
-			log.V("%s attemping to stream events", p.Device)
+			log.V("%s attempting to stream events", p.Device)
 			conn, err := p.Device.Connections.Get(time.Second * 20)
 			if err != nil {
 				log.V("%s unable to connect to stream events: %s", p.Device, err)
@@ -87,6 +85,7 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 			}
 
 			log.V("%s streaming events", p.Device)
+			time.Sleep(time.Second * 30)
 			scanner := bufio.NewScanner(conn)
 			split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 
@@ -110,6 +109,11 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 
 			scanner.Split(split)
 
+			// Let the system know we are ready to process events
+			b.Enqueue(&gohome.DeviceProducingEvt{
+				Device: p.Device,
+			})
+
 			for scanner.Scan() {
 				orig := scanner.Text()
 				if evt := p.parseCommandString(orig); evt != nil {
@@ -125,7 +129,6 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 			}
 		}
 	}()
-	//p.System.EvtBus.Enqueue
 }
 
 func (p *eventProducer) StopProducing() {
@@ -150,6 +153,7 @@ func (p *eventProducer) parseCommandString(cmd string) evtbus.Event {
 	}
 }
 
+//TODO: Move this to go-home-iot/lutron
 func (p *eventProducer) parseDeviceCommand(command string) evtbus.Event {
 	//TODO:
 	/*

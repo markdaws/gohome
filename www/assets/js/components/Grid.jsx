@@ -1,29 +1,33 @@
 var React = require('react');
-var ReactCSSTransitionGroup = require('react-addons-css-transition-group');
 var ReactTransitionGroup = require('react-addons-transition-group');
 var ReactDOM = require('react-dom');
 var ClassNames = require('classnames');
 
 var ExpanderWrapper = React.createClass({
-    getInitialState: function() {
-        console.log('ExpanderWrapper - getInitialState');
-        return {
-            expanded: false,
-        };
+    // Part of the calls for TransitionGroup, have to set the CSS property
+    // to the initial value, then after a small delay set the end animation value
+    componentWillAppear: function(cb) {
+        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
+        $this.css({ 'margin-top': -500 });
+        setTimeout(function() {
+            cb();
+        }, 10);
     },
-
-    componentWillUnmount: function() {
-        this.props.unmounted && this.props.unmounted();
+    componentDidAppear: function() {
+        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
+        $this.css({ 'margin-top': '0px' });
     },
-
+    componentWillLeave: function(cb) {
+        var $this = $(ReactDOM.findDOMNode(this)).find('animateWrapper');
+        $this.css({ 'margin-top': -500 });
+        cb();
+    },
     render: function() {
-        console.log('rendering expander wrapper');
-        debugger;
         return (
-            <div className={ClassNames({
-                    "expander": true,
-                    "expanded": this.state.expanded })}>
-                {this.props.children}
+            <div className="cmp-ExpanderWrapper">
+                <div className="animateWrapper">
+                    {this.props.children}
+                </div>
             </div>
         );
     }
@@ -91,25 +95,25 @@ var Grid = React.createClass({
 
         var cellIndex = $target.data('cell-index')
         if (this.state.expanded) {
-
-            //console.log('expanded cellindex: ' + cellIndex);
+            // Have to take into account the expander height when calculating which
+            // cell the user is clicking on
             if (cellIndex > (this.state.expanderIndex - 1)) {
-                var expanderHeight = $this.find('.expander').height();
+                var expanderHeight = $this.find('.cmp-ExpanderWrapper').height();
                 yOffset -= expanderHeight;
             }
         }
 
         var cellYPos = Math.floor(yOffset / this.props.cellHeight);
-        var expanderIndex = (cellYPos + 1) * cellsPerRow;
-
-        //console.log('x:' + cellXPos + ', y:' + cellYPos);
-        //console.log('expanderIndex: ' + expanderIndex);
-        //console.log('cellsPerRow: ' + cellsPerRow);
+        var expanderIndex = Math.min(this.props.cells.length, (cellYPos + 1) * cellsPerRow);
 
         if (cellXPos === this.state.cellIndices.x &&
             cellYPos === this.state.cellIndices.y) {
             this.setState({
                 expanded: false,
+                cellIndices: { x:-1, y:-1},
+                expanderIndex: -1,
+                selectedIndex: -1,
+                expanderContent: null
             });
         }
         else {
@@ -123,26 +127,11 @@ var Grid = React.createClass({
         }
     },
 
-    expanderUnmounted: function() {
-        // Once the expander has been unmounted, we can now indicate that
-        // we want to group all the cells back together without the
-        // expander split
-        this.setState({
-            cellIndices: { x:-1, y:-1},
-            expanderIndex: -1,
-            selectedIndex: -1,
-        });
-    },
-
     expanderWillMount: function(content) {
         this.props.expanderWillMount && this.props.expanderWillMount(content);
     },
     
     render: function() {
-        if (this.props.name) {
-            console.log("grid rendering: " + this.props.name);
-        }
-        
         function makeCellWrapper(index, selectedIndex, cell) {
             var content = cell.cell;
             return (
@@ -167,37 +156,31 @@ var Grid = React.createClass({
             );
         }
 
-        var beforeCells = [];
-        var afterCells = [];
+        var content = [];
+        var key = '';
+        if (this.state.selectedIndex !== -1) {
+            key = this.props.cells[this.state.selectedIndex].key;
+        }
+        var transitionGroup = (
+            <ReactTransitionGroup key={key + "transition"}>
+                <ExpanderWrapper key={key + 'wrapper'}>
+                    {this.state.expanderContent}
+                </ExpanderWrapper>
+            </ReactTransitionGroup>
+        );
+
         for (var i=0; i<this.props.cells.length; ++i) {
-            if (this.state.expanderIndex === -1 || i<this.state.expanderIndex) {
-                beforeCells.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
-            } else {
-                afterCells.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
+            content.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
+            if (this.state.expanded && this.state.expanderIndex === (i + 1)) {
+                content.push(transitionGroup);
             }
         }
 
-        var expander;
-        var items;
-        if (this.state.expanded) {
-            var key = this.props.cells[this.state.selectedIndex].key;
-            items = (
-                <ExpanderWrapper
-                    key={key}
-                    unmounted={this.expanderUnmounted}>
-                    {this.state.expanderContent}
-                </ExpanderWrapper>
-            );
+        if (!this.state.expanded) {
+            //TODO: This isn't working, looks like multiple transition groups are causing issues, revist.
+            //This should make the expander animate closed, but seems to have some bugs
+            //content.push(transitionGroup);
         }
-                                                     
-        expander = (
-                    <ReactCSSTransitionGroup
-                        transitionName="expander-animation"
-                        transitionEnterTimeout={250}
-                        transitionLeaveTimeout={250}>
-                        {items}
-                    </ReactCSSTransitionGroup>
-        );
 
         return (
             <div className="cmp-Grid" style={{
@@ -207,12 +190,7 @@ var Grid = React.createClass({
                 paddingBottom: this.props.paddingBottom,
             }}>
                 <div className="beforeExpander">
-                    {beforeCells}
-                    <div style={{clear:"both"}}></div>
-                </div>
-                {expander}
-                <div className="afterExpander">
-                    {afterCells}
+                    {content}
                     <div style={{clear:"both"}}></div>
                 </div>
             </div>
