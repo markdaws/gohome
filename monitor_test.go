@@ -17,7 +17,7 @@ type MockChangeHandler struct {
 	ExpiredIDs    []string
 }
 
-func (h *MockChangeHandler) Update(monitorID string, cb *gohome.ChangeBatch) {
+func (h *MockChangeHandler) Update(cb *gohome.ChangeBatch) {
 	h.ChangeBatches = append(h.ChangeBatches, cb)
 }
 func (h *MockChangeHandler) Expired(monitorID string) {
@@ -72,8 +72,8 @@ func makeSystemWithZonesAndSensors(nZones, nSensors int) (*gohome.System, []*zon
 }
 
 type EventConsumer struct {
-	SensorsReport *gohome.SensorsReport
-	ZonesReport   *gohome.ZonesReport
+	SensorsReport *gohome.SensorsReportEvt
+	ZonesReport   *gohome.ZonesReportEvt
 }
 
 func (ec *EventConsumer) ConsumerName() string {
@@ -83,9 +83,9 @@ func (ec *EventConsumer) StartConsuming(ch chan evtbus.Event) {
 	go func() {
 		for e := range ch {
 			switch evt := e.(type) {
-			case *gohome.SensorsReport:
+			case *gohome.SensorsReportEvt:
 				ec.SensorsReport = evt
-			case *gohome.ZonesReport:
+			case *gohome.ZonesReportEvt:
 				ec.ZonesReport = evt
 			}
 		}
@@ -138,7 +138,7 @@ func TestSubscribeSensors(t *testing.T) {
 	group.Sensors[sensor4.ID] = true
 
 	// Begin the subscription, should get back a monitor ID
-	mID := m.Subscribe(group, true)
+	mID, _ := m.Subscribe(group, true)
 	require.NotEqual(t, "", mID)
 
 	// Processing is async, small delay to let event bus process
@@ -158,7 +158,7 @@ func TestSubscribeSensors(t *testing.T) {
 	require.Equal(t, attr4, mockHandler.ChangeBatches[0].Sensors[sensor4.ID])
 
 	// Now respond to the request for sensors 1 and 3 to report their values
-	reporting := &gohome.SensorsReporting{}
+	reporting := &gohome.SensorsReportingEvt{}
 	sensor1Attr := gohome.SensorAttr{
 		Name:  "sensor1",
 		Value: "111",
@@ -220,16 +220,16 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 	group2.Sensors[sensor3.ID] = true
 	group2.Sensors[sensor4.ID] = true
 
-	mID1 := m.Subscribe(group1, false)
+	mID1, _ := m.Subscribe(group1, false)
 	require.NotEqual(t, "", mID1)
 
-	mID2 := m.Subscribe(group2, false)
+	mID2, _ := m.Subscribe(group2, false)
 	require.NotEqual(t, "", mID2)
 
 	// Sensor1 update should only update handler1
 	attr1 := sensor1.Attr
 	attr1.Value = "10"
-	evtBus.Enqueue(&gohome.SensorAttrChanged{
+	evtBus.Enqueue(&gohome.SensorAttrChangedEvt{
 		SensorID: sensor1.ID,
 		Attr:     attr1,
 	})
@@ -244,7 +244,7 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 	mockHandler1.ChangeBatches = nil
 	attr3 := sensor3.Attr
 	attr3.Value = "30"
-	evtBus.Enqueue(&gohome.SensorAttrChanged{
+	evtBus.Enqueue(&gohome.SensorAttrChangedEvt{
 		SensorID: sensor3.ID,
 		Attr:     attr3,
 	})
@@ -260,7 +260,7 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 	mockHandler2.ChangeBatches = nil
 	attr2 := sensor2.Attr
 	attr2.Value = "20"
-	evtBus.Enqueue(&gohome.SensorAttrChanged{
+	evtBus.Enqueue(&gohome.SensorAttrChangedEvt{
 		SensorID: sensor2.ID,
 		Attr:     attr2,
 	})
@@ -316,7 +316,7 @@ func TestSubscribeZones(t *testing.T) {
 	group.Zones[zone4.ID] = true
 
 	// Begin the subscription, should get back a monitor ID
-	mID := m.Subscribe(group, true)
+	mID, _ := m.Subscribe(group, true)
 	require.NotEqual(t, "", mID)
 
 	// Processing is async, small delay to let event bus process
@@ -336,7 +336,7 @@ func TestSubscribeZones(t *testing.T) {
 	require.Equal(t, lvl4, mockHandler.ChangeBatches[0].Zones[zone4.ID])
 
 	// Now respond to the request for zones 1 and 3 to report their values
-	reporting := &gohome.ZonesReporting{}
+	reporting := &gohome.ZonesReportingEvt{}
 	zone1Lvl := cmd.Level{
 		Value: 11,
 	}
@@ -396,15 +396,15 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 	group2.Zones[zone3.ID] = true
 	group2.Zones[zone4.ID] = true
 
-	mID1 := m.Subscribe(group1, false)
+	mID1, _ := m.Subscribe(group1, false)
 	require.NotEqual(t, "", mID1)
 
-	mID2 := m.Subscribe(group2, false)
+	mID2, _ := m.Subscribe(group2, false)
 	require.NotEqual(t, "", mID2)
 
 	// Zone1 update should only update handler1
 	lvl1 := cmd.Level{Value: 10}
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone1.ID,
 		Level:  lvl1,
 	})
@@ -418,7 +418,7 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 	// Zone3 update should only update handler2
 	mockHandler1.ChangeBatches = nil
 	lvl3 := cmd.Level{Value: 30}
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone3.ID,
 		Level:  lvl3,
 	})
@@ -434,7 +434,7 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 	mockHandler2.ChangeBatches = nil
 
 	lvl2 := cmd.Level{Value: 20}
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone2.ID,
 		Level:  lvl2,
 	})
@@ -490,9 +490,9 @@ func TestUnsubscribe(t *testing.T) {
 	group2.Sensors[sensor3.ID] = true
 
 	// Begin the subscription, should get back a monitor ID
-	mID1 := m.Subscribe(group1, true)
+	mID1, _ := m.Subscribe(group1, true)
 	require.NotEqual(t, "", mID1)
-	mID2 := m.Subscribe(group2, true)
+	mID2, _ := m.Subscribe(group2, true)
 	require.NotEqual(t, "", mID2)
 
 	// Processing is async, small delay to let event bus process
@@ -504,7 +504,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	// zone1 change should only affect handler1
 	lvl1 := cmd.Level{Value: 10}
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone1.ID,
 		Level:  lvl1,
 	})
@@ -518,7 +518,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	// zone3 change should only affect handler2
 	lvl3 := cmd.Level{Value: 30}
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone3.ID,
 		Level:  lvl3,
 	})
@@ -532,7 +532,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	// zone2 change should affect handler1 and handler2
 	lvl2 := cmd.Level{Value: 20}
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone2.ID,
 		Level:  lvl2,
 	})
@@ -548,7 +548,7 @@ func TestUnsubscribe(t *testing.T) {
 	m.InvalidateValues(mID2)
 	mockHandler1.ChangeBatches = nil
 	mockHandler2.ChangeBatches = nil
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone1.ID,
 		Level:  lvl1,
 	})
@@ -558,7 +558,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	mockHandler1.ChangeBatches = nil
 	mockHandler2.ChangeBatches = nil
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone2.ID,
 		Level:  lvl2,
 	})
@@ -568,7 +568,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	mockHandler1.ChangeBatches = nil
 	mockHandler2.ChangeBatches = nil
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone3.ID,
 		Level:  lvl3,
 	})
@@ -596,7 +596,7 @@ func TestGroupExpires(t *testing.T) {
 	group1.Zones[zone1.ID] = true
 	group1.Sensors[sensor1.ID] = true
 
-	mID1 := m.Subscribe(group1, true)
+	mID1, _ := m.Subscribe(group1, true)
 	require.NotEqual(t, "", mID1)
 	require.Equal(t, 0, len(mockHandler1.ExpiredIDs))
 
@@ -608,13 +608,13 @@ func TestGroupExpires(t *testing.T) {
 	//Expired group should not receive any updates
 	mockHandler1.ChangeBatches = nil
 	lvl1 := cmd.Level{Value: 10}
-	evtBus.Enqueue(&gohome.ZoneLevelChanged{
+	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 		ZoneID: zone1.ID,
 		Level:  lvl1,
 	})
 	attr1 := sensor1.Attr
 	attr1.Value = "10"
-	evtBus.Enqueue(&gohome.SensorAttrChanged{
+	evtBus.Enqueue(&gohome.SensorAttrChangedEvt{
 		SensorID: sensor1.ID,
 		Attr:     attr1,
 	})

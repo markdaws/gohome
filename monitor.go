@@ -104,7 +104,7 @@ func (m *Monitor) Refresh(monitorID string, force bool) {
 
 	// Build a list of sensors that need to report their values. If we
 	// already have a value for a sensor we can just return that
-	var sensorReport = &SensorsReport{}
+	var sensorReport = &SensorsReportEvt{}
 	for sensorID := range group.Sensors {
 		val, ok := m.sensorValues[sensorID]
 		if ok && !force {
@@ -114,7 +114,7 @@ func (m *Monitor) Refresh(monitorID string, force bool) {
 		}
 	}
 
-	var zoneReport = &ZonesReport{}
+	var zoneReport = &ZonesReportEvt{}
 	for zoneID := range group.Zones {
 		val, ok := m.zoneValues[zoneID]
 		if ok && !force {
@@ -125,20 +125,16 @@ func (m *Monitor) Refresh(monitorID string, force bool) {
 	}
 	m.mutex.RUnlock()
 
-	fmt.Println("refreshing ...")
 	if len(changeBatch.Sensors) > 0 || len(changeBatch.Zones) > 0 {
 		// We have some values already cached for certain items, return
-		fmt.Println("short circuit")
 		group.Handler.Update(changeBatch)
 	}
 	if len(sensorReport.SensorIDs) > 0 {
 		// Need to request these sensor values
-		fmt.Println("sensors requesting")
 		m.evtBus.Enqueue(sensorReport)
 	}
 	if len(zoneReport.ZoneIDs) > 0 {
 		// Need to request these zone values
-		fmt.Println("zones requesting")
 		m.evtBus.Enqueue(zoneReport)
 	}
 }
@@ -310,12 +306,10 @@ func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
 }
 
 func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
-	fmt.Println("zlc")
 	m.mutex.RLock()
 	groups, ok := m.zoneToGroups[zoneID]
 	m.mutex.RUnlock()
 	if !ok {
-		fmt.Println("zlc - exit 1")
 		return
 	}
 
@@ -326,7 +320,6 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
 	if ok {
 		// No change, don't refresh clients
 		if currentVal == val {
-			fmt.Println("zlc - exit 2")
 			return
 		}
 	}
@@ -335,7 +328,6 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
 	m.zoneValues[zoneID] = val
 	m.mutex.Unlock()
 
-	fmt.Println("zlc - go")
 	for groupID := range groups {
 		m.mutex.RLock()
 		group := m.groups[groupID]
@@ -393,21 +385,21 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 	go func() {
 		for e := range c {
 			switch evt := e.(type) {
-			case *SensorAttrChanged:
+			case *SensorAttrChangedEvt:
 				log.V("Monitor - processing SensorAttrChanged event")
 				m.sensorAttrChanged(evt.SensorID, evt.Attr)
 
-			case *SensorsReporting:
+			case *SensorsReportingEvt:
 				for sensorID, attr := range evt.Sensors {
 					m.sensorAttrChanged(sensorID, attr)
 				}
 
-			case *ZonesReporting:
+			case *ZonesReportingEvt:
 				for zoneID, val := range evt.Zones {
 					m.zoneLevelChanged(zoneID, val)
 				}
 
-			case *ZoneLevelChanged:
+			case *ZoneLevelChangedEvt:
 				m.zoneLevelChanged(evt.ZoneID, evt.Level)
 			}
 

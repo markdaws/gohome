@@ -41,6 +41,8 @@ func NewWSHelper(monitor *gohome.Monitor) *WSHelper {
 }
 
 func (h *WSHelper) register(c *connection) {
+	log.V("WSHelper - registering connection, monitorID: " + c.monitorID)
+
 	h.mutex.Lock()
 	conns, ok := h.connections[c.monitorID]
 	if !ok {
@@ -72,6 +74,7 @@ func (h *WSHelper) unregister(c *connection) {
 	}
 	h.mutex.Unlock()
 
+	log.V("WSHelper - unregister connection, monitorID: " + c.monitorID)
 	c.ws.Close()
 	close(c.writeChan)
 	close(c.readChan)
@@ -178,6 +181,8 @@ func (h *WSHelper) Expired(monitorID string) {
 	// The monitor ID has expired, close any connections associated
 	// with this monitorID
 	go func() {
+		log.V("WSHelper - expired connection, monitorID: " + monitorID)
+
 		h.mutex.RLock()
 		conns, ok := h.connections[monitorID]
 

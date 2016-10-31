@@ -28487,13 +28487,10 @@
 	            this._connection = null;
 	        }
 
-	        console.log('attempting refresh');
 	        var conn = new WebSocket("ws://" + window.location.hostname + ":5000/api/v1/monitor/groups/" + monitorId);
 	        conn.onopen = function (evt) {
-	            console.log('connection opened');
 	            function renew() {
 	                this._refreshTimeoutId = setTimeout(function () {
-	                    console.log('renewing subscription');
 	                    if (this._monitorId === '') {
 	                        return;
 	                    }
@@ -28504,7 +28501,6 @@
 	            renew.bind(this)();
 	        }.bind(this);
 	        conn.onclose = function (evt) {
-	            console.log('connection closed');
 	            clearTimeout(this._refreshTimeoutId);
 	            conn = null;
 	            this._connection = null;
@@ -28520,7 +28516,6 @@
 	        conn.onmessage = function (evt) {
 	            var resp = JSON.parse(evt.data);
 
-	            console.log('monitorData updated');
 	            this.setState({ monitorData: resp });
 
 	            //TODO :Needed?

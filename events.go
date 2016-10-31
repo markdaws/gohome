@@ -6,11 +6,14 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
-//TODO: Move to event package
+//TODO: ButtonPressed
+//TODO: ButtonReleased
+//TODO: SceneSet
+//TODO: Delete event/event.go
 
 // SensorAttrChanged represents an event when the attributes of a sensor have
 // changed state
-type SensorAttrChanged struct {
+type SensorAttrChangedEvt struct {
 	// SensorID is the ID of the sensor whos values have changed
 	SensorID string
 
@@ -21,12 +24,12 @@ type SensorAttrChanged struct {
 	Attr SensorAttr
 }
 
-func (e *SensorAttrChanged) String() string {
+func (e *SensorAttrChangedEvt) String() string {
 	return fmt.Sprintf("SensorAttrChanged, Name:%s, ID:%s, %s", e.SensorName, e.SensorID, e.Attr.String())
 }
 
-//TODO: Move
-type ZoneLevelChanged struct {
+// ZoneLevelChanged represents an event when a zones level changes
+type ZoneLevelChangedEvt struct {
 	// ZoneID is the ID of the zone whos value has changed
 	ZoneID string
 
@@ -37,75 +40,70 @@ type ZoneLevelChanged struct {
 	Level cmd.Level
 }
 
-func (e *ZoneLevelChanged) String() string {
+func (e *ZoneLevelChangedEvt) String() string {
 	return fmt.Sprintf("ZoneLevelChanged, Name:%s, ID:%s %s", e.ZoneName, e.ZoneID, e.Level.String())
 }
 
-//TODO: Different file
 // SensorsReport is an event indicating that sensors included in the SensorIDs map
 // should report their current attribute status on the event bus
-type SensorsReport struct {
+type SensorsReportEvt struct {
 	SensorIDs map[string]bool
 }
 
-func (sr *SensorsReport) Add(sensorID string) {
+func (sr *SensorsReportEvt) Add(sensorID string) {
 	if sr.SensorIDs == nil {
 		sr.SensorIDs = make(map[string]bool)
 	}
 	sr.SensorIDs[sensorID] = true
 }
-
-func (e *SensorsReport) String() string {
+func (e *SensorsReportEvt) String() string {
 	return fmt.Sprintf("SensorsReport, contains %d sensors", len(e.SensorIDs))
 }
 
-type SensorsReporting struct {
+// SensorsReporting is an event that is fired when sensors are reporting changes in their
+// attribute values
+type SensorsReportingEvt struct {
 	Sensors map[string]SensorAttr
 }
 
-func (sr *SensorsReporting) Add(sensorID string, attr SensorAttr) {
+func (sr *SensorsReportingEvt) Add(sensorID string, attr SensorAttr) {
 	if sr.Sensors == nil {
 		sr.Sensors = make(map[string]SensorAttr)
 	}
 	sr.Sensors[sensorID] = attr
 }
-
-func (sr *SensorsReporting) String() string {
+func (sr *SensorsReportingEvt) String() string {
 	return fmt.Sprintf("SensorsReporting, contains %d sensors", len(sr.Sensors))
 }
 
-type ZonesReport struct {
+// ZonesReport is an event indicating that the specified zones should report
+// their current value
+type ZonesReportEvt struct {
 	ZoneIDs map[string]bool
 }
 
-func (zr *ZonesReport) Add(zoneID string) {
+func (zr *ZonesReportEvt) Add(zoneID string) {
 	if zr.ZoneIDs == nil {
 		zr.ZoneIDs = make(map[string]bool)
 	}
 	zr.ZoneIDs[zoneID] = true
 }
-
-func (zr *ZonesReport) String() string {
+func (zr *ZonesReportEvt) String() string {
 	return fmt.Sprintf("ZonesReport, contains %d zones", len(zr.ZoneIDs))
 }
 
-type ZonesReporting struct {
+// ZonesReporting is an event that fires when zones are reporting changes to
+// their current level
+type ZonesReportingEvt struct {
 	Zones map[string]cmd.Level
 }
 
-func (zr *ZonesReporting) Add(zoneID string, level cmd.Level) {
+func (zr *ZonesReportingEvt) Add(zoneID string, level cmd.Level) {
 	if zr.Zones == nil {
 		zr.Zones = make(map[string]cmd.Level)
 	}
 	zr.Zones[zoneID] = level
 }
-
-func (zr *ZonesReporting) String() string {
+func (zr *ZonesReportingEvt) String() string {
 	return fmt.Sprintf("ZonesReporting, contains %d zones", len(zr.Zones))
 }
-
-//TODO: ZoneLevelChanged
-//TODO: ButtonPressed
-//TODO: ButtonReleased
-//TODO: SceneSet
-//TODO: Delete event/event.go

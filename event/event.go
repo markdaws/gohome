@@ -1,5 +1,7 @@
 package event
 
+//TODO: Delete - refactor recipes to use go-home-iot/event-bus
+
 import (
 	"time"
 

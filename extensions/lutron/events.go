@@ -27,7 +27,7 @@ func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 	go func() {
 		for e := range ch {
 			switch evt := e.(type) {
-			case *gohome.ZonesReport:
+			case *gohome.ZonesReportEvt:
 				log.V("got zones report")
 				// The system wants zones to report their current status, check if
 				// we own any of these zones, if so report them
@@ -96,7 +96,6 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 				indices := regexp.MustCompile("[~|#][OUTPUT|DEVICE].+\r\n").FindStringIndex(str)
 
 				//TODO: Don't let input grow forever - remove beginning chars after reaching max length
-
 				if indices != nil {
 					token = []byte(string([]rune(str)[indices[0]:indices[1]]))
 					advance = indices[1]
@@ -110,6 +109,7 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 			}
 
 			scanner.Split(split)
+
 			for scanner.Scan() {
 				orig := scanner.Text()
 				if evt := p.parseCommandString(orig); evt != nil {
@@ -217,7 +217,7 @@ func (p *eventProducer) parseZoneCommand(command string) evtbus.Event {
 	var finalCmd cmd.Command
 	switch cmdID {
 	case "1":
-		return &gohome.ZoneLevelChanged{
+		return &gohome.ZoneLevelChangedEvt{
 			ZoneName: z.Name,
 			ZoneID:   z.ID,
 			Level:    cmd.Level{Value: float32(level)},

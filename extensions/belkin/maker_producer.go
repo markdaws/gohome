@@ -46,7 +46,7 @@ func (p *makerProducer) UPNPNotify(e upnp.NotifyEvent) {
 	//      that as a seperate event type
 
 	if attrs.Sensor != nil {
-		evt := &gohome.SensorAttrChanged{
+		evt := &gohome.SensorAttrChangedEvt{
 			SensorID:   p.Sensor.ID,
 			SensorName: p.Sensor.Name,
 			Attr: gohome.SensorAttr{
