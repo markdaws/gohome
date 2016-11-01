@@ -18,7 +18,9 @@ func (c *LogConsumer) StartConsuming(ch chan evtbus.Event) {
 
 	go func() {
 		for e := range ch {
-			log.V("event: %s", e.String())
+			//TODO: Log only certain kinds of events, log to seperate json file
+			_ = e
+			//log.V("event: %s", e.String())
 		}
 		log.V("LogConsumer - event channel has closed")
 	}()

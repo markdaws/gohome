@@ -26,35 +26,50 @@ func (p *eventConsumer) ConsumerName() string {
 func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 	go func() {
 		for e := range ch {
-			switch evt := e.(type) {
-			case *gohome.ZonesReportEvt:
-				log.V("lutron - got zones report")
-				// The system wants zones to report their current status, check if
-				// we own any of these zones, if so report them
-				dev, err := lutronExt.DeviceFromModelNumber(p.Device.ModelNumber)
-				if err != nil {
-					log.V("unsupported device")
-					continue
+
+			// If we have a backlog, merge all of the requests in to one
+			zoneRpt := &gohome.ZonesReportEvt{ZoneIDs: make(map[string]bool)}
+			for {
+				switch evt := e.(type) {
+				case *gohome.ZonesReportEvt:
+					zoneRpt.Merge(evt)
 				}
 
-				for _, zone := range p.Device.Zones {
-					if _, ok := evt.ZoneIDs[zone.ID]; ok {
-						conn, err := p.Device.Connections.Get(time.Second * 10)
-						if err != nil {
-							log.V("unable to get connection to device: %s, timeout", p.Device)
-							continue
-						}
-						err = dev.RequestLevel(zone.Address, conn)
-						if err != nil {
-							log.V("Failed to request level for lutron, zoneID:%s, %s", zone.ID, err)
-							conn.IsBad = true
-						}
-						p.Device.Connections.Release(conn)
+				if len(ch) > 0 {
+					e = <-ch
+				} else {
+					break
+				}
+			}
+
+			if len(zoneRpt.ZoneIDs) == 0 {
+				continue
+			}
+
+			// The system wants zones to report their current status, check if
+			// we own any of these zones, if so report them
+			dev, err := lutronExt.DeviceFromModelNumber(p.Device.ModelNumber)
+			if err != nil {
+				log.V("%s - error, unsupported device %s inside consumer", p.ConsumerName(), p.Device.ModelNumber)
+				continue
+			}
+
+			log.V("%s - %s", p.ConsumerName(), zoneRpt)
+
+			for _, zone := range p.Device.Zones {
+				if _, ok := zoneRpt.ZoneIDs[zone.ID]; ok {
+					conn, err := p.Device.Connections.Get(time.Second * 10)
+					if err != nil {
+						log.V("%s - unable to get connection to device: %s, timeout", p.ConsumerName(), p.Device)
+						continue
 					}
+					err = dev.RequestLevel(zone.Address, conn)
+					if err != nil {
+						log.V("%s - Failed to request level for lutron, zoneID:%s, %s", p.ConsumerName(), zone.ID, err)
+						conn.IsBad = true
+					}
+					p.Device.Connections.Release(conn)
 				}
-				_ = evt
-
-				// TODO:Really no such thing as a poducer ...
 			}
 		}
 	}()

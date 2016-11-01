@@ -1,6 +1,7 @@
 package belkin
 
 import (
+	belkinExt "github.com/go-home-iot/belkin"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
 )
@@ -10,39 +11,43 @@ type extension struct {
 }
 
 func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohome.ExtEvents {
+	var devType belkinExt.DeviceType
+
 	switch d.ModelNumber {
-	//WeMo Maker
 	case "f7c043fc":
-		// A device may have been created but not have any sensors make sure we have them
-		if len(d.Sensors) == 0 {
-			return nil
-		}
+		devType = belkinExt.DTMaker
+	case "f7c029v2":
+		devType = belkinExt.DTInsight
+	}
 
-		evts := &gohome.ExtEvents{}
-		evts.Producer = &makerProducer{
-			Name:   d.Name,
-			System: sys,
-			Device: d,
-
-			// Maker only has one sensor, we just hard code the address to 1 when we create it
-			// in the extension scan code
-			Sensor: d.Sensors["1"],
-
-			// Maker only has one zone, we set the address to 1 when we did a scan and imported
-			// the maker device
-			Zone: d.Zones["1"],
-		}
-		evts.Consumer = &makerConsumer{
-			Name:   d.Name,
-			System: sys,
-			Device: d,
-			Sensor: d.Sensors["1"],
-			Zone:   d.Zones["1"],
-		}
-		return evts
-	default:
+	if devType == "" {
 		return nil
 	}
+
+	evts := &gohome.ExtEvents{}
+	evts.Producer = &producer{
+		Name:   d.Name,
+		System: sys,
+		Device: d,
+
+		// Maker only has one sensor, we just hard code the address to 1 when we create it
+		// in the extension scan code
+		Sensor: d.Sensors["1"],
+
+		// Maker only has one zone, we set the address to 1 when we did a scan and imported
+		// the maker device
+		Zone:       d.Zones["1"],
+		DeviceType: devType,
+	}
+	evts.Consumer = &consumer{
+		Name:       d.Name,
+		System:     sys,
+		Device:     d,
+		Sensor:     d.Sensors["1"],
+		Zone:       d.Zones["1"],
+		DeviceType: devType,
+	}
+	return evts
 }
 
 func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.Builder {

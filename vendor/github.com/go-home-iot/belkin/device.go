@@ -9,23 +9,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/go-home-iot/gossdp"
-)
-
-// BinaryState represents a binary state on or off
-type BinaryState int
-
-const (
-	// BSOff is the off state
-	BSOff BinaryState = 0
-
-	// BSOn is the on state
-	BSOn = 1
-
-	// BSUnknown indicates we do not know the current binary state
-	BSUnknown = 2
 )
 
 // Device contains information about a device that has been found on the network
@@ -236,7 +223,7 @@ type attribute struct {
 
 // FetchAttributes fetches the attributes of the device, such as switch state, sensor state etc
 func (d *Device) FetchAttributes() (*DeviceAttributes, error) {
-	if d.Scan.SearchType != "urn:Belkin:device:Maker:1" {
+	if d.Scan.SearchType != DTMaker {
 		return nil, ErrUnsupportedAction
 	}
 
@@ -294,6 +281,35 @@ func (d *Device) FetchAttributes() (*DeviceAttributes, error) {
 	return attrs, nil
 }
 
+// ParseBinaryState parses the BinaryState element that is received
+// from some WeMo devices. It is expected that the body string looks like:
+// <BinaryState>1|1477978435|0|0|0|1168438|0|100|0|0</BinaryState>
+func ParseBinaryState(body string) *BinaryState {
+	body = strings.TrimSuffix(strings.TrimPrefix(body, "<BinaryState>"), "</BinaryState>")
+	if body == "" {
+		return nil
+	}
+
+	values := strings.Split(body, "|")
+	if len(values) < 2 {
+		return nil
+	}
+
+	onOff, err := strconv.Atoi(values[0])
+	if err != nil {
+		onOff = 0
+	}
+	onSince, err := strconv.ParseInt(values[1], 10, 64)
+	if err != nil {
+		onSince = 0
+	}
+	state := &BinaryState{
+		OnOff:   onOff,
+		OnSince: onSince,
+	}
+	return state
+}
+
 // ParseAttributeList parses the xml attributeList response from the device e.g.
 // <attributeList><attribute><name>...</name><value>...</value></attribute>...</attributeList>
 // the body must be the open and close attributeList element.  If a valid input is not
@@ -331,10 +347,10 @@ func ParseAttributeList(body string) *DeviceAttributes {
 }
 
 // FetchBinaryState fetches the latest binary state value from the device
-func (d *Device) FetchBinaryState() (BinaryState, error) {
+func (d *Device) FetchBinaryState() (int, error) {
 	// GetBinaryState always returns off for WeMo Maker, return error to callers
-	if d.Scan.SearchType == "urn:Belkin:device:Maker:1" {
-		return BSUnknown, ErrUnsupportedAction
+	if d.Scan.SearchType == DTMaker {
+		return 0, ErrUnsupportedAction
 	}
 
 	location := parseLocation(d.Scan.Location)
@@ -357,7 +373,7 @@ func (d *Device) FetchBinaryState() (BinaryState, error) {
 		"",
 	)
 	if err != nil {
-		return BSUnknown, err
+		return 0, err
 	}
 
 	resp := struct {
@@ -365,17 +381,11 @@ func (d *Device) FetchBinaryState() (BinaryState, error) {
 	}{}
 	err = xml.Unmarshal([]byte(body), &resp)
 	if err != nil {
-		return BSUnknown, err
+		return 0, err
 	}
 
-	switch resp.BinaryState {
-	case 1, 8:
-		return BSOn, nil
-	case 0:
-		return BSOff, nil
-	default:
-		return BSUnknown, nil
-	}
+	//Note 1 and 8 mean on
+	return resp.BinaryState, nil
 }
 
 func sendSOAP(location, serviceType, controlURL, action, body string) (string, error) {

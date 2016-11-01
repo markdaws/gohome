@@ -25,7 +25,7 @@ type SensorAttrChangedEvt struct {
 }
 
 func (e *SensorAttrChangedEvt) String() string {
-	return fmt.Sprintf("SensorAttrChanged, Name:%s, ID:%s, %s", e.SensorName, e.SensorID, e.Attr.String())
+	return fmt.Sprintf("SensorAttrChangedEvt[Name:%s, ID:%s, %s]", e.SensorName, e.SensorID, e.Attr.String())
 }
 
 // ZoneLevelChangedEvt represents an event when a zones level changes
@@ -41,7 +41,7 @@ type ZoneLevelChangedEvt struct {
 }
 
 func (e *ZoneLevelChangedEvt) String() string {
-	return fmt.Sprintf("ZoneLevelChanged, Name:%s, ID:%s %s", e.ZoneName, e.ZoneID, e.Level.String())
+	return fmt.Sprintf("ZoneLevelChangedEvt[Name:%s, ID:%s %s]", e.ZoneName, e.ZoneID, e.Level.String())
 }
 
 // SensorsReportEvt is an event indicating that sensors included in the SensorIDs map
@@ -57,7 +57,7 @@ func (sr *SensorsReportEvt) Add(sensorID string) {
 	sr.SensorIDs[sensorID] = true
 }
 func (e *SensorsReportEvt) String() string {
-	return fmt.Sprintf("SensorsReport, contains %d sensors", len(e.SensorIDs))
+	return fmt.Sprintf("SensorsReportEvt[#sensors: %d]", len(e.SensorIDs))
 }
 
 // SensorsReportingEvt is an event that is fired when sensors are reporting changes in their
@@ -73,7 +73,7 @@ func (sr *SensorsReportingEvt) Add(sensorID string, attr SensorAttr) {
 	sr.Sensors[sensorID] = attr
 }
 func (sr *SensorsReportingEvt) String() string {
-	return fmt.Sprintf("SensorsReporting, contains %d sensors", len(sr.Sensors))
+	return fmt.Sprintf("SensorsReportingEvt[#sensors: %d]", len(sr.Sensors))
 }
 
 // ZonesReportEvt is an event indicating that the specified zones should report
@@ -82,14 +82,22 @@ type ZonesReportEvt struct {
 	ZoneIDs map[string]bool
 }
 
+// Add adds a new zone to the report
 func (zr *ZonesReportEvt) Add(zoneID string) {
 	if zr.ZoneIDs == nil {
 		zr.ZoneIDs = make(map[string]bool)
 	}
 	zr.ZoneIDs[zoneID] = true
 }
+
+// Merge merges the zones in the provided parameter into the target report
+func (zr *ZonesReportEvt) Merge(rpt *ZonesReportEvt) {
+	for zoneID := range rpt.ZoneIDs {
+		zr.ZoneIDs[zoneID] = true
+	}
+}
 func (zr *ZonesReportEvt) String() string {
-	return fmt.Sprintf("ZonesReport, contains %d zones", len(zr.ZoneIDs))
+	return fmt.Sprintf("ZonesReportEvt[#zones: %d]", len(zr.ZoneIDs))
 }
 
 // ZonesReportingEvt is an event that fires when zones are reporting changes to
@@ -105,7 +113,7 @@ func (zr *ZonesReportingEvt) Add(zoneID string, level cmd.Level) {
 	zr.Zones[zoneID] = level
 }
 func (zr *ZonesReportingEvt) String() string {
-	return fmt.Sprintf("ZonesReporting, contains %d zones", len(zr.Zones))
+	return fmt.Sprintf("ZonesReportingEvt[#zones: %d]", len(zr.Zones))
 }
 
 // DeviceProducingEvt is raised when a device starts producing events in the system
@@ -114,5 +122,5 @@ type DeviceProducingEvt struct {
 }
 
 func (dp *DeviceProducingEvt) String() string {
-	return fmt.Sprintf("DeviceProducing - device: %s", dp.Device)
+	return fmt.Sprintf("DeviceProducingEvt[%s]", dp.Device)
 }

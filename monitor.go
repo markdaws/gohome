@@ -29,6 +29,10 @@ type MonitorGroup struct {
 	id              string
 }
 
+func (mg *MonitorGroup) String() string {
+	return fmt.Sprintf("MonitorGroup[ID:%s, %d zones, %d sensors]", mg.id, len(mg.Zones), len(mg.Sensors))
+}
+
 // ChangeBatch contains a list of sensors and zones whos values have changed
 type ChangeBatch struct {
 	MonitorID string
@@ -36,12 +40,16 @@ type ChangeBatch struct {
 	Zones     map[string]cmd.Level
 }
 
+func (cb *ChangeBatch) String() string {
+	return fmt.Sprintf("ChangeBatch[monitorID: %s, #zones:%d, #sensors:%d", cb.MonitorID, len(cb.Zones), len(cb.Sensors))
+}
+
 // Monitor keeps track of the current zone and sensor values in the system and reports
 // updates to clients
 type Monitor struct {
 	groups         map[string]*MonitorGroup
 	system         *System
-	nextID         int
+	nextID         int64
 	evtBus         *evtbus.Bus
 	sensorToGroups map[string]map[string]bool
 	zoneToGroups   map[string]map[string]bool
@@ -68,7 +76,7 @@ func NewMonitor(
 	}
 	m := &Monitor{
 		system:         sys,
-		nextID:         1,
+		nextID:         time.Now().UnixNano(),
 		groups:         make(map[string]*MonitorGroup),
 		sensorToGroups: make(map[string]map[string]bool),
 		zoneToGroups:   make(map[string]map[string]bool),
@@ -102,8 +110,6 @@ func (m *Monitor) Refresh(monitorID string, force bool) {
 		Zones:     make(map[string]cmd.Level),
 	}
 
-	log.V("Refreshing %s, force: %t", monitorID, force)
-
 	// Build a list of sensors that need to report their values. If we
 	// already have a value for a sensor we can just return that
 	var sensorReport = &SensorsReportEvt{}
@@ -125,6 +131,11 @@ func (m *Monitor) Refresh(monitorID string, force bool) {
 			zoneReport.Add(zoneID)
 		}
 	}
+
+	log.V("Monitor - refreshing: %s, force:%t", group, force)
+	log.V("Monitor - refreshing: cached values: [%s], uncached zones: %s, uncached sensors: %s",
+		changeBatch, zoneReport, sensorReport)
+
 	m.mutex.RUnlock()
 
 	if len(changeBatch.Sensors) > 0 || len(changeBatch.Zones) > 0 {
@@ -152,7 +163,7 @@ func (m *Monitor) InvalidateValues(monitorID string) {
 		return
 	}
 
-	log.V("invalidate values: %s", monitorID)
+	log.V("Monitor - invalidate values: monitorID: %s", monitorID)
 	m.mutex.Lock()
 	for sensorID := range group.Sensors {
 		delete(m.sensorValues, sensorID)
@@ -186,6 +197,7 @@ func (m *Monitor) SubscribeRenew(monitorID string) error {
 	m.setTimeoutOnGroup(group)
 	m.mutex.Unlock()
 
+	log.V("Monitor - subscriberenew: monitorID: %s", monitorID)
 	return nil
 }
 
@@ -201,7 +213,7 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) (string, error) {
 	}
 
 	m.mutex.Lock()
-	monitorID := strconv.Itoa(m.nextID)
+	monitorID := strconv.FormatInt(m.nextID, 10)
 	m.nextID++
 	g.id = monitorID
 	m.groups[monitorID] = g
@@ -231,6 +243,8 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) (string, error) {
 	}
 	m.mutex.Unlock()
 
+	log.V("Monitor - subscribe: refresh: %t, monitorID: %s, %s", refresh, monitorID, g)
+
 	if refresh {
 		m.Refresh(monitorID, false)
 	}
@@ -244,12 +258,16 @@ func (m *Monitor) Unsubscribe(monitorID string) {
 		return
 	}
 
+	emptySensorToGroupCount := 0
+	emptyZoneToGroupCount := 0
+
 	m.mutex.Lock()
 	delete(m.groups, monitorID)
 	for sensorID, groups := range m.sensorToGroups {
 		if _, ok := groups[monitorID]; ok {
 			delete(groups, monitorID)
 			if len(groups) == 0 {
+				emptySensorToGroupCount++
 				delete(m.sensorToGroups, sensorID)
 				delete(m.sensorValues, sensorID)
 			}
@@ -262,12 +280,16 @@ func (m *Monitor) Unsubscribe(monitorID string) {
 			// If there are no groups pointed to by the zone, clean up
 			// any refs to it
 			if len(groups) == 0 {
+				emptyZoneToGroupCount++
 				delete(m.zoneToGroups, zoneID)
 				delete(m.zoneValues, zoneID)
 			}
 		}
 	}
 	m.mutex.Unlock()
+
+	log.V("Monitor - unsubscribe: monitorID: %s, emptyZoneToGroups: %d, emptySensorToGroups:%d",
+		monitorID, emptyZoneToGroupCount, emptySensorToGroupCount)
 }
 
 func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
@@ -347,20 +369,20 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
 // deviceProducing is called when a device start producing events, in the case of
 // the monitor we need to see if there are MonitorGroups that require values from
 // this device and then request the latest values
-func (m *Monitor) deviceProducing(dev *Device) {
+func (m *Monitor) deviceProducing(evt *DeviceProducingEvt) {
 	groups := make(map[string]bool)
 
 	m.mutex.RLock()
-	for zoneID, _ := range dev.Zones {
-		grp, ok := m.zoneToGroups[zoneID]
+	for _, zone := range evt.Device.Zones {
+		grp, ok := m.zoneToGroups[zone.ID]
 		if ok {
 			for monitorID := range grp {
 				groups[monitorID] = true
 			}
 		}
 	}
-	for sensorID, _ := range dev.Sensors {
-		grp, ok := m.sensorToGroups[sensorID]
+	for _, sensor := range evt.Device.Sensors {
+		grp, ok := m.sensorToGroups[sensor.ID]
 		if ok {
 			for monitorID := range grp {
 				groups[monitorID] = true
@@ -369,9 +391,7 @@ func (m *Monitor) deviceProducing(dev *Device) {
 	}
 	m.mutex.RUnlock()
 
-	if len(groups) == 0 {
-		return
-	}
+	log.V("Monitor - %s, found %d group to refresh", evt, len(groups))
 
 	for monitorID := range groups {
 		m.Refresh(monitorID, false)
@@ -394,6 +414,8 @@ func (m *Monitor) handleTimeouts() {
 			m.mutex.RUnlock()
 
 			for _, group := range expired {
+				log.V("Monitor - group expired, monitorID: %s", group.id)
+
 				m.Unsubscribe(group.id)
 				group.Handler.Expired(group.id)
 			}
@@ -421,9 +443,10 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 
 	go func() {
 		for e := range c {
+			showHandled := true
+
 			switch evt := e.(type) {
 			case *SensorAttrChangedEvt:
-				log.V("Monitor - processing SensorAttrChanged event")
 				m.sensorAttrChanged(evt.SensorID, evt.Attr)
 
 			case *SensorsReportingEvt:
@@ -440,10 +463,20 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 				m.zoneLevelChanged(evt.ZoneID, evt.Level)
 
 			case *DeviceProducingEvt:
-				m.deviceProducing(evt.Device)
+				m.deviceProducing(evt)
+				// Have dedicated logging for this, don't show generic message
+				showHandled = false
+
+			default:
+				showHandled = false
+			}
+
+			if showHandled {
+				log.V("Monitor - handled event: %s", e)
 			}
 		}
-		log.V("Monitor - event channel has closed")
+
+		log.V("Monitor - consumer event channel has closed")
 	}()
 }
 

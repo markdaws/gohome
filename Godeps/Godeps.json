@@ -13,7 +13,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/belkin",
-			"Rev": "1798d5dff96009ae2c8bf5e3884e1dbe98df48e4"
+			"Rev": "c97127886e4045efe6b5edc7644464c268eababf"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/connectedbytcp",
