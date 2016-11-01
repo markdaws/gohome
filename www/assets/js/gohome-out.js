@@ -28595,10 +28595,11 @@
 	            if (this.state.level) {
 	                if (this.props.zone.output === 'binary') {
 	                    opacity = this.state.level.value === 0 ? 0 : 1;
+	                    val = this.state.level.value === 0 ? 'off' : 'on';
 	                } else {
 	                    opacity = this.state.level.value / 100;
+	                    val = this.state.level.value + '%';
 	                }
-	                val = this.state.level.value + '%';
 
 	                if (this.props.zone && this.props.zone.type === 'switch') {
 	                    if (this.state.level.value === 0) {

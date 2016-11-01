@@ -1,7 +1,6 @@
 package belkin
 
 import (
-	"fmt"
 	"html"
 	"regexp"
 	"strconv"
@@ -32,10 +31,61 @@ func (c *makerConsumer) StartConsuming(ch chan evtbus.Event) {
 		for e := range ch {
 			switch evt := e.(type) {
 			case *gohome.ZonesReportEvt:
-				_ = evt
-				//TODO:
+				for _, zone := range c.Device.Zones {
+					if _, ok := evt.ZoneIDs[zone.ID]; !ok {
+						continue
+					}
+
+					dev := &belkinExt.Device{
+						Scan: belkinExt.ScanResponse{
+							SearchType: belkinExt.DTMaker,
+							Location:   c.Device.Address,
+						},
+					}
+					attrs, err := dev.FetchAttributes()
+					if err != nil {
+						log.V("Belkin - failed to fetch attrs: %s", err)
+						continue
+					}
+
+					if attrs.Switch != nil {
+						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+							ZoneName: c.Zone.Name,
+							ZoneID:   c.Zone.ID,
+							Level:    cmd.Level{Value: float32(*attrs.Switch)},
+						})
+					}
+				}
+
 			case *gohome.SensorsReportEvt:
-				//TODO:
+				for _, sensor := range c.Device.Sensors {
+					if _, ok := evt.SensorIDs[sensor.ID]; !ok {
+						continue
+					}
+
+					dev := &belkinExt.Device{
+						Scan: belkinExt.ScanResponse{
+							SearchType: belkinExt.DTMaker,
+							Location:   c.Device.Address,
+						},
+					}
+					attrs, err := dev.FetchAttributes()
+					if err != nil {
+						log.V("Belkin - failed to fetch attrs: %s", err)
+						continue
+					}
+
+					if attrs.Sensor != nil {
+						attr := sensor.Attr
+						attr.Value = strconv.Itoa(*attrs.Sensor)
+						c.System.Services.EvtBus.Enqueue(&gohome.SensorAttrChangedEvt{
+							SensorName: sensor.Name,
+							SensorID:   sensor.ID,
+							Attr:       attr,
+						})
+					}
+
+				}
 			}
 		}
 	}()
@@ -75,10 +125,6 @@ func (p *makerProducer) UPNPNotify(e upnp.NotifyEvent) {
 	if attrs == nil {
 		return
 	}
-
-	fmt.Printf("%+v\n", attrs)
-	//TODO: If this is a switch state change then we need to log
-	//      that as a seperate event type
 
 	if attrs.Sensor != nil {
 		p.System.Services.EvtBus.Enqueue(&gohome.SensorAttrChangedEvt{

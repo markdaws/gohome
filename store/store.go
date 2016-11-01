@@ -473,7 +473,6 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 		d.Sensors = make([]sensorJSON, len(device.Sensors))
 		si := 0
 		for _, sen := range device.Sensors {
-			fmt.Printf("%+v\n", sen)
 			d.Sensors[si] = sensorJSON{
 				Address:     sen.Address,
 				ID:          sen.ID,

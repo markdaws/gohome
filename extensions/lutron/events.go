@@ -2,7 +2,6 @@ package lutron
 
 import (
 	"bufio"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -38,23 +37,19 @@ func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 					continue
 				}
 
-				for zoneID := range evt.ZoneIDs {
-					log.V("calling zone TODO: Should index zones by id not address %s", zoneID)
-					//TODO: this should be p.Device.Zones but zones is indexed by address ... what to do
-					if zn, ok := p.System.Zones[zoneID]; ok {
+				for _, zone := range p.Device.Zones {
+					if _, ok := evt.ZoneIDs[zone.ID]; ok {
 						conn, err := p.Device.Connections.Get(time.Second * 10)
 						if err != nil {
 							log.V("unable to get connection to device: %s, timeout", p.Device)
 							continue
 						}
-						err = dev.RequestLevel(zn.Address, conn)
+						err = dev.RequestLevel(zone.Address, conn)
 						if err != nil {
-							log.V("Failed to request level for lutron, zoneID:%s, %s", zoneID, err)
+							log.V("Failed to request level for lutron, zoneID:%s, %s", zone.ID, err)
 							conn.IsBad = true
 						}
 						p.Device.Connections.Release(conn)
-					} else {
-						fmt.Println("not owned: " + zoneID)
 					}
 				}
 				_ = evt
