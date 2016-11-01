@@ -17,9 +17,12 @@ var SystemDeviceList = React.createClass({
         this.props.devices.forEach(function(device) {
             var cell = {
                 key: device.id,
-                cell: <SystemDeviceListGridCell device={device} />,
+                cell: <SystemDeviceListGridCell
+                          key={device.id}
+                          device={device} />,
                 content: <DeviceInfo
                              name={device.name}
+                             key={device.id}
                              description={device.description}
                              address={device.address}
                              modelNumber={device.modelNumber}

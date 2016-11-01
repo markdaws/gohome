@@ -211,8 +211,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 				Device:      dev,
 			}
 
-			//TODO: Add button function
-			dev.Buttons[b.Address] = b
+			dev.AddButton(b)
 			sys.AddButton(b)
 		}
 
@@ -226,8 +225,11 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 				Type:        zone.TypeFromString(zn.Type),
 				Output:      zone.OutputFromString(zn.Output),
 			}
-
-			err := sys.AddZone(z)
+			err := dev.AddZone(z)
+			if err != nil {
+				log.V("failed to add zone to device: %s", err)
+			}
+			err = sys.AddZone(z)
 			if err != nil {
 				log.V("failed to add zone: %s", err)
 				return nil, err

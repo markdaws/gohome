@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/go-home-iot/connection-pool"
-	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
@@ -29,6 +28,7 @@ type Auth struct {
 	Token    string
 }
 
+// Device is a piece of hardware. It could be a dimmer, a shade, a remote etc
 type Device struct {
 	Address         string
 	ID              string
@@ -48,6 +48,7 @@ type Device struct {
 	Hub             *Device
 }
 
+// NewDevice returns an initialized device object
 func NewDevice(
 	modelNumber,
 	modelName,
@@ -81,7 +82,6 @@ func NewDevice(
 	if connPoolCfg != nil {
 		dev.SetConnPoolCfg(*connPoolCfg)
 	}
-
 	return dev, nil
 }
 
@@ -89,6 +89,7 @@ func (d *Device) SetConnPoolCfg(cfg pool.Config) {
 	d.Connections = pool.NewPool(cfg)
 }
 
+// Validate checks that all of the requirements for this to be a valid device are met
 func (d *Device) Validate() *validation.Errors {
 	errors := &validation.Errors{}
 
@@ -102,25 +103,35 @@ func (d *Device) Validate() *validation.Errors {
 	return nil
 }
 
+// String returns a friendly string describing the device that can be useful for debugging
 func (d *Device) String() string {
 	return fmt.Sprintf("Device[%s]", d.Name)
 }
 
+// AddZone adds the zone to the device
 func (d *Device) AddZone(z *zone.Zone) error {
 	errs := &validation.Errors{}
 
 	// Make sure zone doesn't have same address as any other zone
-	for _, cz := range d.Zones {
-		if cz.Address == z.Address {
-			errs.Add(fmt.Sprintf("device already has a zone with the same address [%s], must be unique", z.Address), "Address")
-			return errs
-		}
+	if _, ok := d.Zones[z.Address]; ok {
+		errs.Add(fmt.Sprintf("device already has a zone with the same address [%s], must be unique", z.Address), "Address")
+		return errs
 	}
 
 	d.Zones[z.Address] = z
 	return nil
 }
 
+// Addbuttons adds a button as a child of this device
+func (d *Device) AddButton(b *Button) error {
+	if _, ok := d.Buttons[b.Address]; ok {
+		return fmt.Errorf("button with address: %s already added to parent device", b.Address)
+	}
+	d.Buttons[b.Address] = b
+	return nil
+}
+
+// AddDevice adds a device as a child of this device
 func (d *Device) AddDevice(cd *Device) error {
 	if _, ok := d.Devices[cd.Address]; ok {
 		return fmt.Errorf("device with address: %s already added to parent device", cd.Address)
@@ -129,6 +140,7 @@ func (d *Device) AddDevice(cd *Device) error {
 	return nil
 }
 
+// AddSensor adds a sensor as a child of this device
 func (d *Device) AddSensor(s *Sensor) error {
 	if _, ok := d.Sensors[s.Address]; ok {
 		return fmt.Errorf("sensor with address: %s already added to device", s.Address)
@@ -136,18 +148,3 @@ func (d *Device) AddSensor(s *Sensor) error {
 	d.Sensors[s.Address] = s
 	return nil
 }
-
-// ==== evtbus.Producer interface
-
-func (d *Device) ProducerName() string {
-	return d.String()
-}
-
-func (d *Device) StartProducing(b *evtbus.Bus) {
-	//TODO: Raise events like zone added? sensor added, lost connection etc
-}
-
-func (d *Device) StopProducing() {
-}
-
-// ====================

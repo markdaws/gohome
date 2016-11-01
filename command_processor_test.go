@@ -39,6 +39,7 @@ func makeTestSystem(cp gohome.CommandProcessor, b *mockBuilder) *gohome.System {
 	s.AddDevice(*d)
 
 	z := &zone.Zone{Name: "z1", Address: "1", ID: "z1", DeviceID: d.ID}
+	d.AddZone(z)
 	s.AddZone(z)
 	return s
 }

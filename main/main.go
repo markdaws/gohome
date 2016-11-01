@@ -24,13 +24,16 @@ type config struct {
 }
 
 func main() {
+	//TODO: Don't panic, system should still start but with warning to the user
 
+	// Find the first public address we can bind to
 	addr, err := getIPV4NonLoopbackAddr()
 	if err != nil || addr == "" {
 		panic("could not find any address to bind to")
 	}
 
 	//TODO: Should read this from a config file on disk
+	//TODO: Break up IP address and port values
 	config := config{
 		StartupConfigPath: "/Users/mark/code/gohome/system2.json",
 		WWWAddr:           addr + ":8000",
@@ -51,7 +54,7 @@ func main() {
 	rm := gohome.NewRecipeManager(eb)
 
 	//TODO: Remove, simulate user importing lutron information on load
-	reset := false
+	reset := true
 	if reset {
 		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", 1)
 		intg.RegisterExtensions(system)
@@ -98,7 +101,6 @@ func main() {
 
 	// Processes all commands in the system in an async fashion, init with
 	// 3 parallel workers and capacity to store up to 1000 commands to be processed
-	log.V("Command Processor - starting")
 	cp := gohome.NewCommandProcessor(3, 1000)
 	cp.Start()
 
@@ -163,7 +165,6 @@ func main() {
 	}()
 
 	// Sit forever since we have started all the services
-	// TODO: Graceful shutdown of service when receive control signal
 	var done chan bool
 	<-done
 }

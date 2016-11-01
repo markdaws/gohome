@@ -51,7 +51,7 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 			"",
 			"",
 			address,
-			sys.NextGlobalID(),
+			"",
 			name,
 			"",
 			hub,
@@ -72,12 +72,11 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 
 			b := &gohome.Button{
 				Address:     btnNumber,
-				ID:          sys.NextGlobalID(),
 				Name:        btnName,
 				Description: btnName,
 				Device:      device,
 			}
-			device.Buttons[btnNumber] = b
+			device.AddButton(b)
 			system.AddButton(b)
 		}
 
@@ -259,7 +258,11 @@ func (imp *importer) FromString(system *gohome.System, data, modelNumber string)
 			Output:      outputTypeFinal,
 		}
 		//TODO: proper logging
-		err := system.AddZone(newZone)
+		err := sbp.AddZone(newZone)
+		if err != nil {
+			fmt.Printf("err adding zone to device\n", err)
+		}
+		err = system.AddZone(newZone)
 		if err != nil {
 			fmt.Printf("err add zone: %s\n", err)
 		} else {

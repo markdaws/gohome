@@ -107,7 +107,7 @@ func apiAddDeviceHandler(
 			data.ModelName,
 			data.SoftwareVersion,
 			data.Address,
-			system.NextGlobalID(),
+			"",
 			data.Name,
 			data.Description,
 			nil,

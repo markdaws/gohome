@@ -150,10 +150,27 @@ func apiAddZoneHandler(
 			Output:      zone.OutputFromString(data.Output),
 		}
 
-		errors := system.AddZone(z)
+		dev, ok := system.Devices[data.DeviceID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		errors := dev.AddZone(z)
 		if errors != nil {
 			if valErrs, ok := errors.(*validation.Errors); ok {
-				fmt.Printf("%+v\n", valErrs.Errors[0])
+				w.WriteHeader(http.StatusBadRequest)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+			} else {
+				//Other kind of errors, TODO: log
+				w.WriteHeader(http.StatusBadRequest)
+			}
+			return
+		}
+
+		errors = system.AddZone(z)
+		if errors != nil {
+			if valErrs, ok := errors.(*validation.Errors); ok {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))

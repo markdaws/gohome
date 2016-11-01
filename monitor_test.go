@@ -49,6 +49,7 @@ func makeSystemWithZonesAndSensors(nZones, nSensors int) (*gohome.System, []*zon
 			Address:  strI,
 			DeviceID: "1234",
 		}
+		dev.AddZone(zone)
 		sys.AddZone(zone)
 		zones = append(zones, zone)
 	}

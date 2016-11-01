@@ -19,6 +19,8 @@ type SystemServices struct {
 	CmdProcessor CommandProcessor
 }
 
+// System is a container that holds information such as all the zones and devices
+// that have been created.
 type System struct {
 	Name         string
 	Description  string
@@ -33,6 +35,8 @@ type System struct {
 	nextGlobalID int
 }
 
+// NewSystem returns an initial System instance.  It is still up to the caller
+// to create all of the services and add them to the system after calling this function
 func NewSystem(name, desc string, nextGlobalID int) *System {
 	s := &System{
 		Name:         name,
@@ -45,27 +49,37 @@ func NewSystem(name, desc string, nextGlobalID int) *System {
 		Recipes:      make(map[string]*Recipe),
 		nextGlobalID: nextGlobalID,
 	}
-
 	s.Extensions = NewExtensions()
 	return s
 }
 
+// NextGlobalID returns the next unique global ID that can be used as an identifier
+// for an item in the system.
 func (s *System) NextGlobalID() string {
 	gid := s.nextGlobalID
 	s.nextGlobalID++
 	return strconv.Itoa(gid)
 }
 
+// PeekNextGlobalID returns the next global ID that will be returned, but does not
+// increment it
 func (s *System) PeekNextGlobalID() int {
 	return s.nextGlobalID
 }
 
+// InitDevices loops through all of the devices in the system and initializes them.
+// This is async so after returning from this function the devices are still
+// probably trying to initialize.  A device may try to create network connections
+// or other tasks when it is initialized
 func (s *System) InitDevices() {
 	for _, d := range s.Devices {
 		s.InitDevice(d)
 	}
 }
 
+// InitDevice initializes a device.  If the device has a connection pool, this is
+// when it will be initialized.  Also if the device produces or consumes events
+// from the system bus, this is where it will be added to the event bus
 func (s *System) InitDevice(d *Device) error {
 	log.V("Init Device: %s", d)
 
@@ -93,11 +107,17 @@ func (s *System) InitDevice(d *Device) error {
 	return nil
 }
 
-func (s *System) AddButton(b *Button) {
-	//TODO: Validate button
+// AddButton adds the button to the system and gives it a unique
+// ID if it already doesn't have one
+func (s *System) AddButton(b *Button) error {
+	if b.ID == "" {
+		b.ID = s.NextGlobalID()
+	}
 	s.Buttons[b.ID] = b
+	return nil
 }
 
+// AddSensor adds a sensor to the system
 func (s *System) AddSensor(sen *Sensor) error {
 	errors := sen.Validate()
 	if errors != nil {
@@ -107,31 +127,32 @@ func (s *System) AddSensor(sen *Sensor) error {
 	if sen.ID == "" {
 		sen.ID = s.NextGlobalID()
 	}
-
 	s.Sensors[sen.ID] = sen
 	return nil
 }
 
+// AddDevice adds a device to the system
 func (s *System) AddDevice(d *Device) error {
 	errors := d.Validate()
 	if errors != nil {
 		return errors
 	}
 
-	//Should we add an id here, like we do in AddZone - consistency...
-
-	//TODO: What about address, allow duplicates?
+	if d.ID == "" {
+		d.ID = s.NextGlobalID()
+	}
 	s.Devices[d.ID] = d
 	return nil
 }
 
+// AddZone adds a zone to the system
 func (s *System) AddZone(z *zone.Zone) error {
 	errors := z.Validate()
 	if errors != nil {
 		return errors
 	}
 
-	d, ok := s.Devices[z.DeviceID]
+	_, ok := s.Devices[z.DeviceID]
 	if !ok {
 		errors = &validation.Errors{}
 		errors.Add("unknown device", "DeviceID")
@@ -141,37 +162,42 @@ func (s *System) AddZone(z *zone.Zone) error {
 	if z.ID == "" {
 		z.ID = s.NextGlobalID()
 	}
-
-	//TODO: Don't do this here, confusing or make consistent across AddButton, AddSensor etc
-	err := d.AddZone(z)
-	if err != nil {
-		return err
-	}
 	s.Zones[z.ID] = z
 	return nil
 }
 
+// AddScene adds a scene to the system
 func (s *System) AddScene(scn *Scene) error {
 	errors := scn.Validate()
 	if errors != nil {
 		return errors
 	}
 
-	scn.ID = s.NextGlobalID()
+	if scn.ID == "" {
+		scn.ID = s.NextGlobalID()
+	}
 	s.Scenes[scn.ID] = scn
 	return nil
 }
 
+// DeleteScene deletes a scene from the system
 func (s *System) DeleteScene(scn *Scene) {
 	delete(s.Scenes, scn.ID)
 }
 
+// DeleteDevice deletes a device from the system and stops all associated
+// services, for all zones and devices this is responsible for
 func (s *System) DeleteDevice(d *Device) {
 	delete(s.Devices, d.ID)
 	//TODO: Remove all associated zones + buttons
 	//TODO: Need to stop all services, recipes, networking etc to this device
 }
 
+// AddRecipe adds a recipe to the system
 func (s *System) AddRecipe(r *Recipe) {
+
+	if r.ID == "" {
+		r.ID = s.NextGlobalID()
+	}
 	s.Recipes[r.ID] = r
 }

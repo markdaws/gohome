@@ -25718,6 +25718,8 @@
 
 	'use strict';
 
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var DeviceInfo = __webpack_require__(204);
@@ -25742,21 +25744,23 @@
 	            remotes = [],
 	            unknown = [];
 	        this.props.devices.forEach(function (device) {
+	            var _React$createElement;
+
 	            var cell = {
 	                key: device.id,
-	                cell: React.createElement(SystemDeviceListGridCell, { device: device }),
-	                content: React.createElement(DeviceInfo, {
+	                cell: React.createElement(SystemDeviceListGridCell, {
+	                    key: device.id,
+	                    device: device }),
+	                content: React.createElement(DeviceInfo, (_React$createElement = {
 	                    name: device.name,
+	                    key: device.id,
 	                    description: device.description,
 	                    address: device.address,
 	                    modelNumber: device.modelNumber,
 	                    id: device.id,
 	                    clientId: device.clientId,
-	                    readOnlyFields: 'id',
-	                    key: device.id || device.clientId,
-	                    type: device.type,
-	                    deviceDelete: this.props.deviceDelete,
-	                    savedDevice: this.props.savedDevice })
+	                    readOnlyFields: 'id'
+	                }, _defineProperty(_React$createElement, 'key', device.id || device.clientId), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'savedDevice', this.props.savedDevice), _React$createElement))
 	            };
 
 	            switch (device.type) {

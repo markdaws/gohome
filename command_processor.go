@@ -59,7 +59,7 @@ func (cp *commandProcessor) Enqueue(cg CommandGroup) error {
 		log.V("CommandProcessor - enqueued: %s", cg.Desc)
 		return nil
 	default:
-		err := errors.New("CommandGroup enqueue failed, CommandProcessor queue is full")
+		err := errors.New("CommandProcessor - CommandGroup enqueue failed, CommandProcessor queue is full")
 		log.E(err.Error())
 		return err
 	}
