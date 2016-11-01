@@ -136,16 +136,6 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 	// Contents are double HTML encoded when returned from the device
 	body := html.UnescapeString(html.UnescapeString(e.Body))
 
-	/*
-		//TODO: Support binary state updates from the insight device
-			fmt.Println(body)
-			<e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">
-				<e:property>
-				<BinaryState>1|1477978435|0|0|0|1168438|0|100|0|0</BinaryState>
-				</e:property>
-				</e:propertyset>
-	*/
-
 	// This could be a response with an attribute list, or it could be a binary state property
 	attrList := attrRegexp.FindStringSubmatch(body)
 	if attrList != nil && len(attrList) != 0 {
@@ -204,28 +194,35 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 
 	go func() {
 		p.Producing = true
+
 		for p.Producing {
-			//TODO: What about if we lose connection to this device or need a new SID?
+			log.V("%s - subscribing to UPNP, SID:%s", p.ProducerName(), p.SID)
 
 			// The make has a sensor and a switch state, need to notify these changes
 			// to the event bus
 			sid, err := p.System.Services.UPNP.Subscribe(
 				p.Device.Address+"/upnp/event/basicevent1",
-				"",
-				300,
+				p.SID,
+				120,
 				true,
 				p)
 
 			if err != nil {
 				// log failure, keep trying to subscribe to the target device
-				// there may be network issues
+				// there may be network issues, if this is a renew, the old SID
+				// might have expired, so reset so we get a new one
 				log.V("[%s] failed to subscribe to upnp: %s", p.ProducerName(), err)
+				p.SID = ""
 				time.Sleep(time.Second * 10)
 			} else {
+				// We got a sid, now sleep then renew the subscription
 				p.SID = sid
-				break
+				log.V("%s - subscribed to UPNP, SID:%s", p.ProducerName(), sid)
+				time.Sleep(time.Second * 100)
 			}
 		}
+
+		log.V("%s - stopped producing events", p.ProducerName())
 	}()
 }
 
