@@ -166,9 +166,10 @@ var ZoneSensorList = React.createClass({
                 this._monitorData.zones[zoneId] = resp.zones[zoneId];
                 
                 var cmp = this.refs['cell_zone_' + zoneId];
-                if (cmp) {
-                    cmp.setLevel(this._monitorData.zones[zoneId]);
+                if (!cmp) {
+                    return;
                 }
+                cmp.setLevel(this._monitorData.zones[zoneId]);
             }.bind(this));
             Object.keys(resp.sensors || {}).forEach(function(sensorId) {
                 this._monitorData.sensors[sensorId] = resp.sensors[sensorId];
@@ -177,7 +178,7 @@ var ZoneSensorList = React.createClass({
                 if (!cmp) {
                     return;
                 }
-                //TODO: Set attribute...cmp.setLevel(this._monitorData.sensors[sensorId].value);
+                cmp.setAttr(this._monitorData.sensors[sensorId]);
             }.bind(this));
 
             //TODO: Need to merge values from all updates otherwise have missing values

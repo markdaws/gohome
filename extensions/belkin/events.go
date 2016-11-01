@@ -88,6 +88,7 @@ func (p *makerProducer) UPNPNotify(e upnp.NotifyEvent) {
 				Name:     "sensor",
 				Value:    strconv.Itoa(*attrs.Sensor),
 				DataType: gohome.SDTInt,
+				States:   p.Sensor.Attr.States,
 			},
 		})
 	} else if attrs.Switch != nil {

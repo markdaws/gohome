@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -38,6 +37,7 @@ func apiSensorsHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 				Attr: jsonSensorAttr{
 					Name:     sensor.Attr.Name,
 					DataType: string(sensor.Attr.DataType),
+					States:   sensor.Attr.States,
 				},
 			}
 			i++
@@ -64,7 +64,6 @@ func apiAddSensorHandler(
 
 		var data jsonSensor
 		if err = json.Unmarshal(body, &data); err != nil {
-			fmt.Printf("%s\n", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -77,6 +76,7 @@ func apiAddSensorHandler(
 			Attr: gohome.SensorAttr{
 				Name:     data.Attr.Name,
 				DataType: gohome.SensorDataType(data.Attr.DataType),
+				States:   data.Attr.States,
 			},
 		}
 

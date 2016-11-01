@@ -91,6 +91,10 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 					Name:     "sensor",
 					Value:    "-1",
 					DataType: gohome.SDTInt,
+					States: map[string]string{
+						"0": "Closed",
+						"1": "Open",
+					},
 				},
 			}
 			dev.AddSensor(sensor)

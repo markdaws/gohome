@@ -79,6 +79,7 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 					Attr: jsonSensorAttr{
 						Name:     sen.Attr.Name,
 						DataType: string(sen.Attr.DataType),
+						States:   sen.Attr.States,
 					},
 				}
 				j++

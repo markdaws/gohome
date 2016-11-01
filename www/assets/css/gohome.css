@@ -68,6 +68,11 @@ button.disabled {
     max-width: 370px;
     margin-top: 3px;
 }
+.cmp-SensorMonitor .value {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 40px;
+}
 
 .cmp-ZoneControl {
     padding: 24px;

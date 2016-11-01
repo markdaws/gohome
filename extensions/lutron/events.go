@@ -29,7 +29,7 @@ func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 		for e := range ch {
 			switch evt := e.(type) {
 			case *gohome.ZonesReportEvt:
-				log.V("got zones report")
+				log.V("lutron - got zones report")
 				// The system wants zones to report their current status, check if
 				// we own any of these zones, if so report them
 				dev, err := lutronExt.DeviceFromModelNumber(p.Device.ModelNumber)
@@ -125,6 +125,8 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 				}
 			}
 
+			//TODO: There should be a ping mechanism here so we know this connection
+			//is still alive...
 			log.V("%s stopped streaming events", p.Device)
 			conn.IsBad = true
 			p.Device.Connections.Release(conn)

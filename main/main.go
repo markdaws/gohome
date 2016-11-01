@@ -109,6 +109,9 @@ func main() {
 	//be able to get executing devices without having to know about system
 	cp.SetSystem(sys)
 
+	//TODO: Services need to be fully started so devices can use then, upnp not started, what happens
+	// when device tries to use it ...
+	//TODO: webserver and apis should work without initing devices first...
 	upnpService := upnp.NewSubServer()
 	sys.Services.UPNP = upnpService
 	go func() {

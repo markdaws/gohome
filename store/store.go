@@ -73,9 +73,10 @@ type deviceJSON struct {
 }
 
 type sensorAttrJSON struct {
-	Name     string `json:"name"`
-	Value    string `json:"value"`
-	DataType string `json:"dataType"`
+	Name     string            `json:"name"`
+	Value    string            `json:"value"`
+	DataType string            `json:"dataType"`
+	States   map[string]string `json:"states"`
 }
 
 type sensorJSON struct {
@@ -248,6 +249,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 					Name:     sen.Attr.Name,
 					Value:    sen.Attr.Value,
 					DataType: gohome.SensorDataType(sen.Attr.DataType),
+					States:   sen.Attr.States,
 				},
 			}
 
@@ -471,6 +473,7 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 		d.Sensors = make([]sensorJSON, len(device.Sensors))
 		si := 0
 		for _, sen := range device.Sensors {
+			fmt.Printf("%+v\n", sen)
 			d.Sensors[si] = sensorJSON{
 				Address:     sen.Address,
 				ID:          sen.ID,
@@ -481,6 +484,7 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 					Name:     sen.Attr.Name,
 					Value:    sen.Attr.Value,
 					DataType: string(sen.Attr.DataType),
+					States:   sen.Attr.States,
 				},
 			}
 			si++

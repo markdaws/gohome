@@ -1,9 +1,10 @@
 package api
 
 type jsonSensorAttr struct {
-	Name     string `json:"name"`
-	Value    string `json:"value"`
-	DataType string `json:"dataType"`
+	Name     string            `json:"name"`
+	Value    string            `json:"value"`
+	DataType string            `json:"dataType"`
+	States   map[string]string `json:"states"`
 }
 
 type jsonSensor struct {

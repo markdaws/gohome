@@ -102,6 +102,8 @@ func (m *Monitor) Refresh(monitorID string, force bool) {
 		Zones:     make(map[string]cmd.Level),
 	}
 
+	log.V("Refreshing %s, force: %t", monitorID, force)
+
 	// Build a list of sensors that need to report their values. If we
 	// already have a value for a sensor we can just return that
 	var sensorReport = &SensorsReportEvt{}
@@ -150,6 +152,7 @@ func (m *Monitor) InvalidateValues(monitorID string) {
 		return
 	}
 
+	log.V("invalidate values: %s", monitorID)
 	m.mutex.Lock()
 	for sensorID := range group.Sensors {
 		delete(m.sensorValues, sensorID)

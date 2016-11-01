@@ -28031,9 +28031,10 @@
 	                this._monitorData.zones[zoneId] = resp.zones[zoneId];
 
 	                var cmp = this.refs['cell_zone_' + zoneId];
-	                if (cmp) {
-	                    cmp.setLevel(this._monitorData.zones[zoneId]);
+	                if (!cmp) {
+	                    return;
 	                }
+	                cmp.setLevel(this._monitorData.zones[zoneId]);
 	            }.bind(this));
 	            Object.keys(resp.sensors || {}).forEach(function (sensorId) {
 	                this._monitorData.sensors[sensorId] = resp.sensors[sensorId];
@@ -28042,7 +28043,7 @@
 	                if (!cmp) {
 	                    return;
 	                }
-	                //TODO: Set attribute...cmp.setLevel(this._monitorData.sensors[sensorId].value);
+	                cmp.setAttr(this._monitorData.sensors[sensorId]);
 	            }.bind(this));
 
 	            //TODO: Need to merge values from all updates otherwise have missing values
@@ -28448,7 +28449,7 @@
 	    mixins: [CssMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            value: -1
+	            attr: null
 	        };
 	    },
 
@@ -28464,15 +28465,26 @@
 	        if (!data || !data.sensors) {
 	            return;
 	        }
-	        var val = data.sensors[this.props.id];
-	        if (val == undefined) {
+	        var attr = data.sensors[this.props.id];
+	        if (attr == undefined) {
 	            return;
 	        }
-	        this.setState({ value: val });
+	        this.setState({ attr: attr });
 	    },
 
 	    render: function render() {
-	        console.log(this.state.value);
+	        var val = '';
+	        if (this.state.attr) {
+	            val = this.state.attr.value;
+
+	            // If there is a states map, which gives value -> ui string then
+	            // use that string instead of the raw value
+	            var uiVal = this.state.attr.states && this.state.attr.states[val];
+	            if (uiVal) {
+	                val = uiVal;
+	            }
+	        }
+
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-SensorMonitor' },
@@ -28483,6 +28495,11 @@
 	                    'div',
 	                    { className: 'name pull-left' },
 	                    this.props.sensor.name
+	                ),
+	                React.createElement(
+	                    'span',
+	                    { className: 'value' },
+	                    val
 	                )
 	            )
 	        );
@@ -28505,7 +28522,8 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            level: this.props.level || { value: 0, r: 0, g: 0, b: 0 }
+	            level: this.props.level || { value: 0, r: 0, g: 0, b: 0 },
+	            attr: null
 	        };
 	    },
 
@@ -28522,7 +28540,13 @@
 	        //$this.find('.light').css('opacity', val/100);
 	    },
 
+	    setAttr: function setAttr(attr) {
+	        this.setState({ attr: attr });
+	    },
+
 	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        //TODO: Fix
+	        return true;
 	        if (nextProps.zone && this.props.zone && this.props.zone.name !== nextProps.zone.name) {
 	            return true;
 	        }
@@ -28533,12 +28557,20 @@
 	            //TODO: RGB
 	            return true;
 	        }
+	        if (nextState.attr && this.state.attr && nextState.attr.value !== this.state.attr.value) {
+	            //TODO: RGB
+	            return true;
+	        }
+
 	        return false;
 	    },
 
 	    render: function render() {
 	        var icon1, icon2, name;
 	        var type;
+	        var val = '';
+	        var opacity = 0;
+
 	        if (this.props.zone) {
 	            switch (this.props.zone.type) {
 	                case 'light':
@@ -28559,31 +28591,44 @@
 	                    break;
 	            }
 	            name = this.props.zone.name;
+
+	            if (this.state.level) {
+	                if (this.props.zone.output === 'binary') {
+	                    opacity = this.state.level.value === 0 ? 0 : 1;
+	                } else {
+	                    opacity = this.state.level.value / 100;
+	                }
+	                val = this.state.level.value + '%';
+
+	                if (this.props.zone && this.props.zone.type === 'switch') {
+	                    if (this.state.level.value === 0) {
+	                        val = 'off';
+	                    } else {
+	                        val = 'on';
+	                    }
+	                }
+	            }
 	        } else {
 	            icon1 = 'icon ion-ios-pulse';
 	            type = 'sensor';
 	            name = this.props.sensor.name;
+
+	            if (this.state.attr) {
+	                val = this.state.attr.value;
+
+	                // If there is a states map, which gives value -> ui string then
+	                // use that string instead of the raw value
+	                var uiVal = this.state.attr.states && this.state.attr.states[val];
+	                if (uiVal) {
+	                    val = uiVal;
+	                }
+	            }
 	        }
 
 	        var icon1Cmp, icon2Cmp;
 	        icon1Cmp = React.createElement('i', { className: icon1 });
 	        if (icon2) {
 	            icon2Cmp = React.createElement('i', { className: icon2 });
-	        }
-
-	        var val = '';
-	        var opacity = 0;
-	        if (this.state.level) {
-	            opacity = this.state.level.value / 100;
-	            val = this.state.level.value + '%';
-
-	            if (this.props.zone && this.props.zone.type === 'switch') {
-	                if (this.state.level.value === 0) {
-	                    val = 'off';
-	                } else {
-	                    val = 'on';
-	                }
-	            }
 	        }
 
 	        var typeClass = {};
@@ -28612,7 +28657,12 @@
 	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '30', width: '200', height: '65' })
 	                    )
 	                ),
-	                React.createElement('path', { className: 'switch', d: 'M105 45 L82 75 L100 75 L95 100 L120 67 L100 65', stroke: 'yellow', fill: 'yellow' }),
+	                React.createElement('path', {
+	                    className: 'switch',
+	                    d: 'M105 45 L82 75 L100 75 L95 100 L120 67 L100 65',
+	                    stroke: 'yellow',
+	                    style: { 'opacity': opacity },
+	                    fill: 'yellow' }),
 	                React.createElement('circle', {
 	                    className: 'light',
 	                    cx: '100',

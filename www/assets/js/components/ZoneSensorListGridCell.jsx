@@ -5,7 +5,8 @@ var Classnames = require('classnames');
 var ZoneSensorListGridCell = React.createClass({
     getInitialState: function() {
         return {
-            level: this.props.level || { value: 0, r:0, g:0, b:0 }
+            level: this.props.level || { value: 0, r:0, g:0, b:0 },
+            attr: null
         };
     },
 
@@ -22,7 +23,13 @@ var ZoneSensorListGridCell = React.createClass({
         //$this.find('.light').css('opacity', val/100);
     },
 
+    setAttr: function(attr) {
+        this.setState({ attr: attr });
+    },
+
     shouldComponentUpdate: function(nextProps, nextState) {
+        //TODO: Fix
+        return true;
         if (nextProps.zone && this.props.zone && (this.props.zone.name !== nextProps.zone.name)) {
             return true;
         }
@@ -33,12 +40,20 @@ var ZoneSensorListGridCell = React.createClass({
             //TODO: RGB
             return true;
         }
+        if (nextState.attr && this.state.attr && (nextState.attr.value !== this.state.attr.value)) {
+            //TODO: RGB
+            return true;
+        }
+
         return false;
     },
     
     render: function() {
         var icon1, icon2, name;
         var type;
+        var val = '';
+        var opacity = 0;
+        
         if (this.props.zone) {
             switch (this.props.zone.type) {
                 case 'light':
@@ -59,31 +74,44 @@ var ZoneSensorListGridCell = React.createClass({
                     break;
             }
             name = this.props.zone.name;
+
+            if (this.state.level) {
+                if (this.props.zone.output === 'binary') {
+                    opacity = this.state.level.value === 0 ? 0 : 1;
+                } else {
+                    opacity = this.state.level.value / 100;
+                }
+                val = this.state.level.value + '%';
+                
+                if (this.props.zone && this.props.zone.type === 'switch') {
+                    if (this.state.level.value === 0) {
+                        val = 'off';
+                    } else {
+                        val = 'on';
+                    }
+                }
+            }
         } else {
             icon1 = 'icon ion-ios-pulse';
             type = 'sensor';
             name = this.props.sensor.name;
+
+            if (this.state.attr) {
+                val = this.state.attr.value;
+
+                // If there is a states map, which gives value -> ui string then
+                // use that string instead of the raw value
+                var uiVal = this.state.attr.states && this.state.attr.states[val];
+                if (uiVal) {
+                    val = uiVal;
+                }
+            }
         }
 
         var icon1Cmp, icon2Cmp;
-        icon1Cmp = <i className={icon1}></i>
+        icon1Cmp = <i className={icon1}></i>;
         if (icon2) {
-            icon2Cmp = <i className={icon2}></i>
-        }
-
-        var val = '';
-        var opacity = 0;
-        if (this.state.level) {
-            opacity = this.state.level.value / 100;
-            val = this.state.level.value + '%';
-        
-            if (this.props.zone && this.props.zone.type === 'switch') {
-                if (this.state.level.value === 0) {
-                    val = 'off';
-                } else {
-                    val = 'on';
-                }
-            }
+            icon2Cmp = <i className={icon2}></i>;
         }
 
         var typeClass = {};
@@ -103,7 +131,12 @@ var ZoneSensorListGridCell = React.createClass({
                         <rect className="clipRect" x="0" y="30" width="200" height="65" />
                     </clipPath>
                 </g>
-                <path className="switch" d="M105 45 L82 75 L100 75 L95 100 L120 67 L100 65" stroke="yellow" fill="yellow"></path>
+                <path
+                    className="switch"
+                    d="M105 45 L82 75 L100 75 L95 100 L120 67 L100 65"
+                    stroke="yellow"
+                    style={{'opacity': opacity}}
+                    fill="yellow"></path>
                 <circle
                     className="light"
                     cx="100"

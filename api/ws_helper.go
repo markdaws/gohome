@@ -103,13 +103,13 @@ func (h *WSHelper) HTTPHandler() func(http.ResponseWriter, *http.Request) {
 			readChan:  make(chan bool),
 		}
 		h.register(conn)
+		go conn.writeLoop(h)
 
 		// When a connection registers, we need to ask the monitor to refresh all
 		// values associated with it. Since we could have subscribed but not connected
 		// yet and missed previous updates
 		h.monitor.Refresh(monitorID, false)
 
-		go conn.writeLoop(h)
 		conn.readLoop(h)
 	}
 }
@@ -139,6 +139,7 @@ func (h *WSHelper) processUpdates() {
 					Name:     attr.Name,
 					Value:    attr.Value,
 					DataType: string(attr.DataType),
+					States:   attr.States,
 				}
 			}
 			for zoneID, level := range update.Zones {

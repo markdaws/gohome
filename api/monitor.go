@@ -82,7 +82,7 @@ func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.Re
 			group.Zones[zoneID] = true
 		}
 
-		mID, err := system.Services.Monitor.Subscribe(group, true)
+		mID, err := system.Services.Monitor.Subscribe(group, false)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return

@@ -23,6 +23,7 @@ type SensorAttr struct {
 	Value         string
 	DataType      SensorDataType
 	UnitOfMeasure string
+	States        map[string]string
 }
 
 func (a SensorAttr) String() string {
