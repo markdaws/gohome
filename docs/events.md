@@ -74,6 +74,8 @@ type DeviceLostEvt struct {
 }
 ```
 
+###ClientConnectedEvt
+//TODO:
 ###DeviceProducingEvt
 //TODO:
 ###DeviceConnectedEvt
