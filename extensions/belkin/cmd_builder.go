@@ -57,5 +57,4 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	default:
 		return nil, fmt.Errorf("unsupported command type")
 	}
-	return nil, nil
 }

@@ -30,10 +30,17 @@ type config struct {
 func main() {
 	//TODO: Don't panic, system should still start but with warning to the user
 
-	// Find the first public address we can bind to
-	addr, err := getIPV4NonLoopbackAddr()
-	if err != nil || addr == "" {
-		panic("could not find any address to bind to")
+	useLocalhost := true
+	var addr string
+	if !useLocalhost {
+		// Find the first public address we can bind to
+		var err error
+		addr, err = getIPV4NonLoopbackAddr()
+		if err != nil || addr == "" {
+			panic("could not find any address to bind to")
+		}
+	} else {
+		addr = "127.0.0.1"
 	}
 
 	// TODO: Should read this from a config file on disk, only if ip addresses are

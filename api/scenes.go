@@ -402,8 +402,8 @@ func apiSceneHandlerCommandAdd(
 				return
 			}
 			finalCmd = &cmd.SceneSet{
-				scene.ID,
-				scene.Name,
+				SceneID:   scene.ID,
+				SceneName: scene.Name,
 			}
 
 		default:

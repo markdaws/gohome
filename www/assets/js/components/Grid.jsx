@@ -59,6 +59,31 @@ var Grid = React.createClass({
         }
     },
 
+    componentWillReceiveProps: function(nextProps) {
+        // If the cells changed, then we are goign to re-render, close the expander
+        if (nextProps.cells && (nextProps.cells !== this.props.cells)) {
+            this.closeExpander();
+        }
+    },
+    
+    shouldComponentUpdate: function(nextProps, nextState) {
+        //TODO: Fix
+        return true;
+        if (nextProps.cells && (nextProps.cells != this.props.cells)) {
+            return true;
+        }
+        if (nextState.cellWidth && (nextState.cellWidth !== this.state.cellWidth)) {
+            return true;
+        }
+        if (nextState.cellHeight && (nextState.cellHeight !== this.state.cellHeight)) {
+            return true;
+        }
+        if (nextState.expanderIndex != undefined && (nextState.expanderIndex !== this.state.expanderIndex)) {
+            return true;
+        }
+        return false;
+    },
+    
     calcCellDimensions: function() {
         var $this = $(ReactDOM.findDOMNode(this));
         var gridWidthNoPadding = $this.width();
@@ -76,6 +101,16 @@ var Grid = React.createClass({
         this.setState({
             cellWidth: dimensions.width,
             cellHeight: dimensions.height
+        });
+    },
+
+    closeExpander: function() {
+        this.setState({
+            expanded: false,
+            cellIndices: { x:-1, y:-1},
+            expanderIndex: -1,
+            selectedIndex: -1,
+            expanderContent: null
         });
     },
     
@@ -108,13 +143,7 @@ var Grid = React.createClass({
 
         if (cellXPos === this.state.cellIndices.x &&
             cellYPos === this.state.cellIndices.y) {
-            this.setState({
-                expanded: false,
-                cellIndices: { x:-1, y:-1},
-                expanderIndex: -1,
-                selectedIndex: -1,
-                expanderContent: null
-            });
+            this.closeExpaner();
         }
         else {
             this.setState({

@@ -24,6 +24,8 @@ func RegisterDeviceHandlers(r *mux.Router, s *apiServer) {
 		apiAddDeviceHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
 	r.HandleFunc("/api/v1/devices/{id}",
 		apiDeviceHandlerDelete(s.systemSavePath, s.system, s.recipeManager)).Methods("DELETE")
+	r.HandleFunc("/api/v1/devices/{id}",
+		apiDeviceHandlerUpdate(s.systemSavePath, s.system, s.recipeManager)).Methods("PUT")
 }
 
 func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
@@ -164,6 +166,85 @@ func apiAddDeviceHandler(
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		data.ClientID = ""
 		data.ID = d.ID
+		json.NewEncoder(w).Encode(data)
+	}
+}
+
+func apiDeviceHandlerUpdate(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var data jsonDevice
+		if err = json.Unmarshal(body, &data); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		d, ok := system.Devices[data.ID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		updatedDev, err := gohome.NewDevice(
+			data.ModelNumber,
+			"",
+			"",
+			data.Address,
+			data.ID,
+			data.Name,
+			data.Description,
+			nil,
+			nil,
+			nil,
+			nil)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		errors := updatedDev.Validate()
+		if errors != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, errors))
+			return
+		}
+
+		// Validated, set the fields
+		d.Name = data.Name
+		d.Description = data.Description
+		d.ModelNumber = data.ModelNumber
+
+		addressChanged := d.Address != data.Address
+		d.Address = data.Address
+		d.Type = gohome.DeviceType(data.Type)
+
+		err = store.SaveSystem(savePath, system, recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		// If the address changed then we need to stop all services associated
+		// with the device and start them again using the new address
+		if addressChanged {
+			//TODO: Finish this, pattern for stopping devices
+			system.StopDevice(d)
+			system.InitDevice(d)
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(data)
 	}
 }

@@ -23722,13 +23722,7 @@
 	        }
 	    },
 
-	    testConnection: function testConnection() {
-	        //TODO: How to know what to call
-	    },
-
-	    save: function save() {
-	        this.setState({ errors: null });
-
+	    createDevice: function createDevice() {
 	        Api.deviceCreate(this.toJson(), function (err, deviceData) {
 	            if (err) {
 	                this.setState({
@@ -23739,7 +23733,7 @@
 	            }
 
 	            // Let callers know the device has been saved
-	            this.props.savedDevice(this.state.clientId, deviceData);
+	            this.props.createdDevice(this.state.clientId, deviceData);
 
 	            // Now we need to loop through each of the zones and save them
 	            function saveZone(index) {
@@ -23792,6 +23786,30 @@
 	                }.bind(this));
 	            }
 	        }.bind(this));
+	    },
+
+	    updateDevice: function updateDevice() {
+	        Api.deviceUpdate(this.toJson(), function (err, deviceData) {
+	            if (err) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validationErrors
+	                });
+	                return;
+	            }
+
+	            this.props.updatedDevice(deviceData);
+	        }.bind(this));
+	    },
+
+	    save: function save() {
+	        this.setState({ errors: null });
+
+	        if (this.state.id) {
+	            this.updateDevice();
+	        } else {
+	            this.createDevice();
+	        }
 	    },
 
 	    deleteDevice: function deleteDevice() {
@@ -24291,6 +24309,27 @@
 	        });
 	    },
 
+	    deviceUpdate: function deviceUpdate(deviceJson, callback) {
+	        $.ajax({
+	            url: BASE + '/api/v1/devices/' + deviceJson.id,
+	            type: 'PUT',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify(deviceJson),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                var errors = (xhr.responseJSON || {}).errors;
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    validationErrors: errors
+	                });
+	            }
+	        });
+	    },
+
 	    // Deletes a device on the server
 	    deviceDestroy: function deviceDestroy(id, callback) {
 	        $.ajax({
@@ -24694,6 +24733,11 @@
 	    DEVICE_CREATE: null,
 	    DEVICE_CREATE_RAW: null,
 	    DEVICE_CREATE_FAIL: null,
+
+	    // Device fields have been updated
+	    DEVICE_UPDATE: null,
+	    DEVICE_UPDATE_RAW: null,
+	    DEVICE_UPDATE_FAIL: null,
 
 	    // When we are importing a device
 	    DEVICE_IMPORT: null,
@@ -25530,9 +25574,15 @@
 	        };
 	    },
 
-	    savedDevice: function savedDevice(clientId, deviceJson, append) {
+	    createdDevice: function createdDevice(clientId, deviceJson, append) {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+	        };
+	    },
+
+	    updatedDevice: function updatedDevice(deviceJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_UPDATE_RAW, data: deviceJson });
 	        };
 	    },
 
@@ -25760,7 +25810,7 @@
 	                    id: device.id,
 	                    clientId: device.clientId,
 	                    readOnlyFields: 'id'
-	                }, _defineProperty(_React$createElement, 'key', device.id || device.clientId), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'savedDevice', this.props.savedDevice), _React$createElement))
+	                }, _defineProperty(_React$createElement, 'key', device.id || device.clientId), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'savedDevice', this.props.savedDevice), _defineProperty(_React$createElement, 'updatedDevice', this.props.updatedDevice), _React$createElement))
 	            };
 
 	            switch (device.type) {
@@ -25785,40 +25835,48 @@
 	            }
 	        }.bind(this));
 
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-SystemDeviceList' },
-	            React.createElement(
+	        var dimmerSection;
+	        if (dimmers.length > 0) {
+	            dimmerSection = React.createElement(
 	                'div',
-	                { className: dimmers.length > 0 ? "" : " hidden" },
+	                { key: 'dimmerSection' },
 	                React.createElement(
 	                    'h2',
 	                    null,
 	                    'Dimmers'
 	                ),
 	                React.createElement(Grid, { cells: dimmers })
-	            ),
-	            React.createElement(
+	            );
+	        }
+	        var switchSection;
+	        if (switches.length > 0) {
+	            switchSection = React.createElement(
 	                'div',
-	                { className: switches.length > 0 ? "" : " hidden" },
+	                { key: 'switchSection' },
 	                React.createElement(
 	                    'h2',
 	                    null,
 	                    'Switches'
 	                ),
 	                React.createElement(Grid, { cells: switches })
-	            ),
-	            React.createElement(
+	            );
+	        }
+	        var shadeSection;
+	        if (shades.length > 0) {
+	            shadeSection = React.createElement(
 	                'div',
-	                { className: shades.length > 0 ? "" : " hidden" },
+	                { key: 'shadeSection' },
 	                React.createElement(
 	                    'h2',
 	                    null,
 	                    'Shades'
 	                ),
 	                React.createElement(Grid, { cells: shades })
-	            ),
-	            React.createElement(
+	            );
+	        }
+	        var hubSection;
+	        if (hubs.length > 0) {
+	            hubSection = React.createElement(
 	                'div',
 	                { className: hubs.length > 0 ? "" : " hidden" },
 	                React.createElement(
@@ -25827,27 +25885,43 @@
 	                    'Hubs'
 	                ),
 	                React.createElement(Grid, { cells: hubs })
-	            ),
-	            React.createElement(
+	            );
+	        }
+	        var remoteSection;
+	        if (remotes.length > 0) {
+	            remoteSection = React.createElement(
 	                'div',
-	                { className: remotes.length > 0 ? "" : " hidden" },
+	                { key: 'remoteSection' },
 	                React.createElement(
 	                    'h2',
 	                    null,
 	                    'Remotes'
 	                ),
 	                React.createElement(Grid, { cells: remotes })
-	            ),
-	            React.createElement(
+	            );
+	        }
+	        var deviceSection;
+	        if (unknown.length > 0) {
+	            deviceSection = React.createElement(
 	                'div',
-	                { className: unknown.length > 0 ? "" : " hidden" },
+	                { key: 'deviceSection' },
 	                React.createElement(
 	                    'h2',
 	                    null,
 	                    'Devices'
 	                ),
 	                React.createElement(Grid, { cells: unknown })
-	            )
+	            );
+	        }
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SystemDeviceList' },
+	            dimmerSection,
+	            switchSection,
+	            shadeSection,
+	            hubSection,
+	            remoteSection,
+	            deviceSection
 	        );
 	    }
 	});
@@ -25857,8 +25931,11 @@
 	        deviceDelete: function deviceDelete(id, clientId) {
 	            dispatch(SystemActions.deviceDelete(id, clientId));
 	        },
-	        savedDevice: function savedDevice(clientId, data) {
-	            dispatch(SystemActions.savedDevice(clientId, data));
+	        createdDevice: function createdDevice(clientId, data) {
+	            dispatch(SystemActions.createdDevice(clientId, data));
+	        },
+	        updatedDevice: function updatedDevice(data) {
+	            dispatch(SystemActions.updatedDevice(data));
 	        }
 	    };
 	}
@@ -25937,6 +26014,31 @@
 	        };
 	    },
 
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        // If the cells changed, then we are goign to re-render, close the expander
+	        if (nextProps.cells && nextProps.cells !== this.props.cells) {
+	            this.closeExpander();
+	        }
+	    },
+
+	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        //TODO: Fix
+	        return true;
+	        if (nextProps.cells && nextProps.cells != this.props.cells) {
+	            return true;
+	        }
+	        if (nextState.cellWidth && nextState.cellWidth !== this.state.cellWidth) {
+	            return true;
+	        }
+	        if (nextState.cellHeight && nextState.cellHeight !== this.state.cellHeight) {
+	            return true;
+	        }
+	        if (nextState.expanderIndex != undefined && nextState.expanderIndex !== this.state.expanderIndex) {
+	            return true;
+	        }
+	        return false;
+	    },
+
 	    calcCellDimensions: function calcCellDimensions() {
 	        var $this = $(ReactDOM.findDOMNode(this));
 	        var gridWidthNoPadding = $this.width();
@@ -25954,6 +26056,16 @@
 	        this.setState({
 	            cellWidth: dimensions.width,
 	            cellHeight: dimensions.height
+	        });
+	    },
+
+	    closeExpander: function closeExpander() {
+	        this.setState({
+	            expanded: false,
+	            cellIndices: { x: -1, y: -1 },
+	            expanderIndex: -1,
+	            selectedIndex: -1,
+	            expanderContent: null
 	        });
 	    },
 
@@ -25985,13 +26097,7 @@
 	        var expanderIndex = Math.min(this.props.cells.length, (cellYPos + 1) * cellsPerRow);
 
 	        if (cellXPos === this.state.cellIndices.x && cellYPos === this.state.cellIndices.y) {
-	            this.setState({
-	                expanded: false,
-	                cellIndices: { x: -1, y: -1 },
-	                expanderIndex: -1,
-	                selectedIndex: -1,
-	                expanderContent: null
-	            });
+	            this.closeExpaner();
 	        } else {
 	            this.setState({
 	                cellIndices: { x: cellXPos, y: cellYPos },
@@ -29953,6 +30059,21 @@
 	            });
 
 	        case Constants.DEVICE_CREATE_FAIL:
+	            break;
+
+	        case Constants.DEVICE_UPDATE:
+	            break;
+
+	        case Constants.DEVICE_UPDATE_RAW:
+	            newState.devices = newState.devices.map(function (device) {
+	                if (device.id === action.data.id) {
+	                    return action.data;
+	                }
+	                return device;
+	            });
+	            break;
+
+	        case Constants.DEVICE_UPDATE_FAIL:
 	            break;
 
 	        case Constants.DEVICE_IMPORT:

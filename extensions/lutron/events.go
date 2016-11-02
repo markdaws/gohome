@@ -79,9 +79,10 @@ func (p *eventConsumer) StopConsuming() {
 }
 
 type eventProducer struct {
-	Name   string
-	System *gohome.System
-	Device *gohome.Device
+	Name      string
+	System    *gohome.System
+	Device    *gohome.Device
+	producing bool
 }
 
 func (p *eventProducer) ProducerName() string {
@@ -89,8 +90,10 @@ func (p *eventProducer) ProducerName() string {
 }
 
 func (p *eventProducer) StartProducing(b *evtbus.Bus) {
+	p.producing = true
+
 	go func() {
-		for {
+		for p.producing {
 			log.V("%s attempting to stream events", p.Device)
 			conn, err := p.Device.Connections.Get(time.Second * 20)
 			if err != nil {
@@ -148,7 +151,8 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 }
 
 func (p *eventProducer) StopProducing() {
-	//TODO:
+	p.producing = false
+	//TODO: get out of the event loop, stop the scanner
 }
 
 //TODO: Move all this parsing to go-home-iot/lutron

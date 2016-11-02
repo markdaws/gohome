@@ -138,12 +138,17 @@ button.disabled {
     margin-bottom: 8px;
 }
 
+.cmp-System {
+    position: relative;
+    padding-bottom: 30px;
+}
 .cmp-System .header {
+    position: absolute;
     left: 0;
     right: 0;
+    padding-top: 0;
     padding-left: 12px;
     padding-right: 12px;
-    padding-top: 12px;
 }
 .cmp-System .btnExitImport {
     margin-bottom: 12px;

@@ -41,6 +41,21 @@ module.exports = function(state, action) {
     case Constants.DEVICE_CREATE_FAIL:
         break;
 
+    case Constants.DEVICE_UPDATE:
+        break;
+
+    case Constants.DEVICE_UPDATE_RAW:
+        newState.devices = newState.devices.map(function(device) {
+            if (device.id === action.data.id) {
+                return action.data;
+            }
+            return device;
+        });
+        break;
+
+    case Constants.DEVICE_UPDATE_FAIL:
+        break;
+
     case Constants.DEVICE_IMPORT:
         break;
     case Constants.DEVICE_IMPORT_RAW:

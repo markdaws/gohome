@@ -69,6 +69,8 @@ type Extension interface {
 	// for the device that was passed in to the function, nil otherwise
 	ImporterForDevice(*System, *Device) Importer
 
+	// EventsForDevice should return a gohome.ExtEvents instance if the extension supports
+	// producing and consuming events for the device passed in to the function
 	EventsForDevice(sys *System, d *Device) *ExtEvents
 }
 
@@ -106,6 +108,8 @@ func (e *Extensions) FindNetwork(sys *System, d *Device) Network {
 	return nil
 }
 
+// FindEvents returns a gohome.ExtEvents instance if there is any extension
+// that supports producing events for the device
 func (e *Extensions) FindEvents(sys *System, d *Device) *ExtEvents {
 	for _, ext := range e.extensions {
 		events := ext.EventsForDevice(sys, d)

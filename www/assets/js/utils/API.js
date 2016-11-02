@@ -48,6 +48,27 @@ var API = {
         });
     },
 
+    deviceUpdate: function(deviceJson, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/devices/' + deviceJson.id,
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(deviceJson),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = (xhr.responseJSON || {}).errors;
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    validationErrors: errors
+                });
+            }
+        });        
+    },
+
     // Deletes a device on the server
     deviceDestroy: function(id, callback) {
         $.ajax({

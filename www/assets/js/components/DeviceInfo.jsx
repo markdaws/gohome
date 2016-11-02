@@ -84,13 +84,7 @@ var DeviceInfo = React.createClass({
         }
     },
 
-    testConnection: function() {
-        //TODO: How to know what to call
-    },
-
-    save: function() {
-        this.setState({ errors: null });
-
+    createDevice: function() {
         Api.deviceCreate(this.toJson(), function(err, deviceData) {
             if (err) {
                 this.setState({
@@ -101,7 +95,7 @@ var DeviceInfo = React.createClass({
             }
 
             // Let callers know the device has been saved
-            this.props.savedDevice(this.state.clientId, deviceData);
+            this.props.createdDevice(this.state.clientId, deviceData);
             
             // Now we need to loop through each of the zones and save them
             function saveZone(index) {
@@ -155,6 +149,30 @@ var DeviceInfo = React.createClass({
             }
 
         }.bind(this));
+    },
+
+    updateDevice: function() {
+        Api.deviceUpdate(this.toJson(), function(err, deviceData) {
+            if (err) {
+                this.setState({
+                    saveButtonStatus: 'error',
+                    errors: err.validationErrors
+                });
+                return;
+            }
+
+            this.props.updatedDevice(deviceData);
+        }.bind(this));
+    },
+    
+    save: function() {
+        this.setState({ errors: null });
+
+        if (this.state.id) {
+            this.updateDevice();
+        } else {
+            this.createDevice();
+        }
     },
 
     deleteDevice: function() {

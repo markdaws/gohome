@@ -23,6 +23,11 @@ module.exports = keyMirror({
     DEVICE_CREATE_RAW: null,
     DEVICE_CREATE_FAIL: null,
 
+    // Device fields have been updated
+    DEVICE_UPDATE: null,
+    DEVICE_UPDATE_RAW: null,
+    DEVICE_UPDATE_FAIL: null,
+
     // When we are importing a device
     DEVICE_IMPORT: null,
     DEVICE_IMPORT_RAW: null,

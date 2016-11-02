@@ -32,7 +32,8 @@ var SystemDeviceList = React.createClass({
                              key={device.id || device.clientId}
                              type={device.type}
                              deviceDelete={this.props.deviceDelete}
-                             savedDevice={this.props.savedDevice} />
+                             savedDevice={this.props.savedDevice}
+                             updatedDevice={this.props.updatedDevice}/>
             };
 
             switch (device.type) {
@@ -57,33 +58,68 @@ var SystemDeviceList = React.createClass({
             }
         }.bind(this));
 
-        return (
-            <div className="cmp-SystemDeviceList">
-                <div className={dimmers.length > 0 ? "" : " hidden"}>
+        var dimmerSection;
+        if (dimmers.length > 0) {
+            dimmerSection = (
+                <div key="dimmerSection">
                     <h2>Dimmers</h2>
                     <Grid cells={dimmers} />
                 </div>
-
-                <div className={switches.length > 0 ? "" : " hidden"}>
+            );
+        }
+        var switchSection;
+        if (switches.length > 0) {
+            switchSection = (
+                <div key="switchSection">
                     <h2>Switches</h2>
                     <Grid cells={switches} />
                 </div>
-                <div className={shades.length > 0 ? "" : " hidden"}>
+            );
+        }
+        var shadeSection;
+        if (shades.length > 0) {
+            shadeSection = (
+                <div key="shadeSection">
                     <h2>Shades</h2>
                     <Grid cells={shades} />
                 </div>
+            );
+        }
+        var hubSection;
+        if (hubs.length > 0) {
+            hubSection = (
                 <div className={hubs.length > 0 ? "" : " hidden"}>
                     <h2>Hubs</h2>
                     <Grid cells={hubs} />
                 </div>
-                <div className={remotes.length > 0 ? "" : " hidden"}>
+            );
+        }
+        var remoteSection;
+        if (remotes.length > 0) {
+            remoteSection = (
+                <div key="remoteSection">
                     <h2>Remotes</h2>
                     <Grid cells={remotes} />
                 </div>
-                <div className={unknown.length > 0 ? "" : " hidden"}>
+            );
+        }
+        var deviceSection;
+        if (unknown.length > 0) {
+            deviceSection = (
+                <div key="deviceSection">
                     <h2>Devices</h2>
                     <Grid cells={unknown} />
                 </div>
+            );
+        }
+        return (
+            <div className="cmp-SystemDeviceList">
+                {dimmerSection}
+                {switchSection}
+                {shadeSection}
+                {hubSection}
+                {remoteSection}
+                {deviceSection}
             </div>
         );
     }
@@ -94,8 +130,11 @@ function mapDispatchToProps(dispatch) {
         deviceDelete: function(id, clientId) {
             dispatch(SystemActions.deviceDelete(id, clientId));
         },
-        savedDevice: function(clientId, data) {
-            dispatch(SystemActions.savedDevice(clientId, data));
+        createdDevice: function(clientId, data) {
+            dispatch(SystemActions.createdDevice(clientId, data));
+        },
+        updatedDevice: function(data) {
+            dispatch(SystemActions.updatedDevice(data));
         }
     };
 }

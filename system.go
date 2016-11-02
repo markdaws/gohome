@@ -107,6 +107,26 @@ func (s *System) InitDevice(d *Device) error {
 	return nil
 }
 
+// StopDevice stops the device, closes any network connections and any other services
+// associated with the device
+func (s *System) StopDevice(d *Device) {
+	log.V("Stop Device: %s", d)
+
+	if d.Connections != nil {
+		d.Connections.Close()
+	}
+
+	evts := s.Extensions.FindEvents(s, d)
+	if evts != nil {
+		if evts.Producer != nil {
+			s.Services.EvtBus.RemoveProducer(evts.Producer)
+		}
+		if evts.Consumer != nil {
+			s.Services.EvtBus.RemoveConsumer(evts.Consumer)
+		}
+	}
+}
+
 // AddButton adds the button to the system and gives it a unique
 // ID if it already doesn't have one
 func (s *System) AddButton(b *Button) error {
