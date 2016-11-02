@@ -69,10 +69,20 @@ var ZoneControl = React.createClass({
             return;
         }
 
+        var c = new Colors({
+            'color': 'rgba(255,0,0,1.0)'
+            });
         wrapper.colorpicker({
             format: 'rgb',
             container: true,
-            inline: true
+            inline: true,
+            color: c,
+            buildCallback: function($elm) {
+                debugger;
+            },
+            renderCallback: function() {
+                debugger;
+            }
         });
 
         var timeoutId;
@@ -97,6 +107,8 @@ var ZoneControl = React.createClass({
                 );
             }.bind(this), 100);
         }.bind(this));
+
+        return wrapper;
     },
 
     makeLevel: function(val, r, g, b) {
@@ -124,7 +136,7 @@ var ZoneControl = React.createClass({
     componentDidMount: function() {
         this._slider = this.initSlider();
         this._switch = this.initSwitch(this._slider);
-        this.initRGB();
+        this._colorPicker = this.initRGB();
 
         this.props.didMount && this.props.didMount(this);
     },
@@ -190,6 +202,14 @@ var ZoneControl = React.createClass({
         switch(this.props.output) {
             case 'continuous':
                 this._slider && this._slider.set(Math.round(val.value));
+                break;
+
+            case 'rgb':
+                //TODO: color picker not changing
+                /*
+                this._colorPicker.colorpicker({
+                    color: new Colors({ color: 'rgba(' + val.r + ',' + val.g + ',' + val.b + ',1.0)' })
+                });*/
                 break;
         }
         this._switch && this._switch.bootstrapSwitch('state', val.value > 0, true);

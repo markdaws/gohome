@@ -9,6 +9,26 @@ type extension struct {
 	gohome.NullExtension
 }
 
+func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohome.ExtEvents {
+	switch d.ModelNumber {
+	case "fluxwifi":
+		evts := &gohome.ExtEvents{}
+		evts.Producer = &producer{
+			Name:   d.Name,
+			Device: d,
+			System: sys,
+		}
+		evts.Consumer = &consumer{
+			Name:   d.Name,
+			System: sys,
+			Device: d,
+		}
+		return evts
+	default:
+		return nil
+	}
+}
+
 func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.Builder {
 	switch d.ModelNumber {
 	case "fluxwifi":

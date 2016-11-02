@@ -23578,7 +23578,7 @@
 	                    clientId: device.clientId,
 	                    readOnlyFields: 'id, modelNumber',
 	                    key: device.id || device.clientId,
-	                    savedDevice: this.props.importedDevice,
+	                    createdDevice: this.props.importedDevice,
 	                    showZones: true,
 	                    showSensors: true,
 	                    zones: device.zones,
@@ -25810,7 +25810,7 @@
 	                    id: device.id,
 	                    clientId: device.clientId,
 	                    readOnlyFields: 'id'
-	                }, _defineProperty(_React$createElement, 'key', device.id || device.clientId), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'savedDevice', this.props.savedDevice), _defineProperty(_React$createElement, 'updatedDevice', this.props.updatedDevice), _React$createElement))
+	                }, _defineProperty(_React$createElement, 'key', device.id || device.clientId), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'createdDevice', this.props.createdDevice), _defineProperty(_React$createElement, 'updatedDevice', this.props.updatedDevice), _React$createElement))
 	            };
 
 	            switch (device.type) {
@@ -28363,10 +28363,20 @@
 	            return;
 	        }
 
+	        var c = new Colors({
+	            'color': 'rgba(255,0,0,1.0)'
+	        });
 	        wrapper.colorpicker({
 	            format: 'rgb',
 	            container: true,
-	            inline: true
+	            inline: true,
+	            color: c,
+	            buildCallback: function buildCallback($elm) {
+	                debugger;
+	            },
+	            renderCallback: function renderCallback() {
+	                debugger;
+	            }
 	        });
 
 	        var timeoutId;
@@ -28384,6 +28394,8 @@
 	                });
 	            }.bind(this), 100);
 	        }.bind(this));
+
+	        return wrapper;
 	    },
 
 	    makeLevel: function makeLevel(val, r, g, b) {
@@ -28411,7 +28423,7 @@
 	    componentDidMount: function componentDidMount() {
 	        this._slider = this.initSlider();
 	        this._switch = this.initSwitch(this._slider);
-	        this.initRGB();
+	        this._colorPicker = this.initRGB();
 
 	        this.props.didMount && this.props.didMount(this);
 	    },
@@ -28470,6 +28482,14 @@
 	        switch (this.props.output) {
 	            case 'continuous':
 	                this._slider && this._slider.set(Math.round(val.value));
+	                break;
+
+	            case 'rgb':
+	                //TODO: color picker not changing
+	                /*
+	                this._colorPicker.colorpicker({
+	                    color: new Colors({ color: 'rgba(' + val.r + ',' + val.g + ',' + val.b + ',1.0)' })
+	                });*/
 	                break;
 	        }
 	        this._switch && this._switch.bootstrapSwitch('state', val.value > 0, true);
@@ -28680,6 +28700,7 @@
 	        var type;
 	        var val = '';
 	        var opacity = 0;
+	        var color = 'yellow';
 
 	        if (this.props.zone) {
 	            switch (this.props.zone.type) {
@@ -28706,6 +28727,12 @@
 	                if (this.props.zone.output === 'binary') {
 	                    opacity = this.state.level.value === 0 ? 0 : 1;
 	                    val = this.state.level.value === 0 ? 'off' : 'on';
+	                } else if (this.props.zone.output === 'rgb') {
+	                    opacity = 1;
+
+	                    var lev = this.state.level;
+	                    val = this.state.level.value === 0 ? 'off' : 'on';
+	                    color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
 	                } else {
 	                    opacity = this.state.level.value / 100;
 	                    val = this.state.level.value + '%';
@@ -28779,7 +28806,7 @@
 	                    cx: '100',
 	                    cy: '55',
 	                    r: '25',
-	                    fill: 'yellow',
+	                    fill: color,
 	                    clipPath: 'url(#lightClip)',
 	                    style: { 'opacity': opacity, 'clipPath': 'url(#lightClip)' } })
 	            ),

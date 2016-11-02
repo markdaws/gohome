@@ -245,14 +245,12 @@ Test Cases
 - Load page, zones don't get values, device is not producing, make sure device start producing, zones update ...
 
 
-Today:
-- Finish monitor class, document, and testing
-- Finish api for monitor
-- Finish efficient updating of cells
-- Finish updating of expander content
-- Test client connect/disconnect
-- Test losing connection to device, reconnect etc
-
-
-
-Suport momentary 
+Task List:
+ - Support importing fluxwifi bulb
+ - Support setting/getting RGB values for a bulb
+ - Support ConnectedByTcp import
+   - Add ability to show UI on import, support extensions providing UI
+ - Edit Zone details, update name including delete, choose which fields are editable
+ - Clean up import UI
+ - Expose an API to get the list of devices that can be imported
+ - Add option to not import device or zone again, just choose certain items to import

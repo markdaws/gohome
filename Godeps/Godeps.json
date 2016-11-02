@@ -29,7 +29,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/fluxwifi",
-			"Rev": "0b89a8a3596b1f1977e8e354c9f15e8d92036441"
+			"Rev": "813f61b89c9b895c7b20003fc5f35fa8754781b0"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/gossdp",

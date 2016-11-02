@@ -1,6 +1,10 @@
 package zone
 
-import "github.com/markdaws/gohome/validation"
+import (
+	"fmt"
+
+	"github.com/markdaws/gohome/validation"
+)
 
 type Zone struct {
 	Address     string
@@ -13,6 +17,10 @@ type Zone struct {
 
 	//TODO: Describe max, min, step e.g. on/off vs dimmable
 	//TODO: Value presets?
+}
+
+func (z *Zone) String() string {
+	return fmt.Sprintf("Zone[ID: %s, Name: %s, Address: %s]", z.ID, z.Name, z.Address)
 }
 
 func (z *Zone) Validate() *validation.Errors {

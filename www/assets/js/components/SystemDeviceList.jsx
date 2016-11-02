@@ -32,7 +32,7 @@ var SystemDeviceList = React.createClass({
                              key={device.id || device.clientId}
                              type={device.type}
                              deviceDelete={this.props.deviceDelete}
-                             savedDevice={this.props.savedDevice}
+                             createdDevice={this.props.createdDevice}
                              updatedDevice={this.props.updatedDevice}/>
             };
 

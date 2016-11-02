@@ -20,10 +20,10 @@ type eventConsumer struct {
 	Device *gohome.Device
 }
 
-func (p *eventConsumer) ConsumerName() string {
+func (c *eventConsumer) ConsumerName() string {
 	return "LutronEventConsumer"
 }
-func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
+func (c *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 	go func() {
 		for e := range ch {
 
@@ -48,33 +48,33 @@ func (p *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 
 			// The system wants zones to report their current status, check if
 			// we own any of these zones, if so report them
-			dev, err := lutronExt.DeviceFromModelNumber(p.Device.ModelNumber)
+			dev, err := lutronExt.DeviceFromModelNumber(c.Device.ModelNumber)
 			if err != nil {
-				log.V("%s - error, unsupported device %s inside consumer", p.ConsumerName(), p.Device.ModelNumber)
+				log.V("%s - error, unsupported device %s inside consumer", c.ConsumerName(), c.Device.ModelNumber)
 				continue
 			}
 
-			log.V("%s - %s", p.ConsumerName(), zoneRpt)
+			log.V("%s - %s", c.ConsumerName(), zoneRpt)
 
-			for _, zone := range p.Device.Zones {
+			for _, zone := range c.Device.Zones {
 				if _, ok := zoneRpt.ZoneIDs[zone.ID]; ok {
-					conn, err := p.Device.Connections.Get(time.Second * 10)
+					conn, err := c.Device.Connections.Get(time.Second * 10)
 					if err != nil {
-						log.V("%s - unable to get connection to device: %s, timeout", p.ConsumerName(), p.Device)
+						log.V("%s - unable to get connection to device: %s, timeout", c.ConsumerName(), c.Device)
 						continue
 					}
 					err = dev.RequestLevel(zone.Address, conn)
 					if err != nil {
-						log.V("%s - Failed to request level for lutron, zoneID:%s, %s", p.ConsumerName(), zone.ID, err)
+						log.V("%s - Failed to request level for lutron, zoneID:%s, %s", c.ConsumerName(), zone.ID, err)
 						conn.IsBad = true
 					}
-					p.Device.Connections.Release(conn)
+					c.Device.Connections.Release(conn)
 				}
 			}
 		}
 	}()
 }
-func (p *eventConsumer) StopConsuming() {
+func (c *eventConsumer) StopConsuming() {
 	//TODO:
 }
 

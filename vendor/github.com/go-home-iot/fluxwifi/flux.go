@@ -11,6 +11,24 @@ import (
 // CREDIT: All the knowledge of how to control this product came from:
 // https://github.com/beville/flux_led
 
+// State represents the current state of the bulb
+type State struct {
+	// Power - 0 -> off, 1 -> on, 2-> unknown
+	Power int
+
+	// Mode - ww|color|custom|unknown
+	Mode string
+
+	// R - red value if in color mode
+	R byte
+
+	// G - green value if in color mode
+	G byte
+
+	// B - blue value if in color mode
+	B byte
+}
+
 // SetLevel changes the RGB values of the bulb.
 func SetLevel(r, g, b byte, w io.Writer) error {
 	return write(w, []byte{0x31, r, g, b, 0x00, 0xf0, 0x0f})
@@ -24,6 +42,57 @@ func TurnOn(w io.Writer) error {
 // TurnOff turns the bulb off
 func TurnOff(w io.Writer) error {
 	return write(w, []byte{0x71, 0x24, 0x0f})
+}
+
+// FetchState returns the current state of the bulb
+func FetchState(rw io.ReadWriter) (*State, error) {
+	err := write(rw, []byte{0x81, 0x8a, 0x8b})
+	if err != nil {
+		return nil, err
+	}
+
+	resp := make([]byte, 100)
+	n, err := rw.Read(resp)
+	if err != nil {
+		return nil, err
+	}
+	if n < 10 {
+		return nil, fmt.Errorf("unknown response from get state")
+	}
+
+	state := &State{}
+	power := resp[2]
+	switch power {
+	case 0x23:
+		state.Power = 1
+	case 0x24:
+		state.Power = 0
+	default:
+		state.Power = 2
+	}
+
+	pattern := resp[3]
+	wwLevel := resp[9]
+	mode := "unknown"
+	switch pattern {
+	case 0x61, 0x62:
+		if wwLevel != 0 {
+			mode = "ww"
+		} else {
+			mode = "color"
+		}
+	case 0x60:
+		mode = "custom"
+	}
+	state.Mode = mode
+
+	switch mode {
+	case "color":
+		state.R = resp[6]
+		state.G = resp[7]
+		state.B = resp[8]
+	}
+	return state, nil
 }
 
 func write(w io.Writer, b []byte) error {

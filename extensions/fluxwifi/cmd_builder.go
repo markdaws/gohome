@@ -23,7 +23,11 @@ func getConnAndExecute(d *gohome.Device, f func(*pool.Connection) error) error {
 	defer func() {
 		d.Connections.Release(conn)
 	}()
-	return f(conn)
+	err = f(conn)
+	if err != nil {
+		conn.IsBad = true
+	}
+	return err
 }
 
 func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {

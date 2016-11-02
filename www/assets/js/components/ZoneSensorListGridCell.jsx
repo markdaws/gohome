@@ -53,6 +53,7 @@ var ZoneSensorListGridCell = React.createClass({
         var type;
         var val = '';
         var opacity = 0;
+        var color = 'yellow';
         
         if (this.props.zone) {
             switch (this.props.zone.type) {
@@ -79,6 +80,12 @@ var ZoneSensorListGridCell = React.createClass({
                 if (this.props.zone.output === 'binary') {
                     opacity = this.state.level.value === 0 ? 0 : 1;
                     val = this.state.level.value === 0 ? 'off' : 'on';
+                } else if (this.props.zone.output === 'rgb') {
+                    opacity = 1;
+
+                    var lev = this.state.level;
+                    val = this.state.level.value === 0 ? 'off' : 'on';
+                    color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
                 } else {
                     opacity = this.state.level.value / 100;
                     val = this.state.level.value + '%';
@@ -143,7 +150,7 @@ var ZoneSensorListGridCell = React.createClass({
                     cx="100"
                     cy="55"
                     r="25"
-                    fill="yellow"
+                    fill={color}
                     clipPath="url(#lightClip)"
                     style={{'opacity': opacity, 'clipPath':'url(#lightClip)'}}/>
             </svg>
