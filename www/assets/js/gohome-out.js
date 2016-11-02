@@ -51,6 +51,8 @@
 	var ControlApp = __webpack_require__(172);
 	var Provider = __webpack_require__(173).Provider;
 	var store = __webpack_require__(305);
+	var Login = __webpack_require__(316);
+	var Api = __webpack_require__(204);
 
 	/*
 	var C1 = require('./components/Testr.jsx');
@@ -64,11 +66,38 @@
 	);
 	*/
 
-	ReactDOM.render(React.createElement(
-	    Provider,
-	    { store: store },
-	    React.createElement(ControlApp, null)
-	), document.getElementsByClassName('content')[0]);
+	// If the user has logged in there is a session cookie, if not we show the login screen
+	var cookies = document.cookie.split(';');
+	var sid = '';
+	for (var i = 0; i < cookies.length; ++i) {
+	    var index = cookies[i].indexOf('=');
+	    if (index === -1) {
+	        continue;
+	    }
+
+	    var name = cookies[i].substr(0, index);
+	    if (name === 'sid') {
+	        sid = cookies[i].substr(index + 1);
+	        break;
+	    }
+	}
+
+	if (sid !== '') {
+	    // Need to set the SID so that we can call our APIs
+	    Api.setSID(sid);
+
+	    ReactDOM.render(React.createElement(
+	        Provider,
+	        { store: store },
+	        React.createElement(ControlApp, null)
+	    ), document.getElementsByClassName('content')[0]);
+	} else {
+	    ReactDOM.render(React.createElement(
+	        Provider,
+	        { store: store },
+	        React.createElement(Login, null)
+	    ), document.getElementsByClassName('content')[0]);
+	}
 
 /***/ },
 /* 1 */
@@ -23727,30 +23756,55 @@
 	 API provides helper methods to access all of the gohome REST APIs
 	*/
 	var API = {
+	    //TODO: Use a client side router and middleware
 
-	    //TODO: Break this in to separate files for different objects
+	    // setSID sets the session ID, this is needed to call an API
+	    setSID: function setSID(sid) {
+	        this.SID = sid;
+	    },
+
+	    checkErr: function checkErr(xhr) {
+	        if (xhr.status === 401) {
+	            // unauthorized, in this case the user has an invalid sid cookie, delete
+	            // it and reload the app which will take the user back to the login page
+	            document.cookie = 'sid=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+	            window.location = '/';
+	            return true;
+	        }
+
+	        return false;
+	    },
+
+	    // url builds a valid url to call an API
+	    url: function url(_url) {
+	        return BASE + _url + '?sid=' + this.SID;
+	    },
 
 	    deviceLoadAll: function deviceLoadAll(callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/devices',
+	            url: this.url('/api/v1/devices'),
 	            dataType: 'json',
 	            cache: false,
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
 	                    status: status
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    deviceCreate: function deviceCreate(deviceJson, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/devices',
+	            url: this.url('/api/v1/devices'),
 	            type: 'POST',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -23758,15 +23812,19 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback(xhr.responseJSON.err);
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    deviceUpdate: function deviceUpdate(deviceJson, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/devices/' + deviceJson.id,
+	            url: this.url('/api/v1/devices/' + deviceJson.id),
 	            type: 'PUT',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -23774,35 +23832,43 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback(xhr.responseJSON.err);
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // Deletes a device on the server
 	    deviceDestroy: function deviceDestroy(id, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/devices/' + id,
+	            url: this.url('/api/v1/devices/' + id),
 	            type: 'DELETE',
 	            cache: false,
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err,
 	                    status: status,
 	                    xhr: xhr
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // sceneActivate actives the specified scene
 	    sceneActivate: function sceneActivate(sceneId, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/scenes/active',
+	            url: this.url('/api/v1/scenes/active'),
 	            type: 'POST',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -23811,6 +23877,10 @@
 	                callback(null, data);
 	            }.bind(this),
 	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({ err: err });
 	            }.bind(this)
 	        });
@@ -23819,26 +23889,30 @@
 	    // sceneLoadAll loads all of the scenes from the backing store
 	    sceneLoadAll: function sceneLoadAll(callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/scenes',
+	            url: this.url('/api/v1/scenes'),
 	            dataType: 'json',
 	            cache: false,
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err,
 	                    status: status,
 	                    xhr: xhr
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // sceneCreate creates a new scene in the backing store
 	    sceneCreate: function sceneCreate(scene, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/scenes',
+	            url: this.url('/api/v1/scenes'),
 	            type: 'POST',
 	            dataType: 'json',
 	            data: JSON.stringify(scene),
@@ -23846,7 +23920,12 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
+	                alert('//TODO: this needs to be changed');
 	                var errors = (xhr.responseJSON || {}).errors;
 	                callback({
 	                    err: err,
@@ -23854,14 +23933,14 @@
 	                    validationErrors: errors,
 	                    id: scene.id
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // sceneUpdate updates fields of an existing scene
 	    sceneUpdate: function sceneUpdate(scene, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/scenes/' + scene.id,
+	            url: this.url('/api/v1/scenes/' + scene.id),
 	            type: 'PUT',
 	            dataType: 'json',
 	            data: JSON.stringify(scene),
@@ -23869,7 +23948,12 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
+	                alert('//TODO: this needs to be changed');
 	                var errors = (xhr.responseJSON || {}).errors;
 	                callback({
 	                    err: err,
@@ -23877,32 +23961,36 @@
 	                    validationErrors: errors,
 	                    id: scene.id
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // sceneDestroy deletes the scene with the specified ID from the backing store
 	    sceneDestroy: function sceneDestroy(id, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/scenes/' + id,
+	            url: this.url('/api/v1/scenes/' + id),
 	            type: 'DELETE',
 	            cache: false,
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err,
 	                    status: status,
 	                    xhr: xhr
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    sceneSaveCommand: function sceneSaveCommand(sceneId, cmd, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/scenes/' + sceneId + '/commands',
+	            url: this.url('/api/v1/scenes/' + sceneId + '/commands'),
 	            type: 'POST',
 	            dataType: 'json',
 	            data: JSON.stringify(cmd),
@@ -23910,20 +23998,25 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
+	                alert('//TODO: This needs to be changed');
 	                var errors = (xhr.responseJSON || {}).errors;
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
 	                    validationErrors: errors
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    sceneDeleteCommand: function sceneDeleteCommand(sceneId, cmdIndex, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/scenes/' + sceneId + '/commands/' + cmdIndex,
+	            url: this.url('/api/v1/scenes/' + sceneId + '/commands/' + cmdIndex),
 	            type: 'DELETE',
 	            dataType: 'json',
 	            data: {},
@@ -23931,20 +24024,24 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
 	                    status: status
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // monitorSubscribe requests to subscribe to sensor and zone changes
 	    monitorSubscribe: function monitorSubscribe(group, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/monitor/groups',
+	            url: this.url('/api/v1/monitor/groups'),
 	            type: 'POST',
 	            dataType: 'json',
 	            data: JSON.stringify(group),
@@ -23952,13 +24049,17 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
 	                    status: status
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
@@ -23966,7 +24067,7 @@
 	    // the timeout for the group before the server stops sending updates
 	    monitorSubscribeRenew: function monitorSubscribeRenew(monitorId, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/monitor/groups/' + monitorId,
+	            url: this.url('/api/v1/monitor/groups/' + monitorId),
 	            type: 'PUT',
 	            dataType: 'json',
 	            data: null,
@@ -23974,13 +24075,17 @@
 	            success: function success(data) {
 	                callback && callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback && callback({
 	                    err: err,
 	                    xhr: xhr,
 	                    status: status
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
@@ -23988,7 +24093,7 @@
 	    // no longer receive updates when values associated with it change
 	    monitorUnsubscribe: function monitorUnsubscribe(monitorId, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/monitor/groups/' + monitorId,
+	            url: this.url('/api/v1/monitor/groups/' + monitorId),
 	            type: 'DELETE',
 	            dataType: 'json',
 	            data: null,
@@ -23996,39 +24101,43 @@
 	            success: function success(data) {
 	                callback && callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
 	                callback && callback({
 	                    err: err,
 	                    xhr: xhr,
 	                    status: status
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // sensorLoadAll loads all of the sensors from the backing store
 	    sensorLoadAll: function sensorLoadAll(callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/sensors',
+	            url: this.url('/api/v1/sensors'),
 	            dataType: 'json',
 	            cache: false,
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err,
 	                    status: status,
 	                    xhr: xhr
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // sensorCreate creates a new sensor on the server
 	    sensorCreate: function sensorCreate(sensorJson, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/sensors',
+	            url: this.url('/api/v1/sensors'),
 	            type: 'POST',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -24036,16 +24145,16 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
 	                callback(xhr.responseJSON.err);
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // sensorUpdate updates a sensor on the server with the new values
 	    sensorUpdate: function sensorUpdate(sensorJson, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/sensors/' + sensorJson.id,
+	            url: this.url('/api/v1/sensors/' + sensorJson.id),
 	            type: 'PUT',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -24053,35 +24162,39 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback(xhr.responseJSON.err);
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // zoneLoadAll loads all of the zones from the backing store
 	    zoneLoadAll: function zoneLoadAll(callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/zones',
+	            url: this.url('/api/v1/zones'),
 	            dataType: 'json',
 	            cache: false,
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
 	                callback({
 	                    err: err,
 	                    status: status,
 	                    xhr: xhr
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // zoneCreate creates a new zone on the server
 	    zoneCreate: function zoneCreate(zoneJson, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/zones',
+	            url: this.url('/api/v1/zones'),
 	            type: 'POST',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -24089,16 +24202,20 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback(xhr.responseJSON.err);
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // zoneUpdate updates a zone on the server with the new values
 	    zoneUpdate: function zoneUpdate(zoneJson, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/zones/' + zoneJson.id,
+	            url: this.url('/api/v1/zones/' + zoneJson.id),
 	            type: 'PUT',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -24106,9 +24223,9 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
 	                callback(xhr.responseJSON.err);
-	            }
+	            }.bind(this)
 	        });
 	    },
 
@@ -24116,7 +24233,7 @@
 	    // cmd -> 'turnOn | turnOff | setLevel
 	    zoneSetLevel: function zoneSetLevel(zoneId, cmd, value, r, g, b, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/zones/' + zoneId + '/level',
+	            url: this.url('/api/v1/zones/' + zoneId + '/level'),
 	            type: 'PUT',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -24130,22 +24247,30 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback(err);
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // buttonLoadAll loads all of the buttons in the system
 	    buttonLoadAll: function buttonLoadAll(callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/buttons',
+	            url: this.url('/api/v1/buttons'),
 	            dataType: 'json',
 	            cache: false,
 	            success: function (data) {
 	                callback(null, data);
 	            }.bind(this),
 	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err,
 	                    xhr: xhr,
@@ -24158,24 +24283,28 @@
 	    // discoverersList lists all of the discoverers
 	    discoverersList: function discoverersList(callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/discovery/discoverers',
+	            url: this.url('/api/v1/discovery/discoverers'),
 	            dataType: 'json',
 	            cache: false,
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback({
 	                    err: err
 	                });
-	            }
+	            }.bind(this)
 	        });
 	    },
 
 	    // discovererScanDevices scans the local network for specific devices
 	    discovererScanDevices: function discovererScanDevices(discovererId, uiFields, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
+	            url: this.url('/api/v1/discovery/discoverers/' + discovererId),
 	            dataType: 'json',
 	            cache: false,
 	            type: 'POST',
@@ -24183,11 +24312,38 @@
 	            success: function success(data) {
 	                callback(null, data);
 	            },
-	            error: function error(xhr, status, err) {
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
 	                callback(xhr.responseJSON.err);
-	            }
+	            }.bind(this)
+	        });
+	    },
+
+	    sessionCreate: function sessionCreate(login, password, callback) {
+	        // NOTE: This api lives on the WWW server, so we get a session cookie set on the
+	        // WWW domain
+	        $.ajax({
+	            url: '//' + window.location.host + '/api/v1/users/' + login + '/sessions',
+	            type: 'POST',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify({ password: password }),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
+	                callback({});
+	            }.bind(this)
 	        });
 	    }
+
 	};
 	module.exports = API;
 
@@ -32771,6 +32927,164 @@
 
 	    return newState;
 	};
+
+/***/ },
+/* 316 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(211);
+
+	var classes = new BEMHelper({
+	    name: 'Login',
+	    prefix: 'b-'
+	});
+	__webpack_require__(317);
+
+	var Login = React.createClass({
+	    displayName: 'Login',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            error: null
+	        };
+	    },
+
+	    loginClicked: function loginClicked(evt) {
+	        evt.preventDefault();
+
+	        this.setState({ error: null });
+
+	        var $el = $(ReactDOM.findDOMNode(this));
+	        var login = $el.find('#login').val();
+	        var password = $el.find('#password').val();
+
+	        if (login === '') {
+	            this.setState({ error: { msg: 'login cannot be empty' } });
+	            return;
+	        }
+	        if (password === '') {
+	            this.setState({ error: { msg: 'password cannot be empty' } });
+	            return;
+	        }
+
+	        Api.sessionCreate(login, password, function (err, data) {
+	            if (err) {
+	                this.setState({ error: err });
+	                return;
+	            }
+
+	            window.location = '/';
+
+	            //expire cookie: document.cookie = 'sid=; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+	        }.bind(this));
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            React.createElement(
+	                'div',
+	                classes('header'),
+	                React.createElement('img', _extends({}, classes('header-logo'), { src: '/assets/images/logo.png' }))
+	            ),
+	            React.createElement(
+	                'div',
+	                classes('login-form'),
+	                React.createElement(
+	                    'form',
+	                    null,
+	                    React.createElement(
+	                        'div',
+	                        { className: 'form-group' },
+	                        React.createElement('input', {
+	                            type: 'text',
+	                            className: 'form-control',
+	                            id: 'login',
+	                            autocapitalize: 'none',
+	                            autocorrect: 'off',
+	                            placeholder: 'Login' })
+	                    ),
+	                    React.createElement(
+	                        'div',
+	                        { className: 'form-group' },
+	                        React.createElement('input', { type: 'password', className: 'form-control', id: 'password', placeholder: 'Password' })
+	                    ),
+	                    React.createElement(
+	                        'button',
+	                        { type: 'submit', onClick: this.loginClicked, className: 'btn btn-primary' },
+	                        'Submit'
+	                    )
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                classes('error', this.state.error !== null ? '' : 'hidden'),
+	                'The login/password combination is not valid, follow the instructions below to add a user or update your password'
+	            ),
+	            React.createElement(
+	                'div',
+	                classes('need-credentials'),
+	                'Don\'t have a login/password, or forgot your details, click ',
+	                React.createElement(
+	                    'a',
+	                    { href: 'https://github.com/markdaws/gohome' },
+	                    'here'
+	                ),
+	                ' and follow the instructions.'
+	            )
+	        );
+	    }
+	});
+
+	module.exports = Login;
+
+/***/ },
+/* 317 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(318);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(216)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Login.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Login.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 318 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(215)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-Login {\n  margin: 20px;\n  font-weight: 200;\n}\n.b-Login__header {\n  margin-top: 60px;\n  text-align: center;\n}\n.b-Login__header-logo {\n  width: 210px;\n}\n.b-Login__login-form {\n  margin-top: 50px;\n}\n.b-Login__need-credentials {\n  margin-top: 30px;\n}\n.b-Login__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-Login__error--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
 
 /***/ }
 /******/ ]);

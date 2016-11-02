@@ -90,3 +90,7 @@ type DeviceLostEvt struct {
 //TODO:
 ###Sunset
 //TODO:
+###UserLoginEvt
+//TODO:
+###UserLogoutEvt
+//TODO:

@@ -239,5 +239,25 @@ func (cc *ClientDisconnectedEvt) String() string {
 	return fmt.Sprintf("ClientDisconnectedEvt[ConnID: %s", cc.ConnectionID)
 }
 
+// UserLoginEvt is fired when a user logs in to the system, or there is an unsuccessful
+// login attempt
+type UserLoginEvt struct {
+	Login   string `json:"login"`
+	Success bool   `json:"success"`
+}
+
+func (ul *UserLoginEvt) String() string {
+	return fmt.Sprintf("UserLoginEvt[Login: %s, Success: %t]", ul.Login, ul.Success)
+}
+
+// UserLogoutEvt is fired when a user logs out of the system explicitly
+type UserLogoutEvt struct {
+	Login string `json:"login"`
+}
+
+func (ul *UserLogoutEvt) String() string {
+	return fmt.Sprintf("UserLogoutEvt[Login: %s]", ul.Login)
+}
+
 //TODO: Finish device lost plumbing
 //TODO: DeviceConnectedEvt

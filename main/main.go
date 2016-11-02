@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
 	"net"
 	"os"
 	"time"
@@ -24,6 +26,7 @@ type config struct {
 	// SystemPath is a path to the json file containing all of the system information
 	SystemPath string `json:"systemPath"`
 
+	// EventLogPath is the path where the event log will be written
 	EventLogPath string `json::eventLogPath"`
 
 	// WWWAddr is the IP address for the WWW server
@@ -46,49 +49,79 @@ type config struct {
 }
 
 func main() {
-	var cfg config
+	runServer := flag.Bool("server", false, "run the goHOME server")
+	setPassword := flag.Bool("set-password", false, "set the password for a user, creates a user is login nof found. --set-password mark mypwd")
 
-	// Find the config file, if we can't find one, fall back to defaults
-	folderPath, err := osext.ExecutableFolder()
-	if err != nil {
-		panic("Failed to locate the current executable directory")
-	}
+	flag.Parse()
 
-	// Try to read the config file, if we can't find one use defaults
-	file, err := os.Open(folderPath + "/config.json")
-	if err != nil {
-		log.E("Error trying to open config.json [%s], falling back to defaults", folderPath)
-		cfg = defaultConfig(folderPath)
-	} else {
-		decoder := json.NewDecoder(file)
-		err := decoder.Decode(&cfg)
-		if err != nil {
-			log.E("Failed to parse config.json: %s, generating default config", err)
-			cfg = defaultConfig(folderPath)
+	if *setPassword {
+		addedUser := false
+		login := flag.Arg(0)
+		password := flag.Arg(1)
+
+		if login == "" || password == "" {
+			fmt.Println("missing values, --set-password <login> <password>")
+			return
 		}
-	}
-	log.V("Config information: %#v", cfg)
 
-	// Recipe manager handles processing all of the recipes the user has created
-	rm := gohome.NewRecipeManager()
+		// Load the system
+		log.Silent = true
+		sys, cfg, rm := loadSystem()
+		log.Silent = false
 
-	// Try to load an existing system from disk, if not present we will create
-	// a blank one
-	sys, err := store.LoadSystem(cfg.SystemPath, rm)
-	if err == store.ErrFileNotFound {
-		log.V("startup file not found at: %s, creating new system", cfg.SystemPath)
+		// Add/update user
+		var user *gohome.User
+		for _, u := range sys.Users {
+			if u.Login == login {
+				user = u
+				break
+			}
+		}
+		if user == nil {
+			//Create user
+			user = &gohome.User{
+				ID:    sys.NextGlobalID(),
+				Login: login,
+			}
+			err := user.Validate()
+			if err != nil {
+				fmt.Println("failed to add user", err)
+				return
+			}
 
-		// First time running the system, create a new blank system, save it
-		sys = gohome.NewSystem("My goHOME system", "")
-		intg.RegisterExtensions(sys)
+			sys.AddUser(user)
+			addedUser = true
+		}
+
+		err := user.SetPassword(password)
+		if err != nil {
+			fmt.Println("failed to set the password:", err)
+			return
+		}
 
 		err = store.SaveSystem(cfg.SystemPath, sys, rm)
 		if err != nil {
-			panic("Failed to save initial system: " + err.Error())
+			fmt.Println("Failed to save the user changes to disk: " + err.Error())
 		}
-	} else if err != nil {
-		panic("Failed to load system: " + err.Error())
+
+		if addedUser {
+			fmt.Println("Successfully added user: ", login)
+		} else {
+			fmt.Println("Successfully updated password for user: ", login)
+		}
+
+		return
 	}
+
+	if *runServer {
+		startServer()
+		return
+	}
+}
+
+func startServer() {
+	// Load the system from disk
+	sys, cfg, rm := loadSystem()
 
 	// The event bus is the backbone of the app.  It allows device to post events
 	// and other devices can list for events and act upon them.
@@ -139,11 +172,12 @@ func main() {
 	eb.AddConsumer(wsLogger)*/
 	var wsLogger gohome.WSEventLogger
 
+	sessions := gohome.NewSessions()
 	go func() {
 		for {
 			endPoint := cfg.WWWAddr + ":" + cfg.WWWPort
 			log.V("WWW Server starting, listening on %s", endPoint)
-			err := www.ListenAndServe("./www", endPoint, sys, rm, wsLogger)
+			err := www.ListenAndServe("./www", endPoint, sys, rm, sessions, wsLogger)
 			log.E("error with WWW server, shutting down: %s\n", err)
 			time.Sleep(time.Second * 5)
 		}
@@ -153,7 +187,7 @@ func main() {
 		for {
 			endPoint := cfg.APIAddr + ":" + cfg.APIPort
 			log.V("API Server starting, listening on %s", endPoint)
-			err := api.ListenAndServe(cfg.SystemPath, endPoint, sys, rm, wsLogger)
+			err := api.ListenAndServe(cfg.SystemPath, endPoint, sys, rm, sessions, wsLogger)
 			log.E("error with API server, shutting down: %s\n", err)
 			time.Sleep(time.Second * 5)
 		}
@@ -162,6 +196,54 @@ func main() {
 	// Sit forever since we have started all the services
 	var done chan bool
 	<-done
+}
+
+func loadSystem() (*gohome.System, config, *gohome.RecipeManager) {
+	var cfg config
+
+	// Find the config file, if we can't find one, fall back to defaults
+	folderPath, err := osext.ExecutableFolder()
+	if err != nil {
+		panic("Failed to locate the current executable directory")
+	}
+
+	// Try to read the config file, if we can't find one use defaults
+	file, err := os.Open(folderPath + "/config.json")
+	if err != nil {
+		log.V("Error trying to open config.json [%s], falling back to defaults", folderPath)
+		cfg = defaultConfig(folderPath)
+	} else {
+		decoder := json.NewDecoder(file)
+		err := decoder.Decode(&cfg)
+		if err != nil {
+			log.V("Failed to parse config.json: %s, generating default config", err)
+			cfg = defaultConfig(folderPath)
+		}
+	}
+	log.V("Config information: %#v", cfg)
+
+	// Recipe manager handles processing all of the recipes the user has created
+	rm := gohome.NewRecipeManager()
+
+	// Try to load an existing system from disk, if not present we will create
+	// a blank one
+	sys, err := store.LoadSystem(cfg.SystemPath, rm)
+	if err == store.ErrFileNotFound {
+		log.V("startup file not found at: %s, creating new system", cfg.SystemPath)
+
+		// First time running the system, create a new blank system, save it
+		sys = gohome.NewSystem("My goHOME system", "")
+		intg.RegisterExtensions(sys)
+
+		err = store.SaveSystem(cfg.SystemPath, sys, rm)
+		if err != nil {
+			panic("Failed to save initial system: " + err.Error())
+		}
+	} else if err != nil {
+		panic("Failed to load system: " + err.Error())
+	}
+
+	return sys, cfg, rm
 }
 
 // getIPV4NonLoopbackAddr returns the first ipv4 non loopback address
@@ -214,6 +296,7 @@ func defaultConfig(systemPath string) config {
 	cfg := config{
 		SystemPath:     systemPath + "/gohome.json",
 		EventLogPath:   systemPath + "/events.json",
+		RecipeDir:      systemPath + "/recipes",
 		WWWAddr:        addr,
 		WWWPort:        "8000",
 		APIAddr:        addr,

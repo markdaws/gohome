@@ -28,6 +28,7 @@ type System struct {
 	Buttons     map[string]*Button
 	Sensors     map[string]*Sensor
 	Recipes     map[string]*Recipe
+	Users       map[string]*User
 	Extensions  *Extensions
 	Services    SystemServices
 }
@@ -44,7 +45,9 @@ func NewSystem(name, desc string) *System {
 		Sensors:     make(map[string]*Sensor),
 		Buttons:     make(map[string]*Button),
 		Recipes:     make(map[string]*Recipe),
+		Users:       make(map[string]*User),
 	}
+
 	s.Extensions = NewExtensions()
 	return s
 }
@@ -149,6 +152,11 @@ func (s *System) AddScene(scn *Scene) {
 // DeleteScene deletes a scene from the system
 func (s *System) DeleteScene(scn *Scene) {
 	delete(s.Scenes, scn.ID)
+}
+
+// AddUser adds the user to the system
+func (s *System) AddUser(u *User) {
+	s.Users[u.ID] = u
 }
 
 // DeleteDevice deletes a device from the system and stops all associated

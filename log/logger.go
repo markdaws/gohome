@@ -11,6 +11,8 @@ var (
 	error   *log.Logger
 )
 
+var Silent = false
+
 func init() {
 	verbose = log.New(os.Stdout, "V: ", log.Ldate|log.Ltime)
 	error = log.New(os.Stderr, "E: ", log.Ldate|log.Ltime)
@@ -18,6 +20,9 @@ func init() {
 
 // V logs a verbose message to the app log
 func V(m string, args ...interface{}) {
+	if Silent {
+		return
+	}
 	verbose.Printf("%s\n", fmt.Sprintf(m, args...))
 }
 

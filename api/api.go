@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -10,6 +11,7 @@ import (
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
+	"github.com/urfave/negroni"
 )
 
 type apiServer struct {
@@ -17,6 +19,7 @@ type apiServer struct {
 	system         *gohome.System
 	recipeManager  *gohome.RecipeManager
 	eventLogger    gohome.WSEventLogger
+	sessions       *gohome.Sessions
 }
 
 // ListenAndServe creates a new WWW server, that handles API calls and also
@@ -26,11 +29,13 @@ func ListenAndServe(
 	addr string,
 	system *gohome.System,
 	recipeManager *gohome.RecipeManager,
+	sessions *gohome.Sessions,
 	eventLogger gohome.WSEventLogger) error {
 	server := &apiServer{
 		systemSavePath: systemSavePath,
 		system:         system,
 		recipeManager:  recipeManager,
+		sessions:       sessions,
 		eventLogger:    eventLogger,
 	}
 	return server.listenAndServe(addr)
@@ -52,6 +57,11 @@ func (s *apiServer) listenAndServe(addr string) error {
 	RegisterCookBookHandlers(r, s)
 	RegisterRecipeHandlers(r, s)
 	RegisterMonitorHandlers(r, s)
+	RegisterUserHandlers(r, s)
+
+	n := negroni.New()
+	n.Use(negroni.HandlerFunc(CheckValidSession(s.sessions)))
+	n.UseHandler(r)
 
 	server := &http.Server{
 		Addr:         addr,
@@ -61,9 +71,35 @@ func (s *apiServer) listenAndServe(addr string) error {
 			handlers.AllowedMethods([]string{"PUT", "POST", "DELETE", "GET", "OPTIONS", "UPGRADE"}),
 			handlers.AllowedOrigins([]string{"*"}),
 			handlers.AllowedHeaders([]string{"content-type"}),
-		)(r),
+		)(n),
 	}
 	return server.ListenAndServe()
+}
+
+func CheckValidSession(sessions *gohome.Sessions) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+
+	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		pairs, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			rw.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		sid, ok := pairs["sid"]
+		if !ok || len(sid) == 0 {
+			rw.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		_, ok = sessions.Get(sid[0])
+		if !ok {
+			rw.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		// If we got here, the user has a valid session ID, go to next handler
+		next(rw, r)
+	}
 }
 
 // apiResponse encapsulates the response from a http handler, responses can either
