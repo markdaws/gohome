@@ -81,8 +81,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 		dev.AddZone(z)
 
 		if scanType == belkinExt.DTMaker {
-			// Need to add the sensor information
-			// TODO: Plumb through the system
 			sensor := &gohome.Sensor{
 				Address:     "1",
 				Name:        devInfo.FriendlyName + " - sensor",

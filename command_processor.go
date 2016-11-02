@@ -25,7 +25,6 @@ type CommandProcessor interface {
 	Start()
 	Stop()
 	Enqueue(CommandGroup) error
-	SetSystem(s *System)
 }
 
 // CommandBuilder know how to take an abstract command like ZoneSetLevel and turn it
@@ -35,8 +34,9 @@ type CommandBuilder interface {
 }
 
 // NewCommandProcessor returns an initialized type that implements the CommandProcessor interface
-func NewCommandProcessor(maxWorkers, queueSize int) CommandProcessor {
+func NewCommandProcessor(system *System, maxWorkers, queueSize int) CommandProcessor {
 	return &commandProcessor{
+		system:     system,
 		queueSize:  queueSize,
 		maxWorkers: maxWorkers,
 	}
@@ -47,10 +47,6 @@ type commandProcessor struct {
 	queueSize  int
 	requests   chan CommandGroup
 	system     *System
-}
-
-func (cp *commandProcessor) SetSystem(s *System) {
-	cp.system = s
 }
 
 func (cp *commandProcessor) Enqueue(cg CommandGroup) error {
@@ -136,8 +132,6 @@ func (cp *commandProcessor) Stop() {
 func (cp *commandProcessor) buildCommands(cg CommandGroup) ([]*cmd.Func, error) {
 	var cmds []*cmd.Func
 
-	// TODO: Shouldn't have this code here, if each command contains the CmdBuild information
-	// we can pull it directly vs having to get it back here.
 	for _, c := range cg.Cmds {
 		finalCmd, err := cp.buildCommand(c)
 		if err != nil {
@@ -151,9 +145,6 @@ func (cp *commandProcessor) buildCommands(cg CommandGroup) ([]*cmd.Func, error) 
 func (cp *commandProcessor) buildCommand(c cmd.Command) ([]*cmd.Func, error) {
 
 	var cmds []*cmd.Func
-
-	// TODO: Shouldn't have this code here, if each command contains the CmdBuild information
-	// we can pull it directly vs having to get it back here.
 	var finalCmd *cmd.Func
 	switch command := c.(type) {
 	case *cmd.ZoneTurnOn:

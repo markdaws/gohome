@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"time"
 
 	eventExt "github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
@@ -19,8 +20,11 @@ type config struct {
 	RecipeDirPath     string
 	StartupConfigPath string
 	WWWAddr           string
+	WWWPort           string
 	APIAddr           string
+	APIPort           string
 	UPNPNotifyAddr    string
+	UPNPNotifyPort    string
 }
 
 func main() {
@@ -32,26 +36,20 @@ func main() {
 		panic("could not find any address to bind to")
 	}
 
-	//TODO: Should read this from a config file on disk
-	//TODO: Break up IP address and port values
+	// TODO: Should read this from a config file on disk, only if ip addresses are
+	// missing should we try to find one automatically
 	config := config{
 		StartupConfigPath: "/Users/mark/code/gohome/system2.json",
-		WWWAddr:           addr + ":8000",
-		APIAddr:           addr + ":5000",
-		UPNPNotifyAddr:    addr + ":8001",
+		WWWAddr:           addr,
+		WWWPort:           "8000",
+		APIAddr:           addr,
+		APIPort:           "5000",
+		UPNPNotifyAddr:    addr,
+		UPNPNotifyPort:    "8001",
 	}
 
-	// The event bus is the backbone of the app.  It allows device to post events
-	// and other devices can list for events and act upon them.
-	log.V("Event Bus - starting")
-	eb := eventExt.NewBus(1000, 100)
-
-	// Log all of the events on the bus to the system log
-	// TODO: Remove or json values so we can play back
-	lc := &gohome.LogConsumer{}
-	eb.AddConsumer(lc)
-
-	rm := gohome.NewRecipeManager(eb)
+	// Recipe manager handles processing all of the recipes the user has created
+	rm := gohome.NewRecipeManager()
 
 	//TODO: Remove, simulate user importing lutron information on load
 	reset := true
@@ -84,44 +82,37 @@ func main() {
 		log.V("startup file not found at: %s, creating new system", config.StartupConfigPath)
 
 		// First time running the system, create a new blank system, save it
-		system := gohome.NewSystem("My goHOME system", "", 1)
+		sys = gohome.NewSystem("My goHOME system", "", 1)
+		intg.RegisterExtensions(sys)
 
-		//TODO: RegisterExtensions expects that we have valid connections to the device
-		// but we are initing afterwards ...
-		intg.RegisterExtensions(system)
-
-		err = store.SaveSystem(config.StartupConfigPath, system, rm)
+		err = store.SaveSystem(config.StartupConfigPath, sys, rm)
 		if err != nil {
 			panic("Failed to save initial system: " + err.Error())
 		}
-		sys = system
 	} else if err != nil {
 		panic("Failed to load system: " + err.Error())
 	}
 
-	// Processes all commands in the system in an async fashion, init with
-	// 3 parallel workers and capacity to store up to 1000 commands to be processed
-	cp := gohome.NewCommandProcessor(3, 1000)
-	cp.Start()
-
-	sys.Services.CmdProcessor = cp
+	// The event bus is the backbone of the app.  It allows device to post events
+	// and other devices can list for events and act upon them.
+	log.V("Event Bus - starting")
+	eb := eventExt.NewBus(1000, 100)
 	sys.Services.EvtBus = eb
 
-	//TODO: Seems janky setting these here, fix - need to fix command processor to
-	//be able to get executing devices without having to know about system
-	cp.SetSystem(sys)
+	// Processes all commands in the system in an async fashion, init with
+	// 3 parallel workers and capacity to store up to 1000 commands to be processed
+	cp := gohome.NewCommandProcessor(sys, 3, 1000)
+	cp.Start()
+	sys.Services.CmdProcessor = cp
 
-	//TODO: Services need to be fully started so devices can use then, upnp not started, what happens
-	// when device tries to use it ...
-	//TODO: webserver and apis should work without initing devices first...
+	// The UPNP service lets us listen for notifications from UPNP devices
 	upnpService := upnp.NewSubServer()
 	sys.Services.UPNP = upnpService
 	go func() {
 		for {
-			//TODO: What happens if this crashes and all devices are waiting
-			//for events, need to notify them to resubscribe ...
-			log.V("UPNP Service - listening on %s", config.UPNPNotifyAddr)
-			err := upnpService.Start(config.UPNPNotifyAddr)
+			endPoint := config.UPNPNotifyAddr + ":" + config.UPNPNotifyPort
+			log.V("UPNP Service - listening on %s", endPoint)
+			err := upnpService.Start(endPoint)
 			log.E("upnp service crashed:" + err.Error())
 		}
 	}()
@@ -132,8 +123,11 @@ func main() {
 	monitor := gohome.NewMonitor(sys, sys.Services.EvtBus, nil, nil)
 	sys.Services.Monitor = monitor
 
-	// Init does things like connecting the gohome server to
-	// all of the devices.
+	// Log all of the events on the bus to the system log
+	// TODO: Remove or json values so we can play back
+	lc := &gohome.LogConsumer{}
+	eb.AddConsumer(lc)
+
 	log.V("Initing devices...")
 	sys.InitDevices()
 
@@ -150,17 +144,21 @@ func main() {
 
 	go func() {
 		for {
-			log.V("WWW Server starting, listening on %s", config.WWWAddr)
-			err := www.ListenAndServe("./www", config.WWWAddr, sys, rm, wsLogger)
+			endPoint := config.WWWAddr + ":" + config.WWWPort
+			log.V("WWW Server starting, listening on %s", endPoint)
+			err := www.ListenAndServe("./www", endPoint, sys, rm, wsLogger)
 			log.E("error with WWW server, shutting down: %s\n", err)
+			time.Sleep(time.Second * 5)
 		}
 	}()
 
 	go func() {
 		for {
-			log.V("API Server starting, listening on %s", config.APIAddr)
-			err := api.ListenAndServe(config.StartupConfigPath, config.APIAddr, sys, rm, wsLogger)
+			endPoint := config.APIAddr + ":" + config.APIPort
+			log.V("API Server starting, listening on %s", endPoint)
+			err := api.ListenAndServe(config.StartupConfigPath, endPoint, sys, rm, wsLogger)
 			log.E("error with API server, shutting down: %s\n", err)
+			time.Sleep(time.Second * 5)
 		}
 	}()
 

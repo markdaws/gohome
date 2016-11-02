@@ -3,9 +3,11 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/go-home-iot/event-bus"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/markdaws/gohome"
@@ -17,6 +19,8 @@ var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { retu
 
 type WSHelper struct {
 	monitor     *gohome.Monitor
+	evtBus      *evtbus.Bus
+	nextID      int64
 	connections map[string]map[*connection]bool
 	conn        *websocket.Conn
 	mutex       sync.RWMutex
@@ -24,15 +28,18 @@ type WSHelper struct {
 }
 
 type connection struct {
-	monitorID string
-	ws        *websocket.Conn
-	writeChan chan bool
-	readChan  chan bool
+	monitorID    string
+	connectionID string
+	ws           *websocket.Conn
+	writeChan    chan bool
+	readChan     chan bool
 }
 
-func NewWSHelper(monitor *gohome.Monitor) *WSHelper {
+func NewWSHelper(monitor *gohome.Monitor, evtBus *evtbus.Bus) *WSHelper {
 	h := WSHelper{
 		monitor:     monitor,
+		evtBus:      evtBus,
+		nextID:      time.Now().UnixNano(),
 		connections: make(map[string]map[*connection]bool),
 		updates:     make(chan *gohome.ChangeBatch, 1000),
 	}
@@ -78,6 +85,8 @@ func (h *WSHelper) unregister(c *connection) {
 	c.ws.Close()
 	close(c.writeChan)
 	close(c.readChan)
+
+	h.evtBus.Enqueue(&gohome.ClientDisconnectedEvt{ConnectionID: c.connectionID})
 }
 
 func (h *WSHelper) HTTPHandler() func(http.ResponseWriter, *http.Request) {
@@ -97,13 +106,28 @@ func (h *WSHelper) HTTPHandler() func(http.ResponseWriter, *http.Request) {
 		}
 
 		conn := &connection{
-			monitorID: monitorID,
-			ws:        c,
-			writeChan: make(chan bool),
-			readChan:  make(chan bool),
+			connectionID: strconv.FormatInt(h.nextID, 10),
+			monitorID:    monitorID,
+			ws:           c,
+			writeChan:    make(chan bool),
+			readChan:     make(chan bool),
 		}
+		h.nextID++
+
 		h.register(conn)
 		go conn.writeLoop(h)
+
+		origin := ""
+		if orig, ok := r.Header["Origin"]; ok && len(orig) == 1 {
+			origin = orig[0]
+		}
+
+		// Let the system know a new client has connected
+		h.evtBus.Enqueue(&gohome.ClientConnectedEvt{
+			MonitorID:    monitorID,
+			Origin:       origin,
+			ConnectionID: conn.connectionID,
+		})
 
 		// When a connection registers, we need to ask the monitor to refresh all
 		// values associated with it. Since we could have subscribed but not connected

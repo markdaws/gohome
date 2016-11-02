@@ -13,7 +13,7 @@ import (
 
 // RegisterMonitorHandlers registers all of the monitor specific REST API routes
 func RegisterMonitorHandlers(r *mux.Router, s *apiServer) {
-	wsHelper := NewWSHelper(s.system.Services.Monitor)
+	wsHelper := NewWSHelper(s.system.Services.Monitor, s.system.Services.EvtBus)
 
 	// Clients call to subscribe to items, api returns a monitorID that can then be used
 	// to subscribe and unsubscribe to notifications

@@ -25,6 +25,7 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 		name := info.ID + ": " + info.Model
 		modelNumber := "fluxwifi"
 
+		panic("you need a new connections function in to pool //TODO")
 		dev, _ := gohome.NewDevice(
 			modelNumber,
 			"",
@@ -35,11 +36,11 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			"",
 			nil,
 			nil,
-			&pool.Config{
+			pool.NewPool(pool.Config{
 				Name: name,
 				Size: 2,
 				//TODO::::!!!!
-			},
+			}),
 			nil,
 		)
 

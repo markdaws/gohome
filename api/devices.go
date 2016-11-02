@@ -131,7 +131,7 @@ func apiAddDeviceHandler(
 					connPoolCfg.NewConnection = connFactory
 				}
 			}
-			d.SetConnPoolCfg(*connPoolCfg)
+			d.Connections = pool.NewPool(*connPoolCfg)
 		}
 
 		cmdBuilder := system.Extensions.FindCmdBuilder(system, d)

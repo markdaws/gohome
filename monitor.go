@@ -487,6 +487,7 @@ func (m *Monitor) StopConsuming() {
 // =================================
 
 // ======== evtbus.Producer interface
+//TODO: Remove?
 func (m *Monitor) ProducerName() string {
 	return "Monitor"
 }

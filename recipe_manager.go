@@ -5,21 +5,17 @@ import (
 	"reflect"
 	"time"
 	"unicode/utf8"
-
-	"github.com/go-home-iot/event-bus"
 )
 
 type RecipeManager struct {
 	CookBooks      []*CookBook
 	System         *System
-	evtBus         *evtbus.Bus
 	triggerFactory map[string]func() Trigger
 	actionFactory  map[string]func() Action
 }
 
-func NewRecipeManager(eb *evtbus.Bus) *RecipeManager {
+func NewRecipeManager() *RecipeManager {
 	rm := &RecipeManager{}
-	rm.evtBus = eb
 	rm.CookBooks = loadCookBooks()
 	rm.triggerFactory = buildTriggerFactory(rm.CookBooks)
 	rm.actionFactory = buildActionFactory(rm.CookBooks)
@@ -56,13 +52,14 @@ func (e ErrUnmarshalRecipe) Error() string {
 }
 
 func (rm *RecipeManager) RegisterAndStart(r *Recipe) {
+	//TODO: these recipes getting saved back on themselves, revist
 	rm.System.Recipes[r.ID] = r
-	rm.evtBus.AddConsumer(r)
+	rm.System.Services.EvtBus.AddConsumer(r)
 }
 
 func (rm *RecipeManager) UnregisterAndStop(r *Recipe) {
 	delete(rm.System.Recipes, r.ID)
-	rm.evtBus.RemoveConsumer(r)
+	rm.System.Services.EvtBus.RemoveConsumer(r)
 }
 
 func (rm *RecipeManager) RecipeByID(id string) *Recipe {
@@ -300,7 +297,6 @@ func (rm *RecipeManager) FromJSON(rj RecipeJSON) (*Recipe, error) {
 func (rm *RecipeManager) DeleteRecipe(r *Recipe) error {
 	//TODO: Verify stop stops the triggers
 	rm.UnregisterAndStop(r)
-	delete(rm.System.Recipes, r.ID)
 	return nil
 }
 

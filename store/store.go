@@ -121,7 +121,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 
 	sys := gohome.NewSystem(s.Name, s.Description, s.NextGlobalID)
 	intg.RegisterExtensions(sys)
-
 	recipeManager.System = sys
 
 	// Load all devices into global device list
@@ -167,7 +166,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 				return nil, err
 			}
 
-			dev.SetConnPoolCfg(pool.Config{
+			dev.Connections = pool.NewPool(pool.Config{
 				Name:          d.ConnPool.Name,
 				Size:          int(d.ConnPool.PoolSize),
 				NewConnection: connFactory,

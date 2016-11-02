@@ -124,3 +124,37 @@ type DeviceProducingEvt struct {
 func (dp *DeviceProducingEvt) String() string {
 	return fmt.Sprintf("DeviceProducingEvt[%s]", dp.Device)
 }
+
+// DeviceLostEvt indicates that connection to a device has been lost
+type DeviceLostEvt struct {
+	DeviceName string
+	DeviceID   string
+}
+
+func (dl *DeviceLostEvt) String() string {
+	return fmt.Sprintf("DeviceLostEvt[ID: %s, Name: %s]", dl.DeviceName, dl.DeviceID)
+}
+
+// ClientConnectedEvt is raised when a client registers to get updates for zone and sensor values
+type ClientConnectedEvt struct {
+	ConnectionID string
+	MonitorID    string
+	Origin       string
+}
+
+func (cc *ClientConnectedEvt) String() string {
+	return fmt.Sprintf("ClientConnectedEvt[ConnID: %s, MonitorID: %s, Origin:%s]",
+		cc.ConnectionID, cc.MonitorID, cc.Origin)
+}
+
+// ClientDisconnectedEvt is raised when a client connection is closed
+type ClientDisconnectedEvt struct {
+	ConnectionID string
+}
+
+func (cc *ClientDisconnectedEvt) String() string {
+	return fmt.Sprintf("ClientDisconnectedEvt[ConnID: %s", cc.ConnectionID)
+}
+
+//TODO: Finish device lost plumbing
+//TODO: DeviceConnectedEvt

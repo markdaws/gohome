@@ -1,6 +1,7 @@
 package belkin
 
 import (
+	"fmt"
 	"html"
 	"regexp"
 	"strconv"
@@ -32,6 +33,10 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 		for e := range ch {
 			switch evt := e.(type) {
 			case *gohome.ZonesReportEvt:
+				// In the case the device has been created, but the sensors and zones not added
+				if c.Zone == nil {
+					continue
+				}
 				for _, zone := range c.Device.Zones {
 					if _, ok := evt.ZoneIDs[zone.ID]; !ok {
 						continue
@@ -52,6 +57,8 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 							continue
 						}
 
+						fmt.Printf("%+v\n", c)
+						fmt.Printf("%+v\n", attrs)
 						if attrs.Switch != nil {
 							c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 								ZoneName: c.Zone.Name,
@@ -76,6 +83,10 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 				}
 
 			case *gohome.SensorsReportEvt:
+				if c.Sensor == nil {
+					continue
+				}
+
 				for _, sensor := range c.Device.Sensors {
 					if _, ok := evt.SensorIDs[sensor.ID]; !ok {
 						continue
@@ -229,8 +240,6 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 func (p *producer) StopProducing() {
 	p.Producing = false
 
-	//TODO: upnp should have want to ping subscribers and see
-	// if they still want events then evict if not
 	err := p.System.Services.UPNP.Unsubscribe(p.SID)
 	if err != nil {
 		log.V("error during unsusbscribe [%s]: %s", p.ProducerName(), err)
