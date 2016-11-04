@@ -3,44 +3,65 @@ package belkin
 import (
 	"errors"
 	"fmt"
-	"net"
 	"strings"
 	"time"
 
 	belkinExt "github.com/go-home-iot/belkin"
-	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/zone"
 )
 
-type network struct {
+type discovery struct {
+	//TODO: Needed?
 	System *gohome.System
 }
 
-func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
+func (d *discovery) Discoverers() []gohome.DiscovererInfo {
+	return []gohome.DiscovererInfo{gohome.DiscovererInfo{
+		ID:          "belkin.wemo.insight",
+		Name:        "Belkin WeMo Insight",
+		Description: "Discover Belkin WeMo Insight devices",
+		Type:        "ScanDevices",
+	}, gohome.DiscovererInfo{
+		ID:          "belkin.wemo.maker",
+		Name:        "Belkin WeMo Maker",
+		Description: "Discover Belkin WeMo Maker devices",
+		Type:        "ScanDevices",
+	}}
+}
+
+func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
+	switch ID {
+	case "belkin.wemo.insight":
+		return &discoverer{scanType: belkinExt.DTInsight}
+	case "belkin.wemo.maker":
+		return &discoverer{scanType: belkinExt.DTMaker}
+	default:
+		return nil
+	}
+}
+
+type discoverer struct {
+	scanType belkinExt.DeviceType
+}
+
+func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, error) {
 
 	log.V("scanning belkin")
-	var scanType belkinExt.DeviceType
-	switch modelNumber {
-	case "f7c043fc":
-		scanType = belkinExt.DTMaker
-	case "f7c029v2":
-		scanType = belkinExt.DTInsight
-	default:
-		return nil, fmt.Errorf("unsupported model number: %s", modelNumber)
-	}
 
-	responses, err := belkinExt.Scan(scanType, 5)
+	responses, err := belkinExt.Scan(d.scanType, 5)
 	if err != nil {
 		log.V("scan err: %s", err)
 		return nil, err
 	}
 
+	fmt.Printf("%+v\n", responses[0])
+
 	devices := make([]*gohome.Device, len(responses))
 	for i, devInfo := range responses {
 		err := devInfo.Load(time.Second * 5)
-
+		fmt.Println("did a load")
 		if err != nil {
 			// Keep going, try to get as many as we can
 			log.V("failed to load device information: %s", err)
@@ -48,10 +69,10 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 		}
 
 		//fmt.Printf("%#v\n", response)
-		//fmt.Printf("%#v\n", devInfo)
+		fmt.Printf("%#v\n", devInfo)
 
 		dev, _ := gohome.NewDevice(
-			modelNumber,
+			devInfo.ModelNumber,
 			devInfo.ModelName,
 			devInfo.FirmwareVersion,
 			strings.Replace(devInfo.Scan.Location, "/setup.xml", "", -1),
@@ -64,12 +85,7 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 			nil,
 		)
 
-		cmdBuilder := sys.Extensions.FindCmdBuilder(sys, dev)
-		if cmdBuilder == nil {
-			return nil, fmt.Errorf("unsupported command builder ID: %s", modelNumber)
-		}
-		dev.CmdBuilder = cmdBuilder
-
+		fmt.Println("got cmd builder")
 		z := &zone.Zone{
 			Address:     "1",
 			Name:        devInfo.FriendlyName,
@@ -80,7 +96,7 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 		}
 		dev.AddZone(z)
 
-		if scanType == belkinExt.DTMaker {
+		if d.scanType == belkinExt.DTMaker {
 			sensor := &gohome.Sensor{
 				Address:     "1",
 				Name:        devInfo.FriendlyName + " - sensor",
@@ -100,9 +116,12 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 		devices[i] = dev
 	}
 
-	return devices, nil
-}
+	fmt.Println("returning devices: ", len(devices))
+	return &gohome.DiscoveryResults{
+		Devices: devices,
+	}, nil
 
-func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(pool.Config) (net.Conn, error), error) {
-	return nil, errors.New("unsupported method")
+}
+func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
+	return nil, errors.New("unsupported")
 }

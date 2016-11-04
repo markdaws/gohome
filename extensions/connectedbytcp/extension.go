@@ -21,14 +21,16 @@ func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.B
 func (e *extension) NetworkForDevice(sys *gohome.System, d *gohome.Device) gohome.Network {
 	switch d.ModelNumber {
 	case "tcp600gwb":
-		return &network{System: sys}
+		return &network{}
 	default:
 		return nil
 	}
 }
 
-func (e *extension) ImporterForDevice(sys *gohome.System, d *gohome.Device) gohome.Importer {
-	return nil
+//TODO: Events
+
+func (e *extension) Discovery(sys *gohome.System) gohome.Discovery {
+	return &discovery{System: sys}
 }
 
 func (e *extension) Name() string {

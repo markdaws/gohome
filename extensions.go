@@ -8,46 +8,57 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
-//TODO: Should be a test suite that all extensions have to go through
-//such as simulating network failure and other types of issues and make
-//sure that the extension code functions as expected
-//TODO: Ping mechanism
-//TODO: Check connection is bad don't put back in the pool
-//TODO: Set write, read timeouts for connections
-//TODO: Store retry time in system config file
-/*func (c *TelnetConnection) Read(p []byte) (n int, err error) {
-	c.conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	n, err = c.conn.Read(p)
-	if err != nil {
-		c.status = CSClosed
-	}
-	return
-}
-func (c *TelnetConnection) Write(p []byte) (n int, err error) {
-	c.conn.SetWriteDeadline(time.Now().Add(15 * time.Second))
-	n, err = c.conn.Write(p)
-	if err != nil {
-		c.status = CSClosed
-	}
-	return
-}*/
-
 // Network is an interface that must be exported by an extension that provides
 // network related functionality pertaining to the extensions hardware
 type Network interface {
-	Devices(sys *System, modelNumber string) ([]*Device, error)
 	NewConnection(sys *System, d *Device) (func(pool.Config) (net.Conn, error), error)
 }
 
-// Importer is an interface that the extension provides to generate gohome models from
-// 3rd party config files
-type Importer interface {
-	FromString(sys *System, data string, modelNumber string) error
-}
-
+// ExtEvent is a struct that contains a producer and consumer,
+// if the extension exports those types
 type ExtEvents struct {
 	Consumer evtbus.Consumer
 	Producer evtbus.Producer
+}
+
+// DiscovererInfo represents information about a Discoverer instance. Extensions might
+// export multiple Discoverers that know how to find devices on a network or create
+// devices from config strings
+type DiscovererInfo struct {
+	// ID a unique ID for the discoverer, extension should put a prefix like "extensionname.hardware.version"
+	// etc. as the ID, make it as unique as possible so it won't clash with other Discoverer IDs in other extensions
+	ID string
+
+	// Name is a friendly name for the Discoverer, it will be shown in the UI
+	Name string
+
+	// Description should contain more info about the discoverer, that wasn't shown in the UI e.g. maybe it
+	// explains the discoverer only supports v1.0 of some hardware.
+	Description string
+
+	// Type can either be ScanDevices|FromString - ScanDevices indicates the discoverer will scan for
+	// devices on the network, FromString indicates the discoverer will take in a string e.g. a config
+	// file from the hardware and turn that into goHOME specific information
+	Type string
+}
+
+// DiscoveryResults contains all of the devices found by the discoverer instance
+type DiscoveryResults struct {
+	Devices []*Device
+}
+
+// Discoverer represents an interface for types that can discover devices on the network or from
+// a config file string.
+type Discoverer interface {
+	ScanDevices(*System) (*DiscoveryResults, error)
+	FromString(string) (*DiscoveryResults, error)
+}
+
+// Discovery is the interface exposed by an extension if it supports discovering devices
+// on a netowkr or can create devices from a config file
+type Discovery interface {
+	Discoverers() []DiscovererInfo
+	DiscovererFromID(ID string) Discoverer
 }
 
 // Extension represents the interface any extension has to implement in order to
@@ -65,13 +76,13 @@ type Extension interface {
 	// for the device that was passed in to the function, nil otherwise
 	NetworkForDevice(*System, *Device) Network
 
-	// ImporterForDevice should return a gohome.Importer if the extension exports an Importer
-	// for the device that was passed in to the function, nil otherwise
-	ImporterForDevice(*System, *Device) Importer
-
 	// EventsForDevice should return a gohome.ExtEvents instance if the extension supports
 	// producing and consuming events for the device passed in to the function
 	EventsForDevice(sys *System, d *Device) *ExtEvents
+
+	// Discovery returns a gohome.Discovery instance if the extension can scan for devices
+	// on the local network or can create devices from a config file, nil otherwise
+	Discovery(sys *System) Discovery
 }
 
 // Extensions contains references to all of the loaded extensions in a system
@@ -120,16 +131,34 @@ func (e *Extensions) FindEvents(sys *System, d *Device) *ExtEvents {
 	return nil
 }
 
-// FindImporter returns a gohome.Importer instance if there is any extension that
-// exports one for the device passed in to the function
-func (e *Extensions) FindImporter(sys *System, d *Device) Importer {
+//TODO:
+func (e *Extensions) FindDiscovererFromID(sys *System, ID string) Discoverer {
 	for _, ext := range e.extensions {
-		importer := ext.ImporterForDevice(sys, d)
-		if importer != nil {
-			return importer
+		discovery := ext.Discovery(sys)
+		if discovery == nil {
+			continue
+		}
+
+		discoverer := discovery.DiscovererFromID(ID)
+		if discoverer != nil {
+			return discoverer
 		}
 	}
 	return nil
+}
+
+//TODO:
+func (e *Extensions) ListDiscoverers(sys *System) []DiscovererInfo {
+	allInfos := []DiscovererInfo{}
+
+	for _, ext := range e.extensions {
+		disc := ext.Discovery(sys)
+		if disc == nil {
+			continue
+		}
+		allInfos = append(allInfos, disc.Discoverers()...)
+	}
+	return allInfos
 }
 
 // NewExtensions inits and returns a new Extensions instance

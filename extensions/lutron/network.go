@@ -2,7 +2,6 @@ package lutron
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -12,13 +11,7 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
-type network struct {
-	System *gohome.System
-}
-
-func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Device, error) {
-	return nil, errors.New("unsupported method - Devices")
-}
+type network struct{}
 
 func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(pool.Config) (net.Conn, error), error) {
 	return func(cfg pool.Config) (net.Conn, error) {

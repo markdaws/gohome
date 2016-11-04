@@ -11,7 +11,13 @@ import (
 
 // RegisterDiscoveryHandlers registers all of the discovery specific API REST routes
 func RegisterDiscoveryHandlers(r *mux.Router, s *apiServer) {
-	r.HandleFunc("/api/v1/discovery/{modelNumber}",
+
+	// Get a list of all the devices that we can discover
+	r.HandleFunc("/api/v1/discovery/discoverers",
+		apiListDiscoveryHandler(s.system)).Methods("GET")
+
+	// Scan the network for all devices corresponding to the discovery ID
+	r.HandleFunc("/api/v1/discovery/discoverers/{discovererID}",
 		apiDiscoveryHandler(s.system)).Methods("GET")
 
 	//TODO: Implement with extensions
@@ -23,28 +29,60 @@ func RegisterDiscoveryHandlers(r *mux.Router, s *apiServer) {
 	*/
 }
 
+func apiListDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		infos := system.Extensions.ListDiscoverers(system)
+
+		jsonInfos := make([]jsonDiscovererInfo, len(infos), len(infos))
+		for i, info := range infos {
+			jsonInfos[i] = jsonDiscovererInfo{
+				ID:          info.ID,
+				Name:        info.Name,
+				Description: info.Description,
+				Type:        info.Type,
+			}
+		}
+		if err := json.NewEncoder(w).Encode(jsonInfos); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+
 func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
-		//TODO: This shouldn't be model number, should be some unique importer generated ID
-		modelNumber := vars["modelNumber"]
+		discovererID := vars["discovererID"]
 
-		//TODO: fix, This is blocking
-		network := system.Extensions.FindNetwork(system, &gohome.Device{ModelNumber: modelNumber})
-		if network == nil {
+		/*
+			network := system.Extensions.FindNetwork(system, &gohome.Device{ModelNumber: modelNumber})
+			if network == nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			devs, err := network.Devices(system, modelNumber)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		*/
+
+		discoverer := system.Extensions.FindDiscovererFromID(system, discovererID)
+		if discoverer == nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		devs, err := network.Devices(system, modelNumber)
+		res, err := discoverer.ScanDevices(system)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		jsonDevices := make(devices, len(devs))
-		for i, device := range devs {
+		jsonDevices := make(devices, len(res.Devices))
+		for i, device := range res.Devices {
 
 			//TODO: This API shouldn't be sending back client ids, the client should
 			//make these values up
@@ -59,7 +97,7 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 					DeviceID:    device.ID,
 					Type:        zn.Type.ToString(),
 					Output:      zn.Output.ToString(),
-					ClientID:    modelNumber + "_zone_" + strconv.Itoa(j),
+					ClientID:    strconv.Itoa(i) + "_zone_" + strconv.Itoa(j),
 				}
 				j++
 			}
@@ -74,7 +112,7 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 					Address:     sen.Address,
 
 					//TODO: Shouldn't be setting ClientID here
-					ClientID: modelNumber + "_sensor_" + strconv.Itoa(j),
+					ClientID: strconv.Itoa(i) + "_sensor_" + strconv.Itoa(j),
 
 					Attr: jsonSensorAttr{
 						Name:     sen.Attr.Name,
@@ -93,17 +131,28 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 					PoolSize: int32(connCfg.Size),
 				}
 			}
+
+			var authJSON *jsonAuth
+			if device.Auth != nil {
+				authJSON = &jsonAuth{
+					Login:    device.Auth.Login,
+					Password: device.Auth.Password,
+					Token:    device.Auth.Token,
+				}
+			}
 			jsonDevices[i] = jsonDevice{
-				ID:          device.ID,
-				Address:     device.Address,
-				Name:        device.Name,
-				Description: device.Description,
-				ModelNumber: device.ModelNumber,
-				Token:       "",
-				ClientID:    modelNumber + "_" + strconv.Itoa(i),
-				Zones:       jsonZones,
-				Sensors:     jsonSensors,
-				ConnPool:    connPoolJSON,
+				ID:              device.ID,
+				Address:         device.Address,
+				Name:            device.Name,
+				Description:     device.Description,
+				ModelNumber:     device.ModelNumber,
+				ModelName:       device.ModelName,
+				SoftwareVersion: device.SoftwareVersion,
+				ClientID:        "device_" + strconv.Itoa(i),
+				Zones:           jsonZones,
+				Sensors:         jsonSensors,
+				ConnPool:        connPoolJSON,
+				Auth:            authJSON,
 			}
 		}
 

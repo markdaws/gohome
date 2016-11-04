@@ -18,7 +18,7 @@ type importer struct {
 	System *gohome.System
 }
 
-func (imp *importer) FromString(system *gohome.System, data, modelNumber string) error {
+func (imp *importer) FromString(system *gohome.System, data string) error {
 
 	//TODO: Don't hard code, modify lutron integration report JSON on upload to
 	//include this ID

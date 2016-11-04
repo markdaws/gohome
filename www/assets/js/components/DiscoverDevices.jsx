@@ -18,7 +18,7 @@ var DiscoverDevices = React.createClass({
             devices: null
         });
 
-        Api.discoverDevice(this.props.modelNumber, function(err, data) {
+        Api.discovererScanDevices(this.props.discoverer.id, function(err, data) {
             this.setState({
                 discovering: false,
                 devices: data || []
@@ -35,8 +35,11 @@ var DiscoverDevices = React.createClass({
                            description={device.description}
                            address={device.address}
                            modelNumber={device.modelNumber}
+                           modelName={device.modelName}
+                           softwareVersion={device.softwareVersion}
                            connectionPool={device.connPool}
                            cmdBuilder={device.cmdBuilder}
+                           auth={device.auth}
                            id={device.id}
                            clientId={device.clientId}
                            readOnlyFields="id, modelNumber"

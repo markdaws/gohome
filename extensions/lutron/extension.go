@@ -46,12 +46,17 @@ func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.B
 func (e *extension) NetworkForDevice(sys *gohome.System, d *gohome.Device) gohome.Network {
 	switch d.ModelNumber {
 	case "l-bdgpro2-wh":
-		return &network{System: sys}
+		return &network{}
 	default:
 		return nil
 	}
 }
 
+func (e *extension) Discovery(sys *gohome.System) gohome.Discovery {
+	return &discovery{System: sys}
+}
+
+/* TODO: Import from a string
 func (e *extension) ImporterForDevice(sys *gohome.System, d *gohome.Device) gohome.Importer {
 	switch d.ModelNumber {
 	case "l-bdgpro2-wh":
@@ -59,7 +64,7 @@ func (e *extension) ImporterForDevice(sys *gohome.System, d *gohome.Device) goho
 	default:
 		return nil
 	}
-}
+}*/
 
 func (e *extension) Name() string {
 	return "Lutron"

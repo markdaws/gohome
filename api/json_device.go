@@ -5,6 +5,12 @@ type jsonConnPool struct {
 	PoolSize int32  `json:"poolSize"`
 }
 
+type jsonAuth struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+	Token    string `json:"token"`
+}
+
 type jsonDevice struct {
 	Address         string        `json:"address"`
 	ID              string        `json:"id"`
@@ -13,12 +19,12 @@ type jsonDevice struct {
 	ModelNumber     string        `json:"modelNumber"`
 	ModelName       string        `json:"modelName"`
 	SoftwareVersion string        `json:"softwareVersion"`
-	Token           string        `json:"token"`
 	ClientID        string        `json:"clientId,omitempty"`
 	Zones           []jsonZone    `json:"zones"`
 	ConnPool        *jsonConnPool `json:"connPool"`
 	Type            string        `json:"type"`
 	Sensors         []jsonSensor  `json:"sensors"`
+	Auth            *jsonAuth     `json:"auth"`
 }
 type devices []jsonDevice
 

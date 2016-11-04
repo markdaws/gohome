@@ -426,6 +426,7 @@ var API = {
         });
     },
 
+    // buttonLoadAll loads all of the buttons in the system
     buttonLoadAll: function(callback) {
         $.ajax({
             url: BASE + '/api/v1/buttons',
@@ -444,9 +445,10 @@ var API = {
         });
     },
 
-    discoverDevice: function(modelNumber, callback) {
+    // discoverersList lists all of the discoverers
+    discoverersList: function(callback) {
         $.ajax({
-            url: BASE + '/api/v1/discovery/' + modelNumber,
+            url: BASE + '/api/v1/discovery/discoverers',
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -460,7 +462,21 @@ var API = {
         });
     },
 
-    discoverToken: function(modelNumber, address, callback) {
+    // discovererScanDevices scans the local network for specific devices
+    discovererScanDevices: function(discovererId, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err
+                });
+            }
+        });
     }
 };
 module.exports = API;

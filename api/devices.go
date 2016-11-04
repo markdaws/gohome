@@ -98,9 +98,11 @@ func apiAddDeviceHandler(
 		}
 
 		var auth *gohome.Auth
-		if data.Token != "" {
+		if data.Auth != nil {
 			auth = &gohome.Auth{
-				Token: data.Token,
+				Login:    data.Auth.Login,
+				Password: data.Auth.Password,
+				Token:    data.Auth.Token,
 			}
 		}
 

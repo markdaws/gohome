@@ -18,6 +18,6 @@ func (e *NullExtension) NetworkForDevice(sys *System, d *Device) Network {
 	return nil
 }
 
-func (e *NullExtension) ImporterForDevice(sys *System, d *Device) Importer {
+func (e *NullExtension) Discovery(sys *System) Discovery {
 	return nil
 }

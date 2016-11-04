@@ -30,7 +30,7 @@ type config struct {
 func main() {
 	//TODO: Don't panic, system should still start but with warning to the user
 
-	useLocalhost := true
+	useLocalhost := false
 	var addr string
 	if !useLocalhost {
 		// Find the first public address we can bind to
@@ -59,7 +59,7 @@ func main() {
 	rm := gohome.NewRecipeManager()
 
 	//TODO: Remove, simulate user importing lutron information on load
-	reset := false
+	reset := true
 	if reset {
 		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", 1)
 		intg.RegisterExtensions(system)
@@ -69,11 +69,14 @@ func main() {
 			panic("Could not read ip.json")
 		}
 
-		importer := system.Extensions.FindImporter(system, &gohome.Device{ModelNumber: "l-bdgpro2-wh"})
-		if importer == nil {
+		discoverer := system.Extensions.FindDiscovererFromID(system, "lutron.l-bdgpro2-wh")
+		if discoverer == nil {
 			panic("Failed to import: " + err.Error())
 		}
-		err = importer.FromString(system, string(bytes[:]), "l-bdgpro2-wh")
+
+		//TODO: This is wrong, fix interface
+		_, err = discoverer.FromString(string(bytes[:]))
+		//err = importer.FromString(system, string(bytes[:]), "l-bdgpro2-wh")
 		if err != nil {
 			panic("Failed to import: " + err.Error())
 		}

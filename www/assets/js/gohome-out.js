@@ -23444,34 +23444,67 @@
 
 	var React = __webpack_require__(1);
 	var DiscoverDevices = __webpack_require__(203);
+	//TODO: Delete
 	var ImportTCP600GWB = __webpack_require__(221);
+	var Api = __webpack_require__(208);
 
 	var Import = React.createClass({
 	    displayName: 'Import',
 
 	    getInitialState: function getInitialState() {
-	        return { selectedProduct: null };
+	        return {
+	            discoverers: [],
+	            selectedDiscoverer: ''
+	        };
 	    },
 
 	    productSelected: function productSelected(evt) {
-	        this.setState({ selectedProduct: evt.target.value });
+	        this.setState({ selectedDiscoverer: evt.target.value });
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        Api.discoverersList(function (err, data) {
+	            if (err) {
+	                //TODO:
+	                console.error(err);
+	                return;
+	            }
+
+	            this.setState({ discoverers: data });
+	        }.bind(this));
 	    },
 
 	    render: function render() {
-	        //TODO: Should get this list from the server, generate drop down automatically from
-	        //registered extensions
-
 	        var body;
-	        switch (this.state.selectedProduct) {
-	            case 'tcp600gwb':
-	            case 'fluxwifi':
-	            case 'f7c029v2':
-	            case 'f7c043fc':
-	                body = React.createElement(DiscoverDevices, { modelNumber: this.state.selectedProduct });
+
+	        var discoverer;
+	        for (var i = 0; i < this.state.discoverers.length; ++i) {
+	            if (this.state.discoverers[i].id === this.state.selectedDiscoverer) {
+	                discoverer = this.state.discoverers[i];
 	                break;
-	            default:
-	                body = null;
+	            }
 	        }
+	        if (discoverer) {
+	            switch (discoverer.type) {
+	                case 'ScanDevices':
+	                    // Need to scan the network
+	                    body = React.createElement(DiscoverDevices, { discoverer: discoverer, key: discoverer.id });
+	                    break;
+
+	                case 'FromString':
+	                    // This importer imports from a user provided string
+	                    //TODO:
+	                    break;
+	            }
+	        }
+
+	        var options = this.state.discoverers.map(function (discoverer) {
+	            return React.createElement(
+	                'option',
+	                { key: discoverer.id, value: discoverer.id },
+	                discoverer.name
+	            );
+	        });
 
 	        return React.createElement(
 	            'div',
@@ -23489,31 +23522,7 @@
 	                    { value: '' },
 	                    'Choose ...'
 	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'f7c029v2' },
-	                    'Belkin WeMo Insight'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'f7c043fc' },
-	                    'Belkin WeMo Maker'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'l-bdgpro2-wh' },
-	                    'Lutron'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'tcp600gwb' },
-	                    'Connected By TCP Hub'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'fluxwifi' },
-	                    'Flux WIFI Bulb'
-	                )
+	                options
 	            ),
 	            React.createElement(
 	                'div',
@@ -23524,12 +23533,6 @@
 	    }
 	});
 	module.exports = Import;
-
-	/*
-	//TODO: Delete
-	                body = <ImportTCP600GWB />
-	            break;
-	*/
 
 /***/ },
 /* 203 */
@@ -23559,7 +23562,7 @@
 	            devices: null
 	        });
 
-	        Api.discoverDevice(this.props.modelNumber, function (err, data) {
+	        Api.discovererScanDevices(this.props.discoverer.id, function (err, data) {
 	            this.setState({
 	                discovering: false,
 	                devices: data || []
@@ -23576,8 +23579,11 @@
 	                    description: device.description,
 	                    address: device.address,
 	                    modelNumber: device.modelNumber,
+	                    modelName: device.modelName,
+	                    softwareVersion: device.softwareVersion,
 	                    connectionPool: device.connPool,
 	                    cmdBuilder: device.cmdBuilder,
+	                    auth: device.auth,
 	                    id: device.id,
 	                    clientId: device.clientId,
 	                    readOnlyFields: 'id, modelNumber',
@@ -23664,7 +23670,9 @@
 	            id: this.props.id,
 	            clientId: this.props.clientId,
 	            modelNumber: this.props.modelNumber || '',
-	            token: this.props.token,
+	            modelName: this.props.modelName || '',
+	            softwareVersion: this.props.softwareVersion || '',
+	            auth: this.props.auth,
 	            showToken: false,
 	            errors: null,
 	            saveButtonStatus: '',
@@ -23692,7 +23700,9 @@
 	            description: s.description,
 	            address: s.address,
 	            modelNumber: s.modelNumber,
-	            token: s.token,
+	            modelName: s.modelName,
+	            softwareVersion: s.softwareVersion,
+	            auth: s.auth,
 	            id: s.id,
 	            connPool: this.props.connectionPool,
 	            cmdBuilder: this.props.cmdBuilder,
@@ -24690,6 +24700,7 @@
 	        });
 	    },
 
+	    // buttonLoadAll loads all of the buttons in the system
 	    buttonLoadAll: function buttonLoadAll(callback) {
 	        $.ajax({
 	            url: BASE + '/api/v1/buttons',
@@ -24708,9 +24719,10 @@
 	        });
 	    },
 
-	    discoverDevice: function discoverDevice(modelNumber, callback) {
+	    // discoverersList lists all of the discoverers
+	    discoverersList: function discoverersList(callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/discovery/' + modelNumber,
+	            url: BASE + '/api/v1/discovery/discoverers',
 	            dataType: 'json',
 	            cache: false,
 	            success: function success(data) {
@@ -24724,7 +24736,22 @@
 	        });
 	    },
 
-	    discoverToken: function discoverToken(modelNumber, address, callback) {}
+	    // discovererScanDevices scans the local network for specific devices
+	    discovererScanDevices: function discovererScanDevices(discovererId, callback) {
+	        $.ajax({
+	            url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
+	            dataType: 'json',
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback({
+	                    err: err
+	                });
+	            }
+	        });
+	    }
 	};
 	module.exports = API;
 
@@ -25896,6 +25923,8 @@
 	                    description: device.description,
 	                    address: device.address,
 	                    modelNumber: device.modelNumber,
+	                    modelName: device.modelName,
+	                    softwareVersion: device.softwareVersion,
 	                    id: device.id,
 	                    clientId: device.clientId,
 	                    readOnlyFields: 'id'
