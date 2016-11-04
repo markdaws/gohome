@@ -21491,7 +21491,11 @@
 	                'You don\'t have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.'
 	            );
 	        } else {
-	            zoneBody = React.createElement(ZoneSensorList, { sensors: this.props.sensors, zones: this.props.zones });
+	            zoneBody = React.createElement(ZoneSensorList, {
+	                sensors: this.props.sensors,
+	                zones: this.props.zones,
+	                devices: this.props.devices
+	            });
 	        }
 
 	        var emptySceneBody;
@@ -23817,7 +23821,6 @@
 	    },
 
 	    typeChanged: function typeChanged(type) {
-	        //this.setState({ type: type });
 	        this.changed({
 	            target: {
 	                getAttribute: function getAttribute() {
@@ -24641,11 +24644,33 @@
 	        });
 	    },
 
+	    // zoneUpdate updates a zone on the server with the new values
+	    zoneUpdate: function zoneUpdate(zoneJson, callback) {
+	        $.ajax({
+	            url: BASE + '/api/v1/zones/' + zoneJson.id,
+	            type: 'PUT',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify(zoneJson),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                var errors = (xhr.responseJSON || {}).errors;
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    validationErrors: errors
+	                });
+	            }
+	        });
+	    },
+
 	    // zoneSetLevel sets the level of a zone.
 	    // cmd -> 'turnOn | turnOff | setLevel
 	    zoneSetLevel: function zoneSetLevel(zoneId, cmd, value, r, g, b, callback) {
 	        $.ajax({
-	            url: BASE + '/api/v1/zones/' + zoneId,
+	            url: BASE + '/api/v1/zones/' + zoneId + '/level',
 	            type: 'PUT',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
@@ -24812,7 +24837,12 @@
 	    // When a zone is being impored
 	    ZONE_IMPORT: null,
 	    ZONE_IMPORT_RAW: null,
-	    ZONE_IMPORT_FAIL: null
+	    ZONE_IMPORT_FAIL: null,
+
+	    // When a zone is being updated
+	    ZONE_UPDATE: null,
+	    ZONE_UPDATE_RAW: null,
+	    ZONE_UPDATE_FAIL: null
 	});
 
 /***/ },
@@ -24881,11 +24911,14 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(173);
 	var UniqueIdMixin = __webpack_require__(205);
 	var InputValidationMixin = __webpack_require__(206);
 	var DevicePicker = __webpack_require__(212);
 	var ZoneOutputPicker = __webpack_require__(213);
 	var ZoneTypePicker = __webpack_require__(214);
+	var SaveBtn = __webpack_require__(207);
+	var Api = __webpack_require__(208);
 
 	var ZoneInfo = React.createClass({
 	    displayName: 'ZoneInfo',
@@ -24900,13 +24933,17 @@
 	            deviceId: this.props.deviceId,
 	            type: this.props.type,
 	            output: this.props.output,
-	            errors: null
+	            errors: null,
+	            id: this.props.id,
+	            dirty: false,
+	            saveButtonStatus: ''
 	        };
 	    },
 
 	    toJson: function toJson() {
 	        var s = this.state;
 	        return {
+	            id: this.props.id,
 	            clientId: s.clientId,
 	            name: s.name,
 	            description: s.description,
@@ -24922,6 +24959,7 @@
 	    },
 
 	    _changed: function _changed(evt) {
+	        this.setState({ saveButtonStatus: '' });
 	        this.props.changed && this.props.changed();
 	        this.changed(evt);
 	    },
@@ -24931,14 +24969,40 @@
 	    },
 
 	    typeChanged: function typeChanged(type) {
-	        this.setState({ type: type });
+	        this.setState({ saveButtonStatus: '' });
+	        this.setState({ type: type, dirty: true });
 	    },
 
 	    outputChanged: function outputChanged(output) {
-	        this.setState({ output: output });
+	        this.setState({ saveButtonStatus: '' });
+	        this.setState({ output: output, dirty: true });
+	    },
+
+	    save: function save() {
+	        this.setState({ errors: null });
+	        Api.zoneUpdate(this.toJson(), function (err, zoneData) {
+	            if (err) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validationErrors
+	                });
+	                return;
+	            }
+
+	            this.setState({ saveButtonStatus: 'success' });
+	            this.props.updatedZone(zoneData);
+	        }.bind(this));
 	    },
 
 	    render: function render() {
+	        var saveBtn;
+	        if (this.state.dirty) {
+	            saveBtn = React.createElement(SaveBtn, {
+	                clicked: this.save,
+	                text: 'Save',
+	                status: this.state.saveButtonStatus });
+	        }
+
 	        return React.createElement(
 	            'div',
 	            { className: 'cmp-ZoneInfo well' },
@@ -24961,55 +25025,6 @@
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: this.addErr("form-group", 'description') },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("description") },
-	                    'Description'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.description,
-	                    'data-statepath': 'description',
-	                    onChange: this._changed,
-	                    className: 'description form-control',
-	                    type: 'text',
-	                    id: this.uid("description") }),
-	                this.errMsg('description')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "address") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("address") },
-	                    'Address'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.address,
-	                    'data-statepath': 'address',
-	                    onChange: this._changed,
-	                    className: 'address form-control',
-	                    type: 'text',
-	                    id: this.uid("address") }),
-	                this.errMsg('address')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "deviceId") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("deviceId") },
-	                    'Device*'
-	                ),
-	                React.createElement(DevicePicker, {
-	                    disabled: this.isReadOnly("deviceId"),
-	                    defaultId: this.props.deviceId,
-	                    devices: this.props.devices,
-	                    changed: this.devicePickerChanged }),
-	                this.errMsg('deviceId')
-	            ),
-	            React.createElement(
-	                'div',
 	                { className: this.addErr("form-group", "type") },
 	                React.createElement(
 	                    'label',
@@ -25029,7 +25044,76 @@
 	                ),
 	                React.createElement(ZoneOutputPicker, { output: this.props.output, changed: this.outputChanged }),
 	                this.errMsg('output')
-	            )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: '' },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("moreInfo") },
+	                    'More Details',
+	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse moreInfo', id: this.uid("moreInfo") },
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", 'description') },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("description") },
+	                        'Description'
+	                    ),
+	                    React.createElement('input', {
+	                        value: this.state.description,
+	                        'data-statepath': 'description',
+	                        onChange: this._changed,
+	                        className: 'description form-control',
+	                        type: 'text',
+	                        id: this.uid("description") }),
+	                    this.errMsg('description')
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", "address") },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("address") },
+	                        'Address'
+	                    ),
+	                    React.createElement('input', {
+	                        value: this.state.address,
+	                        'data-statepath': 'address',
+	                        onChange: this._changed,
+	                        className: 'address form-control',
+	                        type: 'text',
+	                        id: this.uid("address") }),
+	                    this.errMsg('address')
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", "deviceId") },
+	                    React.createElement(
+	                        'label',
+	                        { className: 'control-label', htmlFor: this.uid("deviceId") },
+	                        'Device*'
+	                    ),
+	                    React.createElement(DevicePicker, {
+	                        disabled: this.isReadOnly("deviceId"),
+	                        defaultId: this.props.deviceId,
+	                        devices: this.props.devices,
+	                        changed: this.devicePickerChanged }),
+	                    this.errMsg('deviceId')
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                saveBtn
+	            ),
+	            React.createElement('div', { style: { clear: 'both' } })
 	        );
 	    }
 	});
@@ -25439,8 +25523,13 @@
 	        return function (dispatch) {
 	            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zoneJson });
 	        };
-	    }
+	    },
 
+	    updated: function updated(zoneJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.ZONE_UPDATE_RAW, data: zoneJson });
+	        };
+	    }
 	};
 	module.exports = ZoneActions;
 
@@ -26573,7 +26662,7 @@
 	            React.createElement(
 	                "div",
 	                { className: "icon" },
-	                React.createElement("i", { className: "icon ion-ios-settings" })
+	                React.createElement("i", { className: "icon ion-cube" })
 	            ),
 	            React.createElement(
 	                "div",
@@ -26608,9 +26697,7 @@
 	    mixins: [UniqueIdMixin],
 
 	    getInitialState: function getInitialState() {
-	        return {
-	            editMode: false
-	        };
+	        return { editMode: false };
 	    },
 
 	    _onChange: function _onChange() {
@@ -27979,8 +28066,11 @@
 	var ZoneActions = __webpack_require__(217);
 	var Grid = __webpack_require__(223);
 	var SensorMonitor = __webpack_require__(250);
+	var ZoneInfo = __webpack_require__(211);
 	var ZoneSensorListGridCell = __webpack_require__(251);
 	var Api = __webpack_require__(208);
+
+	//TODO: Need to get the correct state when we come out of edit mode, currently lost
 
 	var ZoneSensorList = React.createClass({
 	    displayName: 'ZoneSensorList',
@@ -27998,7 +28088,15 @@
 	            zones: {},
 	            sensors: {}
 	        };
-	        return null;
+	        return { editMode: false };
+	    },
+
+	    edit: function edit() {
+	        this.setState({ editMode: true });
+	    },
+
+	    endEdit: function endEdit() {
+	        this.setState({ editMode: false });
 	    },
 
 	    getDefaultProps: function getDefaultProps() {
@@ -28022,10 +28120,13 @@
 	    },
 
 	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
-	        if (this.props.zones !== nextProps.zones) {
+	        if (nextProps && this.props.zones !== nextProps.zones) {
 	            return true;
 	        }
-	        if (this.props.sensors !== nextProps.sensors) {
+	        if (nextProps && this.props.sensors !== nextProps.sensors) {
+	            return true;
+	        }
+	        if (nextState && nextState.editMode !== this.state.editMode) {
 	            return true;
 	        }
 	        return false;
@@ -28172,119 +28273,183 @@
 	    },
 
 	    render: function render() {
-	        var lightZones = [];
-	        var shadeZones = [];
-	        var switchZones = [];
-	        var otherZones = [];
-	        var sensors = [];
+	        var btns, body;
 
-	        this.props.zones.forEach(function (zone) {
-	            var cmpZone = {
-	                key: 'zones_' + zone.id,
-	                cell: React.createElement(ZoneSensorListGridCell, {
-	                    key: zone.id,
-	                    ref: "cell_zone_" + zone.id,
-	                    zone: zone }),
-	                content: React.createElement(ZoneControl, _defineProperty({
-	                    key: zone.id,
-	                    id: zone.id,
-	                    didMount: this.expanderMounted,
-	                    willUnmount: this.expanderUnmounted,
+	        if (this.state.editMode) {
+	            btns = React.createElement(
+	                'div',
+	                null,
+	                React.createElement(
+	                    'h2',
+	                    null,
+	                    '\xA0'
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: 'clearfix buttonWrapper' },
+	                    React.createElement(
+	                        'button',
+	                        { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
+	                        'Done'
+	                    )
+	                )
+	            );
+
+	            body = this.props.zones.map(function (zone) {
+	                return React.createElement(ZoneInfo, {
 	                    name: zone.name,
+	                    description: zone.description,
+	                    address: zone.address,
+	                    id: zone.id,
+	                    key: zone.id,
+	                    readOnlyFields: 'deviceId, id',
+	                    deviceId: zone.deviceId,
 	                    type: zone.type,
-	                    output: zone.output
-	                }, 'key', zone.id))
-	            };
-	            switch (zone.type) {
-	                case 'light':
-	                    lightZones.push(cmpZone);
-	                    break;
-	                case 'shade':
-	                    shadeZones.push(cmpZone);
-	                    break;
-	                case 'switch':
-	                    switchZones.push(cmpZone);
-	                    break;
-	                default:
-	                    otherZones.push(cmpZone);
-	                    break;
-	            }
-	        }.bind(this));
+	                    devices: this.props.devices,
+	                    output: zone.output,
+	                    updatedZone: this.props.updatedZone
+	                });
+	            }.bind(this));
+	        } else {
+	            var lightZones = [];
+	            var shadeZones = [];
+	            var switchZones = [];
+	            var otherZones = [];
+	            var sensors = [];
 
-	        this.props.sensors.forEach(function (sensor) {
-	            var cmpSensor = {
-	                key: 'sensor_' + sensor.id,
-	                cell: React.createElement(ZoneSensorListGridCell, {
-	                    key: sensor.id,
-	                    ref: "cell_sensor_" + sensor.id,
-	                    sensor: sensor }),
-	                content: React.createElement(SensorMonitor, {
-	                    id: sensor.id,
-	                    didMount: this.expanderMounted,
-	                    willUnmount: this.expanderUnmounted,
-	                    key: sensor.id,
-	                    sensor: sensor })
-	            };
-	            sensors.push(cmpSensor);
-	        }.bind(this));
+	            this.props.zones.forEach(function (zone) {
+	                var cmpZone = {
+	                    key: 'zones_' + zone.id,
+	                    cell: React.createElement(ZoneSensorListGridCell, {
+	                        key: zone.id,
+	                        ref: "cell_zone_" + zone.id,
+	                        zone: zone }),
+	                    content: React.createElement(ZoneControl, _defineProperty({
+	                        key: zone.id,
+	                        id: zone.id,
+	                        didMount: this.expanderMounted,
+	                        willUnmount: this.expanderUnmounted,
+	                        name: zone.name,
+	                        type: zone.type,
+	                        output: zone.output
+	                    }, 'key', zone.id))
+	                };
+	                switch (zone.type) {
+	                    case 'light':
+	                        lightZones.push(cmpZone);
+	                        break;
+	                    case 'shade':
+	                        shadeZones.push(cmpZone);
+	                        break;
+	                    case 'switch':
+	                        switchZones.push(cmpZone);
+	                        break;
+	                    default:
+	                        otherZones.push(cmpZone);
+	                        break;
+	                }
+	            }.bind(this));
+
+	            this.props.sensors.forEach(function (sensor) {
+	                var cmpSensor = {
+	                    key: 'sensor_' + sensor.id,
+	                    cell: React.createElement(ZoneSensorListGridCell, {
+	                        key: sensor.id,
+	                        ref: "cell_sensor_" + sensor.id,
+	                        sensor: sensor }),
+	                    content: React.createElement(SensorMonitor, {
+	                        id: sensor.id,
+	                        didMount: this.expanderMounted,
+	                        willUnmount: this.expanderUnmounted,
+	                        key: sensor.id,
+	                        sensor: sensor })
+	                };
+	                sensors.push(cmpSensor);
+	            }.bind(this));
+
+	            btns = React.createElement(
+	                'div',
+	                { className: 'clearfix buttonWrapper' },
+	                React.createElement(
+	                    'button',
+	                    { className: 'btn btn-default btnEdit pull-right', onClick: this.edit },
+	                    React.createElement('i', { className: 'fa fa-cog', 'aria-hidden': 'true' })
+	                )
+	            );
+
+	            body = React.createElement(
+	                'div',
+	                null,
+	                React.createElement(
+	                    'div',
+	                    { className: 'clearfix' },
+	                    React.createElement(
+	                        'h2',
+	                        { className: ClassNames({ 'hidden': lightZones.length === 0 }) },
+	                        'Lights'
+	                    ),
+	                    React.createElement(Grid, { name: 'zone grid', cells: lightZones, expanderWillMount: this.zoneExpanderWillMount })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: 'clearfix' },
+	                    React.createElement(
+	                        'h2',
+	                        { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
+	                        'Shades'
+	                    ),
+	                    React.createElement(Grid, { cells: shadeZones, expanderWillMount: this.zoneExpanderWillMount })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: 'clearfix' },
+	                    React.createElement(
+	                        'h2',
+	                        { className: ClassNames({ 'hidden': switchZones.length === 0 }) },
+	                        'Switches'
+	                    ),
+	                    React.createElement(Grid, { cells: switchZones, expanderWillMount: this.zoneExpanderWillMount })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: 'clearfix' },
+	                    React.createElement(
+	                        'h2',
+	                        { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
+	                        'Other Zones'
+	                    ),
+	                    React.createElement(Grid, { cells: otherZones, expanderWillMount: this.zoneExpanderWillMount })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: 'clearfix' },
+	                    React.createElement(
+	                        'h2',
+	                        { className: ClassNames({ 'hidden': sensors.length === 0 }) },
+	                        'Sensors'
+	                    ),
+	                    React.createElement(Grid, { cells: sensors })
+	                )
+	            );
+	        }
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-ZoneSensorList' },
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': lightZones.length === 0 }) },
-	                    'Lights'
-	                ),
-	                React.createElement(Grid, { name: 'zone grid', cells: lightZones, expanderWillMount: this.zoneExpanderWillMount })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': shadeZones.length === 0 }) },
-	                    'Shades'
-	                ),
-	                React.createElement(Grid, { cells: shadeZones, expanderWillMount: this.zoneExpanderWillMount })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': switchZones.length === 0 }) },
-	                    'Switches'
-	                ),
-	                React.createElement(Grid, { cells: switchZones, expanderWillMount: this.zoneExpanderWillMount })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': otherZones.length === 0 }) },
-	                    'Other Zones'
-	                ),
-	                React.createElement(Grid, { cells: otherZones, expanderWillMount: this.zoneExpanderWillMount })
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'h2',
-	                    { className: ClassNames({ 'hidden': sensors.length === 0 }) },
-	                    'Sensors'
-	                ),
-	                React.createElement(Grid, { cells: sensors })
-	            )
+	            { className: ClassNames("cmp-ZoneSensorList", { editMode: this.state.editMode }) },
+	            btns,
+	            body
 	        );
 	    }
 	});
-	module.exports = ZoneSensorList;
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        updatedZone: function updatedZone(data) {
+	            dispatch(ZoneActions.updated(data));
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(ZoneSensorList);
 
 /***/ },
 /* 248 */
@@ -30387,6 +30552,21 @@
 	        case Constants.ZONE_CREATE_RAW:
 	            break;
 	        case Constants.ZONE_CREATE_FAIL:
+	            break;
+
+	        case Constants.ZONE_UPDATE:
+	            break;
+
+	        case Constants.ZONE_UPDATE_RAW:
+	            newState = newState.map(function (zone) {
+	                if (action.data.id === zone.id) {
+	                    return action.data;
+	                }
+	                return zone;
+	            });
+	            break;
+
+	        case Constants.ZONE_UPDATE_FAIL:
 	            break;
 
 	        case Constants.ZONE_IMPORT:

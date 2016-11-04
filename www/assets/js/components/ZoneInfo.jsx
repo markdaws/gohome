@@ -1,9 +1,12 @@
 var React = require('react');
+var ReactRedux = require('react-redux');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 var InputValidationMixin = require('./InputValidationMixin.jsx')
 var DevicePicker = require('./DevicePicker.jsx');
 var ZoneOutputPicker = require('./ZoneOutputPicker.jsx');
 var ZoneTypePicker = require('./ZoneTypePicker.jsx');
+var SaveBtn = require('./SaveBtn.jsx');
+var Api = require('../utils/API.js');
 
 var ZoneInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
@@ -17,12 +20,16 @@ var ZoneInfo = React.createClass({
             type: this.props.type,
             output: this.props.output,
             errors: null,
+            id: this.props.id,
+            dirty: false,
+            saveButtonStatus: '',
         }
     },
 
     toJson: function() {
         var s = this.state
         return {
+            id: this.props.id,
             clientId: s.clientId,
             name: s.name,
             description: s.description,
@@ -38,6 +45,7 @@ var ZoneInfo = React.createClass({
     },
 
     _changed: function(evt) {
+        this.setState({ saveButtonStatus: '' });
         this.props.changed && this.props.changed();
         this.changed(evt);
     },
@@ -47,14 +55,42 @@ var ZoneInfo = React.createClass({
     },
 
     typeChanged: function(type) {
-        this.setState({ type: type });
+        this.setState({ saveButtonStatus: '' });
+        this.setState({ type: type, dirty: true });
     },
 
     outputChanged: function(output) {
-        this.setState({ output: output });
+        this.setState({ saveButtonStatus: '' });
+        this.setState({ output: output, dirty: true });
     },
 
+    save: function() {
+        this.setState({ errors: null });
+        Api.zoneUpdate(this.toJson(), function(err, zoneData) {
+            if (err) {
+                this.setState({
+                    saveButtonStatus: 'error',
+                    errors: err.validationErrors
+                });
+                return;
+            }
+
+            this.setState({ saveButtonStatus: 'success' });
+            this.props.updatedZone(zoneData);
+        }.bind(this));
+    },
+    
     render: function() {
+        var saveBtn;
+        if (this.state.dirty) {
+            saveBtn = (
+                <SaveBtn
+                    clicked={this.save}
+                    text="Save"
+                    status={this.state.saveButtonStatus}/>
+            );
+        }
+
         return (
             <div className="cmp-ZoneInfo well">
               <div className={this.addErr('form-group', 'name')}>
@@ -68,47 +104,59 @@ var ZoneInfo = React.createClass({
                     id={this.uid('name')} />
                 {this.errMsg('name')}
               </div>
-              <div className={this.addErr("form-group", 'description')}>
-                <label className="control-label" htmlFor={this.uid("description")}>Description</label>
-                <input
-                    value={this.state.description}
-                    data-statepath="description"
-                    onChange={this._changed}
-                    className="description form-control"
-                    type="text"
-                    id={this.uid("description")} />
-                {this.errMsg('description')}
-              </div>
-              <div className={this.addErr("form-group", "address")}>
-                <label className="control-label" htmlFor={this.uid("address")}>Address</label>
-                <input
-                    value={this.state.address}
-                    data-statepath="address"
-                    onChange={this._changed}
-                    className="address form-control"
-                    type="text"
-                    id={this.uid("address")} />
-                {this.errMsg('address')}
-              </div>
-              <div className={this.addErr("form-group", "deviceId")}>
-                <label className="control-label" htmlFor={this.uid("deviceId")}>Device*</label>
-                <DevicePicker
-                    disabled={this.isReadOnly("deviceId")}
-                    defaultId={this.props.deviceId}
-                    devices={this.props.devices}
-                    changed={this.devicePickerChanged}/>
-                {this.errMsg('deviceId')}
-              </div>
               <div className={this.addErr("form-group", "type")}>
-                <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
-                <ZoneTypePicker type={this.props.type} changed={this.typeChanged}/>
-                {this.errMsg('type')}
+                  <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
+                  <ZoneTypePicker type={this.props.type} changed={this.typeChanged}/>
+                  {this.errMsg('type')}
               </div>
               <div className={this.addErr("form-group", "output")}>
-                <label className="control-label" htmlFor={this.uid("output")}>Output*</label>
-                <ZoneOutputPicker output={this.props.output} changed={this.outputChanged}/>
-                {this.errMsg('output')}
+                  <label className="control-label" htmlFor={this.uid("output")}>Output*</label>
+                  <ZoneOutputPicker output={this.props.output} changed={this.outputChanged}/>
+                  {this.errMsg('output')}
               </div>
+              <div className="">
+                  <a data-toggle="collapse" href={"#" + this.uid("moreInfo")}>
+                      More Details
+                      <i className="glyphicon glyphicon-menu-down"></i>
+                  </a>
+              </div>
+              <div className="collapse moreInfo" id={this.uid("moreInfo")}>
+                  <div className={this.addErr("form-group", 'description')}>
+                      <label className="control-label" htmlFor={this.uid("description")}>Description</label>
+                      <input
+                          value={this.state.description}
+                          data-statepath="description"
+                          onChange={this._changed}
+                          className="description form-control"
+                          type="text"
+                          id={this.uid("description")} />
+                      {this.errMsg('description')}
+                  </div>
+                  <div className={this.addErr("form-group", "address")}>
+                      <label className="control-label" htmlFor={this.uid("address")}>Address</label>
+                      <input
+                          value={this.state.address}
+                          data-statepath="address"
+                          onChange={this._changed}
+                          className="address form-control"
+                          type="text"
+                          id={this.uid("address")} />
+                      {this.errMsg('address')}
+                  </div>
+                  <div className={this.addErr("form-group", "deviceId")}>
+                      <label className="control-label" htmlFor={this.uid("deviceId")}>Device*</label>
+                      <DevicePicker
+                          disabled={this.isReadOnly("deviceId")}
+                          defaultId={this.props.deviceId}
+                          devices={this.props.devices}
+                          changed={this.devicePickerChanged}/>
+                      {this.errMsg('deviceId')}
+                  </div>
+              </div>
+              <div className="pull-right">
+                  {saveBtn}
+              </div>
+              <div style={{clear: 'both' }}></div>
             </div>
         );
     }

@@ -6,8 +6,11 @@ var SensorMonitor = require('./SensorMonitor.jsx');
 var ZoneActions = require('../actions/ZoneActions.js');
 var Grid = require('./Grid.jsx');
 var SensorMonitor = require('./SensorMonitor.jsx');
+var ZoneInfo = require('./ZoneInfo.jsx');
 var ZoneSensorListGridCell = require('./ZoneSensorListGridCell.jsx');
 var Api = require('../utils/API.js');
+
+//TODO: Need to get the correct state when we come out of edit mode, currently lost
 
 var ZoneSensorList = React.createClass({
     getInitialState: function() {
@@ -23,7 +26,15 @@ var ZoneSensorList = React.createClass({
             zones: {},
             sensors: {}
         };
-        return null;
+        return { editMode: false };
+    },
+
+    edit: function() {
+        this.setState({ editMode: true });
+    },
+
+    endEdit: function() {
+        this.setState({ editMode: false });
     },
     
     getDefaultProps: function() {
@@ -47,10 +58,13 @@ var ZoneSensorList = React.createClass({
     },
     
     shouldComponentUpdate: function(nextProps, nextState) {
-        if (this.props.zones !== nextProps.zones) {
+        if (nextProps && (this.props.zones !== nextProps.zones)) {
             return true;
         }
-        if (this.props.sensors !== nextProps.sensors) {
+        if (nextProps && (this.props.sensors !== nextProps.sensors)) {
+            return true;
+        }
+        if (nextState && (nextState.editMode !== this.state.editMode)) {
             return true;
         }
         return false;
@@ -197,86 +211,140 @@ var ZoneSensorList = React.createClass({
     },
     
     render: function() {
-        var lightZones = [];
-        var shadeZones = [];
-        var switchZones = [];
-        var otherZones = [];
-        var sensors = [];
+        var btns, body;
+        
+        if (this.state.editMode) {
+            btns = (
+                <div>
+                    <h2>&nbsp;</h2>
+                    <div className="clearfix buttonWrapper">
+                        <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
+                    </div>
+                </div>
+            );
 
-        this.props.zones.forEach(function(zone) {
-            var cmpZone = {
-                key: 'zones_' + zone.id,
-                cell: <ZoneSensorListGridCell
-                          key={zone.id}
-                          ref={"cell_zone_" + zone.id}
-                          zone={zone} />,
-                content: <ZoneControl
-                             key={zone.id}
-                             id={zone.id}
-                             didMount={this.expanderMounted}
-                             willUnmount={this.expanderUnmounted}
-                             name={zone.name}
-                             type={zone.type}
-                             output={zone.output}
-                             key={zone.id}/>
-            };
-            switch(zone.type) {
-                case 'light':
-                    lightZones.push(cmpZone);
-                    break;
-                case 'shade':
-                    shadeZones.push(cmpZone);
-                    break;
-                case 'switch':
-                    switchZones.push(cmpZone);
-                    break;
-                default:
-                    otherZones.push(cmpZone);
-                    break;
-            }
-        }.bind(this));
+            body = this.props.zones.map(function(zone) {
+                return (
+                    <ZoneInfo
+                        name={zone.name}
+                        description={zone.description}
+                        address={zone.address}
+                        id={zone.id}
+                        key={zone.id}
+                        readOnlyFields="deviceId, id"
+                        deviceId={zone.deviceId}
+                        type={zone.type}
+                        devices={this.props.devices}
+                        output={zone.output}
+                        updatedZone={this.props.updatedZone}
+                    />
+                );
+            }.bind(this));
+        } else {
+            var lightZones = [];
+            var shadeZones = [];
+            var switchZones = [];
+            var otherZones = [];
+            var sensors = [];
 
-        this.props.sensors.forEach(function(sensor) {
-            var cmpSensor = {
-                key: 'sensor_' + sensor.id,
-                cell: <ZoneSensorListGridCell
-                          key={sensor.id}
-                          ref={"cell_sensor_" + sensor.id}
-                          sensor={sensor} />,
-                content: <SensorMonitor
-                             id={sensor.id}
-                             didMount={this.expanderMounted}
-                             willUnmount={this.expanderUnmounted}
-                             key={sensor.id}
-                             sensor={sensor} />
-            };
-            sensors.push(cmpSensor);
-        }.bind(this));
+            this.props.zones.forEach(function(zone) {
+                var cmpZone = {
+                    key: 'zones_' + zone.id,
+                    cell: <ZoneSensorListGridCell
+                              key={zone.id}
+                              ref={"cell_zone_" + zone.id}
+                              zone={zone} />,
+                    content: <ZoneControl
+                                 key={zone.id}
+                                 id={zone.id}
+                                 didMount={this.expanderMounted}
+                                 willUnmount={this.expanderUnmounted}
+                                 name={zone.name}
+                                 type={zone.type}
+                                 output={zone.output}
+                                 key={zone.id}/>
+                };
+                switch(zone.type) {
+                    case 'light':
+                        lightZones.push(cmpZone);
+                        break;
+                    case 'shade':
+                        shadeZones.push(cmpZone);
+                        break;
+                    case 'switch':
+                        switchZones.push(cmpZone);
+                        break;
+                    default:
+                        otherZones.push(cmpZone);
+                        break;
+                }
+            }.bind(this));
+
+            this.props.sensors.forEach(function(sensor) {
+                var cmpSensor = {
+                    key: 'sensor_' + sensor.id,
+                    cell: <ZoneSensorListGridCell
+                              key={sensor.id}
+                              ref={"cell_sensor_" + sensor.id}
+                              sensor={sensor} />,
+                    content: <SensorMonitor
+                                 id={sensor.id}
+                                 didMount={this.expanderMounted}
+                                 willUnmount={this.expanderUnmounted}
+                                 key={sensor.id}
+                                 sensor={sensor} />
+                };
+                sensors.push(cmpSensor);
+            }.bind(this));
+
+            btns = (
+                <div className="clearfix buttonWrapper">
+                    <button className="btn btn-default btnEdit pull-right" onClick={this.edit}>
+                        <i className="fa fa-cog" aria-hidden="true"></i>
+                    </button>
+                </div>
+            );
+
+            body = (
+                <div>
+                    <div className="clearfix">
+                        <h2 className={ClassNames({ 'hidden': lightZones.length === 0})}>Lights</h2>
+                        <Grid name="zone grid" cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    </div>
+                    <div className="clearfix">
+                        <h2 className={ClassNames({ 'hidden': shadeZones.length === 0})}>Shades</h2>
+                        <Grid cells={shadeZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    </div>
+                    <div className="clearfix">
+                        <h2 className={ClassNames({ 'hidden': switchZones.length === 0})}>Switches</h2>
+                        <Grid cells={switchZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    </div>
+                    <div className="clearfix">
+                        <h2 className={ClassNames({ 'hidden': otherZones.length === 0})}>Other Zones</h2>
+                        <Grid cells={otherZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    </div>
+                    <div className="clearfix">
+                        <h2 className={ClassNames({ 'hidden': sensors.length === 0})}>Sensors</h2>
+                        <Grid cells={sensors} />
+                    </div>
+                </div>
+            );
+        }
 
         return (
-            <div className="cmp-ZoneSensorList">
-                <div className="clearfix">
-                    <h2 className={ClassNames({ 'hidden': lightZones.length === 0})}>Lights</h2>
-                    <Grid name="zone grid" cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                </div>
-                <div className="clearfix">
-                    <h2 className={ClassNames({ 'hidden': shadeZones.length === 0})}>Shades</h2>
-                    <Grid cells={shadeZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                </div>
-                <div className="clearfix">
-                    <h2 className={ClassNames({ 'hidden': switchZones.length === 0})}>Switches</h2>
-                    <Grid cells={switchZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                </div>
-                <div className="clearfix">
-                    <h2 className={ClassNames({ 'hidden': otherZones.length === 0})}>Other Zones</h2>
-                    <Grid cells={otherZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                </div>
-                <div className="clearfix">
-                    <h2 className={ClassNames({ 'hidden': sensors.length === 0})}>Sensors</h2>
-                    <Grid cells={sensors} />
-                </div>
+            <div className={ClassNames("cmp-ZoneSensorList", { editMode: this.state.editMode })}>
+                {btns}
+                {body}
             </div>
         );
     }
 });
-module.exports = ZoneSensorList;
+
+function mapDispatchToProps(dispatch) {
+    return {
+        updatedZone: function(data) {
+            dispatch(ZoneActions.updated(data));
+        }
+    }
+}
+module.exports = ReactRedux.connect(null, mapDispatchToProps)(ZoneSensorList);

@@ -13,9 +13,7 @@ var SceneList = React.createClass({
     mixins: [UniqueIdMixin],
 
     getInitialState: function() {
-        return {
-            editMode: false,
-        };
+        return { editMode: false };
     },
 
     _onChange: function() {

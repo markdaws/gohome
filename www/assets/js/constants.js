@@ -102,4 +102,9 @@ module.exports = keyMirror({
     ZONE_IMPORT: null,
     ZONE_IMPORT_RAW: null,
     ZONE_IMPORT_FAIL: null,
+
+    // When a zone is being updated
+    ZONE_UPDATE: null,
+    ZONE_UPDATE_RAW: null,
+    ZONE_UPDATE_FAIL: null,
 });

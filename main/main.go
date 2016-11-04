@@ -30,7 +30,7 @@ type config struct {
 func main() {
 	//TODO: Don't panic, system should still start but with warning to the user
 
-	useLocalhost := false
+	useLocalhost := true
 	var addr string
 	if !useLocalhost {
 		// Find the first public address we can bind to

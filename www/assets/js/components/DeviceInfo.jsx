@@ -180,7 +180,6 @@ var DeviceInfo = React.createClass({
     },
 
     typeChanged: function(type) {
-        //this.setState({ type: type });
         this.changed({
             target: {
                 getAttribute: function() {

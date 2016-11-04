@@ -5,7 +5,7 @@ var SystemDeviceListGridCell = React.createClass({
         return (
             <div className="cmp-SystemDeviceListGridCell">
                 <div className="icon">
-                    <i className="icon ion-ios-settings"></i>
+                    <i className="icon ion-cube"></i>
                 </div>
                 <div className="name">
                     {this.props.device.name}

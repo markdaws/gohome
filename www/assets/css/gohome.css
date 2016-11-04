@@ -120,14 +120,27 @@ button.disabled {
 }
 
 .cmp-ZoneSensorList {
+    position: relative;
     width: 100%;
     background-color: #fff;
 }
+.cmp-ZoneSensorList .cmp-ZoneInfo {
+    margin-bottom: 50px;
+    margin-left: 12px;
+    margin-right: 12px;
+}
 .cmp-ZoneSensorList h2 {
-    margin-top: 12px;
+    margin: 0;
+    padding: 12px;
     text-transform: uppercase;
     font-weight: 200;
     text-align: center;
+}
+.cmp-ZoneSensorList .buttonWrapper {
+    position: absolute;
+    top: 0px;
+    right:0px;
+    padding: 12px;
 }
 
 .cmp-ZoneSetLevelCommand p {

@@ -42,7 +42,13 @@ var ControlApp = React.createClass({
                 <h5 className="emptyMessage">You don't have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>
             );
         } else {
-            zoneBody = <ZoneSensorList sensors={this.props.sensors} zones={this.props.zones}/>;
+            zoneBody = (
+                <ZoneSensorList
+                    sensors={this.props.sensors}
+                    zones={this.props.zones}
+                    devices={this.props.devices}
+                />
+            );
         }
 
         var emptySceneBody;

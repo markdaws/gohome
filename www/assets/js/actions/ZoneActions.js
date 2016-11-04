@@ -25,5 +25,10 @@ var ZoneActions = {
         };
     },
 
+    updated: function(zoneJson) {
+        return function(dispatch) {
+            dispatch({ type: Constants.ZONE_UPDATE_RAW, data: zoneJson });
+        };
+    }
 };
 module.exports = ZoneActions;

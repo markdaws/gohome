@@ -22,6 +22,21 @@ module.exports = function(state, action) {
     case Constants.ZONE_CREATE_FAIL:
         break;
 
+    case Constants.ZONE_UPDATE:
+        break;
+
+    case Constants.ZONE_UPDATE_RAW:
+        newState = newState.map(function(zone) {
+            if (action.data.id === zone.id) {
+                return action.data;
+            }
+            return zone;
+        });
+        break;
+
+    case Constants.ZONE_UPDATE_FAIL:
+        break;
+
     case Constants.ZONE_IMPORT:
         break;
     case Constants.ZONE_IMPORT_RAW:

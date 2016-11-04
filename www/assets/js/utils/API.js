@@ -380,11 +380,33 @@ var API = {
         });
     },
 
+    // zoneUpdate updates a zone on the server with the new values
+    zoneUpdate: function(zoneJson, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/zones/' + zoneJson.id,
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(zoneJson),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = (xhr.responseJSON || {}).errors;
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    validationErrors: errors
+                });
+            }
+        });        
+    },
+
     // zoneSetLevel sets the level of a zone.
     // cmd -> 'turnOn | turnOff | setLevel
     zoneSetLevel: function(zoneId, cmd, value, r, g, b, callback) {
         $.ajax({
-            url: BASE + '/api/v1/zones/' + zoneId,
+            url: BASE + '/api/v1/zones/' + zoneId + '/level',
             type: 'PUT',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',

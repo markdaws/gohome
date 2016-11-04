@@ -20,14 +20,16 @@ import (
 // RegisterZoneHandlers registers all of the zone specific API REST routes
 func RegisterZoneHandlers(r *mux.Router, s *apiServer) {
 	r.HandleFunc("/api/v1/zones",
-		apiZonesHandler(s.system)).Methods("GET")
+		apiListZonesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/zones",
 		apiAddZoneHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/zones/{id}/level",
+		apiUpdateZoneLevelHandler(s.system)).Methods("PUT")
 	r.HandleFunc("/api/v1/zones/{id}",
-		apiZoneHandler(s.system)).Methods("PUT")
+		apiUpdateZoneHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("PUT")
 }
 
-func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+func apiUpdateZoneLevelHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
 		if err != nil {
@@ -35,6 +37,7 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 			return
 		}
 
+		//{cmd: "setLevel", value: 21, r: 0, g: 0, b: 0}
 		var x struct {
 			CMD   string  `json:"cmd"`
 			Value float32 `json:"value"`
@@ -99,7 +102,76 @@ func apiZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Reque
 	}
 }
 
-func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+func apiUpdateZoneHandler(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var data jsonZone
+		if err = json.Unmarshal(body, &data); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		zn, ok := system.Zones[data.ID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		updatedZn := &zone.Zone{
+			Address:     data.Address,
+			Name:        data.Name,
+			Description: data.Description,
+			DeviceID:    data.DeviceID,
+			Type:        zone.TypeFromString(data.Type),
+			Output:      zone.OutputFromString(data.Output),
+		}
+
+		_, ok = system.Devices[data.DeviceID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		errors := updatedZn.Validate()
+		if errors != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, errors))
+			return
+		}
+
+		// Validated, set the fields
+		zn.Name = updatedZn.Name
+		zn.Description = updatedZn.Description
+		zn.Address = updatedZn.Address
+		zn.Type = updatedZn.Type
+		zn.Output = updatedZn.Output
+
+		//TODO: Support
+		//zn.DeviceID = updatedZn.DeviceID
+
+		err = store.SaveSystem(savePath, system, recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(data)
+	}
+}
+
+func apiListZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		zones := make(zones, len(system.Zones), len(system.Zones))
@@ -112,6 +184,7 @@ func apiZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Requ
 				Description: zone.Description,
 				Type:        zone.Type.ToString(),
 				Output:      zone.Output.ToString(),
+				DeviceID:    zone.DeviceID,
 			}
 			i++
 		}
