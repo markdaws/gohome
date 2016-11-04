@@ -2,6 +2,7 @@ package pool
 
 import (
 	"errors"
+	"io/ioutil"
 	"sync"
 	"time"
 )
@@ -64,12 +65,22 @@ func (p *ConnectionPool) Close() chan bool {
 }
 
 // Get is a blocking function that waits to get an available connection.  If after the
-// timeout duration a connection could not be fetched, the function returns with ErrTimeout
-func (p *ConnectionPool) Get(timeout time.Duration) (*Connection, error) {
-
+// timeout duration a connection could not be fetched, the function returns with ErrTimeout.
+// The flush parameter if set to true will read all of the outstanding data from the
+// connection before returning it to the caller. Note there is a possible 100ms delay for this
+// function to return if you set flush==true while the pool tries to read any existing content
+// from the connection
+func (p *ConnectionPool) Get(timeout time.Duration, flush bool) (*Connection, error) {
 	expire := time.Now().Add(timeout)
 	select {
 	case conn := <-p.pool:
+		if flush {
+			// Read all the contents from the buffer, if there is any, then
+			// reset the read deadline to infinity
+			conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+			_, _ = ioutil.ReadAll(conn)
+			conn.SetReadDeadline(time.Time{})
+		}
 		return conn, nil
 
 	case <-time.After(expire.Sub(time.Now())):
@@ -77,14 +88,15 @@ func (p *ConnectionPool) Get(timeout time.Duration) (*Connection, error) {
 	}
 }
 
-// Release returns the connection back to the pool. Is the connections IsBad field has been
-// set to true, the pool throws the connection away and attempts to create a new one
-func (p *ConnectionPool) Release(c *Connection) {
+// Release returns the connection back to the pool. err is any error that was returned
+// by the connection while it was being used, if there was an error the pool will then
+// throw this connection away and create a new one
+func (p *ConnectionPool) Release(c *Connection, err error) {
 	if c == nil {
 		return
 	}
 
-	if c.IsBad {
+	if err != nil {
 		p.retryNewConnection(nil)
 		return
 	}

@@ -45,19 +45,26 @@ func TurnOff(w io.Writer) error {
 }
 
 // FetchState returns the current state of the bulb
-func FetchState(rw io.ReadWriter) (*State, error) {
-	err := write(rw, []byte{0x81, 0x8a, 0x8b})
+func FetchState(conn net.Conn) (*State, error) {
+	err := write(conn, []byte{0x81, 0x8a, 0x8b})
 	if err != nil {
 		return nil, err
 	}
 
 	resp := make([]byte, 100)
-	n, err := rw.Read(resp)
+	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+	n, err := conn.Read(resp)
 	if err != nil {
 		return nil, err
 	}
-	if n < 10 {
-		return nil, fmt.Errorf("unknown response from get state")
+
+	// Seems like flux sends back multiple responses if they are backed up, sometimes not all
+	// complete, so just grab the last 14 bytes
+	if n > 14 {
+		resp = resp[n-14 : n]
+		if len(resp) != 14 {
+			return nil, fmt.Errorf("unknown response from get state")
+		}
 	}
 
 	state := &State{}

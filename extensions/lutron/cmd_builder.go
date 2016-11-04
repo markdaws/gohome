@@ -79,24 +79,19 @@ func getWriterAndExec(d *gohome.Device, f func(lutronExt.Device, io.Writer) erro
 		hub = d.Hub
 	}
 
-	conn, err := hub.Connections.Get(time.Second * 5)
+	conn, err := hub.Connections.Get(time.Second*5, true)
 	if err != nil {
 		return fmt.Errorf("error connecting, pool returned err: %s", err)
 	}
 
-	defer func() {
-		hub.Connections.Release(conn)
-	}()
-
-	fmt.Printf("%+v\n", hub)
 	lDev, err := lutronExt.DeviceFromModelNumber(hub.ModelNumber)
 	if err != nil {
 		return err
 	}
 
 	err = f(lDev, conn)
+	hub.Connections.Release(conn, err)
 	if err != nil {
-		conn.IsBad = true
 		return fmt.Errorf("Failed to send command %s\n", err)
 	}
 	return nil

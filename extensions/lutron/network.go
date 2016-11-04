@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
@@ -23,7 +24,7 @@ func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(po
 	return func(cfg pool.Config) (net.Conn, error) {
 		log.V("Attempting to connect to Device[%s] %s", dev.Name, dev.Address)
 
-		conn, err := net.Dial("tcp", dev.Address)
+		conn, err := net.DialTimeout("tcp", dev.Address, time.Second*10)
 		if err != nil {
 			log.E("Failed to connect to Device[%s] %s, %s", dev.Name, dev.Address, err)
 			return nil, err

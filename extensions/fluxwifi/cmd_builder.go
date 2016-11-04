@@ -15,18 +15,13 @@ type cmdBuilder struct {
 }
 
 func getConnAndExecute(d *gohome.Device, f func(*pool.Connection) error) error {
-	conn, err := d.Connections.Get(time.Second * 5)
+	conn, err := d.Connections.Get(time.Second*5, true)
 	if err != nil {
 		return fmt.Errorf("fluxwifiCmdBuilder - error connecting, no available connections")
 	}
 
-	defer func() {
-		d.Connections.Release(conn)
-	}()
 	err = f(conn)
-	if err != nil {
-		conn.IsBad = true
-	}
+	d.Connections.Release(conn, err)
 	return err
 }
 

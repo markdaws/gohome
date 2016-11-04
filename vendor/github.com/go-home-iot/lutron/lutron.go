@@ -1,8 +1,13 @@
 package lutron
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"io"
+	"net"
+	"strings"
+	"time"
 )
 
 // Device represents an interface to a Lutron device.  Different Lutron devices may
@@ -21,6 +26,11 @@ type Device interface {
 
 	// ButtonRelease sends a button release command
 	ButtonRelease(devAddr, btnAddr string, w io.Writer) error
+
+	// Ping sends a ping request e.g. #PING, callers can then wait for the
+	// ping response e.g. ~PING, if nothing returns after a while you know something
+	// is wrong with the connection you have to the hub
+	Ping(w net.Conn, wait time.Duration) error
 }
 
 // DeviceFromModelNumber returns a Lutron device, based on the modelNumber parameter
@@ -34,6 +44,34 @@ func DeviceFromModelNumber(modelNumber string) (Device, error) {
 }
 
 type lbdgpro2whDevice struct {
+}
+
+// Ping sends a ping command
+func (d *lbdgpro2whDevice) Ping(rw net.Conn, wait time.Duration) error {
+	err := sendString("#PING\r\n", rw)
+	if err != nil {
+		return err
+	}
+
+	reader := bufio.NewReader(rw)
+	endTime := time.Now().Add(wait)
+	for {
+		rw.SetReadDeadline(time.Now().Add(endTime.Sub(time.Now())))
+		bytes, _, err := reader.ReadLine()
+		rw.SetReadDeadline(time.Time{})
+		if err != nil {
+			return err
+		}
+
+		resp := string(bytes)
+		if strings.Contains(resp, "~PING") {
+			return nil
+		}
+
+		if time.Now().After(endTime) {
+			return errors.New("timeout, no ping received")
+		}
+	}
 }
 
 // SetLevel request to set the level on the specified zone

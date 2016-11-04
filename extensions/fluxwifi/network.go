@@ -3,6 +3,7 @@ package fluxwifi
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/go-home-iot/connection-pool"
 	fluxwifiExt "github.com/go-home-iot/fluxwifi"
@@ -64,6 +65,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 
 func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(pool.Config) (net.Conn, error), error) {
 	return func(cfg pool.Config) (net.Conn, error) {
-		return net.Dial("tcp", dev.Address)
+		return net.DialTimeout("tcp", dev.Address, time.Second*10)
 	}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	belkinExt "github.com/go-home-iot/belkin"
 	"github.com/go-home-iot/connection-pool"
@@ -31,7 +32,6 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 	}
 
 	responses, err := belkinExt.Scan(scanType, 5)
-	fmt.Printf("%+v\n", responses)
 	if err != nil {
 		log.V("scan err: %s", err)
 		return nil, err
@@ -39,7 +39,7 @@ func (d *network) Devices(sys *gohome.System, modelNumber string) ([]*gohome.Dev
 
 	devices := make([]*gohome.Device, len(responses))
 	for i, devInfo := range responses {
-		err := devInfo.Load()
+		err := devInfo.Load(time.Second * 5)
 
 		if err != nil {
 			// Keep going, try to get as many as we can

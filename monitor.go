@@ -330,12 +330,12 @@ func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
 	}
 }
 
-func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
+func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) bool {
 	m.mutex.RLock()
 	groups, ok := m.zoneToGroups[zoneID]
 	m.mutex.RUnlock()
 	if !ok {
-		return
+		return false
 	}
 
 	// Is this value different to what we already know?
@@ -345,7 +345,7 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
 	if ok {
 		// No change, don't refresh clients
 		if currentVal == val {
-			return
+			return false
 		}
 	}
 
@@ -364,6 +364,8 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) {
 		m.mutex.RUnlock()
 		group.Handler.Update(cb)
 	}
+
+	return true
 }
 
 // deviceProducing is called when a device start producing events, in the case of
@@ -460,7 +462,11 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 				}
 
 			case *ZoneLevelChangedEvt:
-				m.zoneLevelChanged(evt.ZoneID, evt.Level)
+				updatedCache := m.zoneLevelChanged(evt.ZoneID, evt.Level)
+				if updatedCache {
+					log.V("Monitor - updated value: %s", e)
+				}
+				showHandled = false
 
 			case *DeviceProducingEvt:
 				m.deviceProducing(evt)

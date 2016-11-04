@@ -13,7 +13,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/belkin",
-			"Rev": "c97127886e4045efe6b5edc7644464c268eababf"
+			"Rev": "d719bbdfd15741359cf853535d8a5c0b83810bc7"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/connectedbytcp",
@@ -21,7 +21,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/connection-pool",
-			"Rev": "e5856fe244434f27efd2ac3134e9d53f73519d3a"
+			"Rev": "a33e8200e2959c09ffe248500c9adeaee3a7ac07"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/event-bus",
@@ -29,7 +29,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/fluxwifi",
-			"Rev": "813f61b89c9b895c7b20003fc5f35fa8754781b0"
+			"Rev": "f52900274efa8478d4117d6c1eda2ca86654075a"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/gossdp",
@@ -41,7 +41,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/lutron",
-			"Rev": "1b1e9bdbc5109359aa6d79dee81fc93c80835739"
+			"Rev": "9bb4eec1de7c2bfb46744274174319dc4142ec5d"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/upnp",

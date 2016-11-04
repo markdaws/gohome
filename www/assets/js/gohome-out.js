@@ -26097,7 +26097,7 @@
 	        var expanderIndex = Math.min(this.props.cells.length, (cellYPos + 1) * cellsPerRow);
 
 	        if (cellXPos === this.state.cellIndices.x && cellYPos === this.state.cellIndices.y) {
-	            this.closeExpaner();
+	            this.closeExpander();
 	        } else {
 	            this.setState({
 	                cellIndices: { x: cellXPos, y: cellYPos },
@@ -28792,7 +28792,7 @@
 	                    React.createElement(
 	                        'clipPath',
 	                        { id: 'lightClip' },
-	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '30', width: '200', height: '65' })
+	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '29', width: '200', height: '65' })
 	                    )
 	                ),
 	                React.createElement('path', {
@@ -28804,7 +28804,7 @@
 	                React.createElement('circle', {
 	                    className: 'light',
 	                    cx: '100',
-	                    cy: '55',
+	                    cy: '53',
 	                    r: '25',
 	                    fill: color,
 	                    clipPath: 'url(#lightClip)',

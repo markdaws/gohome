@@ -58,17 +58,16 @@ func (c *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 
 			for _, zone := range c.Device.Zones {
 				if _, ok := zoneRpt.ZoneIDs[zone.ID]; ok {
-					conn, err := c.Device.Connections.Get(time.Second * 10)
+					conn, err := c.Device.Connections.Get(time.Second*10, true)
 					if err != nil {
 						log.V("%s - unable to get connection to device: %s, timeout", c.ConsumerName(), c.Device)
 						continue
 					}
 					err = dev.RequestLevel(zone.Address, conn)
+					c.Device.Connections.Release(conn, err)
 					if err != nil {
 						log.V("%s - Failed to request level for lutron, zoneID:%s, %s", c.ConsumerName(), zone.ID, err)
-						conn.IsBad = true
 					}
-					c.Device.Connections.Release(conn)
 				}
 			}
 		}
@@ -95,20 +94,20 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 	go func() {
 		for p.producing {
 			log.V("%s attempting to stream events", p.Device)
-			conn, err := p.Device.Connections.Get(time.Second * 20)
+			var err error
+			conn, err := p.Device.Connections.Get(time.Second*20, true)
 			if err != nil {
 				log.V("%s unable to connect to stream events: %s", p.Device, err)
 				continue
 			}
 
 			log.V("%s streaming events", p.Device)
-			time.Sleep(time.Second * 30)
+
 			scanner := bufio.NewScanner(conn)
 			split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 
 				//Match first instance of ~OUTPUT|~DEVICE.*\r\n
 				str := string(data[0:])
-				//log.V("From lutron: " + str)
 				indices := regexp.MustCompile("[~|#][OUTPUT|DEVICE].+\r\n").FindStringIndex(str)
 
 				//TODO: Don't let input grow forever - remove beginning chars after reaching max length
@@ -138,11 +137,9 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 				}
 			}
 
-			//TODO: There should be a ping mechanism here so we know this connection
-			//is still alive...
 			log.V("%s stopped streaming events", p.Device)
-			conn.IsBad = true
-			p.Device.Connections.Release(conn)
+			p.Device.Connections.Release(conn, scanner.Err())
+
 			if err := scanner.Err(); err != nil {
 				log.V("%s error streaming events, streaming stopped: %s", p.Device, err)
 			}
@@ -167,6 +164,7 @@ func (p *eventProducer) parseCommandString(cmd string) evtbus.Event {
 		//TODO:
 		//return p.parseDeviceCommand(cmd)
 		return nil
+
 	default:
 		// Ignore commands we don't care about
 		return nil

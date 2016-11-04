@@ -38,19 +38,17 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 
 				log.V("%s - %s", c.ConsumerName(), evt)
 
-				conn, err := c.Device.Connections.Get(time.Second * 5)
+				conn, err := c.Device.Connections.Get(time.Second*5, true)
 				if err != nil {
 					log.V("%s - failed to get connection: %s", c.ConsumerName(), err)
 					continue
 				}
 
 				state, err := fluxwifiExt.FetchState(conn)
+				c.Device.Connections.Release(conn, err)
 				if err != nil {
 					log.V("%s - failed to get state: %s", c.ConsumerName(), err)
-					conn.IsBad = true
 				} else {
-					log.V("Flux state %+v", state)
-
 					if state.Power < 2 {
 						// 2 -> unknown, so only process if it is 0 or 1
 						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
@@ -65,7 +63,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 						})
 					}
 				}
-				c.Device.Connections.Release(conn)
+
 			}
 		}
 	}()
@@ -94,16 +92,16 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 			time.Sleep(time.Second * 10)
 
 			for _, zone := range p.Device.Zones {
-				conn, err := p.Device.Connections.Get(time.Second * 10)
+				conn, err := p.Device.Connections.Get(time.Second*10, false)
 				if err != nil {
 					log.V("%s - failed to get connection to check status: %s", p.ProducerName(), err)
 					continue
 				}
 
 				state, err := fluxwifiExt.FetchState(conn)
+				p.Device.Connections.Release(conn, err)
 				if err != nil {
 					log.V("%s - failed to get bulb state: %s", p.ProducerName(), err)
-					conn.IsBad = true
 				} else {
 					if state.Power < 2 {
 						// 2 -> unknown, so only process if it is 0 or 1
@@ -119,7 +117,7 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 						})
 					}
 				}
-				p.Device.Connections.Release(conn)
+
 			}
 		}
 	}()

@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-home-iot/gossdp"
 )
@@ -34,14 +35,16 @@ type Device struct {
 	IconVersion      string    `xml:"iconVersion"`
 	BinaryState      int       `xml:"binaryState"`
 	ServiceList      []Service `xml:"serviceList>service"`
+	Timeout          time.Duration
 }
 
 type root struct {
 	Device *Device `xml:"device"`
 }
 
-// Load fetches all of the device specific information and updates the calling struct
-func (d *Device) Load() error {
+// Load fetches all of the device specific information and updates the calling struct. The timeout
+// parameter specifies how long to wait to connect and get a response before giving up
+func (d *Device) Load(timeout time.Duration) error {
 	// Example response
 	/*
 		Response from querying the location address of the insight device
@@ -167,7 +170,7 @@ func (d *Device) Load() error {
 		</root>
 	*/
 
-	client := http.Client{}
+	client := http.Client{Timeout: timeout}
 	resp, err := client.Get(d.Scan.Location)
 	if resp != nil {
 		defer resp.Body.Close()
@@ -191,9 +194,10 @@ func (d *Device) Load() error {
 }
 
 // TurnOn turns on the device.
-func (d *Device) TurnOn() error {
+func (d *Device) TurnOn(timeout time.Duration) error {
 	location := parseLocation(d.Scan.Location)
 	_, err := sendSOAP(
+		timeout,
 		location,
 		"urn:Belkin:service:basicevent:1",
 		"/upnp/control/basicevent1",
@@ -204,9 +208,10 @@ func (d *Device) TurnOn() error {
 }
 
 // TurnOff turns off the device.
-func (d *Device) TurnOff() error {
+func (d *Device) TurnOff(timeout time.Duration) error {
 	location := parseLocation(d.Scan.Location)
 	_, err := sendSOAP(
+		timeout,
 		location,
 		"urn:Belkin:service:basicevent:1",
 		"/upnp/control/basicevent1",
@@ -222,13 +227,14 @@ type attribute struct {
 }
 
 // FetchAttributes fetches the attributes of the device, such as switch state, sensor state etc
-func (d *Device) FetchAttributes() (*DeviceAttributes, error) {
+func (d *Device) FetchAttributes(timeout time.Duration) (*DeviceAttributes, error) {
 	if d.Scan.SearchType != DTMaker {
 		return nil, ErrUnsupportedAction
 	}
 
 	location := parseLocation(d.Scan.Location)
 	body, err := sendSOAP(
+		timeout,
 		location,
 		"urn:Belkin:service:deviceevent:1",
 		"/upnp/control/deviceevent1",
@@ -347,7 +353,7 @@ func ParseAttributeList(body string) *DeviceAttributes {
 }
 
 // FetchBinaryState fetches the latest binary state value from the device
-func (d *Device) FetchBinaryState() (int, error) {
+func (d *Device) FetchBinaryState(timeout time.Duration) (int, error) {
 	// GetBinaryState always returns off for WeMo Maker, return error to callers
 	if d.Scan.SearchType == DTMaker {
 		return 0, ErrUnsupportedAction
@@ -366,6 +372,7 @@ func (d *Device) FetchBinaryState() (int, error) {
 		    </s:Body>
 		</s:Envelope>*/
 	body, err := sendSOAP(
+		timeout,
 		location,
 		"urn:Belkin:service:basicevent:1",
 		"/upnp/control/basicevent1",
@@ -388,9 +395,9 @@ func (d *Device) FetchBinaryState() (int, error) {
 	return resp.BinaryState, nil
 }
 
-func sendSOAP(location, serviceType, controlURL, action, body string) (string, error) {
+func sendSOAP(timeout time.Duration, location, serviceType, controlURL, action, body string) (string, error) {
 	url := location + controlURL
-	resp, err := postData(url, action, serviceType, body)
+	resp, err := postData(timeout, url, action, serviceType, body)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -408,12 +415,12 @@ func sendSOAP(location, serviceType, controlURL, action, body string) (string, e
 	return string(b), nil
 }
 
-func postData(url, action, serviceType, body string) (*http.Response, error) {
+func postData(timeout time.Duration, url, action, serviceType, body string) (*http.Response, error) {
 	payload := fmt.Sprintf("<?xml version=\"1.0\" encoding=\"utf-8\"?><s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body><u:%s xmlns:u=\"%s\">%s</u:%s></s:Body></s:Envelope>",
 		action, serviceType, body, action,
 	)
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: timeout}
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(payload)))
 	if err != nil {

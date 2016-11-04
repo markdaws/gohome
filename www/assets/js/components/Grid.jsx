@@ -143,7 +143,7 @@ var Grid = React.createClass({
 
         if (cellXPos === this.state.cellIndices.x &&
             cellYPos === this.state.cellIndices.y) {
-            this.closeExpaner();
+            this.closeExpander();
         }
         else {
             this.setState({

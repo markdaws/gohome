@@ -7,9 +7,6 @@ type Connection struct {
 	net.Conn
 	owner         *ConnectionPool
 	returnOnClose bool
-	
-	// IsBad should be set to true if the connection is not invalid
-	IsBad         bool
 }
 
 // NewConnection returns an initialized Connection instance
@@ -29,6 +26,6 @@ func (c *Connection) Close() error {
 		}
 		return nil
 	}
-	c.owner.Release(c)
+	c.owner.Release(c, nil)
 	return nil
 }

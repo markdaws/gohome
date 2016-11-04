@@ -1,7 +1,6 @@
 package belkin
 
 import (
-	"fmt"
 	"html"
 	"regexp"
 	"strconv"
@@ -51,14 +50,12 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 
 					switch c.DeviceType {
 					case belkinExt.DTMaker:
-						attrs, err := dev.FetchAttributes()
+						attrs, err := dev.FetchAttributes(time.Second * 5)
 						if err != nil {
 							log.V("Belkin - failed to fetch attrs: %s", err)
 							continue
 						}
 
-						fmt.Printf("%+v\n", c)
-						fmt.Printf("%+v\n", attrs)
 						if attrs.Switch != nil {
 							c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
 								ZoneName: c.Zone.Name,
@@ -68,7 +65,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 						}
 
 					case belkinExt.DTInsight:
-						state, err := dev.FetchBinaryState()
+						state, err := dev.FetchBinaryState(time.Second * 5)
 						if err != nil {
 							log.V("Belkin - failed to fetch binary state: %s", err)
 							continue
@@ -98,7 +95,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 							Location:   c.Device.Address,
 						},
 					}
-					attrs, err := dev.FetchAttributes()
+					attrs, err := dev.FetchAttributes(time.Second * 5)
 					if err != nil {
 						log.V("Belkin - failed to fetch attrs: %s", err)
 						continue

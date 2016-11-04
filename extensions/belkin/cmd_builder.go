@@ -2,6 +2,7 @@ package belkin
 
 import (
 	"fmt"
+	"time"
 
 	belkinExt "github.com/go-home-iot/belkin"
 	"github.com/markdaws/gohome"
@@ -22,9 +23,9 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return &cmd.Func{
 			Func: func() error {
 				if command.Level.Value > 0 {
-					return belkinDev.TurnOn()
+					return belkinDev.TurnOn(time.Second * 5)
 				} else {
-					return belkinDev.TurnOff()
+					return belkinDev.TurnOff(time.Second * 5)
 				}
 			},
 			Friendly: "belkin.cmdBuilder.ZoneSetLevel",
@@ -37,7 +38,7 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		belkinDev := belkinExt.Device{Scan: belkinExt.ScanResponse{Location: d.Address}}
 		return &cmd.Func{
 			Func: func() error {
-				return belkinDev.TurnOn()
+				return belkinDev.TurnOn(time.Second * 5)
 			},
 			Friendly: "belkin.cmdBuilder.ZoneTurnOn",
 		}, nil
@@ -49,7 +50,7 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		belkinDev := belkinExt.Device{Scan: belkinExt.ScanResponse{Location: d.Address}}
 		return &cmd.Func{
 			Func: func() error {
-				return belkinDev.TurnOff()
+				return belkinDev.TurnOff(time.Second * 5)
 			},
 			Friendly: "belkin.cmdBuilder.ZoneTurnOff",
 		}, nil

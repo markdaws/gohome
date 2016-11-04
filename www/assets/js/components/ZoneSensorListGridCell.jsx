@@ -136,7 +136,7 @@ var ZoneSensorListGridCell = React.createClass({
                 xlinkHref="http://www.w3.org/1999/xlink">
                 <g>
                     <clipPath id="lightClip">
-                        <rect className="clipRect" x="0" y="30" width="200" height="65" />
+                        <rect className="clipRect" x="0" y="29" width="200" height="65" />
                     </clipPath>
                 </g>
                 <path
@@ -148,7 +148,7 @@ var ZoneSensorListGridCell = React.createClass({
                 <circle
                     className="light"
                     cx="100"
-                    cy="55"
+                    cy="53"
                     r="25"
                     fill={color}
                     clipPath="url(#lightClip)"
