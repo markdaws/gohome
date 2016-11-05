@@ -15,10 +15,10 @@ type extension struct {
 func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohome.ExtEvents {
 	var devType belkinExt.DeviceType
 
-	switch d.ModelNumber {
-	case "f7c043fc":
+	switch d.ModelName {
+	case "Maker":
 		devType = belkinExt.DTMaker
-	case "f7c029v2":
+	case "Insight":
 		devType = belkinExt.DTInsight
 	}
 

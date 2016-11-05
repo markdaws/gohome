@@ -26810,6 +26810,8 @@
 
 	'use strict';
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var SaveBtn = __webpack_require__(207);
@@ -26818,6 +26820,13 @@
 	var CommandInfo = __webpack_require__(232);
 	var CommandTypePicker = __webpack_require__(241);
 	var SceneActions = __webpack_require__(240);
+	var BEMHelper = __webpack_require__(279);
+
+	var classes = new BEMHelper({
+	    name: 'SceneInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(294);
 
 	var SceneInfo = React.createClass({
 	    displayName: 'SceneInfo',
@@ -26957,10 +26966,10 @@
 	        }
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-SceneInfo well well-sm' },
+	            classes('', '', 'well well-sm'),
 	            React.createElement(
 	                'button',
-	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteScene },
+	                _extends({}, classes('delete', '', 'btn btn-link pull-right'), { onClick: this.deleteScene }),
 	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
 	            ),
 	            React.createElement(
@@ -26968,7 +26977,7 @@
 	                { className: this.addErr("form-group", "name") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("name") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("name") }),
 	                    'Name*'
 	                ),
 	                React.createElement('input', {
@@ -26985,7 +26994,7 @@
 	                { className: this.addErr("form-group", "id") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("id") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("id") }),
 	                    'ID'
 	                ),
 	                React.createElement('input', {
@@ -27003,7 +27012,7 @@
 	                { className: this.addErr("form-group", "address") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("address") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
 	                    'Address'
 	                ),
 	                React.createElement('input', {
@@ -27022,16 +27031,16 @@
 	                    'a',
 	                    { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
 	                    'Edit Commands',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
 	                ),
 	                saveBtn
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: 'collapse commands', id: this.uid("commands") },
+	                _extends({}, classes('commands', '', 'collapse'), { id: this.uid("commands") }),
 	                React.createElement(
 	                    'h3',
-	                    null,
+	                    classes('command-header'),
 	                    'Commands'
 	                ),
 	                commandNodes
@@ -28632,7 +28641,13 @@
 	var ReactDOM = __webpack_require__(34);
 	var CssMixin = __webpack_require__(244);
 	var Api = __webpack_require__(208);
-	var ClassNames = __webpack_require__(216);
+	var BEMHelper = __webpack_require__(279);
+
+	var classes = new BEMHelper({
+	    name: 'SensorMonitor',
+	    prefix: 'b-'
+	});
+	__webpack_require__(292);
 
 	var SensorMonitor = React.createClass({
 	    displayName: 'SensorMonitor',
@@ -28678,20 +28693,16 @@
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-SensorMonitor' },
+	            classes(),
 	            React.createElement(
 	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'div',
-	                    { className: 'name pull-left' },
-	                    this.props.sensor.name
-	                ),
-	                React.createElement(
-	                    'span',
-	                    { className: 'value' },
-	                    val
-	                )
+	                classes('name'),
+	                this.props.sensor.name
+	            ),
+	            React.createElement(
+	                'div',
+	                classes('value'),
+	                val
 	            )
 	        );
 	    }
@@ -31412,6 +31423,86 @@
 
 	// module
 	exports.push([module.id, ".b-ZoneControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-ZoneControl--continuous {\n  height: 200px;\n}\n.b-ZoneControl--binary {\n  height: 86px;\n}\n.b-ZoneControl--rgb {\n  height: 222px;\n}\n.b-ZoneControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 242px;\n  margin-top: 3px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneControl__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 26px;\n}\n.b-ZoneControl__rgb {\n  margin-top: 22px;\n}\n.b-ZoneControl__value {\n  display: inline-block;\n  margin-top: 20px;\n  font-size: 50px;\n}\n.b-ZoneControl__value--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 292 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(293);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(250)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorMonitor.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorMonitor.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 293 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(249)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SensorMonitor {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-SensorMonitor__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  max-width: 370px;\n  margin-top: 3px;\n}\n.b-SensorMonitor__value {\n  display: inline-block;\n  margin-top: 20px;\n  font-size: 40px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 294 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(295);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(250)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 295 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(249)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SceneInfo__delete {\n  padding: 0;\n}\n.b-SceneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-SceneInfo__commands {\n  margin-top: 14px;\n}\n.b-SceneInfo__command-header {\n  margin-top: 0px;\n}\n.b-SceneInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n}\n", ""]);
 
 	// exports
 

@@ -27,51 +27,11 @@ button.disabled {
     font-size: 35px;
 }
 
-.cmp-SceneInfo .btnDelete {
-    padding: 0;
-}
-.cmp-SceneInfo label {
-    font-size: 12px;
-    font-weight: normal;
-}
-.cmp-SceneInfo .commands {
-    margin-top: 14px;
-}
-.cmp-SceneInfo .commands h3 {
-    margin-top: 0px;
-}
-.cmp-SceneInfo .glyphicon-menu-down {
-    font-size: 11px;
-    margin-left: 2px;
-}
-
 .cmp-CommandInfo {
     background-color: #fff;
 }
 .cmp-CommandInfo .btnDelete {
     padding: 0;
-}
-
-.cmp-SensorMonitor {
-    padding: 24px;
-    padding-left: 12px;
-    padding-right: 12px;
-    text-align: center;
-}
-
-.cmp-SensorMonitor .name {
-    text-transform: uppercase;
-    font-size: 20px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 370px;
-    margin-top: 3px;
-}
-.cmp-SensorMonitor .value {
-    display: inline-block;
-    margin-top: 20px;
-    font-size: 40px;
 }
 
 .cmp-ZoneSetLevelCommand p {

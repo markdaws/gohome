@@ -3,7 +3,13 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var CssMixin = require('./CssMixin.jsx');
 var Api = require('../utils/API.js');
-var ClassNames = require('classnames');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'SensorMonitor',
+    prefix: 'b-'
+});
+require('../../css/components/SensorMonitor.less')
 
 var SensorMonitor = React.createClass({
     mixins: [CssMixin],
@@ -46,14 +52,12 @@ var SensorMonitor = React.createClass({
         }
 
         return (
-            <div className="cmp-SensorMonitor">
-                <div className="clearfix">
-                    <div className="name pull-left">
-                        {this.props.sensor.name}
-                    </div>
-                    <span className="value">
-                        {val}
-                    </span>
+            <div {...classes()}>
+                <div {...classes('name')}>
+                    {this.props.sensor.name}
+                </div>
+                <div {...classes('value')}>
+                    {val}
                 </div>
             </div>
         );

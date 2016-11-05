@@ -6,6 +6,13 @@ var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var CommandInfo = require('./CommandInfo.jsx');
 var CommandTypePicker = require('./CommandTypePicker.jsx');
 var SceneActions = require('../actions/SceneActions.js');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'SceneInfo',
+    prefix: 'b-'
+});
+require('../../css/components/SceneInfo.less')
 
 var SceneInfo = React.createClass({
     mixins: [InputValidationMixin, UniqueIdMixin],
@@ -135,12 +142,12 @@ var SceneInfo = React.createClass({
             );
         }
         return (
-            <div className="cmp-SceneInfo well well-sm">
-                <button className="btn btn-link btnDelete pull-right" onClick={this.deleteScene}>
+            <div {...classes('', '', 'well well-sm')}>
+                <button {...classes('delete', '', 'btn btn-link pull-right')} onClick={this.deleteScene}>
                     <i className="glyphicon glyphicon-trash"></i>
                 </button>
                 <div className={this.addErr("form-group", "name")}>
-                    <label className="control-label" htmlFor={this.uid("name")}>Name*</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("name")}>Name*</label>
                     <input
                         value={this.state.name}
                         data-statepath="name"
@@ -151,7 +158,7 @@ var SceneInfo = React.createClass({
                     {this.errMsg("name")}
                 </div>
                 <div className={this.addErr("form-group", "id")}>
-                    <label className="control-label" htmlFor={this.uid("id")}>ID</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("id")}>ID</label>
                     <input
                         value={this.state.id}
                         readOnly={this.isReadOnly("id")}
@@ -163,7 +170,7 @@ var SceneInfo = React.createClass({
                     {this.errMsg("id")}
                 </div>
                 <div className={this.addErr("form-group", "address")}>
-                    <label className="control-label" htmlFor={this.uid("address")}>Address</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("address")}>Address</label>
                     <input
                         value={this.state.address}
                         data-statepath="address"
@@ -176,12 +183,12 @@ var SceneInfo = React.createClass({
                 <div className="clearfix">
                     <a data-toggle="collapse" href={"#" + this.uid("commands")}>
                         Edit Commands
-                        <i className="glyphicon glyphicon-menu-down"></i>
+                        <i {...classes('down-arrow', '', 'glyphicon glyphicon-menu-down')}></i>
                     </a>
                     {saveBtn}
                 </div>
-                <div className="collapse commands" id={this.uid("commands")}>
-                    <h3>Commands</h3>
+                <div {...classes('commands', '', 'collapse')} id={this.uid("commands")}>
+                    <h3 {...classes('command-header')}>Commands</h3>
                     {commandNodes}
                 </div>
             </div>
