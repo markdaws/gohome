@@ -1,6 +1,13 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Classnames = require('classnames');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'ZoneSensorListGridCell',
+    prefix: 'b-'
+});
+require('../../css/components/ZoneSensorListGridCell.less')
 
 var ZoneSensorListGridCell = React.createClass({
     getInitialState: function() {
@@ -122,15 +129,25 @@ var ZoneSensorListGridCell = React.createClass({
             icon2Cmp = <i className={icon2}></i>;
         }
 
-        var typeClass = {};
-        typeClass[type] = true;
         return (
-        <div className={Classnames("cmp-ZoneSensorListGridCell", typeClass)}>
-            <div className="icon">
+        <div {...classes()}>
+            <div {...classes('icon')}>
                 {icon1Cmp}
                 {icon2Cmp}
             </div>
             <svg
+                {...classes('switch-color', type)}
+                viewBox="0 0 200 200"
+                xmlns="http://www.w3.org/2000/svg"
+                xlinkHref="http://www.w3.org/1999/xlink">
+                <path
+                    d="M105 45 L82 75 L100 75 L95 100 L120 67 L100 65"
+                    stroke="yellow"
+                    style={{'opacity': opacity}}
+                    fill="yellow"></path>
+            </svg>
+            <svg
+                {...classes('light-color', type)}
                 viewBox="0 0 200 200"
                 xmlns="http://www.w3.org/2000/svg"
                 xlinkHref="http://www.w3.org/1999/xlink">
@@ -139,14 +156,7 @@ var ZoneSensorListGridCell = React.createClass({
                         <rect className="clipRect" x="0" y="29" width="200" height="65" />
                     </clipPath>
                 </g>
-                <path
-                    className="switch"
-                    d="M105 45 L82 75 L100 75 L95 100 L120 67 L100 65"
-                    stroke="yellow"
-                    style={{'opacity': opacity}}
-                    fill="yellow"></path>
                 <circle
-                    className="light"
                     cx="100"
                     cy="53"
                     r="25"
@@ -154,10 +164,10 @@ var ZoneSensorListGridCell = React.createClass({
                     clipPath="url(#lightClip)"
                     style={{'opacity': opacity, 'clipPath':'url(#lightClip)'}}/>
             </svg>
-            <div className="level">
+            <div {...classes('level')}>
                 {val}
             </div>
-            <div className="name">
+            <div {...classes('name')}>
                 {name}
             </div>
         </div>

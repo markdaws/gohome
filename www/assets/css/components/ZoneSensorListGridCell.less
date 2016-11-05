@@ -1,0 +1,64 @@
+.b-ZoneSensorListGridCell {
+    pointer-events: none;
+    position: relative;
+    height: 100%;
+    text-transform: uppercase;
+    text-align: center;
+    
+    /* Need to set this to stop spacing between the cells */
+    font-size: 0px;
+
+    &__icon {
+        font-size: 57px;
+        color: #555;
+        position: absolute;
+        left: 0;
+        right: 0;
+    }
+
+    &__name {
+        font-size: 12px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto 8px auto;
+
+        /* ellipsis - use mixin */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__level {
+        font-size: 10px;
+        position: absolute;
+        bottom: 30px;
+        left: 0;
+        right: 0;
+        margin: 0 auto 8px auto;
+
+        /* ellipsis use mixin */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* provides color to the switch icon, should only show for switches */
+    &__switch-color {
+        display: none;
+
+        &--switch {
+            display: block;
+        }
+    }
+
+    /* provides color to the light icon, should only show for lights */
+    &__light-color {
+        display: none;
+
+        &--light {
+            display: block;
+        }
+    }
+}

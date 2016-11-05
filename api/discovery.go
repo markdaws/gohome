@@ -19,14 +19,6 @@ func RegisterDiscoveryHandlers(r *mux.Router, s *apiServer) {
 	// Scan the network for all devices corresponding to the discovery ID
 	r.HandleFunc("/api/v1/discovery/discoverers/{discovererID}",
 		apiDiscoveryHandler(s.system)).Methods("GET")
-
-	//TODO: Implement with extensions
-	/*
-		r.HandleFunc("/api/v1/discovery/{modelNumber}/token",
-			apiDiscoveryTokenHandler(s.system)).Methods("GET")
-		r.HandleFunc("/api/v1/discovery/{modelNumber}/access",
-			apiDiscoveryAccessHandler(s.system)).Methods("GET")
-	*/
 }
 
 func apiListDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
@@ -54,20 +46,6 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 
 		vars := mux.Vars(r)
 		discovererID := vars["discovererID"]
-
-		/*
-			network := system.Extensions.FindNetwork(system, &gohome.Device{ModelNumber: modelNumber})
-			if network == nil {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			devs, err := network.Devices(system, modelNumber)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-		*/
 
 		discoverer := system.Extensions.FindDiscovererFromID(system, discovererID)
 		if discoverer == nil {
@@ -162,95 +140,5 @@ func apiDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *http.
 		if err := json.NewEncoder(w).Encode(jsonDevices); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-
-		/*TODO: Remove
-		json.NewEncoder(w).Encode(struct {
-			Location string `json:"location"`
-		}{Location: data["location"]})
-		*/
 	}
 }
-
-/*
-func apiDiscoveryZoneHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		vars := mux.Vars(r)
-
-		//This is blocking, waits 5 seconds
-		zs, err := discovery.Zones(vars["modelNumber"])
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		jsonZones := make(zones, len(zs))
-		for i, zone := range zs {
-			jsonZones[i] = jsonZone{
-				Address:     zone.Address,
-				Name:        zone.Name,
-				Description: zone.Description,
-				Type:        zone.Type.ToString(),
-				Output:      zone.Output.ToString(),
-			}
-		}
-		sort.Sort(jsonZones)
-		if err := json.NewEncoder(w).Encode(jsonZones); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	}
-}
-*/
-
-/*
-func apiDiscoveryTokenHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		vars := mux.Vars(r)
-
-		//TODO: Make non-blocking: this is blocking
-		token, err := discovery.DiscoverToken(vars["modelNumber"], r.URL.Query().Get("address"))
-		if err != nil {
-			if err == discovery.ErrUnauthorized {
-				// Let the caller know this was a specific kind of error
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				w.WriteHeader(http.StatusOK)
-				json.NewEncoder(w).Encode(struct {
-					Unauthorized bool `json:"unauthorized"`
-				}{Unauthorized: true})
-			} else {
-				w.WriteHeader(http.StatusBadRequest)
-			}
-
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(struct {
-			Token string `json:"token"`
-		}{Token: token})
-	}
-}
-
-func apiDiscoveryAccessHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		vars := mux.Vars(r)
-
-		//TODO: Make non-blocking: this is blocking
-		err := discovery.VerifyConnection(
-			vars["modelNumber"],
-			r.URL.Query().Get("address"),
-			r.URL.Query().Get("token"),
-		)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(struct{}{})
-	}
-}
-*/

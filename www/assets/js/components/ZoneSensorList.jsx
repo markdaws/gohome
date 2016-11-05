@@ -9,6 +9,13 @@ var SensorMonitor = require('./SensorMonitor.jsx');
 var ZoneInfo = require('./ZoneInfo.jsx');
 var ZoneSensorListGridCell = require('./ZoneSensorListGridCell.jsx');
 var Api = require('../utils/API.js');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'ZoneSensorList',
+    prefix: 'b-'
+});
+require('../../css/components/ZoneSensorList.less')
 
 //TODO: Need to get the correct state when we come out of edit mode, currently lost
 
@@ -195,7 +202,6 @@ var ZoneSensorList = React.createClass({
                 cmp.setAttr(this._monitorData.sensors[sensorId]);
             }.bind(this));
 
-            //TODO: Need to merge values from all updates otherwise have missing values
             this._gridContent && this._gridContent.monitorData(this._monitorData);
         }).bind(this);
         this._connection = conn;
@@ -211,13 +217,12 @@ var ZoneSensorList = React.createClass({
     },
     
     render: function() {
-        var btns, body;
+        var body, btns;
         
         if (this.state.editMode) {
             btns = (
                 <div>
-                    <h2>&nbsp;</h2>
-                    <div className="clearfix buttonWrapper">
+                    <div {...classes('buttons', 'editing', 'clearfix')}>
                         <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
                     </div>
                 </div>
@@ -225,19 +230,20 @@ var ZoneSensorList = React.createClass({
 
             body = this.props.zones.map(function(zone) {
                 return (
-                    <ZoneInfo
-                        name={zone.name}
-                        description={zone.description}
-                        address={zone.address}
-                        id={zone.id}
-                        key={zone.id}
-                        readOnlyFields="deviceId, id"
-                        deviceId={zone.deviceId}
-                        type={zone.type}
-                        devices={this.props.devices}
-                        output={zone.output}
-                        updatedZone={this.props.updatedZone}
-                    />
+                    <div {...classes('zone-info')} key={zone.id}>
+                        <ZoneInfo
+                            name={zone.name}
+                            description={zone.description}
+                            address={zone.address}
+                            id={zone.id}
+                            key={zone.id}
+                            readOnlyFields="deviceId, id"
+                            deviceId={zone.deviceId}
+                            type={zone.type}
+                            devices={this.props.devices}
+                            output={zone.output}
+                            updatedZone={this.props.updatedZone} />
+                    </div>
                 );
             }.bind(this));
         } else {
@@ -298,7 +304,7 @@ var ZoneSensorList = React.createClass({
             }.bind(this));
 
             btns = (
-                <div className="clearfix buttonWrapper">
+                <div {...classes('buttons', '', 'clearfix')}>
                     <button className="btn btn-default btnEdit pull-right" onClick={this.edit}>
                         <i className="fa fa-cog" aria-hidden="true"></i>
                     </button>
@@ -307,32 +313,22 @@ var ZoneSensorList = React.createClass({
 
             body = (
                 <div>
-                    <div className="clearfix">
-                        <h2 className={ClassNames({ 'hidden': lightZones.length === 0})}>Lights</h2>
-                        <Grid name="zone grid" cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                    </div>
-                    <div className="clearfix">
-                        <h2 className={ClassNames({ 'hidden': shadeZones.length === 0})}>Shades</h2>
-                        <Grid cells={shadeZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                    </div>
-                    <div className="clearfix">
-                        <h2 className={ClassNames({ 'hidden': switchZones.length === 0})}>Switches</h2>
-                        <Grid cells={switchZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                    </div>
-                    <div className="clearfix">
-                        <h2 className={ClassNames({ 'hidden': otherZones.length === 0})}>Other Zones</h2>
-                        <Grid cells={otherZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                    </div>
-                    <div className="clearfix">
-                        <h2 className={ClassNames({ 'hidden': sensors.length === 0})}>Sensors</h2>
-                        <Grid cells={sensors} />
-                    </div>
+                    <h2 {...classes('grid-header', lightZones.length === 0 ? 'hidden' : '')}>Lights</h2>
+                    <Grid name="zone grid" cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    <h2 {...classes('grid-header', shadeZones.length === 0 ? 'hidden' : '')}>Shades</h2>
+                    <Grid cells={shadeZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    <h2 {...classes('grid-header', switchZones.length === 0 ? 'hidden' : '')}>Switches</h2>
+                    <Grid cells={switchZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    <h2 {...classes('grid-header', otherZones.length === 0 ? 'hidden' : '')}>Other Zones</h2>
+                    <Grid cells={otherZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    <h2 {...classes('grid-header', sensors.length === 0 ? 'hidden' : '')}>Sensors</h2>
+                    <Grid cells={sensors} />
                 </div>
             );
         }
 
         return (
-            <div className={ClassNames("cmp-ZoneSensorList", { editMode: this.state.editMode })}>
+            <div {...classes()}>
                 {btns}
                 {body}
             </div>

@@ -218,7 +218,7 @@ var Grid = React.createClass({
                 paddingTop: this.props.paddingTop,
                 paddingBottom: this.props.paddingBottom,
             }}>
-                <div className="beforeExpander">
+                <div className="clearfix beforeExpander">
                     {content}
                     <div style={{clear:"both"}}></div>
                 </div>

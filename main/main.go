@@ -59,7 +59,7 @@ func main() {
 	rm := gohome.NewRecipeManager()
 
 	//TODO: Remove, simulate user importing lutron information on load
-	reset := true
+	reset := false
 	if reset {
 		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", 1)
 		intg.RegisterExtensions(system)

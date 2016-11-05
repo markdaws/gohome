@@ -23,7 +23,11 @@
     "webpack": "^1.12.12"
   },
   "devDependencies": {
-    "redux-devtools": "^3.3.1"
+    "css-loader": "^0.25.0",
+    "less": "^2.7.1",
+    "less-loader": "^2.2.3",
+    "redux-devtools": "^3.3.1",
+    "style-loader": "^0.13.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

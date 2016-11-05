@@ -12,6 +12,7 @@ type extension struct {
 func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohome.ExtEvents {
 	switch d.ModelNumber {
 	case "l-bdgpro2-wh":
+		// TODO: Remove, handle in events producer/consumer
 		// A device may have been created but not have any sensors make sure we have them
 		if len(d.Zones) == 0 {
 			return nil
@@ -55,16 +56,6 @@ func (e *extension) NetworkForDevice(sys *gohome.System, d *gohome.Device) gohom
 func (e *extension) Discovery(sys *gohome.System) gohome.Discovery {
 	return &discovery{System: sys}
 }
-
-/* TODO: Import from a string
-func (e *extension) ImporterForDevice(sys *gohome.System, d *gohome.Device) gohome.Importer {
-	switch d.ModelNumber {
-	case "l-bdgpro2-wh":
-		return &importer{System: sys}
-	default:
-		return nil
-	}
-}*/
 
 func (e *extension) Name() string {
 	return "Lutron"

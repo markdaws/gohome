@@ -92,7 +92,7 @@ var ZoneInfo = React.createClass({
         }
 
         return (
-            <div className="cmp-ZoneInfo well">
+            <div className="cmp-ZoneInfo well well-sm">
               <div className={this.addErr('form-group', 'name')}>
                 <label className="control-label" htmlFor={this.uid('name')}>Name*</label>
                 <input
