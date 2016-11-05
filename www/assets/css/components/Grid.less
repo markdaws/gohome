@@ -1,0 +1,44 @@
+.b-Grid {
+    padding-bottom: 12px;
+    position: relative;
+    background-color: #fff;
+    width: 100%;
+    /*needed to remove gaps between cells*/
+    font-size: 0px; 
+
+    &__cell {
+        background-color: #fff;
+        overflow: hidden;
+        font-size: 0px;
+        border: 1px solid #eee;
+        text-align: center;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+    
+    &__expander-arrow {
+        font-size: 58px;
+        margin-top: -30px;
+        color: #eee;
+        pointer-events: none;
+
+        &--hidden {
+            display: none;
+        }
+    }
+}
+
+.b-Expander {
+    background-color: #eee;
+    width: 100%;
+    font-size: 12px;
+    overflow: hidden;
+    max-height: 500px;
+    position: relative;
+
+    .animateWrapper {
+        margin-top: -500px;
+        transition: margin-top 550ms ease-out;
+        -webkit-transition: margin-top 550ms ease-out;
+    }
+}

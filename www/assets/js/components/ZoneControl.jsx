@@ -4,6 +4,13 @@ var ReactDOM = require('react-dom');
 var CssMixin = require('./CssMixin.jsx');
 var Api = require('../utils/API.js');
 var ClassNames = require('classnames');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'ZoneControl',
+    prefix: 'b-'
+});
+require('../../css/components/ZoneControl.less')
 
 var ZoneControl = React.createClass({
     mixins: [CssMixin],
@@ -23,7 +30,7 @@ var ZoneControl = React.createClass({
     },
 
     initSlider: function() {
-        var sliders = $(ReactDOM.findDOMNode(this)).find('.slider');
+        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-ZoneControl__slider');
         if (!sliders || sliders.length === 0) {
             return null;
         }
@@ -220,10 +227,8 @@ var ZoneControl = React.createClass({
         if (this.props.output === 'continuous') {
             sliderCmp = (
                 <div>
-                    <div className="slider"></div>
-                    <span className={ClassNames({
-                        "value": true,
-                        "hidden": this.state.level.value === -1})}>{this.state.level.value}%</span>
+                    <div {...classes('slider')}></div>
+                    <span {...classes('value', this.state.level.value === -1 ? 'hidden' : '')}>{this.state.level.value}%</span>
                 </div>
             );
         }
@@ -231,19 +236,17 @@ var ZoneControl = React.createClass({
         var rgbCmp;
         if (this.props.output === 'rgb') {
             rgbCmp = (
-                <div className="rgbWrapper"></div>
+                <div {...classes('rgb')}></div>
             );
         }
 
-        var classes = { 'cmp-ZoneControl': true };
-        classes[this.props.output] = true;
         return (
-            <div className={ClassNames(classes)}>
+            <div {...classes('', this.props.output)}>
                 <div className="clearfix">
-                    <div className="name pull-left">
+                    <div {...classes('name', '', 'pull-left')}>
                         {this.props.name}
                     </div>
-                    <div className="onOffWrapper pull-right">
+                    <div {...classes('on-off', '', 'pull-right')}>
                         <input
                             className="switch-indeterminate"
                             type="checkbox"

@@ -1,13 +1,20 @@
 var React = require('react');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'SceneListGridCell',
+    prefix: 'b-'
+});
+require('../../css/components/SceneListGridCell.less')
 
 var SceneListGridCell = React.createClass({
     render: function() {
         return (
-            <div className="cmp-SceneListGridCell">
-                <div className="icon">
+            <div {...classes()}>
+                <div {...classes('icon')}>
                     <i className="icon ion-ios-settings"></i>
                 </div>
-                <div className="name">
+                <div {...classes('name')}>
                     {this.props.scene.name}
                 </div>
             </div>

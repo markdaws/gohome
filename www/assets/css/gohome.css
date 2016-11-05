@@ -74,51 +74,6 @@ button.disabled {
     font-size: 40px;
 }
 
-.cmp-ZoneControl {
-    padding: 24px;
-    padding-left: 12px;
-    padding-right: 12px;
-    text-align: center;
-}
-.cmp-ZoneControl.continuous {
-    height: 200px;
-}
-.cmp-ZoneControl.binary {
-    height: 86px;
-}
-.cmp-ZoneControl.rgb {
-    height: 222px;
-}
-.cmp-ZoneControl .name {
-    text-transform: uppercase;
-    font-size: 20px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 242px;
-    margin-top: 3px;
-}
-.cmp-ZoneControl .rgbWrapper {
-    margin-top: 22px;
-}
-.cmp-ZoneControl .slider {
-    max-width: 400px;
-    position: absolute;
-    left: 0;
-    right: 0;
-    margin-left: 30px;
-    margin-right: 30px;
-    bottom: 26px;
-}
-.cmp-ZoneControl .value {
-    display: inline-block;
-    margin-top: 20px;
-    font-size: 50px;
-}
-.cmp-ZoneControl .onOffWrapper {
-    text-align: center;
-}
-
 .cmp-ZoneSetLevelCommand p {
     font-size: 12px;
     font-weight: normal;
@@ -153,130 +108,11 @@ button.disabled {
     font-size: 22px;
 }
 
-.cmp-ImportTCP600GWB .btn {
-    width: 145px;
-}
-
 .cmp-DiscoverDevices .spinnerWrapper .fa.fa-spinner {
     font-size: 35px;
 }
 .cmp-DiscoverDevices .discover.fa-spinner {
     margin-left: 12px;
-}
-
-.cmp-Grid {
-    position: relative;
-    background-color: #fff;
-    width: 100%;
-    font-size: 0px; /*needed to remove gaps between cells*/
-}
-.cmp-Grid .beforeExpander {
-    position: relative;
-}
-
-.cmp-ExpanderWrapper {
-    background-color: #eee;
-    width: 100%;
-    font-size: 12px;
-    overflow: hidden;
-    max-height: 500px;
-    position: relative;
-}
-
-.cmp-ExpanderWrapper .animateWrapper {
-    margin-top: -500px;
-    transition: margin-top 550ms ease-out;
-    -webkit-transition: margin-top 550ms ease-out;
-
-}
-
-.cmp-Grid .cellWrapper {
-    background-color: #fff;
-    overflow: hidden;
-    font-size: 0px;
-    border: 1px solid #eee;
-    text-align: center;
-    padding-left: 4px;
-    padding-right: 4px;
-}
-.cmp-Grid .cellWrapper:after {
-    border: 1px solid #eee;
-}
-
-.cmp-Grid .cellWrapper i.fa-caret-up {
-    font-size: 58px;
-    margin-top: -30px;
-    color: #eee;
-    pointer-events: none;
-}
-
-.cmp-SceneList {
-    position: relative;
-}
-.cmp-SceneList h2 {
-    margin-top: 12px;
-    text-transform: uppercase;
-    font-weight: 200;
-    text-align: center;
-}
-.cmp-SceneList .buttonWrapper {
-    position: absolute;
-    top: 0;
-    right: 12px;
-    left: 12px;
-}
-.cmp-SceneList .cmp-SceneInfo {
-    margin-bottom: 50px;
-    margin-left: 12px;
-    margin-right: 12px;
-}
-
-.cmp-SceneListGridCell {
-    pointer-events: none;
-    position: relative;
-    height: 100%;
-    font-size: 0px;
-}
-.cmp-SceneListGridCell .name{
-    display: block;
-    font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: center;
-    pointer-events: none;
-    text-transform: uppercase;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0 auto 8px auto;
-}
-.cmp-SceneListGridCell .icon {
-    pointer-events: none;
-    font-size: 50px;
-    text-align: center;
-    color: #555;
-    padding-top: 12px;
-}
-
-.cmp-SceneControl {
-    padding: 8px 12px 0px 12px;
-    padding-left: 12px;
-    padding-right: 12px;
-    text-align: center;
-    height: 112px;
-}
-.cmp-SceneControl .name {
-    text-align: left;
-    text-transform: uppercase;
-    font-size: 20px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 296px;
-    margin-top: 3px;
-    margin-bottom: 12px;
 }
 
 .cmp-SensorInfo label {

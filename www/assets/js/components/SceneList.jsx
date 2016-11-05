@@ -8,6 +8,13 @@ var SceneInfo = require('./SceneInfo.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var SceneActions = require('../actions/SceneActions.js');
 var Grid = require('./Grid.jsx');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'SceneList',
+    prefix: 'b-'
+});
+require('../../css/components/SceneList.less')
 
 var SceneList = React.createClass({
     mixins: [UniqueIdMixin],
@@ -42,23 +49,25 @@ var SceneList = React.createClass({
                 saveState = (this.props.scenes.saveState[scene.clientId || scene.id] || {});
 
                 return (
-                    <SceneInfo
-                        zones={this.props.zones}
-                        buttons={this.props.buttons}
-                        scenes={this.props.scenes.items}
-                        scene={scene}
-                        readOnlyFields="id"
-                        key={scene.id || scene.clientId}
-                        errors={(saveState.err || {}).validationErrors}
-                        saveScene={this.props.saveScene}
-                        updateScene={this.props.updateScene}
-                        deleteScene={this.props.deleteScene}
-                        addCommand={this.props.addCommand}
-                        saveStatus={saveState.status} />
+                    <div {...classes('scene-info')} key={scene.id || scene.clientId}>
+                        <SceneInfo
+                            zones={this.props.zones}
+                            buttons={this.props.buttons}
+                            scenes={this.props.scenes.items}
+                            scene={scene}
+                            readOnlyFields="id"
+                            key={scene.id || scene.clientId}
+                            errors={(saveState.err || {}).validationErrors}
+                            saveScene={this.props.saveScene}
+                            updateScene={this.props.updateScene}
+                            deleteScene={this.props.deleteScene}
+                            addCommand={this.props.addCommand}
+                            saveStatus={saveState.status} />
+                    </div>
                 );
             }.bind(this));
             btns = (
-                <div className="clearfix buttonWrapper">
+                <div {...classes('buttons', '', 'clearfix')}>
                     <button className="btn btn-primary btnNew pull-left" onClick={this.props.newClientScene}>New</button>
                     <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
                 </div>
@@ -73,7 +82,7 @@ var SceneList = React.createClass({
                 };
             });
             btns = (
-                <div className="clearfix buttonWrapper">
+                <div {...classes('buttons', '', 'clearfix')}>
                     <button className="btn btn-default btnEdit pull-right" onClick={this.edit}>
                         <i className="fa fa-cog" aria-hidden="true"></i>
                     </button>
@@ -84,8 +93,8 @@ var SceneList = React.createClass({
         }
 
         return (
-            <div className="cmp-SceneList">
-                <h2>Scenes</h2>
+            <div {...classes()}>
+                <h2 {...classes('header')}>Scenes</h2>
                 {btns}
                 {body}
             </div>

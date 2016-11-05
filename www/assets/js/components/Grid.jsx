@@ -2,36 +2,13 @@ var React = require('react');
 var ReactTransitionGroup = require('react-addons-transition-group');
 var ReactDOM = require('react-dom');
 var ClassNames = require('classnames');
+var BEMHelper = require('react-bem-helper');
 
-var ExpanderWrapper = React.createClass({
-    // Part of the calls for TransitionGroup, have to set the CSS property
-    // to the initial value, then after a small delay set the end animation value
-    componentWillAppear: function(cb) {
-        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
-        $this.css({ 'margin-top': -500 });
-        setTimeout(function() {
-            cb();
-        }, 10);
-    },
-    componentDidAppear: function() {
-        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
-        $this.css({ 'margin-top': '0px' });
-    },
-    componentWillLeave: function(cb) {
-        var $this = $(ReactDOM.findDOMNode(this)).find('animateWrapper');
-        $this.css({ 'margin-top': -500 });
-        cb();
-    },
-    render: function() {
-        return (
-            <div className="cmp-ExpanderWrapper">
-                <div className="animateWrapper">
-                    {this.props.children}
-                </div>
-            </div>
-        );
-    }
+var classes = new BEMHelper({
+    name: 'Grid',
+    prefix: 'b-'
 });
+require('../../css/components/Grid.less')
 
 var Grid = React.createClass({
     getDefaultProps: function() {
@@ -39,10 +16,6 @@ var Grid = React.createClass({
             cells: [],
             cellWidth: 110,
             cellHeight: 110,
-            paddingLeft: 0,
-            paddingRight: 0,
-            paddingTop: 0,
-            paddingBottom: 12,
             spacingH: 0,
             spacingV: 0
         };
@@ -168,19 +141,14 @@ var Grid = React.createClass({
                     key={cell.key}
                     ref={"cellWrapper-" + index}
                     onClick={this.cellClicked}
-                    className="cellWrapper pull-left"
+                    {...classes('cell', '', 'pull-left')}
                     data-cell-index={index}
                     style={{
                         width: this.state.cellWidth,
                         height: this.state.cellHeight,
-                        //marginRight: this.props.spacingH,
-                        //marginBottom: this.props.spacingV
                     }}>
                     {content}
-                    <i className={ClassNames({
-                                 "fa": true,
-                                 "fa-caret-up": true,
-                                 "hidden": index !== selectedIndex})}></i>
+                    <i {...classes('expanded-arrow', index !== selectedIndex ? 'hidden' : '', 'fa fa-caret-up')}></i>
                 </div>
             );
         }
@@ -212,12 +180,7 @@ var Grid = React.createClass({
         }
 
         return (
-            <div className="cmp-Grid" style={{
-                paddingLeft: this.props.paddingLeft,
-                paddingRight: this.props.paddingRight,
-                paddingTop: this.props.paddingTop,
-                paddingBottom: this.props.paddingBottom,
-            }}>
+            <div {...classes()}>
                 <div className="clearfix beforeExpander">
                     {content}
                     <div style={{clear:"both"}}></div>
@@ -226,4 +189,40 @@ var Grid = React.createClass({
         );
     }
 });
+
+var expClasses = new BEMHelper({
+    name: 'Expander',
+    prefix: 'b-'
+});
+
+var ExpanderWrapper = React.createClass({
+    // Part of the calls for TransitionGroup, have to set the CSS property
+    // to the initial value, then after a small delay set the end animation value
+    componentWillAppear: function(cb) {
+        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
+        $this.css({ 'margin-top': -500 });
+        setTimeout(function() {
+            cb();
+        }, 10);
+    },
+    componentDidAppear: function() {
+        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
+        $this.css({ 'margin-top': '0px' });
+    },
+    componentWillLeave: function(cb) {
+        var $this = $(ReactDOM.findDOMNode(this)).find('animateWrapper');
+        $this.css({ 'margin-top': -500 });
+        cb();
+    },
+    render: function() {
+        return (
+            <div {...expClasses()}>
+                <div className="animateWrapper">
+                    {this.props.children}
+                </div>
+            </div>
+        );
+    }
+});
+
 module.exports = Grid;

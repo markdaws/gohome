@@ -1,5 +1,12 @@
 var React = require('react');
 var Api = require('../utils/API.js')
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'SceneControl',
+    prefix: 'b-'
+});
+require('../../css/components/SceneControl.less')
 
 var SceneControl = React.createClass({
     handleClick: function(event) {
@@ -13,15 +20,13 @@ var SceneControl = React.createClass({
 
     render: function() {
         return (
-            <div className="cmp-SceneControl">
-                <div className="name">
+            <div {...classes()}>
+                <div {...classes('name')}>
                     {this.props.scene.name}
                 </div>
-                <div className="activateWrapper">
-                    <a role="button" className="btn btn-primary scene" onClick={this.handleClick}>
-                        <span className="name">Activate</span>
-                    </a>
-                </div>
+                <a role="button" {...classes('activate', '', 'btn btn-primary')} onClick={this.handleClick}>
+                    Activate
+                </a>
             </div>
         )
     }

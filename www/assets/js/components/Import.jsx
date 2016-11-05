@@ -1,7 +1,5 @@
 var React = require('react');
 var DiscoverDevices = require('./DiscoverDevices.jsx');
-//TODO: Delete
-var ImportTCP600GWB = require('./ImportTCP600GWB.jsx');
 var Api = require('../utils/API.js');
 
 var Import = React.createClass({
@@ -62,12 +60,6 @@ var Import = React.createClass({
                 <select className="form-control" onChange={this.productSelected} value={this.state.selectedProduct}>
                     <option value="">Choose ...</option>
                     {options}
-                    {/*TODO: Remove
-                    <option value="f7c029v2">Belkin WeMo Insight</option>
-                    <option value="f7c043fc">Belkin WeMo Maker</option>
-                    <option value="l-bdgpro2-wh">Lutron</option>
-                    <option value="tcp600gwb">Connected By TCP Hub</option>
-                    <option value="fluxwifi">Flux WIFI Bulb</option>*/}
                 </select>
                 <div className="content">
                     {body}

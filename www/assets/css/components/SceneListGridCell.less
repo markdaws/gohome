@@ -1,0 +1,29 @@
+.b-SceneListGridCell {
+    pointer-events: none;
+    position: relative;
+    height: 100%;
+    text-align: center;
+    /* needed to stop spaces between cells */
+    font-size: 0px;
+    
+    &__name{
+        font-size: 12px;
+        text-transform: uppercase;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto 8px auto;
+
+        /* ellipsis mixin */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    &__icon {
+        font-size: 50px;
+        color: #555;
+        padding-top: 12px;
+    }
+}
