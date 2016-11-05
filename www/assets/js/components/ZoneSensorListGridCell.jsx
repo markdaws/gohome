@@ -95,7 +95,7 @@ var ZoneSensorListGridCell = React.createClass({
                     color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
                 } else {
                     opacity = this.state.level.value / 100;
-                    val = this.state.level.value + '%';
+                    val = parseInt(this.state.level.value, 10) + '%';
                 }
                 
                 if (this.props.zone && this.props.zone.type === 'switch') {

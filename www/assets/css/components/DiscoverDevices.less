@@ -1,0 +1,52 @@
+.b-DiscoverDevices {
+
+    &__device-info {
+        background-color: #eee;
+    }
+
+    &__pre-import-instructions {
+        color: #a94442;
+        background-color: #f2dede;
+        border-radius: 4px;
+        padding: 8px;
+        border: 1px solid #ccc;
+
+        &--hidden {
+            display: none;
+        }
+    }
+    
+    &__discover {
+        margin-top: 12px;
+        position: relative;
+    }
+
+    &__no-devices {
+        font-weight: 200;
+        text-align: center;
+        
+        &--hidden {
+            display: none;
+        }
+    }
+
+    &__spinner {
+        position: absolute;
+        top: 6px;
+        font-size: 24px;
+        margin-left: 12px;
+
+        &--hidden {
+            display: none;
+        }
+    }
+
+    &__found-devices {
+        font-weight: 200;
+        
+        &&--hidden {
+            display: none;
+        }
+    }
+    
+}

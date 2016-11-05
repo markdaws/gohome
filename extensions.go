@@ -40,6 +40,12 @@ type DiscovererInfo struct {
 	// devices on the network, FromString indicates the discoverer will take in a string e.g. a config
 	// file from the hardware and turn that into goHOME specific information
 	Type string
+
+	// PreScanInfo is a string that will be shown to the user before
+	// scanning for devices. An example might be some text saying:
+	// "Press the sync button on the hub before scanning" - it can be
+	// instructions the user should perform before scanning.
+	PreScanInfo string
 }
 
 // DiscoveryResults contains all of the devices found by the discoverer instance

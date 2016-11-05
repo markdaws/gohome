@@ -33,6 +33,7 @@ func apiListDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *h
 				Name:        info.Name,
 				Description: info.Description,
 				Type:        info.Type,
+				PreScanInfo: info.PreScanInfo,
 			}
 		}
 		if err := json.NewEncoder(w).Encode(jsonInfos); err != nil {

@@ -17,10 +17,6 @@ button.disabled {
     margin-top: 0px;
 }
 
-.fa.fa-spinner {
-    font-size: 35px;
-}
-
 .cmp-CommandInfo {
     background-color: #fff;
 }
@@ -36,38 +32,6 @@ button.disabled {
     margin-bottom: 8px;
 }
 
-.cmp-System {
-    position: relative;
-    padding-bottom: 30px;
-}
-.cmp-System .header {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding-top: 0;
-    padding-left: 12px;
-    padding-right: 12px;
-}
-.cmp-System .btnExitImport {
-    margin-bottom: 12px;
-}
-.cmp-System h5.emptyMessage {
-    margin: 12px;
-}
-
-.cmp-Import .content {
-    margin-top: 12px;
-}
-.cmp-Import .fa.fa-spinner {
-    font-size: 22px;
-}
-
-.cmp-DiscoverDevices .spinnerWrapper .fa.fa-spinner {
-    font-size: 35px;
-}
-.cmp-DiscoverDevices .discover.fa-spinner {
-    margin-left: 12px;
-}
 
 .cmp-SensorInfo label {
     font-size: 12px;
@@ -144,10 +108,11 @@ button.disabled {
     margin: 12px;
 }
 .cmp-ControlApp .fa-spinner {
+    /*
     width: 100%;
     text-align: center;
     top: 120px;
-    position: absolute;
+    position: absolute;*/
 }
 .cmp-ControlApp .hideTabContent {
     /* Have to hide visibility not display because otherwise the with of the content

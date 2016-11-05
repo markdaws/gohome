@@ -20,6 +20,7 @@ func (d *discovery) Discoverers() []gohome.DiscovererInfo {
 		Name:        "ConnectedByTCP Bulbs",
 		Description: "Discover ConnectedByTCP bulbs",
 		Type:        "ScanDevices",
+		PreScanInfo: "IMPORTANT: You must press the \"Scan\" button on your physical hub hardware before trying to discover devices.  If you don't the scan will fail.",
 	}}
 }
 

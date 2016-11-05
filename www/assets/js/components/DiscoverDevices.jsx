@@ -3,6 +3,13 @@ var ReactRedux = require('react-redux');
 var DeviceInfo = require('./DeviceInfo.jsx');
 var Api = require('../utils/API.js');
 var SystemActions = require('../actions/SystemActions.js');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'DiscoverDevices',
+    prefix: 'b-'
+});
+require('../../css/components/DiscoverDevices.less')
 
 var DiscoverDevices = React.createClass({
     getInitialState: function() {
@@ -18,6 +25,7 @@ var DiscoverDevices = React.createClass({
             devices: null
         });
 
+        console.log(this.props.discoverer)
         Api.discovererScanDevices(this.props.discoverer.id, function(err, data) {
             this.setState({
                 discovering: false,
@@ -30,7 +38,9 @@ var DiscoverDevices = React.createClass({
         var devices
         if (this.state.devices && this.state.devices.length > 0) {
             devices = this.state.devices.map(function(device) {
-                return <DeviceInfo
+                return (
+                    <div {...classes('device-info')} key={device.id || device.clientId}>
+                        <DeviceInfo
                            name={device.name}
                            description={device.description}
                            address={device.address}
@@ -49,26 +59,33 @@ var DiscoverDevices = React.createClass({
                            showSensors={true}
                            zones={device.zones}
                            sensors={device.sensors}/>
+                    </div>
+                );
             }.bind(this));
         }
 
         var importBody
         importBody = (
             <div>
-                <button className={"btn btn-primary" + (this.state.discovering ? " disabled" : "")}
+                <div {...classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : '')}>
+                    {this.props.discoverer.preScanInfo}
+                </div>
+                <div {...classes('discover')}>
+                    <button {...classes('', '', (this.state.discovering ? 'disabled' : '') + ' btn btn-primary')}
                         onClick={this.discover}>Discover Devices</button>
-                <i className={"fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden")}></i>
-                <h3 className={this.state.devices ? "" : " hidden"}>
+                    <i {...classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin')}></i>
+                </div>
+                <h3 {...classes('no-devices', this.state.devices ? '' : 'hidden')}>
                     {this.state.devices && this.state.devices.length} device(s) found
                 </h3>
-                <p className={this.state.devices && this.state.devices.length > 0 ? "" : " hidden"}>
+                <p {...classes('found-devices', this.state.devices && this.state.devices.length > 0 ? '' : ' hidden')}>
                     Click "Save" on each device you wish to add to your system.
                 </p>
                 {devices}
             </div>
         );
         return (
-            <div className="cmp-DiscoverDevices">
+            <div {...classes()}>
                 {importBody}
             </div>
         );

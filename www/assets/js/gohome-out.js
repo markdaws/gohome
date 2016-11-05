@@ -23359,10 +23359,19 @@
 
 	'use strict';
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var Import = __webpack_require__(202);
 	var SystemDeviceList = __webpack_require__(222);
+	var BEMHelper = __webpack_require__(279);
+
+	var classes = new BEMHelper({
+	    name: 'System',
+	    prefix: 'b-'
+	});
+	__webpack_require__(304);
 
 	var System = React.createClass({
 	    displayName: 'System',
@@ -23371,10 +23380,6 @@
 	        return {
 	            importing: false
 	        };
-	    },
-
-	    newClicked: function newClicked() {
-	        this.props.deviceNew();
 	    },
 
 	    importProduct: function importProduct() {
@@ -23391,14 +23396,14 @@
 	            body = React.createElement(Import, null);
 	            header = React.createElement(
 	                'button',
-	                { className: 'btn btn-danger pull-right btnExitImport', onClick: this.cancelImport },
-	                'Exit Import'
+	                _extends({}, classes('exit', '', 'btn btn-danger pull-right'), { onClick: this.cancelImport }),
+	                'Exit'
 	            );
 	        } else {
 	            if (this.props.devices.length === 0) {
 	                body = React.createElement(
 	                    'h5',
-	                    { className: 'emptyMessage' },
+	                    classes('empty-msg'),
 	                    'You don\'t have any devices. Click on the "Import" button to start, or you can manually update the .json file if you know what you are doing ;)'
 	                );
 	            } else {
@@ -23407,7 +23412,7 @@
 
 	            header = React.createElement(
 	                'div',
-	                { className: 'header clearfix' },
+	                classes('header', '', 'clearfix'),
 	                React.createElement(
 	                    'button',
 	                    { className: 'btn btn-default pull-right', onClick: this.importProduct },
@@ -23417,23 +23422,12 @@
 	        }
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-System' },
+	            classes(),
 	            header,
 	            body
 	        );
 	    }
 	});
-
-	/*
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        deviceNew: function() {
-	            dispatch(SystemActions.deviceNew());
-	        }
-	    };
-	}
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(System);
-	*/
 	module.exports = System;
 
 /***/ },
@@ -23445,6 +23439,13 @@
 	var React = __webpack_require__(1);
 	var DiscoverDevices = __webpack_require__(203);
 	var Api = __webpack_require__(208);
+	var BEMHelper = __webpack_require__(279);
+
+	var classes = new BEMHelper({
+	    name: 'Import',
+	    prefix: 'b-'
+	});
+	__webpack_require__(302);
 
 	var Import = React.createClass({
 	    displayName: 'Import',
@@ -23506,11 +23507,11 @@
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-Import' },
+	            classes(),
 	            React.createElement(
 	                'h3',
-	                null,
-	                'Select a product to import'
+	                classes('header'),
+	                'Import Hardware'
 	            ),
 	            React.createElement(
 	                'select',
@@ -23518,13 +23519,13 @@
 	                React.createElement(
 	                    'option',
 	                    { value: '' },
-	                    'Choose ...'
+	                    'Choose a product ...'
 	                ),
 	                options
 	            ),
 	            React.createElement(
 	                'div',
-	                { className: 'content' },
+	                classes('content'),
 	                body
 	            )
 	        );
@@ -23538,11 +23539,20 @@
 
 	'use strict';
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var DeviceInfo = __webpack_require__(204);
 	var Api = __webpack_require__(208);
 	var SystemActions = __webpack_require__(220);
+	var BEMHelper = __webpack_require__(279);
+
+	var classes = new BEMHelper({
+	    name: 'DiscoverDevices',
+	    prefix: 'b-'
+	});
+	__webpack_require__(300);
 
 	var DiscoverDevices = React.createClass({
 	    displayName: 'DiscoverDevices',
@@ -23560,6 +23570,7 @@
 	            devices: null
 	        });
 
+	        console.log(this.props.discoverer);
 	        Api.discovererScanDevices(this.props.discoverer.id, function (err, data) {
 	            this.setState({
 	                discovering: false,
@@ -23572,25 +23583,29 @@
 	        var devices;
 	        if (this.state.devices && this.state.devices.length > 0) {
 	            devices = this.state.devices.map(function (device) {
-	                return React.createElement(DeviceInfo, {
-	                    name: device.name,
-	                    description: device.description,
-	                    address: device.address,
-	                    modelNumber: device.modelNumber,
-	                    modelName: device.modelName,
-	                    softwareVersion: device.softwareVersion,
-	                    connectionPool: device.connPool,
-	                    cmdBuilder: device.cmdBuilder,
-	                    auth: device.auth,
-	                    id: device.id,
-	                    clientId: device.clientId,
-	                    readOnlyFields: 'id, modelNumber',
-	                    key: device.id || device.clientId,
-	                    createdDevice: this.props.importedDevice,
-	                    showZones: true,
-	                    showSensors: true,
-	                    zones: device.zones,
-	                    sensors: device.sensors });
+	                return React.createElement(
+	                    'div',
+	                    _extends({}, classes('device-info'), { key: device.id || device.clientId }),
+	                    React.createElement(DeviceInfo, {
+	                        name: device.name,
+	                        description: device.description,
+	                        address: device.address,
+	                        modelNumber: device.modelNumber,
+	                        modelName: device.modelName,
+	                        softwareVersion: device.softwareVersion,
+	                        connectionPool: device.connPool,
+	                        cmdBuilder: device.cmdBuilder,
+	                        auth: device.auth,
+	                        id: device.id,
+	                        clientId: device.clientId,
+	                        readOnlyFields: 'id, modelNumber',
+	                        key: device.id || device.clientId,
+	                        createdDevice: this.props.importedDevice,
+	                        showZones: true,
+	                        showSensors: true,
+	                        zones: device.zones,
+	                        sensors: device.sensors })
+	                );
 	            }.bind(this));
 	        }
 
@@ -23599,28 +23614,37 @@
 	            'div',
 	            null,
 	            React.createElement(
-	                'button',
-	                { className: "btn btn-primary" + (this.state.discovering ? " disabled" : ""),
-	                    onClick: this.discover },
-	                'Discover Devices'
+	                'div',
+	                classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : ''),
+	                this.props.discoverer.preScanInfo
 	            ),
-	            React.createElement('i', { className: "fa fa-spinner fa-spin discover" + (this.state.discovering ? "" : " hidden") }),
+	            React.createElement(
+	                'div',
+	                classes('discover'),
+	                React.createElement(
+	                    'button',
+	                    _extends({}, classes('', '', (this.state.discovering ? 'disabled' : '') + ' btn btn-primary'), {
+	                        onClick: this.discover }),
+	                    'Discover Devices'
+	                ),
+	                React.createElement('i', classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin'))
+	            ),
 	            React.createElement(
 	                'h3',
-	                { className: this.state.devices ? "" : " hidden" },
+	                classes('no-devices', this.state.devices ? '' : 'hidden'),
 	                this.state.devices && this.state.devices.length,
 	                ' device(s) found'
 	            ),
 	            React.createElement(
 	                'p',
-	                { className: this.state.devices && this.state.devices.length > 0 ? "" : " hidden" },
+	                classes('found-devices', this.state.devices && this.state.devices.length > 0 ? '' : ' hidden'),
 	                'Click "Save" on each device you wish to add to your system.'
 	            ),
 	            devices
 	        );
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-DiscoverDevices' },
+	            classes(),
 	            importBody
 	        );
 	    }
@@ -28832,7 +28856,7 @@
 	                    color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
 	                } else {
 	                    opacity = this.state.level.value / 100;
-	                    val = this.state.level.value + '%';
+	                    val = parseInt(this.state.level.value, 10) + '%';
 	                }
 
 	                if (this.props.zone && this.props.zone.type === 'switch') {
@@ -31599,6 +31623,126 @@
 
 	// module
 	exports.push([module.id, ".b-DeviceInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-DeviceInfo__delete {\n  padding: 0;\n}\n.b-DeviceInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n  margin-bottom: 20px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 300 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(301);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(250)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DiscoverDevices.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DiscoverDevices.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 301 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(249)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 302 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(303);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(250)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Import.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Import.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 303 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(249)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-Import {\n  padding: 12px;\n}\n.b-Import__header {\n  margin-top: 0px;\n  font-weight: 200;\n}\n.b-Import__content {\n  margin-top: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 304 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(305);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(250)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./System.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./System.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 305 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(249)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-System {\n  position: relative;\n  padding-bottom: 30px;\n}\n.b-System__header {\n  position: absolute;\n  left: 0;\n  right: 0;\n  padding: 0px 12px 0px 12px;\n}\n.b-System__exit {\n  margin: 12px;\n}\n.b-System__empty-msg {\n  margin: 12px;\n}\n", ""]);
 
 	// exports
 

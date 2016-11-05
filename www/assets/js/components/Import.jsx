@@ -1,6 +1,13 @@
 var React = require('react');
 var DiscoverDevices = require('./DiscoverDevices.jsx');
 var Api = require('../utils/API.js');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'Import',
+    prefix: 'b-'
+});
+require('../../css/components/Import.less')
 
 var Import = React.createClass({
     getInitialState: function() {
@@ -55,13 +62,13 @@ var Import = React.createClass({
         });
         
         return (
-            <div className="cmp-Import">
-                <h3>Select a product to import</h3>
+            <div {...classes()}>
+                <h3 {...classes('header')}>Import Hardware</h3>
                 <select className="form-control" onChange={this.productSelected} value={this.state.selectedProduct}>
-                    <option value="">Choose ...</option>
+                    <option value="">Choose a product ...</option>
                     {options}
                 </select>
-                <div className="content">
+                <div {...classes('content')}>
                     {body}
                 </div>
             </div>
