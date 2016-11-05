@@ -6,10 +6,17 @@ var SaveBtn = require('./SaveBtn.jsx');
 var Api = require('../utils/API.js');
 var ZoneInfo = require('./ZoneInfo.jsx')
 var SensorInfo = require('./SensorInfo.jsx')
-var Classnames = require('classnames')
 var ZoneActions = require('../actions/ZoneActions.js');
 var SensorActions = require('../actions/SensorActions.js');
 var DeviceTypePicker = require('./DeviceTypePicker.jsx');
+var Classnames = require('classnames');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'DeviceInfo',
+    prefix: 'b-'
+});
+require('../../css/components/DeviceInfo.less')
 
 var DeviceInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
@@ -243,7 +250,7 @@ var DeviceInfo = React.createClass({
         var deleteBtn
         if (this.props.deleteDevice) {
             deleteBtn = (
-                <button className="btn btn-link btnDelete pull-right" onClick={this.deleteDevice}>
+                <button {...classes('delete', '', 'btn btn-link pull-right')} onClick={this.deleteDevice}>
                     <i className="glyphicon glyphicon-trash"></i>
                 </button>
             );
@@ -295,10 +302,10 @@ var DeviceInfo = React.createClass({
         }
             
         return (
-            <div className="cmp-DeviceInfo well-sm">
+            <div {...classes('', '', 'well-sm')}>
                 {deleteBtn}
                 <div className={this.addErr("form-group", "name")}>
-                    <label className="control-label" htmlFor={this.uid("name")}>Name*</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("name")}>Name*</label>
                     <input
                         value={this.state.name}
                         data-statepath="name"
@@ -309,7 +316,7 @@ var DeviceInfo = React.createClass({
                     {this.errMsg("name")}
                 </div>
                 <div className={this.addErr("form-group", "id")}>
-                    <label className="control-label" htmlFor={this.uid("id")}>ID</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("id")}>ID</label>
                     <input
                         value={this.state.id}
                         readOnly={this.isReadOnly("id")}
@@ -321,12 +328,12 @@ var DeviceInfo = React.createClass({
                     {this.errMsg("id")}
                 </div>
                 <div className={this.addErr("form-group", "type")}>
-                    <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("type")}>Type*</label>
                     <DeviceTypePicker type={this.state.type} changed={this.typeChanged}/>
                     {this.errMsg('type')}
                 </div>
                 <div className={this.addErr("form-group", "description")}>
-                    <label className="control-label" htmlFor={this.uid("description")}>Description</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("description")}>Description</label>
                     <input
                         value={this.state.description}
                         data-statepath="description"
@@ -337,7 +344,7 @@ var DeviceInfo = React.createClass({
                     {this.errMsg("description")}
                 </div>
                 <div className={this.addErr("form-group", "modelNumber")}>
-                    <label className="control-label" htmlFor={this.uid("modelNumber")}>Model Number</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("modelNumber")}>Model Number</label>
                     <input
                         value={this.state.modelNumber}
                         readOnly={this.isReadOnly("modelNumber")}
@@ -349,7 +356,7 @@ var DeviceInfo = React.createClass({
                     {this.errMsg("modelNumber")}
                 </div>
                 <div className={this.addErr("form-group", "address")}>
-                    <label className="control-label" htmlFor={this.uid("address")}>Address</label>
+                    <label {...classes('label', '', 'control-label')} htmlFor={this.uid("address")}>Address</label>
                     <input
                         value={this.state.address}
                         data-statepath="address"
@@ -362,7 +369,7 @@ var DeviceInfo = React.createClass({
                 <div className={Classnames({clearfix: true, hidden: !this.props.showZones})}>
                     <a data-toggle="collapse" href={"#" + this.uid("zones")}>
                         Zones
-                        <i className="glyphicon glyphicon-menu-down"></i>
+                        <i {...classes('down-arrow', '', 'glyphicon glyphicon-menu-down')}></i>
                     </a>
                 </div>
                 <div className="collapse zones" id={this.uid("zones")}>
@@ -371,16 +378,13 @@ var DeviceInfo = React.createClass({
                 <div className={Classnames({clearfix: true, hidden: !this.props.showSensors})}>
                     <a data-toggle="collapse" href={"#" + this.uid("sensors")}>
                         Sensors
-                        <i className="glyphicon glyphicon-menu-down"></i>
+                        <i {...classes('down-arrow', '', 'glyphicon glyphicon-menu-down')}></i>
                     </a>
                 </div>
                 <div className="collapse sensors" id={this.uid("sensors")}>
                     {sensors}
                 </div>
                 {token}
-                {/*
-                <button className="btn btn-primary" onClick={this.testConnection}>Test Connection</button>
-                */}
                 <div className="pull-right">
                     {saveBtn}
                 </div>

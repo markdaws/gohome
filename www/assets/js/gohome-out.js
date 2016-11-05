@@ -23642,6 +23642,8 @@
 
 	'use strict';
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var UniqueIdMixin = __webpack_require__(205);
@@ -23650,10 +23652,17 @@
 	var Api = __webpack_require__(208);
 	var ZoneInfo = __webpack_require__(211);
 	var SensorInfo = __webpack_require__(215);
-	var Classnames = __webpack_require__(216);
 	var ZoneActions = __webpack_require__(217);
 	var SensorActions = __webpack_require__(218);
 	var DeviceTypePicker = __webpack_require__(219);
+	var Classnames = __webpack_require__(216);
+	var BEMHelper = __webpack_require__(279);
+
+	var classes = new BEMHelper({
+	    name: 'DeviceInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(298);
 
 	var DeviceInfo = React.createClass({
 	    displayName: 'DeviceInfo',
@@ -23891,7 +23900,7 @@
 	        if (this.props.deleteDevice) {
 	            deleteBtn = React.createElement(
 	                'button',
-	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteDevice },
+	                _extends({}, classes('delete', '', 'btn btn-link pull-right'), { onClick: this.deleteDevice }),
 	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
 	            );
 	        }
@@ -23947,14 +23956,14 @@
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-DeviceInfo well-sm' },
+	            classes('', '', 'well-sm'),
 	            deleteBtn,
 	            React.createElement(
 	                'div',
 	                { className: this.addErr("form-group", "name") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("name") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("name") }),
 	                    'Name*'
 	                ),
 	                React.createElement('input', {
@@ -23971,7 +23980,7 @@
 	                { className: this.addErr("form-group", "id") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("id") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("id") }),
 	                    'ID'
 	                ),
 	                React.createElement('input', {
@@ -23989,7 +23998,7 @@
 	                { className: this.addErr("form-group", "type") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("type") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("type") }),
 	                    'Type*'
 	                ),
 	                React.createElement(DeviceTypePicker, { type: this.state.type, changed: this.typeChanged }),
@@ -24000,7 +24009,7 @@
 	                { className: this.addErr("form-group", "description") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("description") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
 	                    'Description'
 	                ),
 	                React.createElement('input', {
@@ -24017,7 +24026,7 @@
 	                { className: this.addErr("form-group", "modelNumber") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("modelNumber") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("modelNumber") }),
 	                    'Model Number'
 	                ),
 	                React.createElement('input', {
@@ -24035,7 +24044,7 @@
 	                { className: this.addErr("form-group", "address") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("address") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
 	                    'Address'
 	                ),
 	                React.createElement('input', {
@@ -24054,7 +24063,7 @@
 	                    'a',
 	                    { 'data-toggle': 'collapse', href: "#" + this.uid("zones") },
 	                    'Zones',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
 	                )
 	            ),
 	            React.createElement(
@@ -24069,7 +24078,7 @@
 	                    'a',
 	                    { 'data-toggle': 'collapse', href: "#" + this.uid("sensors") },
 	                    'Sensors',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
 	                )
 	            ),
 	            React.createElement(
@@ -26534,25 +26543,32 @@
 /* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	var React = __webpack_require__(1);
+	var BEMHelper = __webpack_require__(279);
+
+	var classes = new BEMHelper({
+	    name: 'SystemDeviceListGridCell',
+	    prefix: 'b-'
+	});
+	__webpack_require__(296);
 
 	var SystemDeviceListGridCell = React.createClass({
-	    displayName: "SystemDeviceListGridCell",
+	    displayName: 'SystemDeviceListGridCell',
 
 	    render: function render() {
 	        return React.createElement(
-	            "div",
-	            { className: "cmp-SystemDeviceListGridCell" },
+	            'div',
+	            classes(),
 	            React.createElement(
-	                "div",
-	                { className: "icon" },
-	                React.createElement("i", { className: "icon ion-cube" })
+	                'div',
+	                classes('icon'),
+	                React.createElement('i', { className: 'icon ion-cube' })
 	            ),
 	            React.createElement(
-	                "div",
-	                { className: "name" },
+	                'div',
+	                classes('name'),
 	                this.props.device.name
 	            )
 	        );
@@ -31503,6 +31519,86 @@
 
 	// module
 	exports.push([module.id, ".b-SceneInfo__delete {\n  padding: 0;\n}\n.b-SceneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-SceneInfo__commands {\n  margin-top: 14px;\n}\n.b-SceneInfo__command-header {\n  margin-top: 0px;\n}\n.b-SceneInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 296 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(297);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(250)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceListGridCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceListGridCell.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 297 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(249)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SystemDeviceListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-SystemDeviceListGridCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SystemDeviceListGridCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 298 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(299);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(250)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 299 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(249)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-DeviceInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-DeviceInfo__delete {\n  padding: 0;\n}\n.b-DeviceInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n  margin-bottom: 20px;\n}\n", ""]);
 
 	// exports
 
