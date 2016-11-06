@@ -7,6 +7,13 @@ var ZoneOutputPicker = require('./ZoneOutputPicker.jsx');
 var ZoneTypePicker = require('./ZoneTypePicker.jsx');
 var SaveBtn = require('./SaveBtn.jsx');
 var Api = require('../utils/API.js');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'ZoneInfo',
+    prefix: 'b-'
+});
+require('../../css/components/ZoneInfo.less')
 
 var ZoneInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
@@ -85,6 +92,7 @@ var ZoneInfo = React.createClass({
         if (this.state.dirty) {
             saveBtn = (
                 <SaveBtn
+                    {...classes('save')}
                     clicked={this.save}
                     text="Save"
                     status={this.state.saveButtonStatus}/>
@@ -92,9 +100,9 @@ var ZoneInfo = React.createClass({
         }
 
         return (
-            <div className="cmp-ZoneInfo well well-sm">
+            <div {...classes('', '', 'well well-sm')}>
               <div className={this.addErr('form-group', 'name')}>
-                <label className="control-label" htmlFor={this.uid('name')}>Name*</label>
+                <label {...classes('label', '', 'control-label')} htmlFor={this.uid('name')}>Name*</label>
                 <input
                     value={this.state.name}
                     data-statepath="name"
@@ -105,12 +113,12 @@ var ZoneInfo = React.createClass({
                 {this.errMsg('name')}
               </div>
               <div className={this.addErr("form-group", "type")}>
-                  <label className="control-label" htmlFor={this.uid("type")}>Type*</label>
+                  <label {...classes('label', '', 'control-label')} htmlFor={this.uid("type")}>Type*</label>
                   <ZoneTypePicker type={this.props.type} changed={this.typeChanged}/>
                   {this.errMsg('type')}
               </div>
               <div className={this.addErr("form-group", "output")}>
-                  <label className="control-label" htmlFor={this.uid("output")}>Output*</label>
+                  <label {...classes('label', '', 'control-label')} htmlFor={this.uid("output")}>Output*</label>
                   <ZoneOutputPicker output={this.props.output} changed={this.outputChanged}/>
                   {this.errMsg('output')}
               </div>
@@ -122,7 +130,7 @@ var ZoneInfo = React.createClass({
               </div>
               <div className="collapse moreInfo" id={this.uid("moreInfo")}>
                   <div className={this.addErr("form-group", 'description')}>
-                      <label className="control-label" htmlFor={this.uid("description")}>Description</label>
+                      <label {...classes('label', '', 'control-label')} htmlFor={this.uid("description")}>Description</label>
                       <input
                           value={this.state.description}
                           data-statepath="description"
@@ -133,7 +141,7 @@ var ZoneInfo = React.createClass({
                       {this.errMsg('description')}
                   </div>
                   <div className={this.addErr("form-group", "address")}>
-                      <label className="control-label" htmlFor={this.uid("address")}>Address</label>
+                      <label {...classes('label', '', 'control-label')} htmlFor={this.uid("address")}>Address</label>
                       <input
                           value={this.state.address}
                           data-statepath="address"
@@ -144,7 +152,7 @@ var ZoneInfo = React.createClass({
                       {this.errMsg('address')}
                   </div>
                   <div className={this.addErr("form-group", "deviceId")}>
-                      <label className="control-label" htmlFor={this.uid("deviceId")}>Device*</label>
+                      <label {...classes('label', '', 'control-label')} htmlFor={this.uid("deviceId")}>Device*</label>
                       <DevicePicker
                           disabled={this.isReadOnly("deviceId")}
                           defaultId={this.props.deviceId}

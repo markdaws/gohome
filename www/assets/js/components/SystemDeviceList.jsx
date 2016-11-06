@@ -4,6 +4,13 @@ var DeviceInfo = require('./DeviceInfo.jsx');
 var SystemActions = require('../actions/SystemActions.js');
 var Grid = require('./Grid.jsx');
 var SystemDeviceListGridCell = require('./SystemDeviceListGridCell.jsx')
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'SystemDeviceList',
+    prefix: 'b-'
+});
+require('../../css/components/SystemDeviceList.less')
 
 var SystemDeviceList = React.createClass({
     getDefaultProps: function() {
@@ -64,7 +71,7 @@ var SystemDeviceList = React.createClass({
         if (dimmers.length > 0) {
             dimmerSection = (
                 <div key="dimmerSection">
-                    <h2>Dimmers</h2>
+                    <h2 {...classes('header')}>Dimmers</h2>
                     <Grid cells={dimmers} />
                 </div>
             );
@@ -73,7 +80,7 @@ var SystemDeviceList = React.createClass({
         if (switches.length > 0) {
             switchSection = (
                 <div key="switchSection">
-                    <h2>Switches</h2>
+                    <h2 {...classes('header')}>Switches</h2>
                     <Grid cells={switches} />
                 </div>
             );
@@ -82,7 +89,7 @@ var SystemDeviceList = React.createClass({
         if (shades.length > 0) {
             shadeSection = (
                 <div key="shadeSection">
-                    <h2>Shades</h2>
+                    <h2 {...classes('header')}>Shades</h2>
                     <Grid cells={shades} />
                 </div>
             );
@@ -91,7 +98,7 @@ var SystemDeviceList = React.createClass({
         if (hubs.length > 0) {
             hubSection = (
                 <div className={hubs.length > 0 ? "" : " hidden"}>
-                    <h2>Hubs</h2>
+                    <h2 {...classes('header')}>Hubs</h2>
                     <Grid cells={hubs} />
                 </div>
             );
@@ -100,7 +107,7 @@ var SystemDeviceList = React.createClass({
         if (remotes.length > 0) {
             remoteSection = (
                 <div key="remoteSection">
-                    <h2>Remotes</h2>
+                    <h2 {...classes('header')}>Remotes</h2>
                     <Grid cells={remotes} />
                 </div>
             );
@@ -109,13 +116,13 @@ var SystemDeviceList = React.createClass({
         if (unknown.length > 0) {
             deviceSection = (
                 <div key="deviceSection">
-                    <h2>Devices</h2>
+                    <h2 {...classes('header')}>Devices</h2>
                     <Grid cells={unknown} />
                 </div>
             );
         }
         return (
-            <div className="cmp-SystemDeviceList">
+            <div {...classes()}>
                 {dimmerSection}
                 {switchSection}
                 {shadeSection}

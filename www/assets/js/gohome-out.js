@@ -50,9 +50,9 @@
 	var ReactDOM = __webpack_require__(34);
 	var ControlApp = __webpack_require__(172);
 	var Provider = __webpack_require__(173).Provider;
-	var store = __webpack_require__(266);
+	var store = __webpack_require__(298);
 
-	var C1 = __webpack_require__(276);
+	var C1 = __webpack_require__(308);
 
 	//TODO: Remove - testing
 	/*
@@ -21447,15 +21447,22 @@
 	var ReactDOM = __webpack_require__(34);
 	var ReactRedux = __webpack_require__(173);
 	var System = __webpack_require__(201);
-	var SceneList = __webpack_require__(228);
-	var ZoneSensorList = __webpack_require__(242);
-	var Logging = __webpack_require__(251);
-	var RecipeApp = __webpack_require__(253);
+	var SceneList = __webpack_require__(246);
+	var ZoneSensorList = __webpack_require__(268);
+	var Logging = __webpack_require__(281);
+	var RecipeApp = __webpack_require__(283);
 	var Constants = __webpack_require__(209);
-	var SceneActions = __webpack_require__(240);
-	var SensorActions = __webpack_require__(218);
-	var SystemActions = __webpack_require__(220);
-	var ZoneActions = __webpack_require__(217);
+	var SceneActions = __webpack_require__(262);
+	var SensorActions = __webpack_require__(222);
+	var SystemActions = __webpack_require__(227);
+	var ZoneActions = __webpack_require__(221);
+	var BEMHelper = __webpack_require__(215);
+
+	var classes = new BEMHelper({
+	    name: 'ControlApp',
+	    prefix: 'b-'
+	});
+	__webpack_require__(296);
 
 	var ControlApp = React.createClass({
 	    displayName: 'ControlApp',
@@ -21509,7 +21516,7 @@
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-ControlApp' },
+	            classes(),
 	            React.createElement(
 	                'ul',
 	                { className: 'nav nav-tabs', role: 'tablist' },
@@ -23364,14 +23371,14 @@
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var Import = __webpack_require__(202);
-	var SystemDeviceList = __webpack_require__(222);
-	var BEMHelper = __webpack_require__(279);
+	var SystemDeviceList = __webpack_require__(232);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'System',
 	    prefix: 'b-'
 	});
-	__webpack_require__(304);
+	__webpack_require__(244);
 
 	var System = React.createClass({
 	    displayName: 'System',
@@ -23439,13 +23446,13 @@
 	var React = __webpack_require__(1);
 	var DiscoverDevices = __webpack_require__(203);
 	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(279);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'Import',
 	    prefix: 'b-'
 	});
-	__webpack_require__(302);
+	__webpack_require__(230);
 
 	var Import = React.createClass({
 	    displayName: 'Import',
@@ -23545,14 +23552,14 @@
 	var ReactRedux = __webpack_require__(173);
 	var DeviceInfo = __webpack_require__(204);
 	var Api = __webpack_require__(208);
-	var SystemActions = __webpack_require__(220);
-	var BEMHelper = __webpack_require__(279);
+	var SystemActions = __webpack_require__(227);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'DiscoverDevices',
 	    prefix: 'b-'
 	});
-	__webpack_require__(300);
+	__webpack_require__(228);
 
 	var DiscoverDevices = React.createClass({
 	    displayName: 'DiscoverDevices',
@@ -23570,7 +23577,6 @@
 	            devices: null
 	        });
 
-	        console.log(this.props.discoverer);
 	        Api.discovererScanDevices(this.props.discoverer.id, function (err, data) {
 	            this.setState({
 	                discovering: false,
@@ -23675,18 +23681,18 @@
 	var SaveBtn = __webpack_require__(207);
 	var Api = __webpack_require__(208);
 	var ZoneInfo = __webpack_require__(211);
-	var SensorInfo = __webpack_require__(215);
-	var ZoneActions = __webpack_require__(217);
-	var SensorActions = __webpack_require__(218);
-	var DeviceTypePicker = __webpack_require__(219);
-	var Classnames = __webpack_require__(216);
-	var BEMHelper = __webpack_require__(279);
+	var SensorInfo = __webpack_require__(220);
+	var ZoneActions = __webpack_require__(221);
+	var SensorActions = __webpack_require__(222);
+	var DeviceTypePicker = __webpack_require__(223);
+	var Classnames = __webpack_require__(224);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'DeviceInfo',
 	    prefix: 'b-'
 	});
-	__webpack_require__(298);
+	__webpack_require__(225);
 
 	var DeviceInfo = React.createClass({
 	    displayName: 'DeviceInfo',
@@ -24968,6 +24974,8 @@
 
 	'use strict';
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var UniqueIdMixin = __webpack_require__(205);
@@ -24977,6 +24985,13 @@
 	var ZoneTypePicker = __webpack_require__(214);
 	var SaveBtn = __webpack_require__(207);
 	var Api = __webpack_require__(208);
+	var BEMHelper = __webpack_require__(215);
+
+	var classes = new BEMHelper({
+	    name: 'ZoneInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(216);
 
 	var ZoneInfo = React.createClass({
 	    displayName: 'ZoneInfo',
@@ -25055,21 +25070,21 @@
 	    render: function render() {
 	        var saveBtn;
 	        if (this.state.dirty) {
-	            saveBtn = React.createElement(SaveBtn, {
+	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
 	                clicked: this.save,
 	                text: 'Save',
-	                status: this.state.saveButtonStatus });
+	                status: this.state.saveButtonStatus }));
 	        }
 
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-ZoneInfo well well-sm' },
+	            classes('', '', 'well well-sm'),
 	            React.createElement(
 	                'div',
 	                { className: this.addErr('form-group', 'name') },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid('name') },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
 	                    'Name*'
 	                ),
 	                React.createElement('input', {
@@ -25086,7 +25101,7 @@
 	                { className: this.addErr("form-group", "type") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("type") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("type") }),
 	                    'Type*'
 	                ),
 	                React.createElement(ZoneTypePicker, { type: this.props.type, changed: this.typeChanged }),
@@ -25097,7 +25112,7 @@
 	                { className: this.addErr("form-group", "output") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("output") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("output") }),
 	                    'Output*'
 	                ),
 	                React.createElement(ZoneOutputPicker, { output: this.props.output, changed: this.outputChanged }),
@@ -25121,7 +25136,7 @@
 	                    { className: this.addErr("form-group", 'description') },
 	                    React.createElement(
 	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("description") },
+	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
 	                        'Description'
 	                    ),
 	                    React.createElement('input', {
@@ -25138,7 +25153,7 @@
 	                    { className: this.addErr("form-group", "address") },
 	                    React.createElement(
 	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("address") },
+	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
 	                        'Address'
 	                    ),
 	                    React.createElement('input', {
@@ -25155,7 +25170,7 @@
 	                    { className: this.addErr("form-group", "deviceId") },
 	                    React.createElement(
 	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("deviceId") },
+	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("deviceId") }),
 	                        'Device*'
 	                    ),
 	                    React.createElement(DevicePicker, {
@@ -25372,14 +25387,470 @@
 
 /***/ },
 /* 215 */
+/***/ function(module, exports) {
+
+	function isObject(obj) {
+	  var type = typeof obj;
+	  return type === 'function' || type === 'object' && !!obj;
+	}
+
+	function isString(string) {
+	  return typeof string === 'string';
+	}
+
+	function isFunction(functionToCheck) {
+	  var getType = {};
+	  return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+	}
+
+	function objectToArray(object) {
+	  var keys   = Object.keys(object);
+	  var output = [];
+
+	  keys.forEach(function(key) {
+	    var predicate = object[key];
+
+	    if (isFunction(predicate)) {
+	      predicate = predicate();
+	    }
+
+	    if (predicate) {
+	      output.push(key);
+	    }
+	  });
+
+	  return output;
+	}
+
+	function listToArray(list) {
+	  if (isString(list) && list !== '') {
+	    return list.split(' ');
+	  } else if (list && list.length) {
+	    return list;
+	  } else if (isObject(list)) {
+	    return objectToArray(list);
+	  } else {
+	    return [];
+	  }
+	}
+
+	module.exports = function(options) {
+	  if (isString(options)) {
+	    options = { name: options };
+	  }
+
+	  return function(first, modifiers, extraClassNames) {
+	    var blockName = options.name;
+	    var rootName = blockName;
+	    var classNames = [];
+	    var modifierDelimiter = options.modifierDelimiter || '--';
+	    var element;
+
+	    // This means the first parameter is not the element, but a configuration variable
+	    if (isObject(first)) {
+	      element = first.element;
+	      modifiers = first.modifiers || first.modifier;
+	      extraClassNames = first.extra;
+	    } else {
+	      element = first;
+	    }
+
+	    if (element) {
+	      rootName += '__' + element;
+	    }
+
+	    classNames.push(rootName);
+
+	    // Compose an array of modifiers
+	    listToArray(modifiers).forEach(function(modifier) {
+	      classNames.push(rootName + modifierDelimiter + modifier);
+	    });
+
+	    // Add a prefix to all the classes in the classNames array
+	    if (options.prefix) {
+	      for (var i = 0; i < classNames.length; i++) {
+	        classNames[i] = options.prefix + classNames[i];
+	      }
+	    }
+	    // Compose an array of extraClassNames
+	    listToArray(extraClassNames).forEach(function(extraClassName) {
+	      classNames.push(extraClassName);
+	    });
+
+	    return {
+	      className: classNames.join(' ').trim()
+	    };
+	  };
+	};
+
+
+/***/ },
+/* 216 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(217);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 217 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-ZoneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-ZoneInfo__save {\n  padding-left: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 218 */
+/***/ function(module, exports) {
+
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	// css base code, injected by the css-loader
+	module.exports = function() {
+		var list = [];
+
+		// return the list of modules as css string
+		list.toString = function toString() {
+			var result = [];
+			for(var i = 0; i < this.length; i++) {
+				var item = this[i];
+				if(item[2]) {
+					result.push("@media " + item[2] + "{" + item[1] + "}");
+				} else {
+					result.push(item[1]);
+				}
+			}
+			return result.join("");
+		};
+
+		// import a list of modules into the list
+		list.i = function(modules, mediaQuery) {
+			if(typeof modules === "string")
+				modules = [[null, modules, ""]];
+			var alreadyImportedModules = {};
+			for(var i = 0; i < this.length; i++) {
+				var id = this[i][0];
+				if(typeof id === "number")
+					alreadyImportedModules[id] = true;
+			}
+			for(i = 0; i < modules.length; i++) {
+				var item = modules[i];
+				// skip already imported module
+				// this implementation is not 100% perfect for weird media query combinations
+				//  when a module is imported multiple times with different media queries.
+				//  I hope this will never occur (Hey this way we have smaller bundles)
+				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+					if(mediaQuery && !item[2]) {
+						item[2] = mediaQuery;
+					} else if(mediaQuery) {
+						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+					}
+					list.push(item);
+				}
+			}
+		};
+		return list;
+	};
+
+
+/***/ },
+/* 219 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	var stylesInDom = {},
+		memoize = function(fn) {
+			var memo;
+			return function () {
+				if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+				return memo;
+			};
+		},
+		isOldIE = memoize(function() {
+			return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase());
+		}),
+		getHeadElement = memoize(function () {
+			return document.head || document.getElementsByTagName("head")[0];
+		}),
+		singletonElement = null,
+		singletonCounter = 0,
+		styleElementsInsertedAtTop = [];
+
+	module.exports = function(list, options) {
+		if(false) {
+			if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+		}
+
+		options = options || {};
+		// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+		// tags it will allow on a page
+		if (typeof options.singleton === "undefined") options.singleton = isOldIE();
+
+		// By default, add <style> tags to the bottom of <head>.
+		if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
+
+		var styles = listToStyles(list);
+		addStylesToDom(styles, options);
+
+		return function update(newList) {
+			var mayRemove = [];
+			for(var i = 0; i < styles.length; i++) {
+				var item = styles[i];
+				var domStyle = stylesInDom[item.id];
+				domStyle.refs--;
+				mayRemove.push(domStyle);
+			}
+			if(newList) {
+				var newStyles = listToStyles(newList);
+				addStylesToDom(newStyles, options);
+			}
+			for(var i = 0; i < mayRemove.length; i++) {
+				var domStyle = mayRemove[i];
+				if(domStyle.refs === 0) {
+					for(var j = 0; j < domStyle.parts.length; j++)
+						domStyle.parts[j]();
+					delete stylesInDom[domStyle.id];
+				}
+			}
+		};
+	}
+
+	function addStylesToDom(styles, options) {
+		for(var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+			if(domStyle) {
+				domStyle.refs++;
+				for(var j = 0; j < domStyle.parts.length; j++) {
+					domStyle.parts[j](item.parts[j]);
+				}
+				for(; j < item.parts.length; j++) {
+					domStyle.parts.push(addStyle(item.parts[j], options));
+				}
+			} else {
+				var parts = [];
+				for(var j = 0; j < item.parts.length; j++) {
+					parts.push(addStyle(item.parts[j], options));
+				}
+				stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+			}
+		}
+	}
+
+	function listToStyles(list) {
+		var styles = [];
+		var newStyles = {};
+		for(var i = 0; i < list.length; i++) {
+			var item = list[i];
+			var id = item[0];
+			var css = item[1];
+			var media = item[2];
+			var sourceMap = item[3];
+			var part = {css: css, media: media, sourceMap: sourceMap};
+			if(!newStyles[id])
+				styles.push(newStyles[id] = {id: id, parts: [part]});
+			else
+				newStyles[id].parts.push(part);
+		}
+		return styles;
+	}
+
+	function insertStyleElement(options, styleElement) {
+		var head = getHeadElement();
+		var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1];
+		if (options.insertAt === "top") {
+			if(!lastStyleElementInsertedAtTop) {
+				head.insertBefore(styleElement, head.firstChild);
+			} else if(lastStyleElementInsertedAtTop.nextSibling) {
+				head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling);
+			} else {
+				head.appendChild(styleElement);
+			}
+			styleElementsInsertedAtTop.push(styleElement);
+		} else if (options.insertAt === "bottom") {
+			head.appendChild(styleElement);
+		} else {
+			throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
+		}
+	}
+
+	function removeStyleElement(styleElement) {
+		styleElement.parentNode.removeChild(styleElement);
+		var idx = styleElementsInsertedAtTop.indexOf(styleElement);
+		if(idx >= 0) {
+			styleElementsInsertedAtTop.splice(idx, 1);
+		}
+	}
+
+	function createStyleElement(options) {
+		var styleElement = document.createElement("style");
+		styleElement.type = "text/css";
+		insertStyleElement(options, styleElement);
+		return styleElement;
+	}
+
+	function createLinkElement(options) {
+		var linkElement = document.createElement("link");
+		linkElement.rel = "stylesheet";
+		insertStyleElement(options, linkElement);
+		return linkElement;
+	}
+
+	function addStyle(obj, options) {
+		var styleElement, update, remove;
+
+		if (options.singleton) {
+			var styleIndex = singletonCounter++;
+			styleElement = singletonElement || (singletonElement = createStyleElement(options));
+			update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
+			remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
+		} else if(obj.sourceMap &&
+			typeof URL === "function" &&
+			typeof URL.createObjectURL === "function" &&
+			typeof URL.revokeObjectURL === "function" &&
+			typeof Blob === "function" &&
+			typeof btoa === "function") {
+			styleElement = createLinkElement(options);
+			update = updateLink.bind(null, styleElement);
+			remove = function() {
+				removeStyleElement(styleElement);
+				if(styleElement.href)
+					URL.revokeObjectURL(styleElement.href);
+			};
+		} else {
+			styleElement = createStyleElement(options);
+			update = applyToTag.bind(null, styleElement);
+			remove = function() {
+				removeStyleElement(styleElement);
+			};
+		}
+
+		update(obj);
+
+		return function updateStyle(newObj) {
+			if(newObj) {
+				if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
+					return;
+				update(obj = newObj);
+			} else {
+				remove();
+			}
+		};
+	}
+
+	var replaceText = (function () {
+		var textStore = [];
+
+		return function (index, replacement) {
+			textStore[index] = replacement;
+			return textStore.filter(Boolean).join('\n');
+		};
+	})();
+
+	function applyToSingletonTag(styleElement, index, remove, obj) {
+		var css = remove ? "" : obj.css;
+
+		if (styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = replaceText(index, css);
+		} else {
+			var cssNode = document.createTextNode(css);
+			var childNodes = styleElement.childNodes;
+			if (childNodes[index]) styleElement.removeChild(childNodes[index]);
+			if (childNodes.length) {
+				styleElement.insertBefore(cssNode, childNodes[index]);
+			} else {
+				styleElement.appendChild(cssNode);
+			}
+		}
+	}
+
+	function applyToTag(styleElement, obj) {
+		var css = obj.css;
+		var media = obj.media;
+
+		if(media) {
+			styleElement.setAttribute("media", media)
+		}
+
+		if(styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = css;
+		} else {
+			while(styleElement.firstChild) {
+				styleElement.removeChild(styleElement.firstChild);
+			}
+			styleElement.appendChild(document.createTextNode(css));
+		}
+	}
+
+	function updateLink(linkElement, obj) {
+		var css = obj.css;
+		var sourceMap = obj.sourceMap;
+
+		if(sourceMap) {
+			// http://stackoverflow.com/a/26603875
+			css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+		}
+
+		var blob = new Blob([css], { type: "text/css" });
+
+		var oldSrc = linkElement.href;
+
+		linkElement.href = URL.createObjectURL(blob);
+
+		if(oldSrc)
+			URL.revokeObjectURL(oldSrc);
+	}
+
+
+/***/ },
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
 	var UniqueIdMixin = __webpack_require__(205);
 	var InputValidationMixin = __webpack_require__(206);
 	var DevicePicker = __webpack_require__(212);
+	var BEMHelper = __webpack_require__(215);
+
+	var classes = new BEMHelper({
+	    name: 'SensorInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(309);
 
 	var SensorInfo = React.createClass({
 	    displayName: 'SensorInfo',
@@ -25424,13 +25895,13 @@
 	    render: function render() {
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-DeviceInfo well' },
+	            classes('', '', 'well well-sm'),
 	            React.createElement(
 	                'div',
 	                { className: this.addErr('form-group', 'name') },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid('name') },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
 	                    'Name*'
 	                ),
 	                React.createElement('input', {
@@ -25447,7 +25918,7 @@
 	                { className: this.addErr("form-group", 'description') },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("description") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
 	                    'Description'
 	                ),
 	                React.createElement('input', {
@@ -25464,7 +25935,7 @@
 	                { className: this.addErr("form-group", "address") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("address") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
 	                    'Address'
 	                ),
 	                React.createElement('input', {
@@ -25481,7 +25952,7 @@
 	                { className: this.addErr("form-group", "deviceId") },
 	                React.createElement(
 	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("deviceId") },
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("deviceId") }),
 	                    'Device*'
 	                ),
 	                React.createElement(DevicePicker, {
@@ -25497,61 +25968,7 @@
 	module.exports = SensorInfo;
 
 /***/ },
-/* 216 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-	  Copyright (c) 2016 Jed Watson.
-	  Licensed under the MIT License (MIT), see
-	  http://jedwatson.github.io/classnames
-	*/
-	/* global define */
-
-	(function () {
-		'use strict';
-
-		var hasOwn = {}.hasOwnProperty;
-
-		function classNames () {
-			var classes = [];
-
-			for (var i = 0; i < arguments.length; i++) {
-				var arg = arguments[i];
-				if (!arg) continue;
-
-				var argType = typeof arg;
-
-				if (argType === 'string' || argType === 'number') {
-					classes.push(arg);
-				} else if (Array.isArray(arg)) {
-					classes.push(classNames.apply(null, arg));
-				} else if (argType === 'object') {
-					for (var key in arg) {
-						if (hasOwn.call(arg, key) && arg[key]) {
-							classes.push(key);
-						}
-					}
-				}
-			}
-
-			return classes.join(' ');
-		}
-
-		if (typeof module !== 'undefined' && module.exports) {
-			module.exports = classNames;
-		} else if (true) {
-			// register as 'classnames', consistent with npm package name
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
-				return classNames;
-			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-		} else {
-			window.classNames = classNames;
-		}
-	}());
-
-
-/***/ },
-/* 217 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25592,7 +26009,7 @@
 	module.exports = ZoneActions;
 
 /***/ },
-/* 218 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25628,7 +26045,7 @@
 	module.exports = SensorActions;
 
 /***/ },
-/* 219 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25688,7 +26105,101 @@
 	module.exports = DeviceTypePicker;
 
 /***/ },
-/* 220 */
+/* 224 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = [];
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+
+			return classes.join(' ');
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
+
+
+/***/ },
+/* 225 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(226);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 226 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-DeviceInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-DeviceInfo__delete {\n  padding: 0;\n}\n.b-DeviceInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n  margin-bottom: 20px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25770,8 +26281,87 @@
 	module.exports = SystemActions;
 
 /***/ },
-/* 221 */,
-/* 222 */
+/* 228 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(229);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DiscoverDevices.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DiscoverDevices.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 229 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 230 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(231);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Import.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Import.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 231 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-Import {\n  padding: 12px;\n}\n.b-Import__header {\n  margin-top: 0px;\n  font-weight: 200;\n}\n.b-Import__content {\n  margin-top: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25781,9 +26371,16 @@
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var DeviceInfo = __webpack_require__(204);
-	var SystemActions = __webpack_require__(220);
-	var Grid = __webpack_require__(223);
-	var SystemDeviceListGridCell = __webpack_require__(227);
+	var SystemActions = __webpack_require__(227);
+	var Grid = __webpack_require__(233);
+	var SystemDeviceListGridCell = __webpack_require__(239);
+	var BEMHelper = __webpack_require__(215);
+
+	var classes = new BEMHelper({
+	    name: 'SystemDeviceList',
+	    prefix: 'b-'
+	});
+	__webpack_require__(242);
 
 	var SystemDeviceList = React.createClass({
 	    displayName: 'SystemDeviceList',
@@ -25852,7 +26449,7 @@
 	                { key: 'dimmerSection' },
 	                React.createElement(
 	                    'h2',
-	                    null,
+	                    classes('header'),
 	                    'Dimmers'
 	                ),
 	                React.createElement(Grid, { cells: dimmers })
@@ -25865,7 +26462,7 @@
 	                { key: 'switchSection' },
 	                React.createElement(
 	                    'h2',
-	                    null,
+	                    classes('header'),
 	                    'Switches'
 	                ),
 	                React.createElement(Grid, { cells: switches })
@@ -25878,7 +26475,7 @@
 	                { key: 'shadeSection' },
 	                React.createElement(
 	                    'h2',
-	                    null,
+	                    classes('header'),
 	                    'Shades'
 	                ),
 	                React.createElement(Grid, { cells: shades })
@@ -25891,7 +26488,7 @@
 	                { className: hubs.length > 0 ? "" : " hidden" },
 	                React.createElement(
 	                    'h2',
-	                    null,
+	                    classes('header'),
 	                    'Hubs'
 	                ),
 	                React.createElement(Grid, { cells: hubs })
@@ -25904,7 +26501,7 @@
 	                { key: 'remoteSection' },
 	                React.createElement(
 	                    'h2',
-	                    null,
+	                    classes('header'),
 	                    'Remotes'
 	                ),
 	                React.createElement(Grid, { cells: remotes })
@@ -25917,7 +26514,7 @@
 	                { key: 'deviceSection' },
 	                React.createElement(
 	                    'h2',
-	                    null,
+	                    classes('header'),
 	                    'Devices'
 	                ),
 	                React.createElement(Grid, { cells: unknown })
@@ -25925,7 +26522,7 @@
 	        }
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-SystemDeviceList' },
+	            classes(),
 	            dimmerSection,
 	            switchSection,
 	            shadeSection,
@@ -25952,7 +26549,7 @@
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(SystemDeviceList);
 
 /***/ },
-/* 223 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25960,16 +26557,16 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var ReactTransitionGroup = __webpack_require__(224);
+	var ReactTransitionGroup = __webpack_require__(234);
 	var ReactDOM = __webpack_require__(34);
-	var ClassNames = __webpack_require__(216);
-	var BEMHelper = __webpack_require__(279);
+	var ClassNames = __webpack_require__(224);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'Grid',
 	    prefix: 'b-'
 	});
-	__webpack_require__(286);
+	__webpack_require__(237);
 
 	var Grid = React.createClass({
 	    displayName: 'Grid',
@@ -25978,7 +26575,7 @@
 	        return {
 	            cells: [],
 	            cellWidth: 110,
-	            cellHeight: 110,
+	            cellHeight: 125,
 	            spacingH: 0,
 	            spacingV: 0
 	        };
@@ -26028,7 +26625,8 @@
 	        var fittedWidth = Math.floor(this.props.cellWidth + (gridWidthNoPadding - cellsPerRow * this.props.cellWidth) / cellsPerRow);
 	        return {
 	            width: fittedWidth,
-	            height: fittedWidth
+	            // height always remains constant
+	            height: this.props.cellHeight
 	        };
 	    },
 
@@ -26197,13 +26795,13 @@
 	module.exports = Grid;
 
 /***/ },
-/* 224 */
+/* 234 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(225);
+	module.exports = __webpack_require__(235);
 
 /***/ },
-/* 225 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
@@ -26223,7 +26821,7 @@
 
 	var React = __webpack_require__(2);
 	var ReactInstanceMap = __webpack_require__(119);
-	var ReactTransitionChildMapping = __webpack_require__(226);
+	var ReactTransitionChildMapping = __webpack_require__(236);
 
 	var emptyFunction = __webpack_require__(12);
 
@@ -26455,7 +27053,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 226 */
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
@@ -26564,19 +27162,59 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 227 */
+/* 237 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(238);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Grid.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Grid.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 238 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-Grid {\n  padding-bottom: 12px;\n  position: relative;\n  background-color: #fff;\n  width: 100%;\n  /*needed to remove gaps between cells*/\n  font-size: 0px;\n}\n.b-Grid__cell {\n  background-color: #fff;\n  overflow: hidden;\n  font-size: 0px;\n  border: 1px solid #eee;\n  text-align: center;\n  padding-left: 4px;\n  padding-right: 4px;\n}\n.b-Grid__expander-arrow {\n  font-size: 58px;\n  margin-top: -30px;\n  color: #eee;\n  pointer-events: none;\n}\n.b-Grid__expander-arrow--hidden {\n  display: none;\n}\n.b-Expander {\n  background-color: #eee;\n  width: 100%;\n  font-size: 12px;\n  overflow: hidden;\n  max-height: 500px;\n  position: relative;\n}\n.b-Expander .animateWrapper {\n  margin-top: -500px;\n  transition: margin-top 550ms ease-out;\n  -webkit-transition: margin-top 550ms ease-out;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(279);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'SystemDeviceListGridCell',
 	    prefix: 'b-'
 	});
-	__webpack_require__(296);
+	__webpack_require__(240);
 
 	var SystemDeviceListGridCell = React.createClass({
 	    displayName: 'SystemDeviceListGridCell',
@@ -26601,7 +27239,127 @@
 	module.exports = SystemDeviceListGridCell;
 
 /***/ },
-/* 228 */
+/* 240 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(241);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceListGridCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceListGridCell.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 241 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SystemDeviceListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-SystemDeviceListGridCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SystemDeviceListGridCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 242 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(243);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceList.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceList.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 243 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SystemDeviceList__header {\n  margin-top: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 244 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(245);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./System.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./System.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 245 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-System {\n  position: relative;\n  padding-bottom: 30px;\n}\n.b-System__header {\n  position: absolute;\n  left: 0;\n  right: 0;\n  padding: 0px 12px 0px 12px;\n}\n.b-System__exit {\n  margin: 12px;\n}\n.b-System__empty-msg {\n  margin: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 246 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26612,19 +27370,19 @@
 	var ReactDOM = __webpack_require__(34);
 	var Redux = __webpack_require__(180);
 	var ReactRedux = __webpack_require__(173);
-	var SceneListGridCell = __webpack_require__(229);
-	var SceneControl = __webpack_require__(230);
-	var SceneInfo = __webpack_require__(231);
+	var SceneListGridCell = __webpack_require__(247);
+	var SceneControl = __webpack_require__(250);
+	var SceneInfo = __webpack_require__(253);
 	var UniqueIdMixin = __webpack_require__(205);
-	var SceneActions = __webpack_require__(240);
-	var Grid = __webpack_require__(223);
-	var BEMHelper = __webpack_require__(279);
+	var SceneActions = __webpack_require__(262);
+	var Grid = __webpack_require__(233);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'SceneList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(282);
+	__webpack_require__(266);
 
 	var SceneList = React.createClass({
 	    displayName: 'SceneList',
@@ -26759,19 +27517,19 @@
 	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
 
 /***/ },
-/* 229 */
+/* 247 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(279);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'SceneListGridCell',
 	    prefix: 'b-'
 	});
-	__webpack_require__(284);
+	__webpack_require__(248);
 
 	var SceneListGridCell = React.createClass({
 	    displayName: 'SceneListGridCell',
@@ -26796,7 +27554,47 @@
 	module.exports = SceneListGridCell;
 
 /***/ },
-/* 230 */
+/* 248 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(249);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneListGridCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneListGridCell.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 249 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SceneListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to stop spaces between cells */\n  font-size: 0px;\n}\n.b-SceneListGridCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SceneListGridCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26805,13 +27603,13 @@
 
 	var React = __webpack_require__(1);
 	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(279);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'SceneControl',
 	    prefix: 'b-'
 	});
-	__webpack_require__(288);
+	__webpack_require__(251);
 
 	var SceneControl = React.createClass({
 	    displayName: 'SceneControl',
@@ -26845,7 +27643,47 @@
 	module.exports = SceneControl;
 
 /***/ },
-/* 231 */
+/* 251 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(252);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneControl.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneControl.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 252 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SceneControl {\n  padding: 8px 12px 0px 12px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n  height: 112px;\n}\n.b-SceneControl__name {\n  text-align: left;\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 296px;\n  margin-top: 3px;\n  margin-bottom: 12px;\n  /* use ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SceneControl__activate {\n  font-size: 20px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26857,16 +27695,16 @@
 	var SaveBtn = __webpack_require__(207);
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
-	var CommandInfo = __webpack_require__(232);
-	var CommandTypePicker = __webpack_require__(241);
-	var SceneActions = __webpack_require__(240);
-	var BEMHelper = __webpack_require__(279);
+	var CommandInfo = __webpack_require__(254);
+	var CommandTypePicker = __webpack_require__(263);
+	var SceneActions = __webpack_require__(262);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'SceneInfo',
 	    prefix: 'b-'
 	});
-	__webpack_require__(294);
+	__webpack_require__(264);
 
 	var SceneInfo = React.createClass({
 	    displayName: 'SceneInfo',
@@ -27092,21 +27930,21 @@
 	module.exports = SceneInfo;
 
 /***/ },
-/* 232 */
+/* 254 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var ZoneSetLevelCommand = __webpack_require__(233);
-	var SceneSetCommand = __webpack_require__(235);
+	var ZoneSetLevelCommand = __webpack_require__(255);
+	var SceneSetCommand = __webpack_require__(257);
 	var SaveBtn = __webpack_require__(207);
-	var ButtonPressCommand = __webpack_require__(237);
-	var ButtonReleaseCommand = __webpack_require__(239);
+	var ButtonPressCommand = __webpack_require__(259);
+	var ButtonReleaseCommand = __webpack_require__(261);
 	var Api = __webpack_require__(208);
 	var Constants = __webpack_require__(209);
-	var SceneActions = __webpack_require__(240);
+	var SceneActions = __webpack_require__(262);
 
 	var CommandInfo = React.createClass({
 	    displayName: 'CommandInfo',
@@ -27211,7 +28049,7 @@
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(CommandInfo);
 
 /***/ },
-/* 233 */
+/* 255 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27219,9 +28057,9 @@
 	var React = __webpack_require__(1);
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
-	var ZonePicker = __webpack_require__(234);
+	var ZonePicker = __webpack_require__(256);
 	var Api = __webpack_require__(208);
-	var ClassNames = __webpack_require__(216);
+	var ClassNames = __webpack_require__(224);
 
 	var ZoneSetLevelCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -27421,7 +28259,7 @@
 	module.exports = ZoneSetLevelCommand;
 
 /***/ },
-/* 234 */
+/* 256 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27480,7 +28318,7 @@
 	module.exports = ZonePicker;
 
 /***/ },
-/* 235 */
+/* 257 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27488,7 +28326,7 @@
 	var React = __webpack_require__(1);
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
-	var ScenePicker = __webpack_require__(236);
+	var ScenePicker = __webpack_require__(258);
 
 	var SceneSetCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -27558,7 +28396,7 @@
 	module.exports = SceneSetCommand;
 
 /***/ },
-/* 236 */
+/* 258 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27622,7 +28460,7 @@
 	module.exports = ScenePicker;
 
 /***/ },
-/* 237 */
+/* 259 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27630,7 +28468,7 @@
 	var React = __webpack_require__(1);
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
-	var ButtonPicker = __webpack_require__(238);
+	var ButtonPicker = __webpack_require__(260);
 
 	var ButtonPressCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -27699,7 +28537,7 @@
 	module.exports = ButtonPressCommand;
 
 /***/ },
-/* 238 */
+/* 260 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27752,7 +28590,7 @@
 	module.exports = ButtonPicker;
 
 /***/ },
-/* 239 */
+/* 261 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27760,7 +28598,7 @@
 	var React = __webpack_require__(1);
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
-	var ButtonPicker = __webpack_require__(238);
+	var ButtonPicker = __webpack_require__(260);
 
 	var ButtonReleaseCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -27828,7 +28666,7 @@
 	module.exports = ButtonReleaseCommand;
 
 /***/ },
-/* 240 */
+/* 262 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27947,7 +28785,7 @@
 	module.exports = SceneActions;
 
 /***/ },
-/* 241 */
+/* 263 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28007,7 +28845,87 @@
 	module.exports = CommandTypePicker;
 
 /***/ },
-/* 242 */
+/* 264 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(265);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 265 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SceneInfo__delete {\n  padding: 0;\n}\n.b-SceneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-SceneInfo__commands {\n  margin-top: 14px;\n}\n.b-SceneInfo__command-header {\n  margin-top: 0px;\n}\n.b-SceneInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 266 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(267);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneList.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneList.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 267 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SceneList {\n  position: relative;\n}\n.b-SceneList__scene-info {\n  margin-bottom: 50px;\n  margin-left: 12px;\n  margin-right: 12px;\n}\n.b-SceneList__header {\n  margin-top: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n.b-SceneList__buttons {\n  position: absolute;\n  top: 0;\n  right: 12px;\n  left: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 268 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28016,24 +28934,24 @@
 
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-	var ClassNames = __webpack_require__(216);
+	var ClassNames = __webpack_require__(224);
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var ZoneControl = __webpack_require__(243);
-	var SensorMonitor = __webpack_require__(245);
-	var ZoneActions = __webpack_require__(217);
-	var Grid = __webpack_require__(223);
-	var SensorMonitor = __webpack_require__(245);
+	var ZoneControl = __webpack_require__(269);
+	var SensorMonitor = __webpack_require__(273);
+	var ZoneActions = __webpack_require__(221);
+	var Grid = __webpack_require__(233);
+	var SensorMonitor = __webpack_require__(273);
 	var ZoneInfo = __webpack_require__(211);
-	var ZoneSensorListGridCell = __webpack_require__(246);
+	var ZoneSensorListGridCell = __webpack_require__(276);
 	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(279);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'ZoneSensorList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(280);
+	__webpack_require__(279);
 
 	//TODO: Need to get the correct state when we come out of edit mode, currently lost
 
@@ -28394,24 +29312,24 @@
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(ZoneSensorList);
 
 /***/ },
-/* 243 */
+/* 269 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var ClassNames = __webpack_require__(216);
+	var ClassNames = __webpack_require__(224);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var CssMixin = __webpack_require__(244);
+	var CssMixin = __webpack_require__(270);
 	var Api = __webpack_require__(208);
-	var ClassNames = __webpack_require__(216);
-	var BEMHelper = __webpack_require__(279);
+	var ClassNames = __webpack_require__(224);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'ZoneControl',
 	    prefix: 'b-'
 	});
-	__webpack_require__(290);
+	__webpack_require__(271);
 
 	var ZoneControl = React.createClass({
 	    displayName: 'ZoneControl',
@@ -28659,7 +29577,7 @@
 	module.exports = ZoneControl;
 
 /***/ },
-/* 244 */
+/* 270 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -28671,23 +29589,63 @@
 	};
 
 /***/ },
-/* 245 */
+/* 271 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(272);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneControl.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneControl.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 272 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-ZoneControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-ZoneControl--continuous {\n  height: 200px;\n}\n.b-ZoneControl--binary {\n  height: 86px;\n}\n.b-ZoneControl--rgb {\n  height: 222px;\n}\n.b-ZoneControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 242px;\n  margin-top: 3px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneControl__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 26px;\n}\n.b-ZoneControl__rgb {\n  margin-top: 22px;\n}\n.b-ZoneControl__value {\n  display: inline-block;\n  margin-top: 20px;\n  font-size: 50px;\n}\n.b-ZoneControl__value--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 273 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var ClassNames = __webpack_require__(216);
+	var ClassNames = __webpack_require__(224);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var CssMixin = __webpack_require__(244);
+	var CssMixin = __webpack_require__(270);
 	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(279);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'SensorMonitor',
 	    prefix: 'b-'
 	});
-	__webpack_require__(292);
+	__webpack_require__(274);
 
 	var SensorMonitor = React.createClass({
 	    displayName: 'SensorMonitor',
@@ -28750,7 +29708,47 @@
 	module.exports = SensorMonitor;
 
 /***/ },
-/* 246 */
+/* 274 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(275);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorMonitor.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorMonitor.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 275 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SensorMonitor {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-SensorMonitor__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  max-width: 370px;\n  margin-top: 3px;\n}\n.b-SensorMonitor__value {\n  display: inline-block;\n  margin-top: 20px;\n  font-size: 40px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 276 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28759,8 +29757,8 @@
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var Classnames = __webpack_require__(216);
-	var BEMHelper = __webpack_require__(279);
+	var Classnames = __webpack_require__(224);
+	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'ZoneSensorListGridCell',
@@ -28950,324 +29948,94 @@
 	module.exports = ZoneSensorListGridCell;
 
 /***/ },
-/* 247 */,
-/* 248 */,
-/* 249 */
-/***/ function(module, exports) {
-
-	/*
-		MIT License http://www.opensource.org/licenses/mit-license.php
-		Author Tobias Koppers @sokra
-	*/
-	// css base code, injected by the css-loader
-	module.exports = function() {
-		var list = [];
-
-		// return the list of modules as css string
-		list.toString = function toString() {
-			var result = [];
-			for(var i = 0; i < this.length; i++) {
-				var item = this[i];
-				if(item[2]) {
-					result.push("@media " + item[2] + "{" + item[1] + "}");
-				} else {
-					result.push(item[1]);
-				}
-			}
-			return result.join("");
-		};
-
-		// import a list of modules into the list
-		list.i = function(modules, mediaQuery) {
-			if(typeof modules === "string")
-				modules = [[null, modules, ""]];
-			var alreadyImportedModules = {};
-			for(var i = 0; i < this.length; i++) {
-				var id = this[i][0];
-				if(typeof id === "number")
-					alreadyImportedModules[id] = true;
-			}
-			for(i = 0; i < modules.length; i++) {
-				var item = modules[i];
-				// skip already imported module
-				// this implementation is not 100% perfect for weird media query combinations
-				//  when a module is imported multiple times with different media queries.
-				//  I hope this will never occur (Hey this way we have smaller bundles)
-				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-					if(mediaQuery && !item[2]) {
-						item[2] = mediaQuery;
-					} else if(mediaQuery) {
-						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-					}
-					list.push(item);
-				}
-			}
-		};
-		return list;
-	};
-
-
-/***/ },
-/* 250 */
+/* 277 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/*
-		MIT License http://www.opensource.org/licenses/mit-license.php
-		Author Tobias Koppers @sokra
-	*/
-	var stylesInDom = {},
-		memoize = function(fn) {
-			var memo;
-			return function () {
-				if (typeof memo === "undefined") memo = fn.apply(this, arguments);
-				return memo;
-			};
-		},
-		isOldIE = memoize(function() {
-			return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase());
-		}),
-		getHeadElement = memoize(function () {
-			return document.head || document.getElementsByTagName("head")[0];
-		}),
-		singletonElement = null,
-		singletonCounter = 0,
-		styleElementsInsertedAtTop = [];
+	// style-loader: Adds some css to the DOM by adding a <style> tag
 
-	module.exports = function(list, options) {
-		if(false) {
-			if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+	// load the styles
+	var content = __webpack_require__(278);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorListGridCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorListGridCell.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
 		}
-
-		options = options || {};
-		// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-		// tags it will allow on a page
-		if (typeof options.singleton === "undefined") options.singleton = isOldIE();
-
-		// By default, add <style> tags to the bottom of <head>.
-		if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
-
-		var styles = listToStyles(list);
-		addStylesToDom(styles, options);
-
-		return function update(newList) {
-			var mayRemove = [];
-			for(var i = 0; i < styles.length; i++) {
-				var item = styles[i];
-				var domStyle = stylesInDom[item.id];
-				domStyle.refs--;
-				mayRemove.push(domStyle);
-			}
-			if(newList) {
-				var newStyles = listToStyles(newList);
-				addStylesToDom(newStyles, options);
-			}
-			for(var i = 0; i < mayRemove.length; i++) {
-				var domStyle = mayRemove[i];
-				if(domStyle.refs === 0) {
-					for(var j = 0; j < domStyle.parts.length; j++)
-						domStyle.parts[j]();
-					delete stylesInDom[domStyle.id];
-				}
-			}
-		};
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
 	}
 
-	function addStylesToDom(styles, options) {
-		for(var i = 0; i < styles.length; i++) {
-			var item = styles[i];
-			var domStyle = stylesInDom[item.id];
-			if(domStyle) {
-				domStyle.refs++;
-				for(var j = 0; j < domStyle.parts.length; j++) {
-					domStyle.parts[j](item.parts[j]);
-				}
-				for(; j < item.parts.length; j++) {
-					domStyle.parts.push(addStyle(item.parts[j], options));
-				}
-			} else {
-				var parts = [];
-				for(var j = 0; j < item.parts.length; j++) {
-					parts.push(addStyle(item.parts[j], options));
-				}
-				stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
-			}
-		}
-	}
+/***/ },
+/* 278 */
+/***/ function(module, exports, __webpack_require__) {
 
-	function listToStyles(list) {
-		var styles = [];
-		var newStyles = {};
-		for(var i = 0; i < list.length; i++) {
-			var item = list[i];
-			var id = item[0];
-			var css = item[1];
-			var media = item[2];
-			var sourceMap = item[3];
-			var part = {css: css, media: media, sourceMap: sourceMap};
-			if(!newStyles[id])
-				styles.push(newStyles[id] = {id: id, parts: [part]});
-			else
-				newStyles[id].parts.push(part);
-		}
-		return styles;
-	}
+	exports = module.exports = __webpack_require__(218)();
+	// imports
 
-	function insertStyleElement(options, styleElement) {
-		var head = getHeadElement();
-		var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1];
-		if (options.insertAt === "top") {
-			if(!lastStyleElementInsertedAtTop) {
-				head.insertBefore(styleElement, head.firstChild);
-			} else if(lastStyleElementInsertedAtTop.nextSibling) {
-				head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling);
-			} else {
-				head.appendChild(styleElement);
-			}
-			styleElementsInsertedAtTop.push(styleElement);
-		} else if (options.insertAt === "bottom") {
-			head.appendChild(styleElement);
-		} else {
-			throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
-		}
-	}
 
-	function removeStyleElement(styleElement) {
-		styleElement.parentNode.removeChild(styleElement);
-		var idx = styleElementsInsertedAtTop.indexOf(styleElement);
-		if(idx >= 0) {
-			styleElementsInsertedAtTop.splice(idx, 1);
-		}
-	}
+	// module
+	exports.push([module.id, ".b-ZoneSensorListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-ZoneSensorListGridCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-ZoneSensorListGridCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__switch-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__switch-color--switch {\n  display: block;\n}\n.b-ZoneSensorListGridCell__light-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__light-color--light {\n  display: block;\n}\n", ""]);
 
-	function createStyleElement(options) {
-		var styleElement = document.createElement("style");
-		styleElement.type = "text/css";
-		insertStyleElement(options, styleElement);
-		return styleElement;
-	}
-
-	function createLinkElement(options) {
-		var linkElement = document.createElement("link");
-		linkElement.rel = "stylesheet";
-		insertStyleElement(options, linkElement);
-		return linkElement;
-	}
-
-	function addStyle(obj, options) {
-		var styleElement, update, remove;
-
-		if (options.singleton) {
-			var styleIndex = singletonCounter++;
-			styleElement = singletonElement || (singletonElement = createStyleElement(options));
-			update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
-			remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
-		} else if(obj.sourceMap &&
-			typeof URL === "function" &&
-			typeof URL.createObjectURL === "function" &&
-			typeof URL.revokeObjectURL === "function" &&
-			typeof Blob === "function" &&
-			typeof btoa === "function") {
-			styleElement = createLinkElement(options);
-			update = updateLink.bind(null, styleElement);
-			remove = function() {
-				removeStyleElement(styleElement);
-				if(styleElement.href)
-					URL.revokeObjectURL(styleElement.href);
-			};
-		} else {
-			styleElement = createStyleElement(options);
-			update = applyToTag.bind(null, styleElement);
-			remove = function() {
-				removeStyleElement(styleElement);
-			};
-		}
-
-		update(obj);
-
-		return function updateStyle(newObj) {
-			if(newObj) {
-				if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
-					return;
-				update(obj = newObj);
-			} else {
-				remove();
-			}
-		};
-	}
-
-	var replaceText = (function () {
-		var textStore = [];
-
-		return function (index, replacement) {
-			textStore[index] = replacement;
-			return textStore.filter(Boolean).join('\n');
-		};
-	})();
-
-	function applyToSingletonTag(styleElement, index, remove, obj) {
-		var css = remove ? "" : obj.css;
-
-		if (styleElement.styleSheet) {
-			styleElement.styleSheet.cssText = replaceText(index, css);
-		} else {
-			var cssNode = document.createTextNode(css);
-			var childNodes = styleElement.childNodes;
-			if (childNodes[index]) styleElement.removeChild(childNodes[index]);
-			if (childNodes.length) {
-				styleElement.insertBefore(cssNode, childNodes[index]);
-			} else {
-				styleElement.appendChild(cssNode);
-			}
-		}
-	}
-
-	function applyToTag(styleElement, obj) {
-		var css = obj.css;
-		var media = obj.media;
-
-		if(media) {
-			styleElement.setAttribute("media", media)
-		}
-
-		if(styleElement.styleSheet) {
-			styleElement.styleSheet.cssText = css;
-		} else {
-			while(styleElement.firstChild) {
-				styleElement.removeChild(styleElement.firstChild);
-			}
-			styleElement.appendChild(document.createTextNode(css));
-		}
-	}
-
-	function updateLink(linkElement, obj) {
-		var css = obj.css;
-		var sourceMap = obj.sourceMap;
-
-		if(sourceMap) {
-			// http://stackoverflow.com/a/26603875
-			css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
-		}
-
-		var blob = new Blob([css], { type: "text/css" });
-
-		var oldSrc = linkElement.href;
-
-		linkElement.href = URL.createObjectURL(blob);
-
-		if(oldSrc)
-			URL.revokeObjectURL(oldSrc);
-	}
+	// exports
 
 
 /***/ },
-/* 251 */
+/* 279 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(280);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorList.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorList.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 280 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-ZoneSensorList {\n  position: relative;\n  width: 100%;\n  background-color: #fff;\n}\n.b-ZoneSensorList__zone-info {\n  margin-bottom: 50px;\n  margin-left: 12px;\n  margin-right: 12px;\n}\n.b-ZoneSensorList__grid-header {\n  margin: 0;\n  padding: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n.b-ZoneSensorList__grid-header--hidden {\n  display: none;\n}\n.b-ZoneSensorList__buttons {\n  position: absolute;\n  top: 0px;\n  right: 0px;\n  padding: 12px;\n}\n.b-ZoneSensorList__buttons--editing {\n  position: static;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 281 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var LogLine = __webpack_require__(252);
+	var LogLine = __webpack_require__(282);
 
 	var Logging = React.createClass({
 	    displayName: 'Logging',
@@ -29403,7 +30171,7 @@
 	module.exports = Logging;
 
 /***/ },
-/* 252 */
+/* 282 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -29448,14 +30216,14 @@
 	module.exports = LogLine;
 
 /***/ },
-/* 253 */
+/* 283 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var NewRecipe = __webpack_require__(254);
-	var RecipeList = __webpack_require__(264);
+	var NewRecipe = __webpack_require__(284);
+	var RecipeList = __webpack_require__(294);
 
 	var RecipeApp = React.createClass({
 	    displayName: 'RecipeApp',
@@ -29522,16 +30290,16 @@
 	module.exports = RecipeApp;
 
 /***/ },
-/* 254 */
+/* 284 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var IngredientList = __webpack_require__(255);
-	var TriggerList = __webpack_require__(257);
-	var ActionList = __webpack_require__(259);
-	var CookBookList = __webpack_require__(261);
+	var IngredientList = __webpack_require__(285);
+	var TriggerList = __webpack_require__(287);
+	var ActionList = __webpack_require__(289);
+	var CookBookList = __webpack_require__(291);
 
 	var NewRecipe = React.createClass({
 	    displayName: 'NewRecipe',
@@ -29815,13 +30583,13 @@
 	module.exports = NewRecipe;
 
 /***/ },
-/* 255 */
+/* 285 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Ingredient = __webpack_require__(256);
+	var Ingredient = __webpack_require__(286);
 
 	var IngredientList = React.createClass({
 	    displayName: 'IngredientList',
@@ -29858,7 +30626,7 @@
 	module.exports = IngredientList;
 
 /***/ },
-/* 256 */
+/* 286 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29955,13 +30723,13 @@
 	module.exports = Ingredient;
 
 /***/ },
-/* 257 */
+/* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Trigger = __webpack_require__(258);
+	var Trigger = __webpack_require__(288);
 
 	var TriggerList = React.createClass({
 	    displayName: 'TriggerList',
@@ -29986,7 +30754,7 @@
 	module.exports = TriggerList;
 
 /***/ },
-/* 258 */
+/* 288 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -30026,13 +30794,13 @@
 	module.exports = Trigger;
 
 /***/ },
-/* 259 */
+/* 289 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Action = __webpack_require__(260);
+	var Action = __webpack_require__(290);
 
 	var ActionList = React.createClass({
 	    displayName: 'ActionList',
@@ -30056,7 +30824,7 @@
 	module.exports = ActionList;
 
 /***/ },
-/* 260 */
+/* 290 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -30096,13 +30864,13 @@
 	module.exports = Action;
 
 /***/ },
-/* 261 */
+/* 291 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var CookBook = __webpack_require__(262);
+	var CookBook = __webpack_require__(292);
 
 	var CookBookList = React.createClass({
 	    displayName: 'CookBookList',
@@ -30126,13 +30894,13 @@
 	module.exports = CookBookList;
 
 /***/ },
-/* 262 */
+/* 292 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var AssetsMixin = __webpack_require__(263);
+	var AssetsMixin = __webpack_require__(293);
 
 	var CookBook = React.createClass({
 	    displayName: 'CookBook',
@@ -30160,7 +30928,7 @@
 	module.exports = CookBook;
 
 /***/ },
-/* 263 */
+/* 293 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -30172,7 +30940,7 @@
 	};
 
 /***/ },
-/* 264 */
+/* 294 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30180,7 +30948,7 @@
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	var React = __webpack_require__(1);
-	var RecipeInfo = __webpack_require__(265);
+	var RecipeInfo = __webpack_require__(295);
 
 	var RecipeList = React.createClass({
 	    displayName: 'RecipeList',
@@ -30248,7 +31016,7 @@
 	module.exports = RecipeList;
 
 /***/ },
-/* 265 */
+/* 295 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30342,20 +31110,60 @@
 	module.exports = RecipeInfo;
 
 /***/ },
-/* 266 */
+/* 296 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(297);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ControlApp.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ControlApp.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 297 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n  box-shadow: 0px 2px 4px #bbb;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp h5.emptyMessage {\n  margin: 12px;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 298 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Redux = __webpack_require__(180);
-	var thunk = __webpack_require__(267).default;
-	var initialState = __webpack_require__(268);
-	var buttonReducer = __webpack_require__(269);
-	var systemReducer = __webpack_require__(270);
-	var scenesReducer = __webpack_require__(271);
-	var sensorReducer = __webpack_require__(273);
-	var zonesReducer = __webpack_require__(274);
-	var loadStatusReducer = __webpack_require__(275);
+	var thunk = __webpack_require__(299).default;
+	var initialState = __webpack_require__(300);
+	var buttonReducer = __webpack_require__(301);
+	var systemReducer = __webpack_require__(302);
+	var scenesReducer = __webpack_require__(303);
+	var sensorReducer = __webpack_require__(305);
+	var zonesReducer = __webpack_require__(306);
+	var loadStatusReducer = __webpack_require__(307);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
@@ -30369,7 +31177,7 @@
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
 
 /***/ },
-/* 267 */
+/* 299 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -30397,7 +31205,7 @@
 	exports['default'] = thunk;
 
 /***/ },
-/* 268 */
+/* 300 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -30443,13 +31251,13 @@
 	};
 
 /***/ },
-/* 269 */
+/* 301 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(268);
+	var initialState = __webpack_require__(300);
 
 	module.exports = function (state, action) {
 	    var newState = [];
@@ -30474,13 +31282,13 @@
 	};
 
 /***/ },
-/* 270 */
+/* 302 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(268);
+	var initialState = __webpack_require__(300);
 
 	var _clientId = 1;
 	module.exports = function (state, action) {
@@ -30580,14 +31388,14 @@
 	};
 
 /***/ },
-/* 271 */
+/* 303 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(268);
-	var CommandsReducer = __webpack_require__(272);
+	var initialState = __webpack_require__(300);
+	var CommandsReducer = __webpack_require__(304);
 
 	var _clientId = 1;
 
@@ -30717,7 +31525,7 @@
 	};
 
 /***/ },
-/* 272 */
+/* 304 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30755,13 +31563,13 @@
 	};
 
 /***/ },
-/* 273 */
+/* 305 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(268);
+	var initialState = __webpack_require__(300);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -30794,13 +31602,13 @@
 	};
 
 /***/ },
-/* 274 */
+/* 306 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(268);
+	var initialState = __webpack_require__(300);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -30856,7 +31664,7 @@
 	};
 
 /***/ },
-/* 275 */
+/* 307 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30888,7 +31696,7 @@
 	};
 
 /***/ },
-/* 276 */
+/* 308 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -31089,23 +31897,23 @@
 	module.exports = C1;
 
 /***/ },
-/* 277 */
+/* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(278);
+	var content = __webpack_require__(310);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
+	var update = __webpack_require__(219)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorListGridCell.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorListGridCell.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorInfo.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -31115,634 +31923,15 @@
 	}
 
 /***/ },
-/* 278 */
+/* 310 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(249)();
+	exports = module.exports = __webpack_require__(218)();
 	// imports
 
 
 	// module
-	exports.push([module.id, ".b-ZoneSensorListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-ZoneSensorListGridCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-ZoneSensorListGridCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__switch-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__switch-color--switch {\n  display: block;\n}\n.b-ZoneSensorListGridCell__light-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__light-color--light {\n  display: block;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 279 */
-/***/ function(module, exports) {
-
-	function isObject(obj) {
-	  var type = typeof obj;
-	  return type === 'function' || type === 'object' && !!obj;
-	}
-
-	function isString(string) {
-	  return typeof string === 'string';
-	}
-
-	function isFunction(functionToCheck) {
-	  var getType = {};
-	  return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
-	}
-
-	function objectToArray(object) {
-	  var keys   = Object.keys(object);
-	  var output = [];
-
-	  keys.forEach(function(key) {
-	    var predicate = object[key];
-
-	    if (isFunction(predicate)) {
-	      predicate = predicate();
-	    }
-
-	    if (predicate) {
-	      output.push(key);
-	    }
-	  });
-
-	  return output;
-	}
-
-	function listToArray(list) {
-	  if (isString(list) && list !== '') {
-	    return list.split(' ');
-	  } else if (list && list.length) {
-	    return list;
-	  } else if (isObject(list)) {
-	    return objectToArray(list);
-	  } else {
-	    return [];
-	  }
-	}
-
-	module.exports = function(options) {
-	  if (isString(options)) {
-	    options = { name: options };
-	  }
-
-	  return function(first, modifiers, extraClassNames) {
-	    var blockName = options.name;
-	    var rootName = blockName;
-	    var classNames = [];
-	    var modifierDelimiter = options.modifierDelimiter || '--';
-	    var element;
-
-	    // This means the first parameter is not the element, but a configuration variable
-	    if (isObject(first)) {
-	      element = first.element;
-	      modifiers = first.modifiers || first.modifier;
-	      extraClassNames = first.extra;
-	    } else {
-	      element = first;
-	    }
-
-	    if (element) {
-	      rootName += '__' + element;
-	    }
-
-	    classNames.push(rootName);
-
-	    // Compose an array of modifiers
-	    listToArray(modifiers).forEach(function(modifier) {
-	      classNames.push(rootName + modifierDelimiter + modifier);
-	    });
-
-	    // Add a prefix to all the classes in the classNames array
-	    if (options.prefix) {
-	      for (var i = 0; i < classNames.length; i++) {
-	        classNames[i] = options.prefix + classNames[i];
-	      }
-	    }
-	    // Compose an array of extraClassNames
-	    listToArray(extraClassNames).forEach(function(extraClassName) {
-	      classNames.push(extraClassName);
-	    });
-
-	    return {
-	      className: classNames.join(' ').trim()
-	    };
-	  };
-	};
-
-
-/***/ },
-/* 280 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(281);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorList.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorList.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 281 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-ZoneSensorList {\n  position: relative;\n  width: 100%;\n  background-color: #fff;\n}\n.b-ZoneSensorList__zone-info {\n  margin-bottom: 50px;\n  margin-left: 12px;\n  margin-right: 12px;\n}\n.b-ZoneSensorList__grid-header {\n  margin: 0;\n  padding: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n.b-ZoneSensorList__grid-header--hidden {\n  display: none;\n}\n.b-ZoneSensorList__buttons {\n  position: absolute;\n  top: 0px;\n  right: 0px;\n  padding: 12px;\n}\n.b-ZoneSensorList__buttons--editing {\n  position: static;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 282 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(283);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneList.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneList.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 283 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SceneList {\n  position: relative;\n}\n.b-SceneList__scene-info {\n  margin-bottom: 50px;\n  margin-left: 12px;\n  margin-right: 12px;\n}\n.b-SceneList__header {\n  margin-top: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n.b-SceneList__buttons {\n  position: absolute;\n  top: 0;\n  right: 12px;\n  left: 12px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 284 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(285);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneListGridCell.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneListGridCell.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 285 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SceneListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to stop spaces between cells */\n  font-size: 0px;\n}\n.b-SceneListGridCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SceneListGridCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 286 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(287);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Grid.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Grid.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 287 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-Grid {\n  padding-bottom: 12px;\n  position: relative;\n  background-color: #fff;\n  width: 100%;\n  /*needed to remove gaps between cells*/\n  font-size: 0px;\n}\n.b-Grid__cell {\n  background-color: #fff;\n  overflow: hidden;\n  font-size: 0px;\n  border: 1px solid #eee;\n  text-align: center;\n  padding-left: 4px;\n  padding-right: 4px;\n}\n.b-Grid__expander-arrow {\n  font-size: 58px;\n  margin-top: -30px;\n  color: #eee;\n  pointer-events: none;\n}\n.b-Grid__expander-arrow--hidden {\n  display: none;\n}\n.b-Expander {\n  background-color: #eee;\n  width: 100%;\n  font-size: 12px;\n  overflow: hidden;\n  max-height: 500px;\n  position: relative;\n}\n.b-Expander .animateWrapper {\n  margin-top: -500px;\n  transition: margin-top 550ms ease-out;\n  -webkit-transition: margin-top 550ms ease-out;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 288 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(289);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneControl.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneControl.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 289 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SceneControl {\n  padding: 8px 12px 0px 12px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n  height: 112px;\n}\n.b-SceneControl__name {\n  text-align: left;\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 296px;\n  margin-top: 3px;\n  margin-bottom: 12px;\n  /* use ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SceneControl__activate {\n  font-size: 20px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 290 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(291);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneControl.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneControl.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 291 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-ZoneControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-ZoneControl--continuous {\n  height: 200px;\n}\n.b-ZoneControl--binary {\n  height: 86px;\n}\n.b-ZoneControl--rgb {\n  height: 222px;\n}\n.b-ZoneControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 242px;\n  margin-top: 3px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneControl__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 26px;\n}\n.b-ZoneControl__rgb {\n  margin-top: 22px;\n}\n.b-ZoneControl__value {\n  display: inline-block;\n  margin-top: 20px;\n  font-size: 50px;\n}\n.b-ZoneControl__value--hidden {\n  display: none;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 292 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(293);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorMonitor.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorMonitor.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 293 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SensorMonitor {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-SensorMonitor__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  max-width: 370px;\n  margin-top: 3px;\n}\n.b-SensorMonitor__value {\n  display: inline-block;\n  margin-top: 20px;\n  font-size: 40px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 294 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(295);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneInfo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SceneInfo.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 295 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SceneInfo__delete {\n  padding: 0;\n}\n.b-SceneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-SceneInfo__commands {\n  margin-top: 14px;\n}\n.b-SceneInfo__command-header {\n  margin-top: 0px;\n}\n.b-SceneInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 296 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(297);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceListGridCell.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceListGridCell.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 297 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SystemDeviceListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-SystemDeviceListGridCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SystemDeviceListGridCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 298 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(299);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 299 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-DeviceInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-DeviceInfo__delete {\n  padding: 0;\n}\n.b-DeviceInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n  margin-bottom: 20px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 300 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(301);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DiscoverDevices.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DiscoverDevices.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 301 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 302 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(303);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Import.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Import.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 303 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-Import {\n  padding: 12px;\n}\n.b-Import__header {\n  margin-top: 0px;\n  font-weight: 200;\n}\n.b-Import__content {\n  margin-top: 12px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 304 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(305);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(250)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./System.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./System.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 305 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(249)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-System {\n  position: relative;\n  padding-bottom: 30px;\n}\n.b-System__header {\n  position: absolute;\n  left: 0;\n  right: 0;\n  padding: 0px 12px 0px 12px;\n}\n.b-System__exit {\n  margin: 12px;\n}\n.b-System__empty-msg {\n  margin: 12px;\n}\n", ""]);
+	exports.push([module.id, ".b-SensorInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n", ""]);
 
 	// exports
 

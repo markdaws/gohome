@@ -15,7 +15,7 @@ var Grid = React.createClass({
         return {
             cells: [],
             cellWidth: 110,
-            cellHeight: 110,
+            cellHeight: 125,
             spacingH: 0,
             spacingV: 0
         };
@@ -65,7 +65,8 @@ var Grid = React.createClass({
         var fittedWidth = Math.floor(this.props.cellWidth + (gridWidthNoPadding - (cellsPerRow * this.props.cellWidth)) / cellsPerRow);
         return {
             width: fittedWidth,
-            height: fittedWidth
+            // height always remains constant
+            height: this.props.cellHeight
         };
     },
 

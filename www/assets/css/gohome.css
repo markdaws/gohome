@@ -24,6 +24,7 @@ button.disabled {
     padding: 0;
 }
 
+
 .cmp-ZoneSetLevelCommand p {
     font-size: 12px;
     font-weight: normal;
@@ -32,92 +33,11 @@ button.disabled {
     margin-bottom: 8px;
 }
 
-
-.cmp-SensorInfo label {
-    font-size: 12px;
-    font-weight: normal;
-}
-
-.cmp-ZoneInfo label {
-    font-size: 12px;
-    font-weight: normal;
-}
-.cmp-ZoneInfo .btnOff {
-    margin-left: 12px;
-}
-.cmp-ZoneInfo .btnSave span {
-    padding-left: 12px;
-}
-
 .cmp-SaveBtn {
     width: 100px;
 }
 .cmp-SaveBtn .fa.fa-spinner {
     font-size: 16px;
-}
-
-.cmp-SystemDeviceList h2 {
-    margin-top: 12px;
-    text-transform: uppercase;
-    font-weight: 200;
-    text-align: center;
-}
-
-.cmp-ControlApp .nav-tabs {
-    border-bottom: 2px solid #337ab7;
-    background-color: #337ab7;
-    box-shadow: 0px 2px 4px #bbb;
-}
-.cmp-ControlApp .nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover {
-    border-width: 0;
-    background-color: #337ab7;                                                                
-}
-.cmp-ControlApp .nav-tabs > li > a {
-    border: none;
-    color: #fff;
-    opacity: 0.6;
-    text-align: center;
-    min-width: 70px;
-    font-size: 25px;
-}
-.cmp-ControlApp .nav-tabs > li.active > a, .nav-tabs > li > a:hover {
-    border: none;
-    color: #fff !important;
-    background: transparent;
-    opacity: 1.0;
-}
-.cmp-ControlApp .nav-tabs > li > a::after {
-    content: "";
-    background: #fff;
-    height: 4px;
-    position: absolute;
-    width: 100%;
-    left: 0px;
-    bottom: -1px;
-    transition: all 250ms ease 0s;
-    transform: scale(0);
-}
-.cmp-ControlApp .nav-tabs > li.active > a::after, .nav-tabs > li:hover > a::after {
-    transform: scale(1);
-}
-.cmp-ControlApp .tab-nav > li > a::after {
-    background: #21527d none repeat scroll 0% 0%;
-    color: #fff;
-}
-.cmp-ControlApp h5.emptyMessage {
-    margin: 12px;
-}
-.cmp-ControlApp .fa-spinner {
-    /*
-    width: 100%;
-    text-align: center;
-    top: 120px;
-    position: absolute;*/
-}
-.cmp-ControlApp .hideTabContent {
-    /* Have to hide visibility not display because otherwise the with of the content
-       isn't set and then the grid computes the wrong width */
-    visibility: hidden;
 }
 
 .cmp-RecipeApp h2 {

@@ -2,6 +2,13 @@ var React = require('react');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 var InputValidationMixin = require('./InputValidationMixin.jsx')
 var DevicePicker = require('./DevicePicker.jsx');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'SensorInfo',
+    prefix: 'b-'
+});
+require('../../css/components/SensorInfo.less')
 
 var SensorInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
@@ -43,9 +50,9 @@ var SensorInfo = React.createClass({
 
     render: function() {
         return (
-            <div className="cmp-DeviceInfo well">
+            <div {...classes('', '', 'well well-sm')}>
               <div className={this.addErr('form-group', 'name')}>
-                <label className="control-label" htmlFor={this.uid('name')}>Name*</label>
+                <label {...classes('label', '', 'control-label')} htmlFor={this.uid('name')}>Name*</label>
                 <input
                     value={this.state.name}
                     data-statepath="name"
@@ -56,7 +63,7 @@ var SensorInfo = React.createClass({
                 {this.errMsg('name')}
               </div>
               <div className={this.addErr("form-group", 'description')}>
-                <label className="control-label" htmlFor={this.uid("description")}>Description</label>
+                <label {...classes('label', '', 'control-label')} htmlFor={this.uid("description")}>Description</label>
                 <input
                     value={this.state.description}
                     data-statepath="description"
@@ -67,7 +74,7 @@ var SensorInfo = React.createClass({
                 {this.errMsg('description')}
               </div>
               <div className={this.addErr("form-group", "address")}>
-                <label className="control-label" htmlFor={this.uid("address")}>Address</label>
+                <label {...classes('label', '', 'control-label')} htmlFor={this.uid("address")}>Address</label>
                 <input
                     value={this.state.address}
                     data-statepath="address"
@@ -78,7 +85,7 @@ var SensorInfo = React.createClass({
                 {this.errMsg('address')}
               </div>
               <div className={this.addErr("form-group", "deviceId")}>
-                <label className="control-label" htmlFor={this.uid("deviceId")}>Device*</label>
+                <label {...classes('label', '', 'control-label')} htmlFor={this.uid("deviceId")}>Device*</label>
                 <DevicePicker
                     disabled={this.isReadOnly("deviceId")}
                     defaultId={this.props.deviceId}

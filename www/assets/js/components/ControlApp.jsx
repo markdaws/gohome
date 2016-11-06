@@ -11,6 +11,13 @@ var SceneActions = require('../actions/SceneActions.js');
 var SensorActions = require('../actions/SensorActions.js');
 var SystemActions = require('../actions/SystemActions.js');
 var ZoneActions = require('../actions/ZoneActions.js');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'ControlApp',
+    prefix: 'b-'
+});
+require('../../css/components/ControlApp.less')
 
 var ControlApp = React.createClass({
     getDefaultProps: function() {
@@ -59,7 +66,7 @@ var ControlApp = React.createClass({
         }
 
         return (
-            <div className="cmp-ControlApp">
+            <div {...classes()}>
                 <ul className="nav nav-tabs" role="tablist">
                     <li role="presentation" className="">
                         <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">

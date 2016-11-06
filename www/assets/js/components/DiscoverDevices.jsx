@@ -25,7 +25,6 @@ var DiscoverDevices = React.createClass({
             devices: null
         });
 
-        console.log(this.props.discoverer)
         Api.discovererScanDevices(this.props.discoverer.id, function(err, data) {
             this.setState({
                 discovering: false,
