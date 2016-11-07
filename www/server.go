@@ -3,6 +3,7 @@ package www
 import (
 	"mime"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
@@ -19,7 +20,7 @@ type wwwServer struct {
 // runs the gohome website
 func ListenAndServe(
 	rootPath string,
-	port string,
+	addr string,
 	system *gohome.System,
 	recipeManager *gohome.RecipeManager,
 	eventLogger gohome.WSEventLogger) error {
@@ -29,10 +30,10 @@ func ListenAndServe(
 		recipeManager: recipeManager,
 		eventLogger:   eventLogger,
 	}
-	return server.listenAndServe(port)
+	return server.listenAndServe(addr)
 }
 
-func (s *wwwServer) listenAndServe(port string) error {
+func (s *wwwServer) listenAndServe(addr string) error {
 
 	r := mux.NewRouter()
 
@@ -58,7 +59,14 @@ func (s *wwwServer) listenAndServe(port string) error {
 	sub.Handle("/images/ext/{filename}", http.StripPrefix("/assets/images/ext/", extImageHandler))
 	sub.Handle("/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
 	r.HandleFunc("/", rootHandler(s.rootPath))
-	return http.ListenAndServe(port, r)
+
+	server := &http.Server{
+		Addr:         addr,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		Handler:      r,
+	}
+	return server.ListenAndServe()
 }
 
 func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {

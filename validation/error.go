@@ -99,7 +99,6 @@ func NewErrorJSON(item interface{}, clientID string, errors *Errors) ErrorJSON {
 			jsonField, err = JSONTagForField(item, e.Field)
 			if err != nil {
 				fmt.Println(err)
-				//TODO: Log?
 				continue
 			}
 		}

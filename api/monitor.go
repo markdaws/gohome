@@ -34,7 +34,7 @@ func apiUnsubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		monitorID := mux.Vars(r)["monitorID"]
 		if _, ok := system.Services.Monitor.Group(monitorID); !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("monitorID is invalid", w)
 			return
 		}
 
@@ -47,7 +47,7 @@ func apiRefreshSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(
 	return func(w http.ResponseWriter, r *http.Request) {
 		monitorID := mux.Vars(r)["monitorID"]
 		if _, ok := system.Services.Monitor.Group(monitorID); !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("monitorID is invalid", w)
 			return
 		}
 		system.Services.Monitor.SubscribeRenew(monitorID)
@@ -59,13 +59,13 @@ func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("Content length too long, max length 1024 bytes", w)
 			return
 		}
 
 		var groupJSON jsonMonitorGroup
 		if err = json.Unmarshal(body, &groupJSON); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("Content is not valid JSON", w)
 			return
 		}
 
@@ -84,14 +84,14 @@ func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.Re
 
 		mID, err := system.Services.Monitor.Subscribe(group, false)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("Invalid input, unable to subscribe", w)
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(struct {
-			MonitorID string `json:"monitorId"`
-		}{MonitorID: mID})
+		resp(apiResponse{
+			Data: &struct {
+				MonitorID string `json:"monitorId"`
+			}{MonitorID: mID},
+		}, w)
 	}
 }
