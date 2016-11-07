@@ -27,7 +27,7 @@ var ZoneSensorList = React.createClass({
         this._lastSubscribeId = 1;
         this._keepRefreshingConnection = true;
         this._retryDuration = 5000;
-        this._monitorTimeout = 120;
+        this._monitorTimeout = 600;
         this._refreshTimeoutId = -1;
         this._monitorData = {
             zones: {},

@@ -3,6 +3,8 @@ var ReactDOM = require('react-dom');
 var Classnames = require('classnames');
 var BEMHelper = require('react-bem-helper');
 
+//TODO: Rename this class, used outside the list
+
 var classes = new BEMHelper({
     name: 'ZoneSensorListGridCell',
     prefix: 'b-'
@@ -10,10 +12,19 @@ var classes = new BEMHelper({
 require('../../css/components/ZoneSensorListGridCell.less')
 
 var ZoneSensorListGridCell = React.createClass({
+    getDefaultProps: function() {
+        return {
+            //TODO: Set false
+            showCheckbox: true,
+            checkboxChecked: true
+        }
+    },
+    
     getInitialState: function() {
         return {
             level: this.props.level || { value: 0, r:0, g:0, b:0 },
-            attr: null
+            attr: null,
+            checkboxChecked: this.props.checkboxChecked
         };
     },
 
@@ -53,6 +64,15 @@ var ZoneSensorListGridCell = React.createClass({
         }
 
         return false;
+    },
+
+    checkboxClicked: function(evt) {
+        evt.stopPropagation();
+    },
+
+    checkboxChanged: function(evt) {
+        this.setState({checkboxChecked: evt.target.checked});
+        this.props.chkBxChanged && this.props.chkBxChanged(checked);
     },
     
     render: function() {
@@ -129,48 +149,61 @@ var ZoneSensorListGridCell = React.createClass({
             icon2Cmp = <i className={icon2}></i>;
         }
 
+        var chkBx;
+        if (this.props.showCheckbox) {
+            chkBx = (
+                <input
+                    {...classes('checkbox')}
+                    type="checkbox"
+                    onChange={this.checkboxChanged}
+                    onClick={this.checkboxClicked}
+                    checked={this.state.checkboxChecked}
+                ></input>
+            );
+        }
         return (
-        <div {...classes()}>
-            <div {...classes('icon')}>
-                {icon1Cmp}
-                {icon2Cmp}
+            <div {...classes()}>
+                {chkBx}
+                <div {...classes('icon')}>
+                    {icon1Cmp}
+                    {icon2Cmp}
+                </div>
+                <svg
+                    {...classes('switch-color', type)}
+                    viewBox="0 0 200 200"
+                    xmlns="http://www.w3.org/2000/svg"
+                    xlinkHref="http://www.w3.org/1999/xlink">
+                    <path
+                        d="M105 45 L82 75 L100 75 L95 100 L120 67 L100 65"
+                        stroke="yellow"
+                        style={{'opacity': opacity}}
+                        fill="yellow"></path>
+                </svg>
+                <svg
+                    {...classes('light-color', type)}
+                    viewBox="0 0 200 200"
+                    xmlns="http://www.w3.org/2000/svg"
+                    xlinkHref="http://www.w3.org/1999/xlink">
+                    <g>
+                        <clipPath id="lightClip">
+                            <rect className="clipRect" x="0" y="29" width="200" height="65" />
+                        </clipPath>
+                    </g>
+                    <circle
+                        cx="100"
+                        cy="53"
+                        r="25"
+                        fill={color}
+                        clipPath="url(#lightClip)"
+                        style={{'opacity': opacity, 'clipPath':'url(#lightClip)'}}/>
+                </svg>
+                <div {...classes('level')}>
+                    {val}
+                </div>
+                <div {...classes('name')}>
+                    {name}
+                </div>
             </div>
-            <svg
-                {...classes('switch-color', type)}
-                viewBox="0 0 200 200"
-                xmlns="http://www.w3.org/2000/svg"
-                xlinkHref="http://www.w3.org/1999/xlink">
-                <path
-                    d="M105 45 L82 75 L100 75 L95 100 L120 67 L100 65"
-                    stroke="yellow"
-                    style={{'opacity': opacity}}
-                    fill="yellow"></path>
-            </svg>
-            <svg
-                {...classes('light-color', type)}
-                viewBox="0 0 200 200"
-                xmlns="http://www.w3.org/2000/svg"
-                xlinkHref="http://www.w3.org/1999/xlink">
-                <g>
-                    <clipPath id="lightClip">
-                        <rect className="clipRect" x="0" y="29" width="200" height="65" />
-                    </clipPath>
-                </g>
-                <circle
-                    cx="100"
-                    cy="53"
-                    r="25"
-                    fill={color}
-                    clipPath="url(#lightClip)"
-                    style={{'opacity': opacity, 'clipPath':'url(#lightClip)'}}/>
-            </svg>
-            <div {...classes('level')}>
-                {val}
-            </div>
-            <div {...classes('name')}>
-                {name}
-            </div>
-        </div>
         );
     }
 });

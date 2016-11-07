@@ -3,6 +3,7 @@ var ReactRedux = require('react-redux');
 var DeviceInfo = require('./DeviceInfo.jsx');
 var Api = require('../utils/API.js');
 var SystemActions = require('../actions/SystemActions.js');
+var ImportGroup = require('./ImportGroup.jsx');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
@@ -37,30 +38,35 @@ var DiscoverDevices = React.createClass({
         var devices
         if (this.state.devices && this.state.devices.length > 0) {
             devices = this.state.devices.map(function(device) {
+                return <ImportGroup key={device.id} device={device} />;
+            });
+            /*
+            devices = this.state.devices.map(function(device) {
                 return (
                     <div {...classes('device-info')} key={device.id || device.clientId}>
                         <DeviceInfo
-                           name={device.name}
-                           description={device.description}
-                           address={device.address}
-                           modelNumber={device.modelNumber}
-                           modelName={device.modelName}
-                           softwareVersion={device.softwareVersion}
-                           connectionPool={device.connPool}
-                           cmdBuilder={device.cmdBuilder}
-                           auth={device.auth}
-                           id={device.id}
-                           clientId={device.clientId}
-                           readOnlyFields="id, modelNumber"
-                           key={device.id || device.clientId}
-                           createdDevice={this.props.importedDevice}
-                           showZones={true}
-                           showSensors={true}
-                           zones={device.zones}
-                           sensors={device.sensors}/>
+                            name={device.name}
+                            description={device.description}
+                            address={device.address}
+                            modelNumber={device.modelNumber}
+                            modelName={device.modelName}
+                            softwareVersion={device.softwareVersion}
+                            connectionPool={device.connPool}
+                            cmdBuilder={device.cmdBuilder}
+                            auth={device.auth}
+                            id={device.id}
+                            clientId={device.clientId}
+                            readOnlyFields="id, modelNumber"
+                            key={device.id || device.clientId}
+                            createdDevice={this.props.importedDevice}
+                            showZones={true}
+                            showSensors={true}
+                            zones={device.zones}
+                            sensors={device.sensors}/>
                     </div>
                 );
             }.bind(this));
+            */
         }
 
         var importBody

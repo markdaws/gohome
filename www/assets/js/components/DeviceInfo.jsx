@@ -38,7 +38,7 @@ var DeviceInfo = React.createClass({
             dirty: !this.props.id,
             connectionPool: this.props.connectionPool,
             cmdBuilder: this.props.cmdBuilder,
-            type: this.props.type
+            type: this.props.type,
         }
     },
 
@@ -47,7 +47,7 @@ var DeviceInfo = React.createClass({
             zones: [],
             sensors: [],
             showZones: false,
-            showSensors: false
+            showSensors: false,
         };
     },
 
@@ -300,7 +300,7 @@ var DeviceInfo = React.createClass({
                 );
             }.bind(this));
         }
-            
+
         return (
             <div {...classes('', '', 'well-sm')}>
                 {deleteBtn}
