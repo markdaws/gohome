@@ -15,6 +15,8 @@ var classes = new BEMHelper({
 });
 require('../../css/components/ZoneInfo.less')
 
+//TODO: Remove individual props from this cmp, just pass in zone
+
 var ZoneInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
