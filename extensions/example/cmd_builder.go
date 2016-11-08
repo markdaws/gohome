@@ -17,9 +17,9 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	// In this example our extension supports different types of hardware, so
 	// we have different build methods for each piece of hardware
 	switch b.ModelNumber {
-	case "example-hardware-1":
+	case "example.hardware.1":
 		return b.buildHardwareOneCommands(c)
-	case "example-hardware-2":
+	case "example.hardware.2":
 		return b.buildHardwareTwoCommands(c)
 	default:
 		return nil, errors.New("unsupported hardware found")
