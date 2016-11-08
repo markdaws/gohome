@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	eventExt "github.com/go-home-iot/event-bus"
+	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/api"
@@ -30,7 +30,7 @@ type config struct {
 func main() {
 	//TODO: Don't panic, system should still start but with warning to the user
 
-	useLocalhost := true
+	useLocalhost := false
 	var addr string
 	if !useLocalhost {
 		// Find the first public address we can bind to
@@ -46,7 +46,7 @@ func main() {
 	// TODO: Should read this from a config file on disk, only if ip addresses are
 	// missing should we try to find one automatically
 	config := config{
-		StartupConfigPath: "/Users/mark/code/gohome/system4.json",
+		StartupConfigPath: "/Users/mark/code/gohome/system8.json",
 		WWWAddr:           addr,
 		WWWPort:           "8000",
 		APIAddr:           addr,
@@ -87,7 +87,16 @@ func main() {
 		}
 	}
 
-	sys, err := store.LoadSystem(config.StartupConfigPath, rm)
+	cleanSystem := true
+	var err error
+	var sys *gohome.System
+
+	if cleanSystem {
+		err = store.ErrFileNotFound
+	} else {
+		sys, err = store.LoadSystem(config.StartupConfigPath, rm)
+	}
+
 	if err == store.ErrFileNotFound {
 		log.V("startup file not found at: %s, creating new system", config.StartupConfigPath)
 
@@ -106,7 +115,7 @@ func main() {
 	// The event bus is the backbone of the app.  It allows device to post events
 	// and other devices can list for events and act upon them.
 	log.V("Event Bus - starting")
-	eb := eventExt.NewBus(1000, 100)
+	eb := evtbus.NewBus(1000, 100)
 	sys.Services.EvtBus = eb
 
 	// Processes all commands in the system in an async fashion, init with

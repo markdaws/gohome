@@ -10,16 +10,20 @@ require('../../css/components/SystemDeviceListGridCell.less')
 var SystemDeviceListGridCell = React.createClass({
     getInitialState: function() {
         return {
-            checkboxChecked: this.props.checkboxChecked
+            checkboxChecked: this.props.checkboxChecked,
         };
     },
 
     getDefaultProps: function() {
         return {
-            //TODO: Set false
-            showCheckbox: true,
-            checkboxChecked: true
+            showCheckbox: false,
+            checkboxChecked: true,
+            hasError: false
         };
+    },
+
+    isChecked: function() {
+        return this.state.checkboxChecked;
     },
 
     checkboxClicked: function(evt) {
@@ -46,7 +50,7 @@ var SystemDeviceListGridCell = React.createClass({
         }
 
         return (
-            <div {...classes()}>
+            <div {...classes('', this.props.hasError ? 'error' : '')}>
                 {chkBx}
                 <div {...classes('icon')}>
                     <i className="icon ion-cube"></i>

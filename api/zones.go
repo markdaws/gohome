@@ -223,6 +223,14 @@ func apiAddZoneHandler(
 			Output:      zone.OutputFromString(data.Output),
 		}
 
+		valErrs := z.Validate()
+		if valErrs != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+			return
+		}
+
 		dev, ok := system.Devices[data.DeviceID]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)

@@ -14,8 +14,9 @@ require('../../css/components/ZoneSensorListGridCell.less')
 var ZoneSensorListGridCell = React.createClass({
     getDefaultProps: function() {
         return {
-            //TODO: Set false
-            showCheckbox: true,
+            hasError: false,
+            showCheckbox: false,
+            showLevel: true,
             checkboxChecked: true
         }
     },
@@ -26,6 +27,10 @@ var ZoneSensorListGridCell = React.createClass({
             attr: null,
             checkboxChecked: this.props.checkboxChecked
         };
+    },
+
+    isChecked: function() {
+        return this.state.checkboxChecked;
     },
 
     setLevel: function(level) {
@@ -72,7 +77,7 @@ var ZoneSensorListGridCell = React.createClass({
 
     checkboxChanged: function(evt) {
         this.setState({checkboxChecked: evt.target.checked});
-        this.props.chkBxChanged && this.props.chkBxChanged(checked);
+        this.props.chkBxChanged && this.props.chkBxChanged(evt.target.checked);
     },
     
     render: function() {
@@ -149,6 +154,10 @@ var ZoneSensorListGridCell = React.createClass({
             icon2Cmp = <i className={icon2}></i>;
         }
 
+        if (!this.props.showLevel) {
+            val = null;
+        }
+
         var chkBx;
         if (this.props.showCheckbox) {
             chkBx = (
@@ -162,7 +171,7 @@ var ZoneSensorListGridCell = React.createClass({
             );
         }
         return (
-            <div {...classes()}>
+            <div {...classes('', this.props.hasError ? 'error' : '')}>
                 {chkBx}
                 <div {...classes('icon')}>
                     {icon1Cmp}

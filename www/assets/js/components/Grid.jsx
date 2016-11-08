@@ -11,6 +11,12 @@ var classes = new BEMHelper({
 require('../../css/components/Grid.less')
 
 var Grid = React.createClass({
+    debug: function(msg) {
+        if (this.props.debugName) {
+            console.log('[' + this.props.debugName + '] - ' + msg);
+        }
+    },
+    
     getDefaultProps: function() {
         return {
             cells: [],
@@ -22,6 +28,8 @@ var Grid = React.createClass({
     },
 
     getInitialState: function() {
+        this.debug('getInitialState');
+        
         return {
             cellIndices: { x:-1, y:-1 },
             expanderIndex: -1,
@@ -35,7 +43,8 @@ var Grid = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         // If the cells changed, then we are goign to re-render, close the expander
         if (nextProps.cells && (nextProps.cells !== this.props.cells)) {
-            this.closeExpander();
+            //TODO: Needed? causing issues when updating items on import, revist
+            //this.closeExpander();
         }
     },
     
@@ -71,6 +80,10 @@ var Grid = React.createClass({
     },
 
     componentDidMount: function() {
+        if (this.props.debugName) {
+            console.log('mounting grid: ' + this.props.debugName);
+        }
+        
         var dimensions = this.calcCellDimensions();
         this.setState({
             cellWidth: dimensions.width,
@@ -78,7 +91,20 @@ var Grid = React.createClass({
         });
     },
 
+    componentDidUpdate: function() {
+        var dimensions = this.calcCellDimensions();
+        if (dimensions.width !== this.state.cellWidth ||
+            dimensions.height !== this.state.cellHeight) {
+            this.setState({
+                cellWidth: dimensions.width,
+                cellHeight: dimensions.height
+            });
+        }
+    },
+    
     closeExpander: function() {
+        this.debug('closeExpander');
+        
         this.setState({
             expanded: false,
             cellIndices: { x:-1, y:-1},
@@ -159,6 +185,11 @@ var Grid = React.createClass({
         if (this.state.selectedIndex !== -1) {
             key = this.props.cells[this.state.selectedIndex].key;
         }
+
+        if (this.props.debugName) {
+            console.log('[' + this.props.debugName + '] selectedIndex: ' + this.state.selectedIndex);
+        }
+        
         var transitionGroup = (
             <ReactTransitionGroup key={key + "transition"}>
                 <ExpanderWrapper key={key + 'wrapper'}>
@@ -182,7 +213,7 @@ var Grid = React.createClass({
 
         return (
             <div {...classes()}>
-                <div className="clearfix beforeExpander">
+                <div key="wha" className="clearfix beforeExpander">
                     {content}
                     <div style={{clear:"both"}}></div>
                 </div>

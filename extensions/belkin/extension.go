@@ -1,8 +1,6 @@
 package belkin
 
 import (
-	"fmt"
-
 	belkinExt "github.com/go-home-iot/belkin"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
@@ -28,25 +26,15 @@ func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohom
 
 	evts := &gohome.ExtEvents{}
 	evts.Producer = &producer{
-		Name:   d.Name,
-		System: sys,
-		Device: d,
-
-		// Maker only has one sensor, we just hard code the address to 1 when we create it
-		// in the extension scan code
-		Sensor: d.Sensors["1"],
-
-		// Maker only has one zone, we set the address to 1 when we did a scan and imported
-		// the maker device
-		Zone:       d.Zones["1"],
+		Name:       d.Name,
+		System:     sys,
+		Device:     d,
 		DeviceType: devType,
 	}
 	evts.Consumer = &consumer{
 		Name:       d.Name,
 		System:     sys,
 		Device:     d,
-		Sensor:     d.Sensors["1"],
-		Zone:       d.Zones["1"],
 		DeviceType: devType,
 	}
 	return evts
@@ -55,7 +43,6 @@ func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohom
 func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.Builder {
 	// Given the device we can return different builds for different devices and even
 	// take in to account SoftwareVersion as a field to return a different builder
-	fmt.Println(d.ModelName)
 	switch d.ModelName {
 	case "Maker":
 		//WeMo Maker

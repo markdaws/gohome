@@ -12,14 +12,11 @@ import (
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/log"
-	"github.com/markdaws/gohome/zone"
 )
 
 type consumer struct {
 	System     *gohome.System
 	Device     *gohome.Device
-	Sensor     *gohome.Sensor
-	Zone       *zone.Zone
 	Name       string
 	DeviceType belkinExt.DeviceType
 }
@@ -32,15 +29,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 		for e := range ch {
 			switch evt := e.(type) {
 			case *gohome.ZonesReportEvt:
-				// In the case the device has been created, but the sensors and zones not added
-				if c.Zone == nil {
-					continue
-				}
-				for _, zone := range c.Device.Zones {
-					if _, ok := evt.ZoneIDs[zone.ID]; !ok {
-						continue
-					}
-
+				for _, zone := range c.Device.OwnedZones(evt.ZoneIDs) {
 					dev := &belkinExt.Device{
 						Scan: belkinExt.ScanResponse{
 							SearchType: string(c.DeviceType),
@@ -58,8 +47,8 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 
 						if attrs.Switch != nil {
 							c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
-								ZoneName: c.Zone.Name,
-								ZoneID:   c.Zone.ID,
+								ZoneName: zone.Name,
+								ZoneID:   zone.ID,
 								Level:    cmd.Level{Value: float32(*attrs.Switch)},
 							})
 						}
@@ -72,23 +61,15 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 						}
 
 						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
-							ZoneName: c.Zone.Name,
-							ZoneID:   c.Zone.ID,
+							ZoneName: zone.Name,
+							ZoneID:   zone.ID,
 							Level:    cmd.Level{Value: float32(state)},
 						})
 					}
 				}
 
 			case *gohome.SensorsReportEvt:
-				if c.Sensor == nil {
-					continue
-				}
-
-				for _, sensor := range c.Device.Sensors {
-					if _, ok := evt.SensorIDs[sensor.ID]; !ok {
-						continue
-					}
-
+				for _, sensor := range c.Device.OwnedSensors(evt.SensorIDs) {
 					dev := &belkinExt.Device{
 						Scan: belkinExt.ScanResponse{
 							SearchType: string(c.DeviceType),
@@ -123,8 +104,6 @@ func (c *consumer) StopConsuming() {
 type producer struct {
 	System     *gohome.System
 	Device     *gohome.Device
-	Sensor     *gohome.Sensor
-	Zone       *zone.Zone
 	Name       string
 	SID        string
 	Producing  bool
@@ -144,6 +123,11 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 	// Contents are double HTML encoded when returned from the device
 	body := html.UnescapeString(html.UnescapeString(e.Body))
 
+	// We only have one zone and sensor, have to check incase we don't currently have
+	// a zone or sensor imported
+	zone, hasZone := p.Device.Zones["1"]
+	sensor, hasSensor := p.Device.Sensors["1"]
+
 	// This could be a response with an attribute list, or it could be a binary state property
 	attrList := attrRegexp.FindStringSubmatch(body)
 	if attrList != nil && len(attrList) != 0 {
@@ -152,25 +136,25 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 			return
 		}
 
-		if attrs.Sensor != nil {
+		if attrs.Sensor != nil && hasSensor {
 			p.System.Services.EvtBus.Enqueue(&gohome.SensorAttrChangedEvt{
-				SensorID:   p.Sensor.ID,
-				SensorName: p.Sensor.Name,
+				SensorID:   sensor.ID,
+				SensorName: sensor.Name,
 				Attr: gohome.SensorAttr{
 					Name:     "sensor",
 					Value:    strconv.Itoa(*attrs.Sensor),
 					DataType: gohome.SDTInt,
-					States:   p.Sensor.Attr.States,
+					States:   sensor.Attr.States,
 				},
 			})
-		} else if attrs.Switch != nil {
+		} else if attrs.Switch != nil && hasZone {
 			p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
-				ZoneName: p.Zone.Name,
-				ZoneID:   p.Zone.ID,
+				ZoneName: zone.Name,
+				ZoneID:   zone.ID,
 				Level:    cmd.Level{Value: float32(*attrs.Switch)},
 			})
 		}
-	} else {
+	} else if hasZone {
 		binary := binaryRegexp.FindStringSubmatch(body)
 		if binary == nil || len(binary) == 0 {
 			return
@@ -184,8 +168,8 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 			level = 1
 		}
 		p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
-			ZoneName: p.Zone.Name,
-			ZoneID:   p.Zone.ID,
+			ZoneName: zone.Name,
+			ZoneID:   zone.ID,
 			Level:    cmd.Level{Value: float32(level)},
 		})
 	}

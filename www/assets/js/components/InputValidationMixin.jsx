@@ -1,3 +1,5 @@
+var React = require('react');
+
 module.exports = {
     uid: function(field) {
         var id = (!this.state.clientId) ? this.state.id : this.state.clientId;
@@ -31,7 +33,7 @@ module.exports = {
         return classes;
     },
 
-    changed: function(evt) {
+    changed: function(evt, cb) {
         var statePath = evt.target.getAttribute('data-statepath');
         var s = {}
         s[statePath] = evt.target.value;
@@ -40,7 +42,7 @@ module.exports = {
         var errors = this.state['errors'] || {};
         delete errors[this.uid(statePath)];
         s.errors = errors;
-        this.setState(s);
+        this.setState(s, cb);
     },
 
     isReadOnly: function(field) {

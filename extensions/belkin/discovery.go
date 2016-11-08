@@ -2,7 +2,6 @@ package belkin
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -56,20 +55,14 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		return nil, err
 	}
 
-	fmt.Printf("%+v\n", responses[0])
-
 	devices := make([]*gohome.Device, len(responses))
 	for i, devInfo := range responses {
 		err := devInfo.Load(time.Second * 5)
-		fmt.Println("did a load")
 		if err != nil {
 			// Keep going, try to get as many as we can
 			log.V("failed to load device information: %s", err)
 			continue
 		}
-
-		//fmt.Printf("%#v\n", response)
-		fmt.Printf("%#v\n", devInfo)
 
 		dev := gohome.NewDevice(
 			devInfo.ModelNumber,
@@ -85,7 +78,6 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 			nil,
 		)
 
-		fmt.Println("got cmd builder")
 		z := &zone.Zone{
 			Address:     "1",
 			Name:        devInfo.FriendlyName,
@@ -116,7 +108,6 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		devices[i] = dev
 	}
 
-	fmt.Println("returning devices: ", len(devices))
 	return &gohome.DiscoveryResults{
 		Devices: devices,
 	}, nil

@@ -3,6 +3,8 @@ var ReactRedux = require('react-redux');
 var DeviceInfo = require('./DeviceInfo.jsx');
 var Api = require('../utils/API.js');
 var SystemActions = require('../actions/SystemActions.js');
+var ZoneActions = require('../actions/ZoneActions.js');
+var SensorActions = require('../actions/SensorActions.js');
 var ImportGroup = require('./ImportGroup.jsx');
 var BEMHelper = require('react-bem-helper');
 
@@ -38,8 +40,14 @@ var DiscoverDevices = React.createClass({
         var devices
         if (this.state.devices && this.state.devices.length > 0) {
             devices = this.state.devices.map(function(device) {
-                return <ImportGroup key={device.id} device={device} />;
-            });
+                return <ImportGroup
+                           key={device.id}
+                           device={device}
+                           createdDevice={this.props.importedDevice}
+                           createdZone={this.props.importedZone}
+                           createdSensor={this.props.importedSensor}
+                       />;
+            }.bind(this));
             /*
             devices = this.state.devices.map(function(device) {
                 return (
@@ -84,7 +92,8 @@ var DiscoverDevices = React.createClass({
                     {this.state.devices && this.state.devices.length} device(s) found
                 </h3>
                 <p {...classes('found-devices', this.state.devices && this.state.devices.length > 0 ? '' : ' hidden')}>
-                    Click "Save" on each device you wish to add to your system.
+                    Click "Import" on each device you wish to add to your system. Uncheck the check boxes next to items
+                    you do not want to import.
                 </p>
                 {devices}
             </div>
@@ -101,6 +110,12 @@ function mapDispatchToProps(dispatch) {
     return {
         importedDevice: function(clientId, deviceJson) {
             dispatch(SystemActions.importedDevice(deviceJson));
+        },
+        importedZone: function(zoneJson) {
+            dispatch(ZoneActions.importedZone(zoneJson));
+        },
+        importedSensor: function(sensorJson) {
+            dispatch(SensorActions.importedSensor(sensorJson));
         }
     };
 }

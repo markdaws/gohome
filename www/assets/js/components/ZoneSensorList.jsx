@@ -53,6 +53,7 @@ var ZoneSensorList = React.createClass({
     
     componentWillReceiveProps: function(nextProps) {
         var shouldRefreshMonitor = false;
+        debugger;
         if (nextProps.zones && (this.props.zones !== nextProps.zones)) {
             shouldRefreshMonitor = true;
         }
@@ -78,10 +79,7 @@ var ZoneSensorList = React.createClass({
     },
 
     componentDidMount: function() {
-        // Need this function since componentDidUpdate is not called on the initial render
-        if (this._monitorDataChanged) {
-            this.refreshMonitoring(this.props.zones, this.props.sensors);
-        }
+        this.refreshMonitoring(this.props.zones, this.props.sensors);
     },
 
     componentWillUnmount: function() {
@@ -102,7 +100,7 @@ var ZoneSensorList = React.createClass({
 
     refreshMonitoring: function(zones, sensors) {
         this._monitorDataChanged = false;
-        
+
         if (zones.length === 0 && sensors.length === 0) {
             return;
         }
@@ -237,6 +235,7 @@ var ZoneSensorList = React.createClass({
                             address={zone.address}
                             id={zone.id}
                             key={zone.id}
+                            showSaveBtn={true}
                             readOnlyFields="deviceId, id"
                             deviceId={zone.deviceId}
                             type={zone.type}
@@ -313,16 +312,26 @@ var ZoneSensorList = React.createClass({
 
             body = (
                 <div>
-                    <h2 {...classes('grid-header', lightZones.length === 0 ? 'hidden' : '')}>Lights</h2>
-                    <Grid name="zone grid" cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                    <h2 {...classes('grid-header', shadeZones.length === 0 ? 'hidden' : '')}>Shades</h2>
-                    <Grid cells={shadeZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                    <h2 {...classes('grid-header', switchZones.length === 0 ? 'hidden' : '')}>Switches</h2>
-                    <Grid cells={switchZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                    <h2 {...classes('grid-header', otherZones.length === 0 ? 'hidden' : '')}>Other Zones</h2>
-                    <Grid cells={otherZones} expanderWillMount={this.zoneExpanderWillMount}/>
-                    <h2 {...classes('grid-header', sensors.length === 0 ? 'hidden' : '')}>Sensors</h2>
-                    <Grid cells={sensors} />
+                    <div {...classes('grid-section', lightZones.length === 0 ? 'hidden' : '')}>
+                        <h2 {...classes('grid-header')}>Lights</h2>
+                        <Grid cells={lightZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    </div>
+                    <div {...classes('grid-section', shadeZones.length === 0 ? 'hidden' : '')}>
+                        <h2 {...classes('grid-header')}>Shades</h2>
+                        <Grid cells={shadeZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    </div>
+                    <div {...classes('grid-section', switchZones.length === 0 ? 'hidden' : '')}>
+                        <h2 {...classes('grid-header')}>Switches</h2>
+                        <Grid cells={switchZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    </div>
+                    <div {...classes('grid-section', otherZones.length === 0 ? 'hidden' : '')}>
+                        <h2 {...classes('grid-header')}>Other Zones</h2>
+                        <Grid cells={otherZones} expanderWillMount={this.zoneExpanderWillMount}/>
+                    </div>
+                    <div {...classes('grid-section', sensors.length === 0 ? 'hidden' : '')}>
+                        <h2 {...classes('grid-header')}>Sensors</h2>
+                        <Grid cells={sensors} expanderWillMount={this.sensorExpanderWillMount}/>
+                    </div>
                 </div>
             );
         }

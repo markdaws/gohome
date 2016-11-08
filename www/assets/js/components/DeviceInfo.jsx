@@ -33,7 +33,7 @@ var DeviceInfo = React.createClass({
             softwareVersion: this.props.softwareVersion || '',
             auth: this.props.auth,
             showToken: false,
-            errors: null,
+            errors: this.props.errors,
             saveButtonStatus: '',
             dirty: !this.props.id,
             connectionPool: this.props.connectionPool,
@@ -46,6 +46,7 @@ var DeviceInfo = React.createClass({
         return {
             zones: [],
             sensors: [],
+            showSaveBtn: false,
             showZones: false,
             showSensors: false,
         };
@@ -198,6 +199,8 @@ var DeviceInfo = React.createClass({
                 },
                 value: type
             }
+        }, function() {
+            this.props.changed && this.props.changed(this);
         });
     },
 
@@ -205,7 +208,9 @@ var DeviceInfo = React.createClass({
         this.setState({ saveButtonStatus: '' });
 
         if (evt) {
-            this.changed(evt);
+            this.changed(evt, function() {
+                this.props.changed && this.props.changed(this)
+            }.bind(this));
         }
     },
 
@@ -238,7 +243,7 @@ var DeviceInfo = React.createClass({
         }
 
         var saveBtn;
-        if (this.state.dirty) {
+        if (this.props.showSaveBtn && this.state.dirty) {
             saveBtn = (
                 <SaveBtn
                     clicked={this.save}
@@ -302,7 +307,7 @@ var DeviceInfo = React.createClass({
         }
 
         return (
-            <div {...classes('', '', 'well-sm')}>
+            <div {...classes('', '', 'well well-sm')}>
                 {deleteBtn}
                 <div className={this.addErr("form-group", "name")}>
                     <label {...classes('label', '', 'control-label')} htmlFor={this.uid("name")}>Name*</label>

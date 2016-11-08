@@ -8,6 +8,10 @@
     /* Need to set this to stop spacing between the cells */
     font-size: 0px;
 
+    &--error {
+        background-color: #ffdddd
+    }
+    
     &__checkbox {
         position: absolute;
         top: 6px;
@@ -30,6 +34,8 @@
         left: 0;
         right: 0;
         margin: 0 auto 8px auto;
+        padding-left: 4px;
+        padding-right: 4px;
 
         /* ellipsis - use mixin */
         overflow: hidden;

@@ -188,3 +188,19 @@ func (d *Device) OwnedZones(zoneIDs map[string]bool) []*zone.Zone {
 	}
 	return zones
 }
+
+// OwnedSensors returns a slice of sensors that the device controls, where the
+// map is keyed by sensor.ID
+func (d *Device) OwnedSensors(sensorIDs map[string]bool) []*Sensor {
+	if len(d.Sensors) == 0 {
+		return nil
+	}
+
+	sensors := []*Sensor{}
+	for _, sensor := range d.Sensors {
+		if _, ok := sensorIDs[sensor.ID]; ok {
+			sensors = append(sensors, sensor)
+		}
+	}
+	return sensors
+}

@@ -44,9 +44,9 @@ var ControlApp = React.createClass({
     render: function() {
 
         var zoneBody;
-        if (this.props.zones.length === 0) {
+        if (this.props.zones.length === 0 && this.props.sensors.length === 0) {
             zoneBody = (
-                <h5 className="emptyMessage">You don't have any zones. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>
+                <h5 className="emptyMessage">You don't have any zones or sensors. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>
             );
         } else {
             zoneBody = (

@@ -19,6 +19,13 @@ require('../../css/components/ZoneInfo.less')
 
 var ZoneInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
+
+    getDefaultProps: function() {
+        return {
+            showSaveBtn: false
+        };
+    },
+    
     getInitialState: function() {
         return {
             clientId: this.props.clientId,
@@ -28,7 +35,7 @@ var ZoneInfo = React.createClass({
             deviceId: this.props.deviceId,
             type: this.props.type,
             output: this.props.output,
-            errors: null,
+            errors: this.props.errors,
             id: this.props.id,
             dirty: false,
             saveButtonStatus: '',
@@ -54,23 +61,44 @@ var ZoneInfo = React.createClass({
     },
 
     _changed: function(evt) {
-        this.setState({ saveButtonStatus: '' });
-        this.props.changed && this.props.changed();
+        this.setState({ saveButtonStatus: '' }, function() {
+            this.props.changed && this.props.changed(this);
+        }.bind(this));
         this.changed(evt);
     },
     
     devicePickerChanged: function(deviceId) {
-        this.setState({ deviceId: deviceId });
+        this.setState({ deviceId: deviceId }, function() {
+            this.props.changed && this.props.changed(this);
+        }.bind(this));
     },
 
     typeChanged: function(type) {
-        this.setState({ saveButtonStatus: '' });
-        this.setState({ type: type, dirty: true });
+        if (this.state.type === type) {
+            return;
+        }
+        
+        this.setState({
+            saveButtonStatus: '',
+            type: type,
+            dirty: true
+        }, function() {
+            this.props.changed && this.props.changed(this);
+        }.bind(this));
     },
 
     outputChanged: function(output) {
-        this.setState({ saveButtonStatus: '' });
-        this.setState({ output: output, dirty: true });
+        if (this.state.output === output) {
+            return;
+        }
+        
+        this.setState({
+            saveButtonStatus: '',
+            output: output,
+            dirty: true
+        }, function() {
+            this.props.changed && this.props.changed(this);
+        }.bind(this));
     },
 
     save: function() {
@@ -91,7 +119,7 @@ var ZoneInfo = React.createClass({
     
     render: function() {
         var saveBtn;
-        if (this.state.dirty) {
+        if (this.props.showSaveBtn && this.state.dirty) {
             saveBtn = (
                 <SaveBtn
                     {...classes('save')}

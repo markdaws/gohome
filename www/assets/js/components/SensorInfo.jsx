@@ -19,7 +19,7 @@ var SensorInfo = React.createClass({
             description: this.props.description,
             address: this.props.address,
             deviceId: this.props.deviceId,
-            errors: null,
+            errors: this.props.errors,
         }
     },
 
@@ -40,12 +40,15 @@ var SensorInfo = React.createClass({
     },
 
     _changed: function(evt) {
-        this.props.changed && this.props.changed();
-        this.changed(evt);
+        this.changed(evt, function(){
+            this.props.changed && this.props.changed(this);
+        }.bind(this));
     },
     
     devicePickerChanged: function(deviceId) {
-        this.setState({ deviceId: deviceId });
+        this.setState({ deviceId: deviceId }, function() {
+            this.props.changed && this.props.changed(this);
+        }.bind(this));
     },
 
     render: function() {

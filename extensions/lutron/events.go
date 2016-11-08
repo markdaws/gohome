@@ -183,8 +183,8 @@ func (p *eventProducer) parseDeviceCommand(command string) evtbus.Event {
 		deviceID := matches[1]
 		componentID := matches[2]
 		cmdID := matches[3]
-		sourceDevice := p.Device.Devices[deviceID]
-		if sourceDevice == nil {
+		sourceDevice, ok := p.Device.Devices[deviceID]
+		if !ok {
 			return nil
 		}
 
@@ -224,15 +224,15 @@ func (p *eventProducer) parseZoneCommand(command string) evtbus.Event {
 		return nil
 	}
 
-	zoneID := matches[1]
+	zoneAddress := matches[1]
 	cmdID := matches[2]
 	level, err := strconv.ParseFloat(matches[3], 64)
 	if err != nil {
 		return nil
 	}
 
-	z := p.Device.Zones[zoneID]
-	if z == nil {
+	z, ok := p.Device.Zones[zoneAddress]
+	if !ok {
 		return nil
 	}
 
