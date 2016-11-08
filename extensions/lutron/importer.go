@@ -46,7 +46,7 @@ func (imp *importer) FromString(system *gohome.System, data string) error {
 		sys *gohome.System,
 		auth *gohome.Auth) *gohome.Device {
 
-		device, _ := gohome.NewDevice(
+		device := gohome.NewDevice(
 			modelNumber,
 			"",
 			"",

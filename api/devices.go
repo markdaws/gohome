@@ -106,7 +106,7 @@ func apiAddDeviceHandler(
 			}
 		}
 
-		d, _ := gohome.NewDevice(
+		d := gohome.NewDevice(
 			data.ModelNumber,
 			data.ModelName,
 			data.SoftwareVersion,
@@ -197,7 +197,7 @@ func apiDeviceHandlerUpdate(
 			return
 		}
 
-		updatedDev, err := gohome.NewDevice(
+		updatedDev := gohome.NewDevice(
 			data.ModelNumber,
 			"",
 			"",

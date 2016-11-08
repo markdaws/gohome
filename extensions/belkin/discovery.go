@@ -71,7 +71,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		//fmt.Printf("%#v\n", response)
 		fmt.Printf("%#v\n", devInfo)
 
-		dev, _ := gohome.NewDevice(
+		dev := gohome.NewDevice(
 			devInfo.ModelNumber,
 			devInfo.ModelName,
 			devInfo.FirmwareVersion,

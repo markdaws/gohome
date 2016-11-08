@@ -136,7 +136,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 
 		log.V("loaded Device: ID:%s, Name:%s, Model:%s, Address:%s", d.ID, d.Name, d.ModelNumber, d.Address)
 
-		dev, err := gohome.NewDevice(
+		dev := gohome.NewDevice(
 			d.ModelNumber,
 			d.ModelName,
 			d.SoftwareVersion,
@@ -148,9 +148,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			nil,
 			nil,
 			auth)
-		if err != nil {
-			return nil, err
-		}
 
 		cmdBuilder := sys.Extensions.FindCmdBuilder(sys, dev)
 		dev.CmdBuilder = cmdBuilder

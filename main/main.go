@@ -30,7 +30,7 @@ type config struct {
 func main() {
 	//TODO: Don't panic, system should still start but with warning to the user
 
-	useLocalhost := false
+	useLocalhost := true
 	var addr string
 	if !useLocalhost {
 		// Find the first public address we can bind to
@@ -46,7 +46,7 @@ func main() {
 	// TODO: Should read this from a config file on disk, only if ip addresses are
 	// missing should we try to find one automatically
 	config := config{
-		StartupConfigPath: "/Users/mark/code/gohome/system2.json",
+		StartupConfigPath: "/Users/mark/code/gohome/system4.json",
 		WWWAddr:           addr,
 		WWWPort:           "8000",
 		APIAddr:           addr,

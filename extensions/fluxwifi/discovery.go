@@ -52,7 +52,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		name := info.ID + ": " + info.Model
 		modelNumber := "fluxwifi"
 
-		dev, _ := gohome.NewDevice(
+		dev := gohome.NewDevice(
 			modelNumber,
 			"",
 			"",

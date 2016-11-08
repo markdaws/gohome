@@ -91,7 +91,7 @@ func NewDevice(
 	hub *Device,
 	cmdBuilder cmd.Builder,
 	connPool *pool.ConnectionPool,
-	auth *Auth) (*Device, error) {
+	auth *Auth) *Device {
 
 	dev := &Device{
 		Address:         address,
@@ -110,7 +110,7 @@ func NewDevice(
 		CmdBuilder:      cmdBuilder,
 		Connections:     connPool,
 	}
-	return dev, nil
+	return dev
 }
 
 // Validate checks that all of the requirements for this to be a valid device are met
@@ -171,4 +171,20 @@ func (d *Device) AddSensor(s *Sensor) error {
 	}
 	d.Sensors[s.Address] = s
 	return nil
+}
+
+// OwnedZones returns a slice of zones that the device controls, where the
+// map is keyed by zone.ID
+func (d *Device) OwnedZones(zoneIDs map[string]bool) []*zone.Zone {
+	if len(d.Zones) == 0 {
+		return nil
+	}
+
+	zones := []*zone.Zone{}
+	for _, zone := range d.Zones {
+		if _, ok := zoneIDs[zone.ID]; ok {
+			zones = append(zones, zone)
+		}
+	}
+	return zones
 }

@@ -48,7 +48,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 			return nil, err
 		}
 
-		dev, _ := gohome.NewDevice(
+		dev := gohome.NewDevice(
 			"tcp600gwb",
 			"tcp600gwb",
 			"",
