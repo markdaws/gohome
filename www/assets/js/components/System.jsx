@@ -33,8 +33,8 @@ var System = React.createClass({
         } else {
             if (this.props.devices.length === 0) {
                 body = (
-                    <h5 {...classes('empty-msg')}>
-                        You don't have any devices. Click on the "Import" button to start, or you can manually update the .json file if you know what you are doing ;)
+                    <h5 {...classes('empty-message')}>
+                        You don't have any hardware. Click on the "Import" button to get started.
                     </h5>
                 );
             } else {

@@ -106,6 +106,24 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 	}
 	devices[0].AddZone(z)
 
+	// Add a fake sensor to the device, each sensor can have one attribute that
+	// determines the type of the data returned from the device
+	sensor := &gohome.Sensor{
+		Address:     "1",
+		Name:        "fake sensor",
+		Description: "",
+		Attr: gohome.SensorAttr{
+			Name:     "sensor",
+			Value:    "-1",
+			DataType: gohome.SDTInt,
+			States: map[string]string{
+				"0": "Closed",
+				"1": "Open",
+			},
+		},
+	}
+	devices[0].AddSensor(sensor)
+
 	// Return these devices back to the UI, the user can then choose to import them or not
 	return &gohome.DiscoveryResults{
 		Devices: devices,

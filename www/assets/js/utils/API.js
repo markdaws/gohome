@@ -339,6 +339,28 @@ var API = {
         });
     },
 
+    // sensorUpdate updates a sensor on the server with the new values
+    sensorUpdate: function(sensorJson, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/sensors/' + sensorJson.id,
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(sensorJson),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                var errors = (xhr.responseJSON || {}).errors;
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    validationErrors: errors
+                });
+            }
+        });        
+    },
+
     // zoneLoadAll loads all of the zones from the backing store
     zoneLoadAll: function(callback) {
         $.ajax({

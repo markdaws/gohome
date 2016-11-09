@@ -4,9 +4,11 @@ var ReactRedux = require('react-redux');
 var ZoneControl = require('./ZoneControl.jsx');
 var SensorMonitor = require('./SensorMonitor.jsx');
 var ZoneActions = require('../actions/ZoneActions.js');
+var SensorActions = require('../actions/SensorActions.js');
 var Grid = require('./Grid.jsx');
 var SensorMonitor = require('./SensorMonitor.jsx');
 var ZoneInfo = require('./ZoneInfo.jsx');
+var SensorInfo = require('./SensorInfo.jsx');
 var ZoneSensorListGridCell = require('./ZoneSensorListGridCell.jsx');
 var Api = require('../utils/API.js');
 var BEMHelper = require('react-bem-helper');
@@ -53,7 +55,6 @@ var ZoneSensorList = React.createClass({
     
     componentWillReceiveProps: function(nextProps) {
         var shouldRefreshMonitor = false;
-        debugger;
         if (nextProps.zones && (this.props.zones !== nextProps.zones)) {
             shouldRefreshMonitor = true;
         }
@@ -226,7 +227,7 @@ var ZoneSensorList = React.createClass({
                 </div>
             );
 
-            body = this.props.zones.map(function(zone) {
+            var zones = this.props.zones.map(function(zone) {
                 return (
                     <div {...classes('zone-info')} key={zone.id}>
                         <ZoneInfo
@@ -245,6 +246,34 @@ var ZoneSensorList = React.createClass({
                     </div>
                 );
             }.bind(this));
+
+            var sensors = this.props.sensors.map(function(sensor) {
+                return (
+                    <div {...classes('sensor-info')} key={sensor.id || sensor.clientId}>
+                        <SensorInfo
+                            readOnlyFields="deviceId"
+                            key={sensor.id || sensor.clientId}
+                            name={sensor.name}
+                            description={sensor.description}
+                            address={sensor.address}
+                            id={sensor.id}
+                            attr={sensor.attr}
+                            showSaveBtn={true}
+                            deviceId={sensor.deviceId}
+                            clientId={sensor.clientId}
+                            devices={this.props.devices}
+                            updatedSensor={this.props.updatedSensor} />
+                    </div>
+                );
+            }.bind(this));
+
+            body = (
+                <div>
+                    {zones}
+                    {sensors}
+                </div>
+            );
+
         } else {
             var lightZones = [];
             var shadeZones = [];
@@ -349,6 +378,9 @@ function mapDispatchToProps(dispatch) {
     return {
         updatedZone: function(data) {
             dispatch(ZoneActions.updated(data));
+        },
+        updatedSensor: function(data) {
+            dispatch(SensorActions.updated(data))
         }
     }
 }

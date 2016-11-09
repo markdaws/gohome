@@ -48,36 +48,14 @@ var DiscoverDevices = React.createClass({
                            createdSensor={this.props.importedSensor}
                        />;
             }.bind(this));
-            /*
-            devices = this.state.devices.map(function(device) {
-                return (
-                    <div {...classes('device-info')} key={device.id || device.clientId}>
-                        <DeviceInfo
-                            name={device.name}
-                            description={device.description}
-                            address={device.address}
-                            modelNumber={device.modelNumber}
-                            modelName={device.modelName}
-                            softwareVersion={device.softwareVersion}
-                            connectionPool={device.connPool}
-                            cmdBuilder={device.cmdBuilder}
-                            auth={device.auth}
-                            id={device.id}
-                            clientId={device.clientId}
-                            readOnlyFields="id, modelNumber"
-                            key={device.id || device.clientId}
-                            createdDevice={this.props.importedDevice}
-                            showZones={true}
-                            showSensors={true}
-                            zones={device.zones}
-                            sensors={device.sensors}/>
-                    </div>
-                );
-            }.bind(this));
-            */
         }
 
         var importBody
+        var deviceCount = 0;
+        if (this.state.devices) {
+            deviceCount = this.state.devices.length;
+        }
+        
         importBody = (
             <div>
                 <div {...classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : '')}>
@@ -88,8 +66,8 @@ var DiscoverDevices = React.createClass({
                         onClick={this.discover}>Discover Devices</button>
                     <i {...classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin')}></i>
                 </div>
-                <h3 {...classes('no-devices', this.state.devices ? '' : 'hidden')}>
-                    {this.state.devices && this.state.devices.length} device(s) found
+                <h3 {...classes('no-devices', this.state.devices && deviceCount === 0 ? '' : 'hidden')}>
+                    {deviceCount} device{deviceCount > 1 ? 's' : ''} found
                 </h3>
                 <p {...classes('found-devices', this.state.devices && this.state.devices.length > 0 ? '' : ' hidden')}>
                     Click "Import" on each device you wish to add to your system. Uncheck the check boxes next to items

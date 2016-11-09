@@ -87,6 +87,11 @@ module.exports = keyMirror({
     SENSOR_IMPORT: null,
     SENSOR_IMPORT_RAW: null,
     SENSOR_IMPORT_FAIL: null,
+
+    // When a sensor is updated
+    SENSOR_UPDATE: null,
+    SENSOR_UPDATE_RAW: null,
+    SENSOR_UPDATE_FAIL: null,
     
     // Load all of the zones from the server
     ZONE_LOAD_ALL: null,

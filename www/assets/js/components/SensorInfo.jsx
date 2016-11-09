@@ -3,6 +3,8 @@ var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 var InputValidationMixin = require('./InputValidationMixin.jsx')
 var DevicePicker = require('./DevicePicker.jsx');
 var BEMHelper = require('react-bem-helper');
+var SaveBtn = require('./SaveBtn.jsx');
+var Api = require('../utils/API.js');
 
 var classes = new BEMHelper({
     name: 'SensorInfo',
@@ -12,6 +14,13 @@ require('../../css/components/SensorInfo.less')
 
 var SensorInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
+
+    getDefaultProps: function() {
+        return {
+            showSaveBtn: false
+        };
+    },
+    
     getInitialState: function() {
         return {
             clientId: this.props.clientId,
@@ -20,6 +29,7 @@ var SensorInfo = React.createClass({
             address: this.props.address,
             deviceId: this.props.deviceId,
             errors: this.props.errors,
+            saveButtonStatus: ''
         }
     },
 
@@ -31,6 +41,7 @@ var SensorInfo = React.createClass({
             description: s.description,
             address: s.address,
             deviceId: s.deviceId,
+            id: this.props.id,
             attr: this.props.attr,
         }
     },
@@ -40,18 +51,49 @@ var SensorInfo = React.createClass({
     },
 
     _changed: function(evt) {
+        this.setState({ saveButtonStatus: '' });
         this.changed(evt, function(){
             this.props.changed && this.props.changed(this);
         }.bind(this));
     },
     
     devicePickerChanged: function(deviceId) {
-        this.setState({ deviceId: deviceId }, function() {
+        this.setState({
+            deviceId: deviceId,
+            saveButtonStatus: ''
+        }, function() {
             this.props.changed && this.props.changed(this);
         }.bind(this));
     },
 
+    save: function() {
+        this.setState({ errors: null });
+        Api.sensorUpdate(this.toJson(), function(err, sensorData) {
+            if (err) {
+                this.setState({
+                    saveButtonStatus: 'error',
+                    errors: err.validationErrors
+                });
+                return;
+            }
+
+            this.setState({ saveButtonStatus: 'success' });
+            this.props.updatedSensor(sensorData);
+        }.bind(this));
+    },
+    
     render: function() {
+        var saveBtn;
+        if (this.props.showSaveBtn && this.state.dirty) {
+            saveBtn = (
+                <SaveBtn
+                    {...classes('save')}
+                    clicked={this.save}
+                    text="Save"
+                    status={this.state.saveButtonStatus}/>
+            );
+        }
+
         return (
             <div {...classes('', '', 'well well-sm')}>
               <div className={this.addErr('form-group', 'name')}>
@@ -96,6 +138,10 @@ var SensorInfo = React.createClass({
                     changed={this.devicePickerChanged}/>
                 {this.errMsg('deviceId')}
               </div>
+              <div className="pull-right">
+                  {saveBtn}
+              </div>
+              <div style={{clear: 'both' }}></div>
             </div>
         );
     }

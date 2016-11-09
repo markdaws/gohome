@@ -30,7 +30,7 @@ type config struct {
 func main() {
 	//TODO: Don't panic, system should still start but with warning to the user
 
-	useLocalhost := false
+	useLocalhost := true
 	var addr string
 	if !useLocalhost {
 		// Find the first public address we can bind to
@@ -59,7 +59,7 @@ func main() {
 	rm := gohome.NewRecipeManager()
 
 	//TODO: Remove, simulate user importing lutron information on load
-	reset := false
+	reset := true
 	if reset {
 		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", 1)
 		intg.RegisterExtensions(system)

@@ -16,6 +16,21 @@ module.exports = function(state, action) {
         //TODO: Loading error
         break;
 
+    case Constants.SENSOR_UPDATE:
+        break;
+
+    case Constants.SENSOR_UPDATE_RAW:
+        newState = newState.map(function(sensor) {
+            if (action.data.id === sensor.id) {
+                return action.data;
+            }
+            return sensor;
+        });
+        break;
+
+    case Constants.SENSOR_UPDATE_FAIL:
+        break;
+        
     case Constants.SENSOR_IMPORT:
         break;
     case Constants.SENSOR_IMPORT_RAW:

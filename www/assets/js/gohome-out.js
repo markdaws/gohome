@@ -21494,8 +21494,8 @@
 	        if (this.props.zones.length === 0 && this.props.sensors.length === 0) {
 	            zoneBody = React.createElement(
 	                'h5',
-	                { className: 'emptyMessage' },
-	                'You don\'t have any zones or sensors. Go to the devices tab and import a Device, or manually edit the .json system file.'
+	                classes('empty-message-zones'),
+	                'You don\'t have any lights or sensors. Go to the devices tab to get started.'
 	            );
 	        } else {
 	            zoneBody = React.createElement(ZoneSensorList, {
@@ -21509,7 +21509,7 @@
 	        if (this.props.scenes.items.length === 0) {
 	            emptySceneBody = React.createElement(
 	                'h5',
-	                { className: 'emptyMessage' },
+	                classes('empty-message-scenes'),
 	                'You don\'t have any scenes.  Click on the Edit button to add a new Scene.'
 	            );
 	        }
@@ -21560,7 +21560,11 @@
 	                        React.createElement(SceneList, { scenes: this.props.scenes, buttons: this.props.buttons, zones: this.props.zones }),
 	                        emptySceneBody
 	                    ),
-	                    React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "") })
+	                    React.createElement(
+	                        'div',
+	                        classes('spinner'),
+	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "") })
+	                    )
 	                ),
 	                React.createElement(
 	                    'div',
@@ -21570,7 +21574,11 @@
 	                        { className: this.props.appLoadStatus.zonesLoaded ? "" : "hideTabContent" },
 	                        zoneBody
 	                    ),
-	                    React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.zonesLoaded ? "hidden" : "") })
+	                    React.createElement(
+	                        'div',
+	                        classes('spinner'),
+	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.zonesLoaded ? "hidden" : "") })
+	                    )
 	                ),
 	                React.createElement(
 	                    'div',
@@ -21580,7 +21588,11 @@
 	                        { className: this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent" },
 	                        React.createElement(System, { devices: this.props.devices })
 	                    ),
-	                    React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "") })
+	                    React.createElement(
+	                        'div',
+	                        classes('spinner'),
+	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "") })
+	                    )
 	                )
 	            )
 	        );
@@ -23410,8 +23422,8 @@
 	            if (this.props.devices.length === 0) {
 	                body = React.createElement(
 	                    'h5',
-	                    classes('empty-msg'),
-	                    'You don\'t have any devices. Click on the "Import" button to start, or you can manually update the .json file if you know what you are doing ;)'
+	                    classes('empty-message'),
+	                    'You don\'t have any hardware. Click on the "Import" button to get started.'
 	                );
 	            } else {
 	                body = React.createElement(SystemDeviceList, { devices: this.props.devices });
@@ -23600,36 +23612,14 @@
 	                    createdSensor: this.props.importedSensor
 	                });
 	            }.bind(this));
-	            /*
-	            devices = this.state.devices.map(function(device) {
-	                return (
-	                    <div {...classes('device-info')} key={device.id || device.clientId}>
-	                        <DeviceInfo
-	                            name={device.name}
-	                            description={device.description}
-	                            address={device.address}
-	                            modelNumber={device.modelNumber}
-	                            modelName={device.modelName}
-	                            softwareVersion={device.softwareVersion}
-	                            connectionPool={device.connPool}
-	                            cmdBuilder={device.cmdBuilder}
-	                            auth={device.auth}
-	                            id={device.id}
-	                            clientId={device.clientId}
-	                            readOnlyFields="id, modelNumber"
-	                            key={device.id || device.clientId}
-	                            createdDevice={this.props.importedDevice}
-	                            showZones={true}
-	                            showSensors={true}
-	                            zones={device.zones}
-	                            sensors={device.sensors}/>
-	                    </div>
-	                );
-	            }.bind(this));
-	            */
 	        }
 
 	        var importBody;
+	        var deviceCount = 0;
+	        if (this.state.devices) {
+	            deviceCount = this.state.devices.length;
+	        }
+
 	        importBody = React.createElement(
 	            'div',
 	            null,
@@ -23651,9 +23641,11 @@
 	            ),
 	            React.createElement(
 	                'h3',
-	                classes('no-devices', this.state.devices ? '' : 'hidden'),
-	                this.state.devices && this.state.devices.length,
-	                ' device(s) found'
+	                classes('no-devices', this.state.devices && deviceCount === 0 ? '' : 'hidden'),
+	                deviceCount,
+	                ' device',
+	                deviceCount > 1 ? 's' : '',
+	                ' found'
 	            ),
 	            React.createElement(
 	                'p',
@@ -24677,6 +24669,28 @@
 	        });
 	    },
 
+	    // sensorUpdate updates a sensor on the server with the new values
+	    sensorUpdate: function sensorUpdate(sensorJson, callback) {
+	        $.ajax({
+	            url: BASE + '/api/v1/sensors/' + sensorJson.id,
+	            type: 'PUT',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify(sensorJson),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                var errors = (xhr.responseJSON || {}).errors;
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    validationErrors: errors
+	                });
+	            }
+	        });
+	    },
+
 	    // zoneLoadAll loads all of the zones from the backing store
 	    zoneLoadAll: function zoneLoadAll(callback) {
 	        $.ajax({
@@ -24914,6 +24928,11 @@
 	    SENSOR_IMPORT: null,
 	    SENSOR_IMPORT_RAW: null,
 	    SENSOR_IMPORT_FAIL: null,
+
+	    // When a sensor is updated
+	    SENSOR_UPDATE: null,
+	    SENSOR_UPDATE_RAW: null,
+	    SENSOR_UPDATE_FAIL: null,
 
 	    // Load all of the zones from the server
 	    ZONE_LOAD_ALL: null,
@@ -25902,6 +25921,8 @@
 	var InputValidationMixin = __webpack_require__(206);
 	var DevicePicker = __webpack_require__(212);
 	var BEMHelper = __webpack_require__(215);
+	var SaveBtn = __webpack_require__(207);
+	var Api = __webpack_require__(208);
 
 	var classes = new BEMHelper({
 	    name: 'SensorInfo',
@@ -25913,6 +25934,13 @@
 	    displayName: 'SensorInfo',
 
 	    mixins: [UniqueIdMixin, InputValidationMixin],
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            showSaveBtn: false
+	        };
+	    },
+
 	    getInitialState: function getInitialState() {
 	        return {
 	            clientId: this.props.clientId,
@@ -25920,7 +25948,8 @@
 	            description: this.props.description,
 	            address: this.props.address,
 	            deviceId: this.props.deviceId,
-	            errors: this.props.errors
+	            errors: this.props.errors,
+	            saveButtonStatus: ''
 	        };
 	    },
 
@@ -25932,6 +25961,7 @@
 	            description: s.description,
 	            address: s.address,
 	            deviceId: s.deviceId,
+	            id: this.props.id,
 	            attr: this.props.attr
 	        };
 	    },
@@ -25941,18 +25971,46 @@
 	    },
 
 	    _changed: function _changed(evt) {
+	        this.setState({ saveButtonStatus: '' });
 	        this.changed(evt, function () {
 	            this.props.changed && this.props.changed(this);
 	        }.bind(this));
 	    },
 
 	    devicePickerChanged: function devicePickerChanged(deviceId) {
-	        this.setState({ deviceId: deviceId }, function () {
+	        this.setState({
+	            deviceId: deviceId,
+	            saveButtonStatus: ''
+	        }, function () {
 	            this.props.changed && this.props.changed(this);
 	        }.bind(this));
 	    },
 
+	    save: function save() {
+	        this.setState({ errors: null });
+	        Api.sensorUpdate(this.toJson(), function (err, sensorData) {
+	            if (err) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validationErrors
+	                });
+	                return;
+	            }
+
+	            this.setState({ saveButtonStatus: 'success' });
+	            this.props.updatedSensor(sensorData);
+	        }.bind(this));
+	    },
+
 	    render: function render() {
+	        var saveBtn;
+	        if (this.props.showSaveBtn && this.state.dirty) {
+	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
+	                clicked: this.save,
+	                text: 'Save',
+	                status: this.state.saveButtonStatus }));
+	        }
+
 	        return React.createElement(
 	            'div',
 	            classes('', '', 'well well-sm'),
@@ -26021,7 +26079,13 @@
 	                    devices: this.props.devices,
 	                    changed: this.devicePickerChanged }),
 	                this.errMsg('deviceId')
-	            )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                saveBtn
+	            ),
+	            React.createElement('div', { style: { clear: 'both' } })
 	        );
 	    }
 	});
@@ -26138,6 +26202,12 @@
 	    importedSensor: function importedSensor(sensorJson) {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.SENSOR_IMPORT_RAW, data: sensorJson });
+	        };
+	    },
+
+	    updated: function updated(sensorJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SENSOR_UPDATE_RAW, data: sensorJson });
 	        };
 	    }
 
@@ -26714,7 +26784,7 @@
 	                    classes('header'),
 	                    'Zones'
 	                ),
-	                React.createElement(Grid, { ref: 'zonegrid', key: 'zonegrid', cells: zones, debugName: 'zonegrid' })
+	                React.createElement(Grid, { ref: 'zonegrid', key: 'zonegrid', cells: zones })
 	            ),
 	            React.createElement(
 	                'div',
@@ -27805,7 +27875,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-Grid {\n  padding-bottom: 12px;\n  position: relative;\n  background-color: #fff;\n  width: 100%;\n  /*needed to remove gaps between cells*/\n  font-size: 0px;\n}\n.b-Grid__cell {\n  background-color: #fff;\n  overflow: hidden;\n  font-size: 0px;\n  border: 1px solid #eee;\n  text-align: center;\n}\n.b-Grid__expander-arrow {\n  font-size: 58px;\n  margin-top: -30px;\n  color: #eee;\n  pointer-events: none;\n}\n.b-Grid__expander-arrow--hidden {\n  display: none;\n}\n.b-Expander {\n  background-color: #eee;\n  width: 100%;\n  font-size: 12px;\n  overflow: hidden;\n  max-height: 500px;\n  position: relative;\n}\n.b-Expander .animateWrapper {\n  margin-top: -500px;\n  transition: margin-top 550ms ease-out;\n  -webkit-transition: margin-top 550ms ease-out;\n}\n", ""]);
+	exports.push([module.id, ".b-Grid {\n  padding-bottom: 12px;\n  position: relative;\n  background-color: #fff;\n  width: 100%;\n  /*needed to remove gaps between cells*/\n  font-size: 0px;\n}\n.b-Grid__cell {\n  background-color: #fff;\n  overflow: hidden;\n  font-size: 0px;\n  border: 1px solid #eee;\n  text-align: center;\n}\n.b-Grid__expanded-arrow {\n  font-size: 58px;\n  margin-top: -30px;\n  color: #eee;\n  pointer-events: none;\n}\n.b-Grid__expanded-arrow--hidden {\n  display: none;\n}\n.b-Expander {\n  background-color: #eee;\n  width: 100%;\n  font-size: 12px;\n  overflow: hidden;\n  max-height: 500px;\n  position: relative;\n}\n.b-Expander .animateWrapper {\n  margin-top: -500px;\n  transition: margin-top 550ms ease-out;\n  -webkit-transition: margin-top 550ms ease-out;\n}\n", ""]);
 
 	// exports
 
@@ -27885,7 +27955,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
@@ -28470,7 +28540,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-System {\n  position: relative;\n  padding-bottom: 30px;\n}\n.b-System__header {\n  position: absolute;\n  left: 0;\n  right: 0;\n  padding: 0px 12px 0px 12px;\n}\n.b-System__exit {\n  margin: 12px;\n}\n.b-System__empty-msg {\n  margin: 12px;\n}\n", ""]);
+	exports.push([module.id, ".b-System {\n  position: relative;\n  padding-bottom: 30px;\n}\n.b-System__header {\n  position: absolute;\n  left: 0;\n  right: 0;\n  padding: 0px 12px 0px 12px;\n}\n.b-System__exit {\n  margin: 12px;\n}\n.b-System__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  padding-top: 54px;\n}\n", ""]);
 
 	// exports
 
@@ -30057,9 +30127,11 @@
 	var ZoneControl = __webpack_require__(278);
 	var SensorMonitor = __webpack_require__(282);
 	var ZoneActions = __webpack_require__(223);
+	var SensorActions = __webpack_require__(224);
 	var Grid = __webpack_require__(250);
 	var SensorMonitor = __webpack_require__(282);
 	var ZoneInfo = __webpack_require__(211);
+	var SensorInfo = __webpack_require__(220);
 	var ZoneSensorListGridCell = __webpack_require__(234);
 	var Api = __webpack_require__(208);
 	var BEMHelper = __webpack_require__(215);
@@ -30108,7 +30180,6 @@
 
 	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
 	        var shouldRefreshMonitor = false;
-	        debugger;
 	        if (nextProps.zones && this.props.zones !== nextProps.zones) {
 	            shouldRefreshMonitor = true;
 	        }
@@ -30287,7 +30358,7 @@
 	                )
 	            );
 
-	            body = this.props.zones.map(function (zone) {
+	            var zones = this.props.zones.map(function (zone) {
 	                return React.createElement(
 	                    'div',
 	                    _extends({}, classes('zone-info'), { key: zone.id }),
@@ -30306,6 +30377,33 @@
 	                        updatedZone: this.props.updatedZone })
 	                );
 	            }.bind(this));
+
+	            var sensors = this.props.sensors.map(function (sensor) {
+	                return React.createElement(
+	                    'div',
+	                    _extends({}, classes('sensor-info'), { key: sensor.id || sensor.clientId }),
+	                    React.createElement(SensorInfo, {
+	                        readOnlyFields: 'deviceId',
+	                        key: sensor.id || sensor.clientId,
+	                        name: sensor.name,
+	                        description: sensor.description,
+	                        address: sensor.address,
+	                        id: sensor.id,
+	                        attr: sensor.attr,
+	                        showSaveBtn: true,
+	                        deviceId: sensor.deviceId,
+	                        clientId: sensor.clientId,
+	                        devices: this.props.devices,
+	                        updatedSensor: this.props.updatedSensor })
+	                );
+	            }.bind(this));
+
+	            body = React.createElement(
+	                'div',
+	                null,
+	                zones,
+	                sensors
+	            );
 	        } else {
 	            var lightZones = [];
 	            var shadeZones = [];
@@ -30442,6 +30540,9 @@
 	    return {
 	        updatedZone: function updatedZone(data) {
 	            dispatch(ZoneActions.updated(data));
+	        },
+	        updatedSensor: function updatedSensor(data) {
+	            dispatch(SensorActions.updated(data));
 	        }
 	    };
 	}
@@ -32040,7 +32141,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n  box-shadow: 0px 2px 4px #bbb;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp h5.emptyMessage {\n  margin: 12px;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
+	exports.push([module.id, ".b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 0px;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n  box-shadow: 0px 2px 4px #bbb;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
 
 	// exports
 
@@ -32480,6 +32581,21 @@
 
 	        case Constants.SENSOR_LOAD_ALL_FAIL:
 	            //TODO: Loading error
+	            break;
+
+	        case Constants.SENSOR_UPDATE:
+	            break;
+
+	        case Constants.SENSOR_UPDATE_RAW:
+	            newState = newState.map(function (sensor) {
+	                if (action.data.id === sensor.id) {
+	                    return action.data;
+	                }
+	                return sensor;
+	            });
+	            break;
+
+	        case Constants.SENSOR_UPDATE_FAIL:
 	            break;
 
 	        case Constants.SENSOR_IMPORT:

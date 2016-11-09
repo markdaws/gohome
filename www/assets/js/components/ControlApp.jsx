@@ -46,7 +46,7 @@ var ControlApp = React.createClass({
         var zoneBody;
         if (this.props.zones.length === 0 && this.props.sensors.length === 0) {
             zoneBody = (
-                <h5 className="emptyMessage">You don't have any zones or sensors. Go to the devices tab and import a Device, or manually edit the .json system file.</h5>
+                <h5 {...classes('empty-message-zones')}>You don't have any lights or sensors. Go to the devices tab to get started.</h5>
             );
         } else {
             zoneBody = (
@@ -61,7 +61,7 @@ var ControlApp = React.createClass({
         var emptySceneBody;
         if (this.props.scenes.items.length === 0) {
             emptySceneBody = (
-                <h5 className="emptyMessage">You don't have any scenes.  Click on the Edit button to add a new Scene.</h5>
+                <h5 {...classes('empty-message-scenes')}>You don't have any scenes.  Click on the Edit button to add a new Scene.</h5>
             );
         }
 
@@ -99,19 +99,25 @@ var ControlApp = React.createClass({
                             <SceneList scenes={this.props.scenes} buttons={this.props.buttons} zones={this.props.zones} />
                             {emptySceneBody}
                         </div>
-                        <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
+                        <div {...classes('spinner')}>
+                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
+                        </div>
                     </div>
                     <div role="tabpanel" className="tab-pane active" id="zones">
                         <div className={(this.props.appLoadStatus.zonesLoaded ? "" : "hideTabContent")}>
                             {zoneBody}
                         </div>
-                        <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.zonesLoaded ? "hidden" : "")}></i>
+                        <div {...classes('spinner')}>
+                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.zonesLoaded ? "hidden" : "")}></i>
+                        </div>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="system">
                         <div className={(this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent")}>
                             <System devices={this.props.devices}/>
                         </div>
-                        <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
+                        <div {...classes('spinner')}>
+                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
+                        </div>
                     </div>
             {/*
             <div role="tabpanel" className="tab-pane fade" id="logging">

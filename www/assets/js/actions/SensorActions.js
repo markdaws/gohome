@@ -25,5 +25,11 @@ var SensorActions = {
         };
     },
 
+    updated: function(sensorJson) {
+        return function(dispatch) {
+            dispatch({ type: Constants.SENSOR_UPDATE_RAW, data: sensorJson });
+        };
+    }
+
 };
 module.exports = SensorActions;

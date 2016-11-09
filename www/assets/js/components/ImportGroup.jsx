@@ -305,7 +305,7 @@ var ImportGroup = React.createClass({
                 </div>
                 <div key="aa" {...classes('zones', zones.length === 0 ? 'hidden' : '')}>
                     <h2 {...classes('header')}>Zones</h2>
-                    <Grid ref="zonegrid" key="zonegrid" cells={zones} debugName="zonegrid"/>
+                    <Grid ref="zonegrid" key="zonegrid" cells={zones} />
                 </div>
                 <div {...classes('sensors', sensors.length === 0 ? 'hidden' : '')}>
                     <h2 {...classes('header')}>Sensors</h2>

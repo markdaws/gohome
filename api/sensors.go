@@ -19,6 +19,8 @@ func RegisterSensorHandlers(r *mux.Router, s *apiServer) {
 		apiSensorsHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/sensors",
 		apiAddSensorHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
+	r.HandleFunc("/api/v1/sensors/{id}",
+		apiUpdateSensorHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("PUT")
 }
 
 func apiSensorsHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
@@ -46,6 +48,46 @@ func apiSensorsHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		if err := json.NewEncoder(w).Encode(sensors); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+	}
+}
+
+func apiUpdateSensorHandler(
+	savePath string,
+	system *gohome.System,
+	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var data jsonSensor
+		if err = json.Unmarshal(body, &data); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		sen, ok := system.Sensors[data.ID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		sen.Name = data.Name
+		sen.Address = data.Address
+		sen.Description = data.Description
+
+		err = store.SaveSystem(savePath, system, recipeManager)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(data)
 	}
 }
 
