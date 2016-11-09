@@ -50,6 +50,7 @@ Currently there are two main parts to the project, the golang powered server and
 ###gohome Server
 The goHome server is developed using golang (http://golang.org) In order to develop the code:
 //TODO:
+go build -o gohome main/main.go && gohome
 
 ###gohome web UI
 The web UI is developed using the React framework: https://facebook.github.io/react/ In order to develop the web UI:

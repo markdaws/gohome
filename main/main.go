@@ -1,13 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os"
 	"time"
 
 	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
+	"github.com/kardianos/osext"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/api"
 	"github.com/markdaws/gohome/intg"
@@ -17,43 +20,80 @@ import (
 )
 
 type config struct {
-	RecipeDirPath     string
-	StartupConfigPath string
-	WWWAddr           string
-	WWWPort           string
-	APIAddr           string
-	APIPort           string
-	UPNPNotifyAddr    string
-	UPNPNotifyPort    string
+	// RecipeDir is a directory where all of the user recipes are stored
+	RecipeDir string `json:"recipeDir"`
+
+	// SystemPath is a path to the json file containing all of the system information
+	SystemPath string `json:"systemPath"`
+
+	// WWWAddr is the IP address for the WWW server
+	WWWAddr string `json:"wwwAddr"`
+
+	// WWWPort is the port for the WWW server
+	WWWPort string `json:"wwwPort"`
+
+	// APIAddr is the IP address of the API server
+	APIAddr string `json:"apiAddr"`
+
+	// APIPort is the port number of the API server
+	APIPort string `json:"apiPort"`
+
+	// UPNPNotifyAddr is the IP of the UPNP Notify server
+	UPNPNotifyAddr string `json:"upnpNotifyAddr"`
+
+	// UPNPNotifyPort is the port of the UPNP Notify server
+	UPNPNotifyPort string `json:"upnpNotifyPort"`
 }
 
-func main() {
-	//TODO: Don't panic, system should still start but with warning to the user
-
+func defaultConfig(systemPath string) config {
+	addr := "127.0.0.1"
+	//TODO: Change to false
 	useLocalhost := true
-	var addr string
 	if !useLocalhost {
 		// Find the first public address we can bind to
 		var err error
 		addr, err = getIPV4NonLoopbackAddr()
 		if err != nil || addr == "" {
-			panic("could not find any address to bind to")
+			log.E("Could not detect non loopback IP address, falling back to 127.0.0.1")
 		}
-	} else {
-		addr = "127.0.0.1"
 	}
 
-	// TODO: Should read this from a config file on disk, only if ip addresses are
-	// missing should we try to find one automatically
-	config := config{
-		StartupConfigPath: "/Users/mark/code/gohome/system8.json",
-		WWWAddr:           addr,
-		WWWPort:           "8000",
-		APIAddr:           addr,
-		APIPort:           "5000",
-		UPNPNotifyAddr:    addr,
-		UPNPNotifyPort:    "8001",
+	cfg := config{
+		SystemPath:     systemPath + "/system.json",
+		WWWAddr:        addr,
+		WWWPort:        "8000",
+		APIAddr:        addr,
+		APIPort:        "5000",
+		UPNPNotifyAddr: addr,
+		UPNPNotifyPort: "8001",
 	}
+
+	return cfg
+}
+
+func main() {
+	var cfg config
+
+	// Find the config file, if we can't find one, fall back to defaults
+	folderPath, err := osext.ExecutableFolder()
+	if err != nil {
+		panic("Failed to locate the current executable directory")
+	}
+
+	// Try to read the config file, if we can't find one use defaults
+	file, err := os.Open(folderPath + "/config.json")
+	if err != nil {
+		log.E("Error trying to open config.json [%s], falling back to defaults", folderPath)
+		cfg = defaultConfig(folderPath)
+	} else {
+		decoder := json.NewDecoder(file)
+		err := decoder.Decode(&cfg)
+		if err != nil {
+			log.E("Failed to parse config.json: %s, generating default config", err)
+			cfg = defaultConfig(folderPath)
+		}
+	}
+	log.V("Config information: %#v", cfg)
 
 	// Recipe manager handles processing all of the recipes the user has created
 	rm := gohome.NewRecipeManager()
@@ -81,30 +121,21 @@ func main() {
 			panic("Failed to import: " + err.Error())
 		}
 
-		err = store.SaveSystem(config.StartupConfigPath, system, rm)
+		err = store.SaveSystem(cfg.SystemPath, system, rm)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
-	cleanSystem := true
-	var err error
-	var sys *gohome.System
-
-	if cleanSystem {
-		err = store.ErrFileNotFound
-	} else {
-		sys, err = store.LoadSystem(config.StartupConfigPath, rm)
-	}
-
+	sys, err := store.LoadSystem(cfg.SystemPath, rm)
 	if err == store.ErrFileNotFound {
-		log.V("startup file not found at: %s, creating new system", config.StartupConfigPath)
+		log.V("startup file not found at: %s, creating new system", cfg.SystemPath)
 
 		// First time running the system, create a new blank system, save it
 		sys = gohome.NewSystem("My goHOME system", "", 1)
 		intg.RegisterExtensions(sys)
 
-		err = store.SaveSystem(config.StartupConfigPath, sys, rm)
+		err = store.SaveSystem(cfg.SystemPath, sys, rm)
 		if err != nil {
 			panic("Failed to save initial system: " + err.Error())
 		}
@@ -129,10 +160,11 @@ func main() {
 	sys.Services.UPNP = upnpService
 	go func() {
 		for {
-			endPoint := config.UPNPNotifyAddr + ":" + config.UPNPNotifyPort
+			endPoint := cfg.UPNPNotifyAddr + ":" + cfg.UPNPNotifyPort
 			log.V("UPNP Service - listening on %s", endPoint)
 			err := upnpService.Start(endPoint)
 			log.E("upnp service crashed:" + err.Error())
+			time.Sleep(time.Second * 5)
 		}
 	}()
 
@@ -163,7 +195,7 @@ func main() {
 
 	go func() {
 		for {
-			endPoint := config.WWWAddr + ":" + config.WWWPort
+			endPoint := cfg.WWWAddr + ":" + cfg.WWWPort
 			log.V("WWW Server starting, listening on %s", endPoint)
 			err := www.ListenAndServe("./www", endPoint, sys, rm, wsLogger)
 			log.E("error with WWW server, shutting down: %s\n", err)
@@ -173,9 +205,9 @@ func main() {
 
 	go func() {
 		for {
-			endPoint := config.APIAddr + ":" + config.APIPort
+			endPoint := cfg.APIAddr + ":" + cfg.APIPort
 			log.V("API Server starting, listening on %s", endPoint)
-			err := api.ListenAndServe(config.StartupConfigPath, endPoint, sys, rm, wsLogger)
+			err := api.ListenAndServe(cfg.SystemPath, endPoint, sys, rm, wsLogger)
 			log.E("error with API server, shutting down: %s\n", err)
 			time.Sleep(time.Second * 5)
 		}
