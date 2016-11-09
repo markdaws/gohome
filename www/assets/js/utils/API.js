@@ -499,6 +499,26 @@ var API = {
                 });
             }
         });
+    },
+
+    // discovererFromString reads the config string and returns goHOME relevant devices
+    discovererFromString: function(discovererId, configStr, callback) {
+        $.ajax({
+            url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
+            dataType: 'json',
+            type: 'POST',
+            data: JSON.stringify(configStr),
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback({
+                    err: err
+                });
+            }
+        });
     }
+
 };
 module.exports = API;

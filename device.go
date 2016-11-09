@@ -41,13 +41,34 @@ type Auth struct {
 
 // Device is a piece of hardware. It could be a dimmer, a shade, a remote etc
 type Device struct {
-	ID              string
-	Address         string
-	Name            string
-	Description     string
-	Type            DeviceType
-	ModelName       string
-	ModelNumber     string
+	// ID a unique system wide ID, this is set when the device is added to the system
+	// don't set this manually unless you know what you are doing
+	ID string
+
+	// Address can be whatever type of address is needed for the device e.g.
+	// an IP address 192.168.0.9:23 or some value that is custom to whatever
+	// system we have imported
+	Address string
+
+	// AddressRequired indicates that this device has to have an address, defaults to false
+	AddressRequired bool
+
+	// Name is a friendly name for the device, it will be shown in the UI
+	Name string
+
+	// Description provides more detailed information about the device
+	Description string
+
+	// Type describes what type of device this is e.g. Hub, Switch, Shade etc
+	Type DeviceType
+
+	// ModelName
+	ModelName string
+
+	// Modelnumber
+	ModelNumber string
+
+	// SoftwareVersion can store what version of software is installed on the device
 	SoftwareVersion string
 
 	// Buttons - keyed by button address not global ID
@@ -119,6 +140,10 @@ func (d *Device) Validate() *validation.Errors {
 
 	if d.Name == "" {
 		errors.Add("required field", "Name")
+	}
+
+	if d.AddressRequired && d.Address == "" {
+		errors.Add("required field", "Address")
 	}
 
 	if errors.Has() {

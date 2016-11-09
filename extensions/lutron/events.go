@@ -56,18 +56,17 @@ func (c *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 
 			log.V("%s - %s", c.ConsumerName(), zoneRpt)
 
-			for _, zone := range c.Device.Zones {
-				if _, ok := zoneRpt.ZoneIDs[zone.ID]; ok {
-					conn, err := c.Device.Connections.Get(time.Second*10, true)
-					if err != nil {
-						log.V("%s - unable to get connection to device: %s, timeout", c.ConsumerName(), c.Device)
-						continue
-					}
-					err = dev.RequestLevel(zone.Address, conn)
-					c.Device.Connections.Release(conn, err)
-					if err != nil {
-						log.V("%s - Failed to request level for lutron, zoneID:%s, %s", c.ConsumerName(), zone.ID, err)
-					}
+			for _, zone := range c.Device.OwnedZones(zoneRpt.ZoneIDs) {
+				conn, err := c.Device.Connections.Get(time.Second*10, true)
+				if err != nil {
+					log.V("%s - unable to get connection to device: %s, timeout", c.ConsumerName(), c.Device)
+					continue
+				}
+
+				err = dev.RequestLevel(zone.Address, conn)
+				c.Device.Connections.Release(conn, err)
+				if err != nil {
+					log.V("%s - Failed to request level for lutron, zoneID:%s, %s", c.ConsumerName(), zone.ID, err)
 				}
 			}
 		}

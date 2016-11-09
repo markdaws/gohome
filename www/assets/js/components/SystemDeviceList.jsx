@@ -33,6 +33,7 @@ var SystemDeviceList = React.createClass({
                              showSaveBtn={true}
                              description={device.description}
                              address={device.address}
+                             addressRequired={device.addressRequired}
                              modelNumber={device.modelNumber}
                              modelName={device.modelName}
                              softwareVersion={device.softwareVersion}

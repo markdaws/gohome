@@ -215,6 +215,7 @@ var ImportGroup = React.createClass({
                          ref={"deviceinfo-" + device.clientId}
                          description={device.description}
                          address={device.address}
+                         addressRequired={device.addressRequired}
                          modelNumber={device.modelNumber}
                          modelName={device.modelName}
                          softwareVersion={device.softwareVersion}

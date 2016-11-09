@@ -56,8 +56,9 @@ type connPoolJSON struct {
 }
 
 type deviceJSON struct {
-	Address         string        `json:"address"`
 	ID              string        `json:"id"`
+	Address         string        `json:"address"`
+	AddressRequired bool          `json:"addressRequired"`
 	Name            string        `json:"name"`
 	Description     string        `json:"description"`
 	ModelNumber     string        `json:"modelNumber"`
@@ -148,6 +149,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			nil,
 			nil,
 			auth)
+		dev.AddressRequired = d.AddressRequired
 
 		cmdBuilder := sys.Extensions.FindCmdBuilder(sys, dev)
 		dev.CmdBuilder = cmdBuilder
@@ -421,8 +423,9 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 			}
 		}
 		d := deviceJSON{
-			Address:         device.Address,
 			ID:              device.ID,
+			Address:         device.Address,
+			AddressRequired: device.AddressRequired,
 			Name:            device.Name,
 			Description:     device.Description,
 			HubID:           hubID,

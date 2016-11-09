@@ -75,63 +75,68 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 	}
 }
 
+func scenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
+	jsonScenes := make(scenes, len(inputScenes))
+	var i int32
+	for _, scene := range inputScenes {
+		jsonScenes[i] = jsonScene{
+			Address:     scene.Address,
+			ID:          scene.ID,
+			Name:        scene.Name,
+			Description: scene.Description,
+			Managed:     scene.Managed,
+		}
+
+		cmds := make([]jsonCommand, len(scene.Commands))
+		for j, sCmd := range scene.Commands {
+			switch xCmd := sCmd.(type) {
+			case *cmd.ZoneSetLevel:
+				cmds[j] = jsonCommand{
+					Type: "zoneSetLevel",
+					Attributes: map[string]interface{}{
+						"ZoneID": xCmd.ZoneID,
+						"Level":  xCmd.Level.Value,
+					},
+				}
+			case *cmd.ButtonPress:
+				cmds[j] = jsonCommand{
+					Type: "buttonPress",
+					Attributes: map[string]interface{}{
+						"ButtonID": xCmd.ButtonID,
+					},
+				}
+			case *cmd.ButtonRelease:
+				cmds[j] = jsonCommand{
+					Type: "buttonRelease",
+					Attributes: map[string]interface{}{
+						"ButtonID": xCmd.ButtonID,
+					},
+				}
+			case *cmd.SceneSet:
+				cmds[j] = jsonCommand{
+					Type: "sceneSet",
+					Attributes: map[string]interface{}{
+						"SceneID": xCmd.SceneID,
+					},
+				}
+			default:
+				fmt.Println("unknown scene command")
+			}
+		}
+
+		jsonScenes[i].Commands = cmds
+		i++
+	}
+	sort.Sort(jsonScenes)
+	return jsonScenes
+}
+
 func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-		scenes := make(scenes, len(system.Scenes), len(system.Scenes))
-		var i int32
-		for _, scene := range system.Scenes {
-			scenes[i] = jsonScene{
-				Address:     scene.Address,
-				ID:          scene.ID,
-				Name:        scene.Name,
-				Description: scene.Description,
-				Managed:     scene.Managed,
-			}
-
-			cmds := make([]jsonCommand, len(scene.Commands))
-			for j, sCmd := range scene.Commands {
-				switch xCmd := sCmd.(type) {
-				case *cmd.ZoneSetLevel:
-					cmds[j] = jsonCommand{
-						Type: "zoneSetLevel",
-						Attributes: map[string]interface{}{
-							"ZoneID": xCmd.ZoneID,
-							"Level":  xCmd.Level.Value,
-						},
-					}
-				case *cmd.ButtonPress:
-					cmds[j] = jsonCommand{
-						Type: "buttonPress",
-						Attributes: map[string]interface{}{
-							"ButtonID": xCmd.ButtonID,
-						},
-					}
-				case *cmd.ButtonRelease:
-					cmds[j] = jsonCommand{
-						Type: "buttonRelease",
-						Attributes: map[string]interface{}{
-							"ButtonID": xCmd.ButtonID,
-						},
-					}
-				case *cmd.SceneSet:
-					cmds[j] = jsonCommand{
-						Type: "sceneSet",
-						Attributes: map[string]interface{}{
-							"SceneID": xCmd.SceneID,
-						},
-					}
-				default:
-					fmt.Println("unknown scene command")
-				}
-			}
-
-			scenes[i].Commands = cmds
-			i++
-		}
-		sort.Sort(scenes)
-		if err := json.NewEncoder(w).Encode(scenes); err != nil {
+		jsonScenes := scenesToJSON(system.Scenes)
+		if err := json.NewEncoder(w).Encode(jsonScenes); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}

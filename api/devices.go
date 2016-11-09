@@ -36,12 +36,13 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		var i int32
 		for _, device := range system.Devices {
 			devices[i] = jsonDevice{
-				Address:     device.Address,
-				ID:          device.ID,
-				Name:        device.Name,
-				Description: device.Description,
-				ModelNumber: device.ModelNumber,
-				Type:        string(device.Type),
+				Address:         device.Address,
+				AddressRequired: device.AddressRequired,
+				ID:              device.ID,
+				Name:            device.Name,
+				Description:     device.Description,
+				ModelNumber:     device.ModelNumber,
+				Type:            string(device.Type),
 			}
 			i++
 		}
@@ -119,6 +120,7 @@ func apiAddDeviceHandler(
 			nil,
 			auth,
 		)
+		d.AddressRequired = data.AddressRequired
 		d.Type = gohome.DeviceType(data.Type)
 
 		var connPoolCfg *pool.Config

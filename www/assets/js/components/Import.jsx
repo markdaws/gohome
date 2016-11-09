@@ -52,7 +52,7 @@ var Import = React.createClass({
 
                 case 'FromString':
                     // This importer imports from a user provided string
-                    //TODO:
+                    body = <DiscoverDevices type="FromString" discoverer={discoverer} key={discoverer.id} />;
                     break;
             }
         }

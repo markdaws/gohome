@@ -29,5 +29,6 @@ _testmain.go
 .#*
 
 gohome
+gohome.json
 config.json
 system.json

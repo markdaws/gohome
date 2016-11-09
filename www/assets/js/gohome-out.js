@@ -23511,7 +23511,7 @@
 
 	                case 'FromString':
 	                    // This importer imports from a user provided string
-	                    //TODO:
+	                    body = React.createElement(DiscoverDevices, { type: 'FromString', discoverer: discoverer, key: discoverer.id });
 	                    break;
 	            }
 	        }
@@ -23582,22 +23582,61 @@
 	    getInitialState: function getInitialState() {
 	        return {
 	            discovering: false,
-	            devices: null
+	            devices: null,
+	            scenes: null,
+	            configString: ''
 	        };
 	    },
 
 	    discover: function discover() {
+	        var configString = '';
+	        try {
+	            // Remove all the whitespace, otherwise go gets upset
+	            configString = JSON.stringify(JSON.parse(this.state.configString));
+	        } catch (e) {
+	            console.error('TODO: show error');
+	            this.setState();
+	        }
 	        this.setState({
 	            discovering: true,
-	            devices: null
+	            devices: null,
+	            scenes: null
 	        });
 
-	        Api.discovererScanDevices(this.props.discoverer.id, function (err, data) {
-	            this.setState({
-	                discovering: false,
-	                devices: data || []
-	            });
-	        }.bind(this));
+	        if (this.props.discoverer.type === 'FromString') {
+	            Api.discovererFromString(this.props.discoverer.id, configString, function (err, data) {
+	                if (err != null) {
+	                    //TODO: Change import button to green/red
+	                    console.error("Failed to discover");
+	                    console.error(err);
+	                    return;
+	                }
+
+	                this.setState({
+	                    discovering: false,
+	                    scenes: data.scenes,
+	                    devices: data.devices
+	                });
+	            }.bind(this));
+	        } else {
+	            Api.discovererScanDevices(this.props.discoverer.id, function (err, data) {
+	                if (err != null) {
+	                    //TODO: Change import button to green/red
+	                    console.error("Failed to discover");
+	                    console.error(err);
+	                    return;
+	                }
+	                this.setState({
+	                    discovering: false,
+	                    scenes: data.scenes,
+	                    devices: data.devices
+	                });
+	            }.bind(this));
+	        }
+	    },
+
+	    textChanged: function textChanged(evt) {
+	        this.setState({ configString: evt.target.value });
 	    },
 
 	    render: function render() {
@@ -23605,7 +23644,7 @@
 	        if (this.state.devices && this.state.devices.length > 0) {
 	            devices = this.state.devices.map(function (device) {
 	                return React.createElement(ImportGroup, {
-	                    key: device.id,
+	                    key: device.id || device.clientId,
 	                    device: device,
 	                    createdDevice: this.props.importedDevice,
 	                    createdZone: this.props.importedZone,
@@ -23628,6 +23667,8 @@
 	                classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : ''),
 	                this.props.discoverer.preScanInfo
 	            ),
+	            React.createElement('textarea', _extends({}, classes('text-area', this.props.discoverer.type === 'FromString' ? '' : 'hidden'), {
+	                placeholder: 'Paste the config string here', value: this.state.configString, onChange: this.textChanged })),
 	            React.createElement(
 	                'div',
 	                classes('discover'),
@@ -23716,6 +23757,7 @@
 	            name: this.props.name || '',
 	            description: this.props.description || '',
 	            address: this.props.address,
+	            addressRequired: this.props.addressRequired,
 	            id: this.props.id,
 	            clientId: this.props.clientId,
 	            modelNumber: this.props.modelNumber || '',
@@ -23749,6 +23791,7 @@
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
+	            addressRequired: s.AddressRequired,
 	            modelNumber: s.modelNumber,
 	            modelName: s.modelName,
 	            softwareVersion: s.softwareVersion,
@@ -24829,7 +24872,27 @@
 	                });
 	            }
 	        });
+	    },
+
+	    // discovererFromString reads the config string and returns goHOME relevant devices
+	    discovererFromString: function discovererFromString(discovererId, configStr, callback) {
+	        $.ajax({
+	            url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
+	            dataType: 'json',
+	            type: 'POST',
+	            data: JSON.stringify(configStr),
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function error(xhr, status, err) {
+	                callback({
+	                    err: err
+	                });
+	            }
+	        });
 	    }
+
 	};
 	module.exports = API;
 
@@ -26681,6 +26744,7 @@
 	                ref: "deviceinfo-" + device.clientId,
 	                description: device.description,
 	                address: device.address,
+	                addressRequired: device.addressRequired,
 	                modelNumber: device.modelNumber,
 	                modelName: device.modelName,
 	                softwareVersion: device.softwareVersion,
@@ -27915,7 +27979,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ImportGroup {\n  border: 1px solid #eee;\n  border-radius: 4px;\n  padding: 8px;\n}\n.b-ImportGroup__header {\n  margin-top: 0;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: left;\n}\n.b-ImportGroup__devices--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-ImportGroup {\n  border: 1px solid #eee;\n  border-radius: 4px;\n  padding: 8px;\n}\n.b-ImportGroup__header {\n  margin-top: 0;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: left;\n}\n.b-ImportGroup__devices--hidden {\n  display: none;\n}\n.b-ImportGroup__zones--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
@@ -27955,7 +28019,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__text-area {\n  width: 100%;\n  height: 140px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__text-area--hidden {\n  display: none;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
@@ -28052,6 +28116,7 @@
 	                    showSaveBtn: true,
 	                    description: device.description,
 	                    address: device.address,
+	                    addressRequired: device.addressRequired,
 	                    modelNumber: device.modelNumber,
 	                    modelName: device.modelName,
 	                    softwareVersion: device.softwareVersion,

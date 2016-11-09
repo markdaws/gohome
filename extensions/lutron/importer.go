@@ -1,5 +1,7 @@
 package lutron
 
+//TODO: Delete this file
+
 import (
 	"encoding/json"
 	"errors"

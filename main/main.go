@@ -45,32 +45,6 @@ type config struct {
 	UPNPNotifyPort string `json:"upnpNotifyPort"`
 }
 
-func defaultConfig(systemPath string) config {
-	addr := "127.0.0.1"
-	//TODO: Change to false
-	useLocalhost := true
-	if !useLocalhost {
-		// Find the first public address we can bind to
-		var err error
-		addr, err = getIPV4NonLoopbackAddr()
-		if err != nil || addr == "" {
-			log.E("Could not detect non loopback IP address, falling back to 127.0.0.1")
-		}
-	}
-
-	cfg := config{
-		SystemPath:     systemPath + "/system.json",
-		WWWAddr:        addr,
-		WWWPort:        "8000",
-		APIAddr:        addr,
-		APIPort:        "5000",
-		UPNPNotifyAddr: addr,
-		UPNPNotifyPort: "8001",
-	}
-
-	return cfg
-}
-
 func main() {
 	var cfg config
 
@@ -218,6 +192,8 @@ func main() {
 	<-done
 }
 
+// getIPV4NonLoopbackAddr returns the first ipv4 non loopback address
+// we can find. If non can be found an error is returned
 func getIPV4NonLoopbackAddr() (string, error) {
 
 	ifaces, err := net.Interfaces()
@@ -247,4 +223,32 @@ func getIPV4NonLoopbackAddr() (string, error) {
 		}
 	}
 	return "", nil
+}
+
+// defaultConfig returns a default config option with all the values
+// populated to some default values
+func defaultConfig(systemPath string) config {
+	addr := "127.0.0.1"
+	//TODO: Change to false
+	useLocalhost := true
+	if !useLocalhost {
+		// Find the first public address we can bind to
+		var err error
+		addr, err = getIPV4NonLoopbackAddr()
+		if err != nil || addr == "" {
+			log.E("Could not detect non loopback IP address, falling back to 127.0.0.1")
+		}
+	}
+
+	cfg := config{
+		SystemPath:     systemPath + "/gohome.json",
+		WWWAddr:        addr,
+		WWWPort:        "8000",
+		APIAddr:        addr,
+		APIPort:        "5000",
+		UPNPNotifyAddr: addr,
+		UPNPNotifyPort: "8001",
+	}
+
+	return cfg
 }

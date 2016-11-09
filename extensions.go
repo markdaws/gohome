@@ -45,12 +45,14 @@ type DiscovererInfo struct {
 	// scanning for devices. An example might be some text saying:
 	// "Press the sync button on the hub before scanning" - it can be
 	// instructions the user should perform before scanning.
+	//TODO: Rename this, applies to scanning and importing
 	PreScanInfo string
 }
 
 // DiscoveryResults contains all of the devices found by the discoverer instance
 type DiscoveryResults struct {
 	Devices []*Device
+	Scenes  []*Scene
 }
 
 // Discoverer represents an interface for types that can discover devices on the network or from

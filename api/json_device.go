@@ -12,8 +12,9 @@ type jsonAuth struct {
 }
 
 type jsonDevice struct {
-	Address         string        `json:"address"`
 	ID              string        `json:"id"`
+	Address         string        `json:"address"`
+	AddressRequired bool          `json:"addressRequired"`
 	Name            string        `json:"name"`
 	Description     string        `json:"description"`
 	ModelNumber     string        `json:"modelNumber"`

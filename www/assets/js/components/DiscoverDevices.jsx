@@ -19,29 +19,69 @@ var DiscoverDevices = React.createClass({
         return {
             discovering: false,
             devices: null,
+            scenes: null,
+            configString: ''
         };
     },
 
     discover: function() {
+        var configString = '';
+        try {
+            // Remove all the whitespace, otherwise go gets upset
+            configString = JSON.stringify(JSON.parse(this.state.configString))
+        }
+        catch(e) {
+            console.error('TODO: show error');
+            this.setState();
+        }
         this.setState({
             discovering: true,
-            devices: null
+            devices: null,
+            scenes: null
         });
 
-        Api.discovererScanDevices(this.props.discoverer.id, function(err, data) {
-            this.setState({
-                discovering: false,
-                devices: data || []
-            });
-        }.bind(this));
+        if (this.props.discoverer.type === 'FromString') {
+            Api.discovererFromString(this.props.discoverer.id, configString, function(err, data) {
+                if (err != null) {
+                    //TODO: Change import button to green/red
+                    console.error("Failed to discover");
+                    console.error(err);
+                    return;
+                }
+
+                this.setState({
+                    discovering: false,
+                    scenes: data.scenes,
+                    devices: data.devices
+                });            
+            }.bind(this));
+        } else {
+            Api.discovererScanDevices(this.props.discoverer.id, function(err, data) {
+                if (err != null) {
+                    //TODO: Change import button to green/red
+                    console.error("Failed to discover");
+                    console.error(err);
+                    return;
+                }
+                this.setState({
+                    discovering: false,
+                    scenes: data.scenes,
+                    devices: data.devices
+                });
+            }.bind(this));
+        }
     },
 
+    textChanged: function(evt) {
+        this.setState({ configString: evt.target.value });
+    },
+    
     render: function() {
         var devices
         if (this.state.devices && this.state.devices.length > 0) {
             devices = this.state.devices.map(function(device) {
                 return <ImportGroup
-                           key={device.id}
+                           key={device.id || device.clientId}
                            device={device}
                            createdDevice={this.props.importedDevice}
                            createdZone={this.props.importedZone}
@@ -50,7 +90,7 @@ var DiscoverDevices = React.createClass({
             }.bind(this));
         }
 
-        var importBody
+        var importBody;
         var deviceCount = 0;
         if (this.state.devices) {
             deviceCount = this.state.devices.length;
@@ -61,6 +101,10 @@ var DiscoverDevices = React.createClass({
                 <div {...classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : '')}>
                     {this.props.discoverer.preScanInfo}
                 </div>
+                <textarea
+                    {...classes('text-area', this.props.discoverer.type === 'FromString' ? '' : 'hidden')}
+                    placeholder="Paste the config string here" value={this.state.configString} onChange={this.textChanged}>
+                </textarea>
                 <div {...classes('discover')}>
                     <button {...classes('', '', (this.state.discovering ? 'disabled' : '') + ' btn btn-primary')}
                         onClick={this.discover}>Discover Devices</button>
