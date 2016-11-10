@@ -1,8 +1,6 @@
 package example
 
 import (
-	"errors"
-
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/zone"
@@ -35,12 +33,6 @@ func (d *discovery) Discoverers() []gohome.DiscovererInfo {
 		// this option supports.
 		Description: "Discover version 1.0 example hardware",
 
-		// Type describes how the import UI should behave.  If the type is "ScenDevices"
-		// there is no additional UI, if it is "FromString" then the import UI will
-		// show a textbox where the user can paste in a string from a config file, this
-		// string will then end up being passed to FromString function later in this file
-		Type: "ScanDevices",
-
 		// This is a string you can show to the user before the system will try to scan the network
 		// for devices, you can give more info. For example the user might have to press a
 		// physcial button on the device before we can scan the network, or if this is a config
@@ -66,7 +58,7 @@ func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 
 type discoverer struct{}
 
-func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, error) {
+func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {
 	// This function will be called when the system wants you to scan the
 	// network for your hardware
 
@@ -76,10 +68,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 
 	log.V("scanning for example hardware")
 
-	// Pretend we got one device repsond
-	devices := make([]*gohome.Device, 1)
-
-	devices[0] = gohome.NewDevice(
+	dev := gohome.NewDevice(
 		"example.hardware.1",
 		"example model name",
 		"example softeare version 1.0",
@@ -93,25 +82,32 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		nil,
 	)
 
+	// You must give each object an ID, which will be unique in the system before returning
+	// the data back to the clients
+	dev.ID = sys.NextGlobalID()
+
 	// Add one zone to the device
 	z := &zone.Zone{
+		ID:          sys.NextGlobalID(),
 		Address:     "1",
 		Name:        "fake zone 1",
 		Description: "fake zone 1 desc",
-		DeviceID:    "", // We don't know this right now just leave blank
+		DeviceID:    dev.ID,
 
 		// Make this a dimmable light zone, there are many other types
 		Type:   zone.ZTLight,
 		Output: zone.OTContinuous,
 	}
-	devices[0].AddZone(z)
+	dev.AddZone(z)
 
 	// Add a fake sensor to the device, each sensor can have one attribute that
 	// determines the type of the data returned from the device
 	sensor := &gohome.Sensor{
+		ID:          sys.NextGlobalID(),
 		Address:     "1",
 		Name:        "fake sensor",
 		Description: "",
+		DeviceID:    dev.ID,
 		Attr: gohome.SensorAttr{
 			Name:     "sensor",
 			Value:    "-1",
@@ -122,19 +118,11 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 			},
 		},
 	}
-	devices[0].AddSensor(sensor)
+	dev.AddSensor(sensor)
 
 	// Return these devices back to the UI, the user can then choose to import them or not
 	return &gohome.DiscoveryResults{
-		Devices: devices,
+		Devices: []*gohome.Device{dev},
 	}, nil
 
-}
-func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
-	// If you support creating goHOME types from a string, the string could be a config
-	// file form the hardware that you need to translate to gohome specific types, you
-	// can do that here, parse the string and return the devices. An example of this
-	// can be seen in gohome/extensions/lutron/discovery.go where the code parses a lutron
-	// config file and turns the information in to gohome specific types.
-	return nil, errors.New("unsupported")
 }

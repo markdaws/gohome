@@ -72,24 +72,29 @@ func (errs *Errors) Error() string {
 
 // ErrorJSON provides a consistent format to send back validation errors to
 // a client, it is an object, that contains one field "errors", the errors field
-// is an object, where the keys are a unique identifier to the field that has
-// the error and then the error message .e.g
+// is an object, where the keys are a unique identifier to the object that had
+// the error, keyed by ids ID, e.g. a zone ID or scene ID, whaterver has been validated,
+// then that has a map which is keyed by the field name which has validation issues
 // {
 //    errors: {
-//        "field1": { message: "required field" },
-//		  "field2": { message: "must be greater than 50" }
+//        "objectID": {
+//            "field1": { message: "required field" },
+//	    	  "field2": { message: "must be greater than 50" }
+//        }
 //    }
 // }
 type ErrorJSON struct {
-	Errors map[string]map[string]string `json:"errors"`
+	Errors map[string]map[string]map[string]string `json:"errors"`
 }
 
 // NewErrorJSON returns an ErrorJSON instance populated with all of the errors in
 // the errors parameter
-func NewErrorJSON(item interface{}, clientID string, errors *Errors) ErrorJSON {
+func NewErrorJSON(item interface{}, objectID string, errors *Errors) ErrorJSON {
 	valErr := ErrorJSON{
-		Errors: make(map[string]map[string]string),
+		Errors: make(map[string]map[string]map[string]string),
 	}
+	valErr.Errors[objectID] = make(map[string]map[string]string)
+
 	for _, e := range errors.Errors {
 		var jsonField string
 		if e.IgnoreJSONTag {
@@ -102,8 +107,8 @@ func NewErrorJSON(item interface{}, clientID string, errors *Errors) ErrorJSON {
 				continue
 			}
 		}
-		valErr.Errors[clientID+"_"+jsonField] = make(map[string]string)
-		valErr.Errors[clientID+"_"+jsonField]["message"] = e.MSG
+		valErr.Errors[objectID][jsonField] = make(map[string]string)
+		valErr.Errors[objectID][jsonField]["message"] = e.MSG
 	}
 	return valErr
 }

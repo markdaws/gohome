@@ -29,6 +29,25 @@ func RegisterZoneHandlers(r *mux.Router, s *apiServer) {
 		apiUpdateZoneHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("PUT")
 }
 
+func ZonesToJSON(zns map[string]*zone.Zone) []jsonZone {
+	zones := make(zones, len(zns))
+	var i int32
+	for _, zone := range zns {
+		zones[i] = jsonZone{
+			Address:     zone.Address,
+			ID:          zone.ID,
+			Name:        zone.Name,
+			Description: zone.Description,
+			Type:        zone.Type.ToString(),
+			Output:      zone.Output.ToString(),
+			DeviceID:    zone.DeviceID,
+		}
+		i++
+	}
+	sort.Sort(zones)
+	return zones
+}
+
 func apiUpdateZoneLevelHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
@@ -174,22 +193,7 @@ func apiUpdateZoneHandler(
 func apiListZonesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		zones := make(zones, len(system.Zones), len(system.Zones))
-		var i int32
-		for _, zone := range system.Zones {
-			zones[i] = jsonZone{
-				Address:     zone.Address,
-				ID:          zone.ID,
-				Name:        zone.Name,
-				Description: zone.Description,
-				Type:        zone.Type.ToString(),
-				Output:      zone.Output.ToString(),
-				DeviceID:    zone.DeviceID,
-			}
-			i++
-		}
-		sort.Sort(zones)
-		if err := json.NewEncoder(w).Encode(zones); err != nil {
+		if err := json.NewEncoder(w).Encode(ZonesToJSON(system.Zones)); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -210,11 +214,13 @@ func apiAddZoneHandler(
 
 		var data jsonZone
 		if err = json.Unmarshal(body, &data); err != nil {
+			log.V("failed to unmarshal data when adding zone")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		z := &zone.Zone{
+			ID:          data.ID,
 			Address:     data.Address,
 			Name:        data.Name,
 			Description: data.Description,
@@ -233,6 +239,7 @@ func apiAddZoneHandler(
 
 		dev, ok := system.Devices[data.DeviceID]
 		if !ok {
+			log.V("unknown device id when adding zone")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -249,21 +256,11 @@ func apiAddZoneHandler(
 			return
 		}
 
-		errors = system.AddZone(z)
-		if errors != nil {
-			if valErrs, ok := errors.(*validation.Errors); ok {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
-			} else {
-				//Other kind of errors, TODO: log
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			return
-		}
+		system.AddZone(z)
 
 		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
+			log.V("error saving system after adding zone: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

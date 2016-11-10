@@ -18,7 +18,8 @@ var SystemDeviceListGridCell = React.createClass({
         return {
             showCheckbox: false,
             checkboxChecked: true,
-            hasError: false
+            hasError: false,
+            hasSuccess: false
         };
     },
 
@@ -32,7 +33,7 @@ var SystemDeviceListGridCell = React.createClass({
 
     checkboxChanged: function(evt) {
         this.setState({checkboxChecked: evt.target.checked});
-        this.props.chkBxChanged && this.props.chkBxChanged(evt.target.checked);
+        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
     },
     
     render: function() {
@@ -49,8 +50,14 @@ var SystemDeviceListGridCell = React.createClass({
             );
         }
 
+        var state = '';
+        if (this.props.hasError) {
+            state = 'error';
+        } else if (this.props.hasSuccess) {
+            state = 'success';
+        }
         return (
-            <div {...classes('', this.props.hasError ? 'error' : '')}>
+            <div {...classes('', state)}>
                 {chkBx}
                 <div {...classes('icon')}>
                     <i className="icon ion-cube"></i>

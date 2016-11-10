@@ -1,8 +1,6 @@
 package connectedbytcp
 
 import (
-	"errors"
-
 	connectedbytcpExt "github.com/go-home-iot/connectedbytcp"
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
@@ -19,7 +17,6 @@ func (d *discovery) Discoverers() []gohome.DiscovererInfo {
 		ID:          "connectedbytcp.bulbs",
 		Name:        "ConnectedByTCP Bulbs",
 		Description: "Discover ConnectedByTCP bulbs",
-		Type:        "ScanDevices",
 		PreScanInfo: "IMPORTANT: You must press the \"Scan\" button on your physical hub hardware before trying to discover devices.  If you don't the scan will fail.",
 	}}
 }
@@ -35,7 +32,7 @@ func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 
 type discoverer struct{}
 
-func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, error) {
+func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {
 	infos, err := connectedbytcpExt.Scan(5)
 	if err != nil {
 		return nil, err
@@ -66,6 +63,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 				Token: token,
 			},
 		)
+		dev.ID = sys.NextGlobalID()
 
 		// Get all of the rooms and all the zones in each room
 		resp, err := connectedbytcpExt.RoomGetCarousel(info.Location, token)
@@ -76,10 +74,11 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		for _, room := range resp.Rooms {
 			for _, d := range room.Devices {
 				z := &zone.Zone{
+					ID:          sys.NextGlobalID(),
 					Address:     d.DID,
 					Name:        d.Name,
 					Description: "",
-					DeviceID:    "",
+					DeviceID:    dev.ID,
 					Type:        zone.ZTLight,
 					Output:      zone.OTContinuous,
 				}
@@ -92,8 +91,4 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 	return &gohome.DiscoveryResults{
 		Devices: devices,
 	}, nil
-}
-
-func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
-	return nil, errors.New("unsupported")
 }

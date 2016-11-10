@@ -23,29 +23,32 @@ func RegisterSensorHandlers(r *mux.Router, s *apiServer) {
 		apiUpdateSensorHandler(s.systemSavePath, s.system, s.recipeManager)).Methods("PUT")
 }
 
+func SensorsToJSON(sens map[string]*gohome.Sensor) []jsonSensor {
+	sensors := make(sensors, len(sens))
+	var i int32
+	for _, sensor := range sens {
+		sensors[i] = jsonSensor{
+			Address:     sensor.Address,
+			ID:          sensor.ID,
+			Name:        sensor.Name,
+			Description: sensor.Description,
+			DeviceID:    sensor.DeviceID,
+			Attr: jsonSensorAttr{
+				Name:     sensor.Attr.Name,
+				DataType: string(sensor.Attr.DataType),
+				States:   sensor.Attr.States,
+			},
+		}
+		i++
+	}
+	sort.Sort(sensors)
+	return sensors
+}
+
 func apiSensorsHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
-		sensors := make(sensors, len(system.Sensors), len(system.Sensors))
-		var i int32
-		for _, sensor := range system.Sensors {
-			sensors[i] = jsonSensor{
-				Address:     sensor.Address,
-				ID:          sensor.ID,
-				Name:        sensor.Name,
-				Description: sensor.Description,
-				DeviceID:    sensor.DeviceID,
-				Attr: jsonSensorAttr{
-					Name:     sensor.Attr.Name,
-					DataType: string(sensor.Attr.DataType),
-					States:   sensor.Attr.States,
-				},
-			}
-			i++
-		}
-		sort.Sort(sensors)
-		if err := json.NewEncoder(w).Encode(sensors); err != nil {
+		if err := json.NewEncoder(w).Encode(SensorsToJSON(system.Sensors)); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -111,6 +114,7 @@ func apiAddSensorHandler(
 		}
 
 		sensor := &gohome.Sensor{
+			ID:          data.ID,
 			Name:        data.Name,
 			Description: data.Description,
 			Address:     data.Address,
@@ -142,30 +146,7 @@ func apiAddSensorHandler(
 			return
 		}
 
-		errors := system.AddSensor(sensor)
-
-		// Subscribe to events from the sensor
-		evts := system.Extensions.FindEvents(system, dev)
-		if evts != nil {
-			if evts.Producer != nil {
-				system.Services.EvtBus.AddProducer(evts.Producer)
-			}
-			if evts.Consumer != nil {
-				system.Services.EvtBus.AddConsumer(evts.Consumer)
-			}
-		}
-
-		if errors != nil {
-			if valErrs, ok := errors.(*validation.Errors); ok {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
-			} else {
-				//Other kind of errors, TODO: log
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			return
-		}
+		system.AddSensor(sensor)
 
 		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {

@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"time"
@@ -72,35 +70,8 @@ func main() {
 	// Recipe manager handles processing all of the recipes the user has created
 	rm := gohome.NewRecipeManager()
 
-	//TODO: Remove, simulate user importing lutron information on load
-	reset := true
-	if reset {
-		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro")
-		intg.RegisterExtensions(system)
-
-		bytes, err := ioutil.ReadFile("main/ip.json")
-		if err != nil {
-			panic("Could not read ip.json")
-		}
-
-		discoverer := system.Extensions.FindDiscovererFromID(system, "lutron.l-bdgpro2-wh")
-		if discoverer == nil {
-			panic("Failed to import: " + err.Error())
-		}
-
-		//TODO: This is wrong, fix interface
-		_, err = discoverer.FromString(string(bytes[:]))
-		//err = importer.FromString(system, string(bytes[:]), "l-bdgpro2-wh")
-		if err != nil {
-			panic("Failed to import: " + err.Error())
-		}
-
-		err = store.SaveSystem(cfg.SystemPath, system, rm)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
+	// Try to load an existing system from disk, if not present we will create
+	// a blank one
 	sys, err := store.LoadSystem(cfg.SystemPath, rm)
 	if err == store.ErrFileNotFound {
 		log.V("startup file not found at: %s, creating new system", cfg.SystemPath)
@@ -229,7 +200,6 @@ func getIPV4NonLoopbackAddr() (string, error) {
 // populated to some default values
 func defaultConfig(systemPath string) config {
 	addr := "127.0.0.1"
-	//TODO: Change to false
 	useLocalhost := true
 	if !useLocalhost {
 		// Find the first public address we can bind to

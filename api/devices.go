@@ -2,11 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/go-home-iot/connection-pool"
 	"github.com/gorilla/mux"
@@ -14,6 +14,7 @@ import (
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/validation"
+	"github.com/markdaws/gohome/zone"
 )
 
 // RegisterDeviceHandlers registers the REST API routes relating to devices
@@ -28,26 +29,58 @@ func RegisterDeviceHandlers(r *mux.Router, s *apiServer) {
 		apiDeviceHandlerUpdate(s.systemSavePath, s.system, s.recipeManager)).Methods("PUT")
 }
 
+func DevicesToJSON(devs map[string]*gohome.Device) []jsonDevice {
+	devices := make(devices, len(devs))
+	var i int32
+	for _, device := range devs {
+		var connPoolJSON *jsonConnPool
+		if device.Connections != nil {
+			connCfg := device.Connections.Config
+			connPoolJSON = &jsonConnPool{
+				Name:     connCfg.Name,
+				PoolSize: int32(connCfg.Size),
+			}
+		}
+
+		var authJSON *jsonAuth
+		if device.Auth != nil {
+			authJSON = &jsonAuth{
+				Login:    device.Auth.Login,
+				Password: device.Auth.Password,
+				Token:    device.Auth.Token,
+			}
+		}
+
+		jsonButtons := ButtonsToJSON(device.Buttons)
+		jsonZones := ZonesToJSON(device.Zones)
+		jsonSensors := SensorsToJSON(device.Sensors)
+
+		devices[i] = jsonDevice{
+			ID:              device.ID,
+			Address:         device.Address,
+			Name:            device.Name,
+			Description:     device.Description,
+			ModelNumber:     device.ModelNumber,
+			ModelName:       device.ModelName,
+			SoftwareVersion: device.SoftwareVersion,
+			Zones:           jsonZones,
+			Sensors:         jsonSensors,
+			Buttons:         jsonButtons,
+			ConnPool:        connPoolJSON,
+			Auth:            authJSON,
+			Type:            string(device.Type),
+		}
+		i++
+	}
+	sort.Sort(devices)
+	return devices
+}
+
 func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		devices := make(devices, len(system.Devices), len(system.Devices))
-		var i int32
-		for _, device := range system.Devices {
-			devices[i] = jsonDevice{
-				Address:         device.Address,
-				AddressRequired: device.AddressRequired,
-				ID:              device.ID,
-				Name:            device.Name,
-				Description:     device.Description,
-				ModelNumber:     device.ModelNumber,
-				Type:            string(device.Type),
-			}
-			i++
-		}
-		sort.Sort(devices)
-		if err := json.NewEncoder(w).Encode(devices); err != nil {
+		if err := json.NewEncoder(w).Encode(DevicesToJSON(system.Devices)); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -87,13 +120,20 @@ func apiAddDeviceHandler(
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
 		if err != nil {
+			log.V("Failed to ready request body %s", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		var data jsonDevice
 		if err = json.Unmarshal(body, &data); err != nil {
-			fmt.Printf("%s\n", err)
+			log.V("error unmarhsaling device %s", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if _, ok := system.Devices[data.ID]; ok {
+			log.V("trying to add duplicate device %s", data.ID)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -112,7 +152,7 @@ func apiAddDeviceHandler(
 			data.ModelName,
 			data.SoftwareVersion,
 			data.Address,
-			"",
+			data.ID,
 			data.Name,
 			data.Description,
 			nil,
@@ -120,7 +160,6 @@ func apiAddDeviceHandler(
 			nil,
 			auth,
 		)
-		d.AddressRequired = data.AddressRequired
 		d.Type = gohome.DeviceType(data.Type)
 
 		var connPoolCfg *pool.Config
@@ -128,6 +167,9 @@ func apiAddDeviceHandler(
 			connPoolCfg = &pool.Config{
 				Name: data.ConnPool.Name,
 				Size: int(data.ConnPool.PoolSize),
+
+				//TODO Serialize
+				RetryDuration: time.Second * 10,
 			}
 
 			network := system.Extensions.FindNetwork(system, d)
@@ -143,17 +185,122 @@ func apiAddDeviceHandler(
 		cmdBuilder := system.Extensions.FindCmdBuilder(system, d)
 		d.CmdBuilder = cmdBuilder
 
-		errors := system.AddDevice(d)
-		if errors != nil {
-			if valErrs, ok := errors.(*validation.Errors); ok {
+		valErrs := d.Validate()
+		if valErrs != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
+			return
+		}
+
+		newButtons := make([]*gohome.Button, 0, len(data.Buttons))
+		for _, button := range data.Buttons {
+			btn := &gohome.Button{
+				Address:     button.Address,
+				ID:          button.ID,
+				Name:        button.Name,
+				Description: button.Description,
+				Device:      d,
+			}
+			err := d.AddButton(btn)
+			if err != nil {
+				log.V("failed to add button to device: %s", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			newButtons = append(newButtons, btn)
+		}
+
+		newZones := make([]*zone.Zone, 0, len(data.Zones))
+		for _, zn := range data.Zones {
+			if _, ok := system.Zones[zn.ID]; ok {
+				log.V("trying to add duplicate zone %s", zn.ID)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			z := &zone.Zone{
+				ID:          zn.ID,
+				Address:     zn.Address,
+				Name:        zn.Name,
+				Description: zn.Description,
+				DeviceID:    zn.DeviceID,
+				Type:        zone.TypeFromString(zn.Type),
+				Output:      zone.OutputFromString(zn.Output),
+			}
+
+			valErrs := z.Validate()
+			if valErrs != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
-			} else {
-				//Other kind of errors, TODO: log
-				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&zn, zn.ID, valErrs))
+				return
 			}
-			return
+
+			errors := d.AddZone(z)
+			if errors != nil {
+				if valErrs, ok := errors.(*validation.Errors); ok {
+					w.WriteHeader(http.StatusBadRequest)
+					w.Header().Set("Content-Type", "application/json; charset=utf-8")
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&zn, zn.ID, valErrs))
+				} else {
+					log.V("error adding zone to device %s", errors)
+					w.WriteHeader(http.StatusBadRequest)
+				}
+				return
+			}
+			newZones = append(newZones, z)
+		}
+
+		newSensors := make([]*gohome.Sensor, 0, len(data.Sensors))
+		for _, sen := range data.Sensors {
+			if _, ok := system.Sensors[sen.ID]; ok {
+				log.V("trying to add duplicate sensor %s", sen.ID)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			sensor := &gohome.Sensor{
+				ID:          sen.ID,
+				Name:        sen.Name,
+				Description: sen.Description,
+				Address:     sen.Address,
+				DeviceID:    sen.DeviceID,
+				Attr: gohome.SensorAttr{
+					Name:     sen.Attr.Name,
+					DataType: gohome.SensorDataType(sen.Attr.DataType),
+					States:   sen.Attr.States,
+				},
+			}
+
+			valErrs := sensor.Validate()
+			if valErrs != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&sen, sen.ID, valErrs))
+				return
+			}
+
+			err = d.AddSensor(sensor)
+			if err != nil {
+				log.V("error adding sensor to device %s", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			newSensors = append(newSensors, sensor)
+		}
+
+		// Now we have created everything and know all the validation passes we can
+		// commit all the changes at once
+		system.AddDevice(d)
+		for _, button := range newButtons {
+			system.AddButton(button)
+		}
+		for _, zone := range newZones {
+			system.AddZone(zone)
+		}
+		for _, sensor := range newSensors {
+			system.AddSensor(sensor)
 		}
 
 		err = system.InitDevice(d)
@@ -163,6 +310,7 @@ func apiAddDeviceHandler(
 
 		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
+			log.V("error writing changes to disk %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

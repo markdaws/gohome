@@ -50,9 +50,6 @@ type Device struct {
 	// system we have imported
 	Address string
 
-	// AddressRequired indicates that this device has to have an address, defaults to false
-	AddressRequired bool
-
 	// Name is a friendly name for the device, it will be shown in the UI
 	Name string
 
@@ -138,11 +135,15 @@ func NewDevice(
 func (d *Device) Validate() *validation.Errors {
 	errors := &validation.Errors{}
 
+	if d.ID == "" {
+		errors.Add("required field", "ID")
+	}
+
 	if d.Name == "" {
 		errors.Add("required field", "Name")
 	}
 
-	if d.AddressRequired && d.Address == "" {
+	if d.Address == "" {
 		errors.Add("required field", "Address")
 	}
 
@@ -228,4 +229,19 @@ func (d *Device) OwnedSensors(sensorIDs map[string]bool) []*Sensor {
 		}
 	}
 	return sensors
+}
+
+// IsDupeZone returns true if this zone is a dupe of one the device already owns. This check
+// is not based on ID equality, since users could try to import a zone and it is given a new
+// ID when it is scanned, but it might be a dupe of a zone we previously scanned, so we have
+// to check equality on other properties
+func (d *Device) IsDupeZone(z *zone.Zone) (*zone.Zone, bool) {
+	zone, ok := d.Zones[z.Address]
+	return zone, ok
+}
+
+// IsDupeSensor returns true if the sensor is a dupe of one the device already owns
+func (d *Device) IsDupeSensor(s *Sensor) (*Sensor, bool) {
+	sensor, ok := d.Sensors[s.Address]
+	return sensor, ok
 }

@@ -26,6 +26,10 @@ func (z *Zone) String() string {
 func (z *Zone) Validate() *validation.Errors {
 	errors := &validation.Errors{}
 
+	if z.ID == "" {
+		errors.Add("required field", "ID")
+	}
+
 	if z.Name == "" {
 		errors.Add("required field", "Name")
 	}

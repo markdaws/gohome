@@ -26,7 +26,6 @@ var DeviceInfo = React.createClass({
             name: this.props.name || '',
             description: this.props.description || '',
             address: this.props.address,
-            addressRequired: this.props.addressRequired,
             id: this.props.id,
             modelNumber: this.props.modelNumber || '',
             modelName: this.props.modelName || '',
@@ -36,7 +35,7 @@ var DeviceInfo = React.createClass({
             errors: this.props.errors,
             saveButtonStatus: '',
             dirty: !this.props.id,
-            connectionPool: this.props.connectionPool,
+            connPool: this.props.connPool,
             cmdBuilder: this.props.cmdBuilder,
             type: this.props.type,
         }
@@ -55,16 +54,16 @@ var DeviceInfo = React.createClass({
     toJson: function() {
         var s = this.state;
         return {
+            id: s.id,
             name: s.name,
             description: s.description,
             address: s.address,
-            addressRequired: s.AddressRequired,
             modelNumber: s.modelNumber,
             modelName: s.modelName,
             softwareVersion: s.softwareVersion,
             auth: s.auth,
-            id: s.id,
-            connPool: this.props.connectionPool,
+            buttons: this.props.buttons,
+            connPool: this.props.connPool,
             cmdBuilder: this.props.cmdBuilder,
             type: s.type
         };

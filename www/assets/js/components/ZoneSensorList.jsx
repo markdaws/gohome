@@ -280,7 +280,9 @@ var ZoneSensorList = React.createClass({
             var otherZones = [];
             var sensors = [];
 
+            console.log("rendering");
             this.props.zones.forEach(function(zone) {
+                console.log("ZNID: " + zone.id)
                 var cmpZone = {
                     key: 'zones_' + zone.id,
                     cell: <ZoneSensorListGridCell
@@ -314,6 +316,7 @@ var ZoneSensorList = React.createClass({
             }.bind(this));
 
             this.props.sensors.forEach(function(sensor) {
+                console.log("SENID: " + sensor.id);
                 var cmpSensor = {
                     key: 'sensor_' + sensor.id,
                     cell: <ZoneSensorListGridCell

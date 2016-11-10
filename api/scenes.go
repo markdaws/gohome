@@ -35,47 +35,7 @@ func RegisterSceneHandlers(r *mux.Router, s *apiServer) {
 		apiActiveScenesHandler(s.system)).Methods("POST")
 }
 
-func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		var x struct {
-			ID string `json:"id"`
-		}
-		if err = json.Unmarshal(body, &x); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		scene, ok := system.Scenes[x.ID]
-		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		desc := fmt.Sprintf("Set scene: %s", scene.Name)
-		err = system.Services.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.SceneSet{
-			SceneID:   scene.ID,
-			SceneName: scene.Name,
-		}))
-		if err != nil {
-			//TODO: log
-			fmt.Printf("enqueue failed: %s\n", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(struct{}{})
-	}
-}
-
-func scenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
+func ScenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
 	jsonScenes := make(scenes, len(inputScenes))
 	var i int32
 	for _, scene := range inputScenes {
@@ -135,12 +95,51 @@ func scenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
 	return jsonScenes
 }
 
+func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var x struct {
+			ID string `json:"id"`
+		}
+		if err = json.Unmarshal(body, &x); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		scene, ok := system.Scenes[x.ID]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		desc := fmt.Sprintf("Set scene: %s", scene.Name)
+		err = system.Services.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.SceneSet{
+			SceneID:   scene.ID,
+			SceneName: scene.Name,
+		}))
+		if err != nil {
+			//TODO: log
+			fmt.Printf("enqueue failed: %s\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(struct{}{})
+	}
+}
+
 func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-		jsonScenes := scenesToJSON(system.Scenes)
-		if err := json.NewEncoder(w).Encode(jsonScenes); err != nil {
+		if err := json.NewEncoder(w).Encode(ScenesToJSON(system.Scenes)); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -327,6 +326,7 @@ func apiSceneHandlerCommandAdd(
 			}
 
 			finalCmd = &cmd.ZoneSetLevel{
+				ID:          command.ID,
 				ZoneAddress: z.Address,
 				ZoneID:      z.ID,
 				ZoneName:    z.Name,
@@ -367,6 +367,7 @@ func apiSceneHandlerCommandAdd(
 
 			if command.Type == "buttonPress" {
 				finalCmd = &cmd.ButtonPress{
+					ID:            command.ID,
 					ButtonAddress: button.Address,
 					ButtonID:      button.ID,
 					DeviceName:    button.Device.Name,
@@ -375,6 +376,7 @@ func apiSceneHandlerCommandAdd(
 				}
 			} else {
 				finalCmd = &cmd.ButtonRelease{
+					ID:            command.ID,
 					ButtonAddress: button.Address,
 					ButtonID:      button.ID,
 					DeviceName:    button.Device.Name,
@@ -411,6 +413,7 @@ func apiSceneHandlerCommandAdd(
 				return
 			}
 			finalCmd = &cmd.SceneSet{
+				ID:        command.ID,
 				SceneID:   scene.ID,
 				SceneName: scene.Name,
 			}
@@ -511,24 +514,13 @@ func apiSceneHandlerCreate(savePath string, system *gohome.System, recipeManager
 		}
 
 		newScene := &gohome.Scene{
+			ID:          scene.ID,
 			Address:     scene.Address,
 			Name:        scene.Name,
 			Description: scene.Description,
 			Managed:     true,
 		}
-
-		err = system.AddScene(newScene)
-		if err != nil {
-			if valErrs, ok := err.(*validation.Errors); ok {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&scene, scene.ID, valErrs))
-			} else {
-				//Other kind of errors, TODO: log
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			return
-		}
+		system.AddScene(newScene)
 
 		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {

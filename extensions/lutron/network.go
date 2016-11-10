@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/go-home-iot/connection-pool"
@@ -15,11 +16,16 @@ type network struct{}
 
 func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(pool.Config) (net.Conn, error), error) {
 	return func(cfg pool.Config) (net.Conn, error) {
-		log.V("Attempting to connect to Device[%s] %s", dev.Name, dev.Address)
+		addr := dev.Address
+		if strings.Index(addr, ":") == -1 {
+			addr += ":23"
+		}
 
-		conn, err := net.DialTimeout("tcp", dev.Address, time.Second*10)
+		log.V("Attempting to connect to Device[%s] %s", dev.Name, addr)
+
+		conn, err := net.DialTimeout("tcp", addr, time.Second*10)
 		if err != nil {
-			log.E("Failed to connect to Device[%s] %s, %s", dev.Name, dev.Address, err)
+			log.E("Failed to connect to Device[%s] %s, %s", dev.Name, addr, err)
 			return nil, err
 		}
 
@@ -44,7 +50,7 @@ func (d *network) NewConnection(sys *gohome.System, dev *gohome.Device) (func(po
 			return nil, fmt.Errorf("authenticate password failed: %s", err)
 		}
 
-		log.V("Connected to Device[%s] %s", dev.Name, dev.Address)
+		log.V("Connected to Device[%s] %s", dev.Name, addr)
 		return conn, nil
 	}, nil
 }

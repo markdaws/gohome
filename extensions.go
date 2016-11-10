@@ -21,6 +21,24 @@ type ExtEvents struct {
 	Producer evtbus.Producer
 }
 
+type UIField struct {
+	// ID a unique ID for the field, doesn't need to be globally unique
+	ID string
+
+	// Label is a string that is shown to the user. This should be short, for more
+	// information use the Description field
+	Label string
+
+	// Description is a string that will be shown to the user.
+	Description string
+
+	// Default is the value that shoud be shown by default
+	Default string
+
+	// Required indicates the field must be filled out by the user before a scan can occur
+	Required bool
+}
+
 // DiscovererInfo represents information about a Discoverer instance. Extensions might
 // export multiple Discoverers that know how to find devices on a network or create
 // devices from config strings
@@ -36,10 +54,11 @@ type DiscovererInfo struct {
 	// explains the discoverer only supports v1.0 of some hardware.
 	Description string
 
-	// Type can either be ScanDevices|FromString - ScanDevices indicates the discoverer will scan for
-	// devices on the network, FromString indicates the discoverer will take in a string e.g. a config
-	// file from the hardware and turn that into goHOME specific information
-	Type string
+	// UIFields is a list of fields that will be displayed to the user before the scan
+	// begins, these can be used to get extra information from the user if necessary. For example
+	// some system may export a config file but not include the IP address of the device in the
+	// export so you can add a UI field to get the user to enter the IP address
+	UIFields []UIField
 
 	// PreScanInfo is a string that will be shown to the user before
 	// scanning for devices. An example might be some text saying:
@@ -58,8 +77,7 @@ type DiscoveryResults struct {
 // Discoverer represents an interface for types that can discover devices on the network or from
 // a config file string.
 type Discoverer interface {
-	ScanDevices(*System) (*DiscoveryResults, error)
-	FromString(string) (*DiscoveryResults, error)
+	ScanDevices(*System, map[string]string) (*DiscoveryResults, error)
 }
 
 // Discovery is the interface exposed by an extension if it supports discovering devices

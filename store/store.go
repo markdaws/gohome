@@ -57,7 +57,6 @@ type connPoolJSON struct {
 type deviceJSON struct {
 	ID              string        `json:"id"`
 	Address         string        `json:"address"`
-	AddressRequired bool          `json:"addressRequired"`
 	Name            string        `json:"name"`
 	Description     string        `json:"description"`
 	ModelNumber     string        `json:"modelNumber"`
@@ -149,7 +148,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			nil,
 			nil,
 			auth)
-		dev.AddressRequired = d.AddressRequired
 
 		cmdBuilder := sys.Extensions.FindCmdBuilder(sys, dev)
 		dev.CmdBuilder = cmdBuilder
@@ -175,11 +173,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			})
 		}
 
-		err = sys.AddDevice(dev)
-		if err != nil {
-			log.V("failed to add device to system: %s", err)
-			return nil, err
-		}
+		sys.AddDevice(dev)
 	}
 
 	// Have to go back through patching up devices to point to their child devices
@@ -227,12 +221,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			if err != nil {
 				log.V("failed to add zone to device: %s", err)
 			}
-			err = sys.AddZone(z)
-			if err != nil {
-				log.V("failed to add zone: %s", err)
-				return nil, err
-			}
-
+			sys.AddZone(z)
 			log.V("loaded Zone: ID:%s, Name:%s, Address:%s, Type:%s, Output:%s",
 				zn.ID, zn.Name, zn.Address, zn.Type, zn.Output,
 			)
@@ -254,12 +243,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			}
 
 			dev.AddSensor(sensor)
-			err := sys.AddSensor(sensor)
-			if err != nil {
-				log.V("failed to add sensor: %s", err)
-				return nil, err
-			}
-
+			sys.AddSensor(sensor)
 			log.V("loaded Sensor: ID:%s, Name:%s, Address:%s, DeviceID:%s",
 				sensor.ID, sensor.Name, sensor.Address, sensor.DeviceID,
 			)
@@ -325,11 +309,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			}
 			scene.Commands[i] = finalCmd
 		}
-		err = sys.AddScene(scene)
-		if err != nil {
-			log.V("failed to add scene: %s", err)
-			return nil, err
-		}
+		sys.AddScene(scene)
 		log.V("loaded Scene: ID:%s, Name:%s, Address:%s, Managed:%t",
 			scene.ID, scene.Name, scene.Address, scene.Managed,
 		)
@@ -432,7 +412,6 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 		d := deviceJSON{
 			ID:              device.ID,
 			Address:         device.Address,
-			AddressRequired: device.AddressRequired,
 			Name:            device.Name,
 			Description:     device.Description,
 			HubID:           hubID,

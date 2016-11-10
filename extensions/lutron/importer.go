@@ -124,10 +124,7 @@ func (imp *importer) FromString(system *gohome.System, data string) error {
 						},
 					},
 				}
-				err := system.AddScene(scene)
-				if err != nil {
-					fmt.Printf("error adding scene: %s\n", err)
-				}
+				system.AddScene(scene)
 			}
 		}
 
@@ -264,12 +261,7 @@ func (imp *importer) FromString(system *gohome.System, data string) error {
 		if err != nil {
 			fmt.Printf("err adding zone to device\n", err)
 		}
-		err = system.AddZone(newZone)
-		if err != nil {
-			fmt.Printf("err add zone: %s\n", err)
-		} else {
-			//fmt.Printf("added zone %s with ID %s\n", newZone.Name, newZone.ID)
-		}
+		system.AddZone(newZone)
 		//sbp.Zones()[newZone.Address] = newZone
 	}
 

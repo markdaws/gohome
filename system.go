@@ -4,7 +4,6 @@ import (
 	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
 	"github.com/markdaws/gohome/log"
-	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
 	"github.com/nu7hatch/gouuid"
 )
@@ -123,75 +122,28 @@ func (s *System) StopDevice(d *Device) {
 
 // AddButton adds the button to the system and gives it a unique
 // ID if it already doesn't have one
-func (s *System) AddButton(b *Button) error {
-	if b.ID == "" {
-		b.ID = s.NextGlobalID()
-	}
+func (s *System) AddButton(b *Button) {
 	s.Buttons[b.ID] = b
-	return nil
 }
 
 // AddSensor adds a sensor to the system
-func (s *System) AddSensor(sen *Sensor) error {
-	errors := sen.Validate()
-	if errors != nil {
-		return errors
-	}
-
-	if sen.ID == "" {
-		sen.ID = s.NextGlobalID()
-	}
+func (s *System) AddSensor(sen *Sensor) {
 	s.Sensors[sen.ID] = sen
-	return nil
 }
 
 // AddDevice adds a device to the system
-func (s *System) AddDevice(d *Device) error {
-	errors := d.Validate()
-	if errors != nil {
-		return errors
-	}
-
-	if d.ID == "" {
-		d.ID = s.NextGlobalID()
-	}
+func (s *System) AddDevice(d *Device) {
 	s.Devices[d.ID] = d
-	return nil
 }
 
 // AddZone adds a zone to the system
-func (s *System) AddZone(z *zone.Zone) error {
-	errors := z.Validate()
-	if errors != nil {
-		return errors
-	}
-
-	_, ok := s.Devices[z.DeviceID]
-	if !ok {
-		errors = &validation.Errors{}
-		errors.Add("unknown device", "DeviceID")
-		return errors
-	}
-
-	if z.ID == "" {
-		z.ID = s.NextGlobalID()
-	}
+func (s *System) AddZone(z *zone.Zone) {
 	s.Zones[z.ID] = z
-	return nil
 }
 
 // AddScene adds a scene to the system
-func (s *System) AddScene(scn *Scene) error {
-	errors := scn.Validate()
-	if errors != nil {
-		return errors
-	}
-
-	if scn.ID == "" {
-		scn.ID = s.NextGlobalID()
-	}
+func (s *System) AddScene(scn *Scene) {
 	s.Scenes[scn.ID] = scn
-	return nil
 }
 
 // DeleteScene deletes a scene from the system
@@ -214,4 +166,39 @@ func (s *System) AddRecipe(r *Recipe) {
 		r.ID = s.NextGlobalID()
 	}
 	s.Recipes[r.ID] = r
+}
+
+// IsDupeDevice returns true if the device is a dupe of one the system
+// already owns.  This check is not based on ID equality, since you could
+// have scanned for a device previosuly and a second time, both scans will
+// give a different ID for the device, since they are globally unique even
+// though they are the same device
+func (s *System) IsDupeDevice(x *Device) (*Device, bool) {
+	for _, y := range s.Devices {
+		if x.Address == y.Address {
+			// Two devices are considered equal if they share the same address, however
+			// if they have the same address but different hubs (if they have one) then
+			// those are unique since the hub controls the device
+
+			xHasHub := x.Hub != nil
+			yHasHub := y.Hub != nil
+
+			// Even though they have the same address, they have different hubs
+			// so they are different
+			if xHasHub != yHasHub {
+				return nil, false
+			}
+
+			if !xHasHub && !yHasHub {
+				// Both devices aren't under a hub and both have the same address so
+				// they are a dupe
+				return y, true
+			}
+
+			// If we are here both devices have the same address and they both have a hub
+			// if the hubs are equal then the devices are equal
+			return y, x.Hub.ID == y.Hub.ID
+		}
+	}
+	return nil, false
 }

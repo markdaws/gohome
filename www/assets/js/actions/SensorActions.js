@@ -19,9 +19,9 @@ var SensorActions = {
         };
     },
 
-    importedSensor: function(sensorJson) {
+    importedSensors: function(sensors) {
         return function(dispatch) {
-            dispatch({ type: Constants.SENSOR_IMPORT_RAW, data: sensorJson });
+            dispatch({ type: Constants.SENSOR_IMPORT_RAW, data: sensors });
         };
     },
 

@@ -482,11 +482,13 @@ var API = {
     },
 
     // discovererScanDevices scans the local network for specific devices
-    discovererScanDevices: function(discovererId, callback) {
+    discovererScanDevices: function(discovererId, uiFields, callback) {
         $.ajax({
             url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
             dataType: 'json',
             cache: false,
+            type: 'POST',
+            data: JSON.stringify(uiFields),
             success: function(data) {
                 callback(null, data);
             },
@@ -497,25 +499,5 @@ var API = {
             }
         });
     },
-
-    // discovererFromString reads the config string and returns goHOME relevant devices
-    discovererFromString: function(discovererId, configStr, callback) {
-        $.ajax({
-            url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
-            dataType: 'json',
-            type: 'POST',
-            data: JSON.stringify(configStr),
-            cache: false,
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                callback({
-                    err: err
-                });
-            }
-        });
-    }
-
 };
 module.exports = API;

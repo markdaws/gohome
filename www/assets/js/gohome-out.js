@@ -23503,17 +23503,7 @@
 	            }
 	        }
 	        if (discoverer) {
-	            switch (discoverer.type) {
-	                case 'ScanDevices':
-	                    // Need to scan the network
-	                    body = React.createElement(DiscoverDevices, { discoverer: discoverer, key: discoverer.id });
-	                    break;
-
-	                case 'FromString':
-	                    // This importer imports from a user provided string
-	                    body = React.createElement(DiscoverDevices, { type: 'FromString', discoverer: discoverer, key: discoverer.id });
-	                    break;
-	            }
+	            body = React.createElement(DiscoverDevices, { discoverer: discoverer, key: discoverer.id });
 	        }
 
 	        var options = this.state.discoverers.map(function (discoverer) {
@@ -23579,64 +23569,46 @@
 	var DiscoverDevices = React.createClass({
 	    displayName: 'DiscoverDevices',
 
+
 	    getInitialState: function getInitialState() {
+	        var uiFields = {};
+	        this.props.discoverer.uiFields.forEach(function (field) {
+	            uiFields[field.id] = field.default;
+	        });
 	        return {
 	            discovering: false,
 	            devices: null,
 	            scenes: null,
-	            configString: ''
+	            uiFields: uiFields
 	        };
 	    },
 
 	    discover: function discover() {
-	        var configString = '';
-	        try {
-	            // Remove all the whitespace, otherwise go gets upset
-	            configString = JSON.stringify(JSON.parse(this.state.configString));
-	        } catch (e) {
-	            console.error('TODO: show error');
-	            this.setState();
-	        }
 	        this.setState({
 	            discovering: true,
 	            devices: null,
 	            scenes: null
 	        });
 
-	        if (this.props.discoverer.type === 'FromString') {
-	            Api.discovererFromString(this.props.discoverer.id, configString, function (err, data) {
-	                if (err != null) {
-	                    //TODO: Change import button to green/red
-	                    console.error("Failed to discover");
-	                    console.error(err);
-	                    return;
-	                }
-
-	                this.setState({
-	                    discovering: false,
-	                    scenes: data.scenes,
-	                    devices: data.devices
-	                });
-	            }.bind(this));
-	        } else {
-	            Api.discovererScanDevices(this.props.discoverer.id, function (err, data) {
-	                if (err != null) {
-	                    //TODO: Change import button to green/red
-	                    console.error("Failed to discover");
-	                    console.error(err);
-	                    return;
-	                }
-	                this.setState({
-	                    discovering: false,
-	                    scenes: data.scenes,
-	                    devices: data.devices
-	                });
-	            }.bind(this));
-	        }
+	        Api.discovererScanDevices(this.props.discoverer.id, this.state.uiFields, function (err, data) {
+	            if (err != null) {
+	                //TODO: Change import button to green/red
+	                console.error("Failed to discover");
+	                console.error(err);
+	                return;
+	            }
+	            this.setState({
+	                discovering: false,
+	                scenes: data.scenes,
+	                devices: data.devices
+	            });
+	        }.bind(this));
 	    },
 
-	    textChanged: function textChanged(evt) {
-	        this.setState({ configString: evt.target.value });
+	    uiFieldChanged: function uiFieldChanged(id, evt) {
+	        var fields = Object.assign({}, this.state.uiFields);
+	        fields[id] = evt.target.value;
+	        this.setState({ uiFields: fields });
 	    },
 
 	    render: function render() {
@@ -23647,8 +23619,8 @@
 	                    key: device.id,
 	                    device: device,
 	                    createdDevice: this.props.importedDevice,
-	                    createdZone: this.props.importedZone,
-	                    createdSensor: this.props.importedSensor
+	                    createdZones: this.props.importedZones,
+	                    createdSensors: this.props.importedSensors
 	                });
 	            }.bind(this));
 	        }
@@ -23659,6 +23631,25 @@
 	            deviceCount = this.state.devices.length;
 	        }
 
+	        var uiFields = this.props.discoverer.uiFields.map(function (uiField) {
+	            //id/name/description
+	            return React.createElement(
+	                'div',
+	                { className: 'form-group', key: uiField.id },
+	                React.createElement(
+	                    'label',
+	                    { htmlFor: uiField.id },
+	                    uiField.label
+	                ),
+	                React.createElement('input', {
+	                    className: 'form-control',
+	                    id: uiField.id,
+	                    type: 'text',
+	                    value: this.state.uiFields[uiField.id] || "",
+	                    onChange: this.uiFieldChanged.bind(this, uiField.id)
+	                })
+	            );
+	        }.bind(this));
 	        importBody = React.createElement(
 	            'div',
 	            null,
@@ -23667,8 +23658,11 @@
 	                classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : ''),
 	                this.props.discoverer.preScanInfo
 	            ),
-	            React.createElement('textarea', _extends({}, classes('text-area', this.props.discoverer.type === 'FromString' ? '' : 'hidden'), {
-	                placeholder: 'Paste the config string here', value: this.state.configString, onChange: this.textChanged })),
+	            React.createElement(
+	                'div',
+	                null,
+	                uiFields
+	            ),
 	            React.createElement(
 	                'div',
 	                classes('discover'),
@@ -23708,11 +23702,11 @@
 	        importedDevice: function importedDevice(deviceJson) {
 	            dispatch(SystemActions.importedDevice(deviceJson));
 	        },
-	        importedZone: function importedZone(zoneJson) {
-	            dispatch(ZoneActions.importedZone(zoneJson));
+	        importedZones: function importedZones(zones) {
+	            dispatch(ZoneActions.importedZones(zones));
 	        },
-	        importedSensor: function importedSensor(sensorJson) {
-	            dispatch(SensorActions.importedSensor(sensorJson));
+	        importedSensors: function importedSensors(sensors) {
+	            dispatch(SensorActions.importedSensors(sensors));
 	        }
 	    };
 	}
@@ -23757,7 +23751,6 @@
 	            name: this.props.name || '',
 	            description: this.props.description || '',
 	            address: this.props.address,
-	            addressRequired: this.props.addressRequired,
 	            id: this.props.id,
 	            modelNumber: this.props.modelNumber || '',
 	            modelName: this.props.modelName || '',
@@ -23767,7 +23760,7 @@
 	            errors: this.props.errors,
 	            saveButtonStatus: '',
 	            dirty: !this.props.id,
-	            connectionPool: this.props.connectionPool,
+	            connPool: this.props.connPool,
 	            cmdBuilder: this.props.cmdBuilder,
 	            type: this.props.type
 	        };
@@ -23786,16 +23779,16 @@
 	    toJson: function toJson() {
 	        var s = this.state;
 	        return {
+	            id: s.id,
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
-	            addressRequired: s.AddressRequired,
 	            modelNumber: s.modelNumber,
 	            modelName: s.modelName,
 	            softwareVersion: s.softwareVersion,
 	            auth: s.auth,
-	            id: s.id,
-	            connPool: this.props.connectionPool,
+	            buttons: this.props.buttons,
+	            connPool: this.props.connPool,
 	            cmdBuilder: this.props.cmdBuilder,
 	            type: s.type
 	        };
@@ -24223,7 +24216,9 @@
 	        if (!errors) {
 	            return null;
 	        }
-	        return errors[this.uid(field)];
+	        //TODO: delete
+	        //return errors[this.uid(field)];
+	        return errors[field];
 	    },
 
 	    hasErr: function hasErr(field) {
@@ -24841,30 +24836,13 @@
 	    },
 
 	    // discovererScanDevices scans the local network for specific devices
-	    discovererScanDevices: function discovererScanDevices(discovererId, callback) {
+	    discovererScanDevices: function discovererScanDevices(discovererId, uiFields, callback) {
 	        $.ajax({
 	            url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
 	            dataType: 'json',
 	            cache: false,
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function error(xhr, status, err) {
-	                callback({
-	                    err: err
-	                });
-	            }
-	        });
-	    },
-
-	    // discovererFromString reads the config string and returns goHOME relevant devices
-	    discovererFromString: function discovererFromString(discovererId, configStr, callback) {
-	        $.ajax({
-	            url: BASE + '/api/v1/discovery/discoverers/' + discovererId,
-	            dataType: 'json',
 	            type: 'POST',
-	            data: JSON.stringify(configStr),
-	            cache: false,
+	            data: JSON.stringify(uiFields),
 	            success: function success(data) {
 	                callback(null, data);
 	            },
@@ -24875,7 +24853,6 @@
 	            }
 	        });
 	    }
-
 	};
 	module.exports = API;
 
@@ -26200,9 +26177,9 @@
 	        };
 	    },
 
-	    importedZone: function importedZone(zoneJson) {
+	    importedZones: function importedZones(zones) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zoneJson });
+	            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zones });
 	        };
 	    },
 
@@ -26241,9 +26218,9 @@
 	        };
 	    },
 
-	    importedSensor: function importedSensor(sensorJson) {
+	    importedSensors: function importedSensors(sensors) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.SENSOR_IMPORT_RAW, data: sensorJson });
+	            dispatch({ type: Constants.SENSOR_IMPORT_RAW, data: sensors });
 	        };
 	    },
 
@@ -26521,10 +26498,8 @@
 	    displayName: 'ImportGroup',
 
 	    getInitialState: function getInitialState() {
-	        this._savedZones = {};
-	        this._savedSensors = {};
 	        this._deviceSaved = false;
-	        this._deviceId = null;
+	        this._unselected = {};
 
 	        return {
 	            device: this.props.device,
@@ -26537,13 +26512,31 @@
 	        };
 	    },
 
-	    deviceChkBxChanged: function deviceChkBxChanged(checked) {},
+	    updateUnselected: function updateUnselected(id, checked) {
+	        if (checked) {
+	            delete this._unselected[id];
+	        } else {
+	            this._unselected[id] = true;
+	        }
+	    },
 
-	    zoneChkBxChanged: function zoneChkBxChanged(checked) {},
+	    deviceChkBxChanged: function deviceChkBxChanged(deviceId, checked) {
+	        this.updateUnselected(deviceId, checked);
+	    },
 
-	    sensorChkBxChanged: function sensorChkBxChanged(checked) {},
+	    zoneChkBxChanged: function zoneChkBxChanged(zoneId, checked) {
+	        this.updateUnselected(zoneId, checked);
+	    },
+
+	    sensorChkBxChanged: function sensorChkBxChanged(sensorId, checked) {
+	        this.updateUnselected(sensorId, checked);
+	    },
 
 	    _deviceChanged: function _deviceChanged(cmp) {
+	        if (this._deviceSaved) {
+	            return;
+	        }
+
 	        this.setState({
 	            device: cmp.toJson(),
 	            saveButtonStatus: ''
@@ -26551,6 +26544,10 @@
 	    },
 
 	    _zoneChanged: function _zoneChanged(cmp) {
+	        if (this._deviceSaved) {
+	            return;
+	        }
+
 	        var zone = cmp.toJson();
 	        var zones = this.state.zones.map(function (zn) {
 	            if (zn.id === zone.id) {
@@ -26565,12 +26562,15 @@
 	    },
 
 	    _sensorChanged: function _sensorChanged(cmp) {
+	        if (this._deviceSaved) {
+	            return;
+	        }
 	        var sensor = cmp.toJson();
 
 	        // Update our list of sensors, with the newly updated sensor replacing the old version,
 	        // this will cause a re-render
 	        var sensors = this.state.sensors.map(function (sen) {
-	            if (sen.id === sensor.idd) {
+	            if (sen.id === sensor.id) {
 	                return sensor;
 	            }
 	            return sen;
@@ -26582,6 +26582,8 @@
 	    },
 
 	    importClicked: function importClicked() {
+	        var _this = this;
+
 	        this.refs["devicegrid"].closeExpander();
 	        this.refs["zonegrid"].closeExpander();
 	        this.refs["sensorgrid"].closeExpander();
@@ -26591,89 +26593,62 @@
 	            deviceErrors: null
 	        });
 
-	        // Now we need to loop through each of the zones and save them
-	        function saveZone(index) {
-	            if (index >= this.state.zones.length) {
-	                saveSensor.bind(this)(0);
-	                return;
-	            }
+	        var device = this.state.device;
+	        device.zones = this.state.zones.filter(function (zone) {
+	            return !zone.isDupe && !this._unselected[zone.id];
+	        }.bind(this));
+	        device.sensors = this.state.sensors.filter(function (sensor) {
+	            return !sensor.isDupe && !this._unselected[sensor.id];
+	        }.bind(this));
 
-	            var zone = this.state.zones[index];
-	            var zoneCell = this.refs["cell_zone_" + zone.id];
-	            if (!zoneCell.isChecked()) {
-	                saveZone.bind(this)(index + 1);
-	                return;
-	            }
+	        if (device.isDupe) {
+	            (function () {
+	                var saveZone = function saveZone(index) {
+	                    if (index >= device.zones.length) {
+	                        //TODO: Sensors
+	                        this.setState({ saveButtonStatus: 'success' });
+	                        return;
+	                    }
 
-	            if (this._savedZones[zone.id]) {
-	                // Already saved this, on a previous call before we ran in to
-	                // an error, skip and keep going
-	                saveZone.bind(this)(index + 1);
-	                return;
-	            }
+	                    var zone = device.zones[index];
+	                    Api.zoneCreate(zone, function (err, zoneData) {
+	                        if (err) {
+	                            var zoneErrs = {};
+	                            zoneErrs[zone.id] = err.validationErrors[zone.id];
+	                            this.setState({
+	                                saveButtonStatus: 'error',
+	                                zoneErrors: zoneErrs
+	                            });
+	                            return;
+	                        }
+	                        this.props.createdZones([zone]);
+	                        saveZone.bind(this)(index + 1);
+	                    }.bind(this));
+	                };
 
-	            Api.zoneCreate(zone, function (err, zoneData) {
-	                if (err) {
-	                    var errs = {};
-	                    errs[zone.id] = err.validationErrors;
-	                    this.setState({
-	                        zoneErrors: errs,
-	                        saveButtonStatus: 'error'
-	                    });
-	                    return;
-	                }
-
-	                this._savedZones[zone.id] = true;
-	                this.props.createdZone(zoneData);
-	                saveZone.bind(this)(index + 1);
-	            }.bind(this));
-	        }
-
-	        // Loop through sensors saving
-	        function saveSensor(index) {
-	            if (index >= this.state.sensors.length) {
-	                this.setState({ saveButtonStatus: 'success' });
-	                return;
-	            }
-
-	            var sensor = this.state.sensors[index];
-	            var sensorCell = this.refs["cell_sensor_" + sensor.id];
-	            if (!sensorCell.isChecked()) {
-	                saveSensor.bind(this)(index + 1);
-	                return;
-	            }
-
-	            if (this._savedSensors[sensor.id]) {
-	                saveSensor.bind(this)(index + 1);
-	                return;
-	            }
-
-	            Api.sensorCreate(sensor, function (err, sensorData) {
-	                if (err) {
-	                    var errs = {};
-	                    errs[sensor.id] = err.validationErrors;
-	                    this.setState({
-	                        sensorErrors: errs,
-	                        saveButtonStatus: 'error'
-	                    });
-	                    return;
-	                }
-
-	                this._savedSensors[sensor.id] = true;
-	                this.props.createdSensor(sensorData);
-	                saveSensor.bind(this)(index + 1);
-	            }.bind(this));
-	        }
-
-	        if (this._deviceSaved) {
-	            // Start saving zones and sensors
-	            saveZone.bind(this)(0);
+	                saveZone.bind(_this)(0);
+	            })();
 	        } else {
-	            Api.deviceCreate(this.state.device, function (err, deviceData) {
+	            Api.deviceCreate(device, function (err, deviceData) {
 	                if (err) {
+	                    var zoneErrs = {};
+	                    var sensorErrs = {};
+	                    this.state.zones.forEach(function (zone) {
+	                        if (err.validationErrors[zone.id]) {
+	                            zoneErrs[zone.id] = err.validationErrors[zone.id];
+	                        }
+	                    });
+	                    this.state.sensors.forEach(function (sensor) {
+	                        if (err.validationErrors[sensor.id]) {
+	                            sensorErrs[sensor.id] = err.validationErrors[sensor.id];
+	                        }
+	                    });
+
 	                    this.setState({
 	                        saveButtonStatus: 'error',
-	                        deviceErrors: err.validationErrors
+	                        zoneErrors: zoneErrs,
+	                        sensorErrors: sensorErrs,
+	                        deviceErrors: err.validationErrors[this.state.device.id]
 	                    });
 	                    return;
 	                }
@@ -26682,9 +26657,10 @@
 
 	                // Let callers know the device has been saved
 	                this.props.createdDevice(deviceData);
+	                this.props.createdZones(this.state.device.zones);
+	                this.props.createdSensors(this.state.device.sensors);
 
-	                // Now save the zones and sensors
-	                saveZone.bind(this)(0);
+	                this.setState({ saveButtonStatus: 'success' });
 	            }.bind(this));
 	        }
 	    },
@@ -26693,88 +26669,87 @@
 	        var devices = [];
 	        var zones = [];
 	        var sensors = [];
-
 	        var device = this.state.device;
-	        var cell = {
-	            key: device.id,
-	            cell: React.createElement(SystemDeviceListGridCell, {
-	                key: "devicecell-" + device.id,
-	                showCheckbox: false,
-	                chkBxChanged: this.deviceChkBxChanged,
-	                hasError: this.state.deviceErrors != null,
-	                device: device }),
-	            content: React.createElement(DeviceInfo, {
-	                name: device.name,
-	                key: "deviceinfo-" + device.id,
-	                ref: "deviceinfo-" + device.id,
-	                description: device.description,
-	                address: device.address,
-	                addressRequired: device.addressRequired,
-	                modelNumber: device.modelNumber,
-	                modelName: device.modelName,
-	                softwareVersion: device.softwareVersion,
-	                id: device.id,
-	                readOnlyFields: 'id',
-	                errors: this.state.deviceErrors,
-	                changed: this._deviceChanged,
-	                type: device.type })
-	        };
-	        devices.push(cell);
+
+	        // Only render non dupes
+	        if (!device.isDupe) {
+	            var cell = {
+	                key: device.id,
+	                cell: React.createElement(SystemDeviceListGridCell, {
+	                    key: "devicecell-" + device.id,
+	                    id: device.id,
+	                    showCheckbox: false,
+	                    chkBxChanged: this.deviceChkBxChanged,
+	                    hasError: this.state.deviceErrors != null,
+	                    hasSuccess: this._deviceSaved,
+	                    device: device }),
+	                content: React.createElement(DeviceInfo, _extends({}, device, {
+	                    key: "deviceinfo-" + device.id,
+	                    ref: "deviceinfo-" + device.id,
+	                    readOnlyFields: 'id',
+	                    errors: this.state.deviceErrors,
+	                    changed: this._deviceChanged }))
+	            };
+	            devices.push(cell);
+	        }
 
 	        (this.state.zones || []).forEach(function (zone) {
+	            if (zone.isDupe) {
+	                return;
+	            }
+
 	            // If we have an error we need to check for it
 	            var err = this.state.zoneErrors[zone.id];
 
 	            var cmpZone = {
 	                key: 'zones_' + zone.id,
 	                cell: React.createElement(ZoneSensorListGridCell, {
+	                    id: zone.id,
 	                    showCheckbox: true,
 	                    showLevel: false,
 	                    hasError: err != null,
+	                    hasSuccess: this._deviceSaved && !this._unselected[zone.id],
 	                    chkBxChanged: this.zoneChkBxChanged,
 	                    key: "zonecell-" + zone.id,
 	                    ref: "cell_zone_" + zone.id,
 	                    zone: zone }),
-	                content: React.createElement(ZoneInfo, {
+	                content: React.createElement(ZoneInfo, _extends({}, zone, {
 	                    readOnlyFields: 'deviceId',
 	                    key: "zoneinfo-" + zone.id,
 	                    ref: "zoneinfo-" + zone.id,
-	                    name: zone.name,
-	                    description: zone.description,
-	                    address: zone.address,
-	                    type: zone.type,
-	                    output: zone.output,
 	                    errors: err,
 	                    deviceId: device.id,
 	                    devices: [device],
-	                    changed: this._zoneChanged })
+	                    changed: this._zoneChanged }))
 	            };
 	            zones.push(cmpZone);
 	        }.bind(this));
 
 	        (this.state.sensors || []).forEach(function (sensor) {
+	            if (sensor.isDupe) {
+	                return;
+	            }
+
 	            var err = this.state.sensorErrors[sensor.id];
 
 	            var cmpSensor = {
 	                key: 'sensor_' + sensor.id,
 	                cell: React.createElement(ZoneSensorListGridCell, {
+	                    id: sensor.id,
 	                    showCheckbox: true,
 	                    chkBxChanged: this.sensorChkBxChanged,
 	                    hasError: err != null,
+	                    hasSuccess: this._deviceSaved && !this._unselected[sensor.id],
 	                    key: sensor.id,
 	                    ref: "cell_sensor_" + sensor.id,
 	                    sensor: sensor }),
-	                content: React.createElement(SensorInfo, {
+	                content: React.createElement(SensorInfo, _extends({}, sensor, {
 	                    readOnlyFields: 'deviceId',
 	                    key: sensor.id,
-	                    name: sensor.name,
-	                    description: sensor.description,
-	                    address: sensor.address,
-	                    attr: sensor.attr,
 	                    errors: err,
 	                    deviceId: device.id,
 	                    devices: [device],
-	                    changed: this._sensorChanged })
+	                    changed: this._sensorChanged }))
 
 	            };
 	            sensors.push(cmpSensor);
@@ -26782,12 +26757,11 @@
 
 	        return React.createElement(
 	            'div',
-	            classes(),
+	            classes('', '', 'clearfix'),
 	            React.createElement(
 	                'div',
 	                classes('import', '', 'pull-right clearfix'),
 	                React.createElement(SaveBtn, {
-	                    className: 'whatcha',
 	                    clicked: this.importClicked,
 	                    text: 'Import', status: this.state.saveButtonStatus })
 	            ),
@@ -26820,7 +26794,8 @@
 	                    'Sensors'
 	                ),
 	                React.createElement(Grid, { ref: 'sensorgrid', key: 'sensorgrid', cells: sensors })
-	            )
+	            ),
+	            React.createElement('div', { style: { clear: 'both' } })
 	        );
 	    }
 	});
@@ -26856,7 +26831,8 @@
 	        return {
 	            showCheckbox: false,
 	            checkboxChecked: true,
-	            hasError: false
+	            hasError: false,
+	            hasSuccess: false
 	        };
 	    },
 
@@ -26870,7 +26846,7 @@
 
 	    checkboxChanged: function checkboxChanged(evt) {
 	        this.setState({ checkboxChecked: evt.target.checked });
-	        this.props.chkBxChanged && this.props.chkBxChanged(evt.target.checked);
+	        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
 	    },
 
 	    render: function render() {
@@ -26884,9 +26860,15 @@
 	            }));
 	        }
 
+	        var state = '';
+	        if (this.props.hasError) {
+	            state = 'error';
+	        } else if (this.props.hasSuccess) {
+	            state = 'success';
+	        }
 	        return React.createElement(
 	            'div',
-	            classes('', this.props.hasError ? 'error' : ''),
+	            classes('', state),
 	            chkBx,
 	            React.createElement(
 	                'div',
@@ -26938,7 +26920,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-SystemDeviceListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-SystemDeviceListGridCell--error {\n  background-color: #ffdddd;\n}\n.b-SystemDeviceListGridCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-SystemDeviceListGridCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SystemDeviceListGridCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
+	exports.push([module.id, ".b-SystemDeviceListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-SystemDeviceListGridCell--error {\n  background-color: #ffdddd;\n}\n.b-SystemDeviceListGridCell--success {\n  background-color: #ddffdd;\n}\n.b-SystemDeviceListGridCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-SystemDeviceListGridCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SystemDeviceListGridCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
 
 	// exports
 
@@ -26970,6 +26952,7 @@
 	    getDefaultProps: function getDefaultProps() {
 	        return {
 	            hasError: false,
+	            hasSuccess: false,
 	            showCheckbox: false,
 	            showLevel: true,
 	            checkboxChecked: true
@@ -27032,7 +27015,7 @@
 
 	    checkboxChanged: function checkboxChanged(evt) {
 	        this.setState({ checkboxChecked: evt.target.checked });
-	        this.props.chkBxChanged && this.props.chkBxChanged(evt.target.checked);
+	        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
 	    },
 
 	    render: function render() {
@@ -27122,9 +27105,16 @@
 	                checked: this.state.checkboxChecked
 	            }));
 	        }
+
+	        var state = '';
+	        if (this.props.hasError) {
+	            state = 'error';
+	        } else if (this.props.hasSuccess) {
+	            state = 'success';
+	        }
 	        return React.createElement(
 	            'div',
-	            classes('', this.props.hasError ? 'error' : ''),
+	            classes('', state),
 	            chkBx,
 	            React.createElement(
 	                'div',
@@ -27217,7 +27207,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ZoneSensorListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-ZoneSensorListGridCell--error {\n  background-color: #ffdddd;\n}\n.b-ZoneSensorListGridCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-ZoneSensorListGridCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-ZoneSensorListGridCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__switch-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__switch-color--switch {\n  display: block;\n}\n.b-ZoneSensorListGridCell__light-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__light-color--light {\n  display: block;\n}\n", ""]);
+	exports.push([module.id, ".b-ZoneSensorListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-ZoneSensorListGridCell--error {\n  background-color: #ffdddd;\n}\n.b-ZoneSensorListGridCell--success {\n  background-color: #ddffdd;\n}\n.b-ZoneSensorListGridCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-ZoneSensorListGridCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-ZoneSensorListGridCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__switch-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__switch-color--switch {\n  display: block;\n}\n.b-ZoneSensorListGridCell__light-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__light-color--light {\n  display: block;\n}\n", ""]);
 
 	// exports
 
@@ -28077,7 +28067,6 @@
 	                    showSaveBtn: true,
 	                    description: device.description,
 	                    address: device.address,
-	                    addressRequired: device.addressRequired,
 	                    modelNumber: device.modelNumber,
 	                    modelName: device.modelName,
 	                    softwareVersion: device.softwareVersion,
@@ -30439,7 +30428,9 @@
 	            var otherZones = [];
 	            var sensors = [];
 
+	            console.log("rendering");
 	            this.props.zones.forEach(function (zone) {
+	                console.log("ZNID: " + zone.id);
 	                var cmpZone = {
 	                    key: 'zones_' + zone.id,
 	                    cell: React.createElement(ZoneSensorListGridCell, {
@@ -30473,6 +30464,7 @@
 	            }.bind(this));
 
 	            this.props.sensors.forEach(function (sensor) {
+	                console.log("SENID: " + sensor.id);
 	                var cmpSensor = {
 	                    key: 'sensor_' + sensor.id,
 	                    cell: React.createElement(ZoneSensorListGridCell, {
@@ -32612,7 +32604,7 @@
 	        case Constants.SENSOR_IMPORT:
 	            break;
 	        case Constants.SENSOR_IMPORT_RAW:
-	            newState = [action.data].concat(newState);
+	            newState = [].concat(action.data, newState);
 	            break;
 	        case Constants.SENSOR_IMPORT_FAIL:
 	            break;
@@ -32672,7 +32664,7 @@
 	        case Constants.ZONE_IMPORT:
 	            break;
 	        case Constants.ZONE_IMPORT_RAW:
-	            newState = [action.data].concat(newState);
+	            newState = [].concat(action.data, newState);
 	            break;
 	        case Constants.ZONE_IMPORT_FAIL:
 	            break;

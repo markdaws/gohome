@@ -10,7 +10,9 @@ module.exports = {
         if (!errors) {
             return null;
         }
-        return errors[this.uid(field)];
+        //TODO: delete
+        //return errors[this.uid(field)];
+        return errors[field];
     },
 
     hasErr: function(field) {

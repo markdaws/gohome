@@ -15,48 +15,31 @@ var classes = new BEMHelper({
 require('../../css/components/DiscoverDevices.less')
 
 var DiscoverDevices = React.createClass({
+
     getInitialState: function() {
+        var uiFields = {}
+        this.props.discoverer.uiFields.forEach(function(field) {
+            uiFields[field.id] = field.default;
+        });
         return {
             discovering: false,
             devices: null,
             scenes: null,
-            configString: ''
+            uiFields: uiFields
         };
     },
 
     discover: function() {
-        var configString = '';
-        try {
-            // Remove all the whitespace, otherwise go gets upset
-            configString = JSON.stringify(JSON.parse(this.state.configString))
-        }
-        catch(e) {
-            console.error('TODO: show error');
-            this.setState();
-        }
         this.setState({
             discovering: true,
             devices: null,
             scenes: null
         });
-
-        if (this.props.discoverer.type === 'FromString') {
-            Api.discovererFromString(this.props.discoverer.id, configString, function(err, data) {
-                if (err != null) {
-                    //TODO: Change import button to green/red
-                    console.error("Failed to discover");
-                    console.error(err);
-                    return;
-                }
-
-                this.setState({
-                    discovering: false,
-                    scenes: data.scenes,
-                    devices: data.devices
-                });            
-            }.bind(this));
-        } else {
-            Api.discovererScanDevices(this.props.discoverer.id, function(err, data) {
+        
+        Api.discovererScanDevices(
+            this.props.discoverer.id,
+            this.state.uiFields,
+            function(err, data) {
                 if (err != null) {
                     //TODO: Change import button to green/red
                     console.error("Failed to discover");
@@ -69,11 +52,12 @@ var DiscoverDevices = React.createClass({
                     devices: data.devices
                 });
             }.bind(this));
-        }
     },
 
-    textChanged: function(evt) {
-        this.setState({ configString: evt.target.value });
+    uiFieldChanged: function(id, evt) {
+        var fields = Object.assign({}, this.state.uiFields);
+        fields[id] = evt.target.value;
+        this.setState({uiFields: fields});
     },
     
     render: function() {
@@ -84,8 +68,8 @@ var DiscoverDevices = React.createClass({
                            key={device.id}
                            device={device}
                            createdDevice={this.props.importedDevice}
-                           createdZone={this.props.importedZone}
-                           createdSensor={this.props.importedSensor}
+                           createdZones={this.props.importedZones}
+                           createdSensors={this.props.importedSensors}
                        />;
             }.bind(this));
         }
@@ -95,16 +79,30 @@ var DiscoverDevices = React.createClass({
         if (this.state.devices) {
             deviceCount = this.state.devices.length;
         }
-        
+
+        var uiFields = this.props.discoverer.uiFields.map(function(uiField) {
+            //id/name/description
+            return (
+                <div className="form-group" key={uiField.id}>
+                    <label htmlFor={uiField.id}>{uiField.label}</label>
+                    <input
+                        className="form-control"
+                        id={uiField.id}
+                        type="text"
+                        value={this.state.uiFields[uiField.id] || ""}
+                        onChange={this.uiFieldChanged.bind(this, uiField.id)}
+                    ></input>
+                </div>
+            );
+        }.bind(this));
         importBody = (
             <div>
                 <div {...classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : '')}>
                     {this.props.discoverer.preScanInfo}
                 </div>
-                <textarea
-                    {...classes('text-area', this.props.discoverer.type === 'FromString' ? '' : 'hidden')}
-                    placeholder="Paste the config string here" value={this.state.configString} onChange={this.textChanged}>
-                </textarea>
+                <div>
+                    {uiFields}
+                </div>
                 <div {...classes('discover')}>
                     <button {...classes('', '', (this.state.discovering ? 'disabled' : '') + ' btn btn-primary')}
                         onClick={this.discover}>Discover Devices</button>
@@ -133,11 +131,11 @@ function mapDispatchToProps(dispatch) {
         importedDevice: function(deviceJson) {
             dispatch(SystemActions.importedDevice(deviceJson));
         },
-        importedZone: function(zoneJson) {
-            dispatch(ZoneActions.importedZone(zoneJson));
+        importedZones: function(zones) {
+            dispatch(ZoneActions.importedZones(zones));
         },
-        importedSensor: function(sensorJson) {
-            dispatch(SensorActions.importedSensor(sensorJson));
+        importedSensors: function(sensors) {
+            dispatch(SensorActions.importedSensors(sensors));
         }
     };
 }

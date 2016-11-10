@@ -42,8 +42,16 @@ type Sensor struct {
 func (s *Sensor) Validate() *validation.Errors {
 	errors := &validation.Errors{}
 
+	if s.ID == "" {
+		errors.Add("required field", "ID")
+	}
+
 	if s.Name == "" {
 		errors.Add("required field", "Name")
+	}
+
+	if s.Address == "" {
+		errors.Add("required field", "Address")
 	}
 
 	if s.DeviceID == "" {

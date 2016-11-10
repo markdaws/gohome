@@ -40,7 +40,7 @@ module.exports = function(state, action) {
     case Constants.ZONE_IMPORT:
         break;
     case Constants.ZONE_IMPORT_RAW:
-        newState = [action.data].concat(newState);
+        newState = [].concat(action.data, newState);
         break;
     case Constants.ZONE_IMPORT_FAIL:
         break;

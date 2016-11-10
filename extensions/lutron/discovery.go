@@ -18,16 +18,30 @@ type discovery struct {
 }
 
 func (d *discovery) Discoverers() []gohome.DiscovererInfo {
+	// List all of the discoverers we support
 	return []gohome.DiscovererInfo{gohome.DiscovererInfo{
 		ID:          "lutron.l-bdgpro2-wh",
 		Name:        "Lutron Smart Bridge Pro",
 		Description: "Discover Lutron Smart Bridge Pro hubs",
-		Type:        "FromString",
+
 		PreScanInfo: "To get your configuration information, go to the Lutron app, then go: " +
 			"Settings -> Advanced -> Integration -> Send Integration Report. Copy and paste the contents " +
 			"of the email into the box below.  You also need the IP address of the Smart Bridge device, to find " +
-			"that go to Settings -> Advanced -> Integration -> Network Settings. Then take note of the IP Address value " +
-			"which you will need when you try to import the device",
+			"that go to Settings -> Advanced -> Integration -> Network Settings.",
+		UIFields: []gohome.UIField{
+			gohome.UIField{
+				ID:          "ipaddress",
+				Label:       "IP Address",
+				Description: "The IP Address of the Lutron Smart Hub",
+				Required:    true,
+			},
+			gohome.UIField{
+				ID:          "integrationreport",
+				Label:       "Integration Report",
+				Description: "The Integration report for the Smart Home Hub",
+				Required:    true,
+			},
+		},
 	}}
 }
 
@@ -44,24 +58,14 @@ type discoverer struct {
 	System *gohome.System
 }
 
-func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, error) {
-	return nil, errors.New("unsupported")
-}
-
-func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
-	//TODO: Fix should not suck into a system ...
-	//TODO: remove
-	//importer := &importer{System: d.System}
-	//err := importer.FromString(d.System, body)
-	//return nil, err
-
+func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {
 	result := &gohome.DiscoveryResults{}
 
 	// We need to know which device is the Smart Bridge Pro - it is always ID==1 in the config file
 	var smartBridgeProID string = "1"
 
 	var configJSON map[string]interface{}
-	if err := json.Unmarshal([]byte(body), &configJSON); err != nil {
+	if err := json.Unmarshal([]byte(uiFields["integrationreport"]), &configJSON); err != nil {
 		return nil, err
 	}
 
@@ -107,12 +111,12 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 			}
 
 			b := &gohome.Button{
+				ID:          d.System.NextGlobalID(),
 				Address:     btnNumber,
 				Name:        btnName,
 				Description: btnName,
 				Device:      device,
 			}
-			b.ID = d.System.NextGlobalID()
 			device.AddButton(b)
 		}
 
@@ -181,17 +185,13 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 			dev := makeDevice(
 				"l-bdgpro2-wh",
 				"Smart Bridge - Hub",
-				"",
+				uiFields["ipaddress"],
 				device,
 				nil,
 				&gohome.Auth{
 					Login:    "lutron",
 					Password: "integration",
 				})
-
-			// We need an address for this device, we can't get it from the Lutron config file so by setting
-			// this flag the devices validation will fail when the user tries to import the device
-			dev.AddressRequired = true
 			sbp = dev
 
 			//TODO: Needed for serialization?
@@ -255,6 +255,11 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 			case "light":
 				zoneTypeFinal = zone.ZTLight
 			case "shade":
+				zoneTypeFinal = zone.ZTShade
+			}
+		} else {
+			// Some simple heuristics
+			if strings.Contains(strings.ToLower(zoneName), "shade") {
 				zoneTypeFinal = zone.ZTShade
 			}
 		}

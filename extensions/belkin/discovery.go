@@ -1,7 +1,6 @@
 package belkin
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -21,12 +20,10 @@ func (d *discovery) Discoverers() []gohome.DiscovererInfo {
 		ID:          "belkin.wemo.insight",
 		Name:        "Belkin WeMo Insight",
 		Description: "Discover Belkin WeMo Insight devices",
-		Type:        "ScanDevices",
 	}, gohome.DiscovererInfo{
 		ID:          "belkin.wemo.maker",
 		Name:        "Belkin WeMo Maker",
 		Description: "Discover Belkin WeMo Maker devices",
-		Type:        "ScanDevices",
 	}}
 }
 
@@ -45,7 +42,7 @@ type discoverer struct {
 	scanType belkinExt.DeviceType
 }
 
-func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, error) {
+func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {
 
 	log.V("scanning belkin")
 
@@ -69,7 +66,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 			devInfo.ModelName,
 			devInfo.FirmwareVersion,
 			strings.Replace(devInfo.Scan.Location, "/setup.xml", "", -1),
-			"",
+			sys.NextGlobalID(),
 			devInfo.FriendlyName,
 			devInfo.ModelDescription,
 			nil,
@@ -79,10 +76,11 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		)
 
 		z := &zone.Zone{
+			ID:          sys.NextGlobalID(),
 			Address:     "1",
 			Name:        devInfo.FriendlyName,
 			Description: devInfo.ModelDescription,
-			DeviceID:    "",
+			DeviceID:    dev.ID,
 			Type:        zone.ZTSwitch,
 			Output:      zone.OTBinary,
 		}
@@ -90,9 +88,11 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 
 		if d.scanType == belkinExt.DTMaker {
 			sensor := &gohome.Sensor{
+				ID:          sys.NextGlobalID(),
 				Address:     "1",
 				Name:        devInfo.FriendlyName + " - sensor",
 				Description: "",
+				DeviceID:    dev.ID,
 				Attr: gohome.SensorAttr{
 					Name:     "sensor",
 					Value:    "-1",
@@ -112,7 +112,4 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		Devices: devices,
 	}, nil
 
-}
-func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
-	return nil, errors.New("unsupported")
 }

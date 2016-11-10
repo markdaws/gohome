@@ -34,7 +34,7 @@ module.exports = function(state, action) {
     case Constants.SENSOR_IMPORT:
         break;
     case Constants.SENSOR_IMPORT_RAW:
-        newState = [action.data].concat(newState);
+        newState = [].concat(action.data, newState);
         break;
     case Constants.SENSOR_IMPORT_FAIL:
         break;

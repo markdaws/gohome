@@ -1,8 +1,6 @@
 package fluxwifi
 
 import (
-	"errors"
-
 	"github.com/go-home-iot/connection-pool"
 	fluxwifiExt "github.com/go-home-iot/fluxwifi"
 	"github.com/markdaws/gohome"
@@ -25,7 +23,6 @@ func (d *discovery) Discoverers() []gohome.DiscovererInfo {
 		ID:          "fluxwifi.bulbs",
 		Name:        "FluxWIFI",
 		Description: "Discover FluxWIFI bulbs",
-		Type:        "ScanDevices",
 	}}
 }
 
@@ -41,7 +38,7 @@ func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 type discoverer struct {
 }
 
-func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, error) {
+func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {
 	infos, err := fluxwifiExt.Scan(5)
 	if err != nil {
 		return nil, err
@@ -68,12 +65,14 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 			}),
 			nil,
 		)
+		dev.ID = sys.NextGlobalID()
 
 		z := &zone.Zone{
+			ID:          sys.NextGlobalID(),
 			Address:     "1",
 			Name:        dev.Name,
 			Description: "",
-			DeviceID:    "",
+			DeviceID:    dev.ID,
 			Type:        zone.ZTLight,
 			Output:      zone.OTRGB,
 		}
@@ -85,7 +84,4 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 		Devices: devices,
 	}, nil
 
-}
-func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
-	return nil, errors.New("unsupported")
 }

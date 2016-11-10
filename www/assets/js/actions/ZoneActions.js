@@ -19,9 +19,9 @@ var ZoneActions = {
         };
     },
 
-    importedZone: function(zoneJson) {
+    importedZones: function(zones) {
         return function(dispatch) {
-            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zoneJson });
+            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zones });
         };
     },
 

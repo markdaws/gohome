@@ -44,17 +44,7 @@ var Import = React.createClass({
             }
         }
         if (discoverer) {
-            switch (discoverer.type) {
-                case 'ScanDevices':
-                    // Need to scan the network
-                    body = <DiscoverDevices discoverer={discoverer} key={discoverer.id} />;
-                    break;
-
-                case 'FromString':
-                    // This importer imports from a user provided string
-                    body = <DiscoverDevices type="FromString" discoverer={discoverer} key={discoverer.id} />;
-                    break;
-            }
+            body = <DiscoverDevices discoverer={discoverer} key={discoverer.id} />;
         }
 
         var options = this.state.discoverers.map(function(discoverer) {

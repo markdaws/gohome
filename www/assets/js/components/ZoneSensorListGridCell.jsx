@@ -15,6 +15,7 @@ var ZoneSensorListGridCell = React.createClass({
     getDefaultProps: function() {
         return {
             hasError: false,
+            hasSuccess: false,
             showCheckbox: false,
             showLevel: true,
             checkboxChecked: true
@@ -77,7 +78,7 @@ var ZoneSensorListGridCell = React.createClass({
 
     checkboxChanged: function(evt) {
         this.setState({checkboxChecked: evt.target.checked});
-        this.props.chkBxChanged && this.props.chkBxChanged(evt.target.checked);
+        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
     },
     
     render: function() {
@@ -170,8 +171,15 @@ var ZoneSensorListGridCell = React.createClass({
                 ></input>
             );
         }
+
+        var state = '';
+        if (this.props.hasError) {
+            state = 'error';
+        } else if (this.props.hasSuccess) {
+            state = 'success';
+        }
         return (
-            <div {...classes('', this.props.hasError ? 'error' : '')}>
+            <div {...classes('', state)}>
                 {chkBx}
                 <div {...classes('icon')}>
                     {icon1Cmp}
