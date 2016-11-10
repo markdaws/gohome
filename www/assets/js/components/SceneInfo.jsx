@@ -27,7 +27,6 @@ var SceneInfo = React.createClass({
     getInitialState: function() {
         return {
             id: this.props.scene.id || '',
-            clientId: this.props.scene.clientId,
             name: this.props.scene.name || '',
             address: this.props.scene.address || '',
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
@@ -56,7 +55,6 @@ var SceneInfo = React.createClass({
             name: this.state.name,
             address: this.state.address,
             managed: this.state.managed,
-            clientId: this.state.clientId,
         };
     },
 
@@ -64,6 +62,8 @@ var SceneInfo = React.createClass({
         this.setState({ errors: null });
         var self = this;
 
+        //TODO: Broken
+        alert('this is broken, need to know if scene is new vs on server');
         if (this.state.id === '') {
             //TODO: Update state on save, not dirty, has id not clientId
             this.props.saveScene(this.toJson());
@@ -74,7 +74,7 @@ var SceneInfo = React.createClass({
     },
 
     deleteScene: function() {
-        this.props.deleteScene(this.state.clientId, this.state.id);
+        this.props.deleteScene(this.state.id);
     },
 
     commandTypeChanged: function(cmdType) {

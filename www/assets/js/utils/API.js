@@ -126,9 +126,6 @@ var API = {
 
     // sceneCreate creates a new scene in the backing store
     sceneCreate: function(scene, callback) {
-        // Note: new scenes don't have an ID yet, since the server has to assign that, but
-        // they do have a clientId which is a unique ID created on the client so they can
-        // still be distinguished from one another
         $.ajax({
             url: BASE + '/api/v1/scenes',
             type: 'POST',
@@ -144,7 +141,7 @@ var API = {
                     err: err,
                     xhr: xhr,
                     validationErrors: errors,
-                    clientId: scene.clientId
+                    id: scene.id
                 });
             }
         });

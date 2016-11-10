@@ -81,7 +81,7 @@ var DiscoverDevices = React.createClass({
         if (this.state.devices && this.state.devices.length > 0) {
             devices = this.state.devices.map(function(device) {
                 return <ImportGroup
-                           key={device.id || device.clientId}
+                           key={device.id}
                            device={device}
                            createdDevice={this.props.importedDevice}
                            createdZone={this.props.importedZone}
@@ -130,7 +130,7 @@ var DiscoverDevices = React.createClass({
 
 function mapDispatchToProps(dispatch) {
     return {
-        importedDevice: function(clientId, deviceJson) {
+        importedDevice: function(deviceJson) {
             dispatch(SystemActions.importedDevice(deviceJson));
         },
         importedZone: function(zoneJson) {

@@ -3,6 +3,7 @@ package cmd
 import "fmt"
 
 type SceneSet struct {
+	ID        string
 	SceneID   string
 	SceneName string
 }

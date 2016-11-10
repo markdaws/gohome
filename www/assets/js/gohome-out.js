@@ -23644,7 +23644,7 @@
 	        if (this.state.devices && this.state.devices.length > 0) {
 	            devices = this.state.devices.map(function (device) {
 	                return React.createElement(ImportGroup, {
-	                    key: device.id || device.clientId,
+	                    key: device.id,
 	                    device: device,
 	                    createdDevice: this.props.importedDevice,
 	                    createdZone: this.props.importedZone,
@@ -23705,7 +23705,7 @@
 
 	function mapDispatchToProps(dispatch) {
 	    return {
-	        importedDevice: function importedDevice(clientId, deviceJson) {
+	        importedDevice: function importedDevice(deviceJson) {
 	            dispatch(SystemActions.importedDevice(deviceJson));
 	        },
 	        importedZone: function importedZone(zoneJson) {
@@ -23759,7 +23759,6 @@
 	            address: this.props.address,
 	            addressRequired: this.props.addressRequired,
 	            id: this.props.id,
-	            clientId: this.props.clientId,
 	            modelNumber: this.props.modelNumber || '',
 	            modelName: this.props.modelName || '',
 	            softwareVersion: this.props.softwareVersion || '',
@@ -23787,7 +23786,6 @@
 	    toJson: function toJson() {
 	        var s = this.state;
 	        return {
-	            clientId: this.props.clientId,
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
@@ -23824,9 +23822,6 @@
 	        if (nextProps.id != "") {
 	            this.setState({ id: nextProps.id });
 	        }
-	        if (nextProps.clientId != "") {
-	            this.setState({ clientId: nextProps.clientId });
-	        }
 	    },
 
 	    createDevice: function createDevice() {
@@ -23840,7 +23835,7 @@
 	            }
 
 	            // Let callers know the device has been saved
-	            this.props.createdDevice(this.state.clientId, deviceData);
+	            this.props.createdDevice(this.state.id, deviceData);
 
 	            // Now we need to loop through each of the zones and save them
 	            function saveZone(index) {
@@ -23849,10 +23844,7 @@
 	                    return;
 	                }
 
-	                // Now the device has an id, we need to bind the zone to it
-	                var zoneInfo = this.refs["zoneInfo_" + this.props.zones[index].clientId];
-	                var zone = Object.assign({}, zoneInfo.toJson());
-	                zone.deviceId = deviceData.id;
+	                var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
 	                Api.zoneCreate(zone, function (err, zoneData) {
 	                    if (err) {
 	                        zoneInfo.setErrors(err.validationErrors);
@@ -23875,10 +23867,7 @@
 	                    return;
 	                }
 
-	                // Now the device has an id, we need to bind the sensor to it
-	                var sensorInfo = this.refs["sensorInfo_" + this.props.sensors[index].clientId];
-	                var sensor = Object.assign({}, sensorInfo.toJson());
-	                sensor.deviceId = deviceData.id;
+	                var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
 	                Api.sensorCreate(sensor, function (err, sensorData) {
 	                    if (err) {
 	                        sensorInfo.setErrors(err.validationErrors);
@@ -23887,7 +23876,7 @@
 	                        });
 	                        return;
 	                    }
-
+	                    pp;
 	                    this.props.savedSensor(sensorData);
 	                    saveSensor.bind(this)(index + 1);
 	                }.bind(this));
@@ -23920,7 +23909,7 @@
 	    },
 
 	    deleteDevice: function deleteDevice() {
-	        this.props.deviceDelete(this.state.id, this.state.clientId);
+	        this.props.deviceDelete(this.state.id);
 	    },
 
 	    typeChanged: function typeChanged(type) {
@@ -24005,16 +23994,15 @@
 	        } else {
 	            zones = this.props.zones.map(function (zone) {
 	                return React.createElement(ZoneInfo, {
-	                    ref: "zoneInfo_" + zone.clientId,
+	                    ref: "zoneInfo_" + zone.id,
 	                    readOnlyFields: 'deviceId',
-	                    key: zone.id || zone.clientId,
-	                    clientId: zone.clientId,
+	                    key: zone.id,
 	                    name: zone.name,
 	                    description: zone.description,
 	                    address: zone.address,
 	                    type: zone.type,
 	                    output: zone.output,
-	                    deviceId: this.state.id || this.state.clientId,
+	                    deviceId: this.state.id,
 	                    devices: [this.toJson()],
 	                    changed: this._zoneChanged });
 	            }.bind(this));
@@ -24030,15 +24018,14 @@
 	        } else {
 	            sensors = this.props.sensors.map(function (sensor) {
 	                return React.createElement(SensorInfo, {
-	                    ref: "sensorInfo_" + sensor.clientId,
+	                    ref: "sensorInfo_" + sensor.id,
 	                    readOnlyFields: 'deviceId',
-	                    key: sensor.id || sensor.clientId,
-	                    clientId: sensor.clientId,
+	                    key: sensor.id,
 	                    name: sensor.name,
 	                    description: sensor.description,
 	                    address: sensor.address,
 	                    attr: sensor.attr,
-	                    deviceId: this.state.id || this.state.clientId,
+	                    deviceId: this.state.id,
 	                    devices: [this.toJson()],
 	                    changed: this._sensorChanged });
 	            }.bind(this));
@@ -24228,8 +24215,7 @@
 
 	module.exports = {
 	    uid: function uid(field) {
-	        var id = !this.state.clientId ? this.state.id : this.state.clientId;
-	        return id + '_' + field;
+	        return this.state.id + '_' + field;
 	    },
 
 	    getErr: function getErr(field) {
@@ -24499,9 +24485,6 @@
 
 	    // sceneCreate creates a new scene in the backing store
 	    sceneCreate: function sceneCreate(scene, callback) {
-	        // Note: new scenes don't have an ID yet, since the server has to assign that, but
-	        // they do have a clientId which is a unique ID created on the client so they can
-	        // still be distinguished from one another
 	        $.ajax({
 	            url: BASE + '/api/v1/scenes',
 	            type: 'POST',
@@ -24517,7 +24500,7 @@
 	                    err: err,
 	                    xhr: xhr,
 	                    validationErrors: errors,
-	                    clientId: scene.clientId
+	                    id: scene.id
 	                });
 	            }
 	        });
@@ -25117,7 +25100,6 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            clientId: this.props.clientId,
 	            name: this.props.name,
 	            description: this.props.description,
 	            address: this.props.address,
@@ -25135,7 +25117,6 @@
 	        var s = this.state;
 	        return {
 	            id: this.props.id,
-	            clientId: s.clientId,
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
@@ -25365,7 +25346,7 @@
 	    render: function render() {
 	        var options = [];
 	        this.props.devices.forEach(function (device) {
-	            var id = device.id || device.clientId;
+	            var id = device.id;
 	            options.push(React.createElement(
 	                "option",
 	                { key: id, value: id },
@@ -26006,7 +25987,6 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            clientId: this.props.clientId,
 	            name: this.props.name,
 	            description: this.props.description,
 	            address: this.props.address,
@@ -26019,7 +25999,6 @@
 	    toJson: function toJson() {
 	        var s = this.state;
 	        return {
-	            clientId: s.clientId,
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
@@ -26447,27 +26426,27 @@
 	        };
 	    },
 
-	    deviceDelete: function deviceDelete(id, clientId) {
+	    deviceDelete: function deviceDelete(id) {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.DEVICE_DESTROY });
 	            if (!id) {
-	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, clientId: clientId });
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id });
 	                return;
 	            }
 
 	            Api.deviceDestroy(id, function (err, data) {
 	                if (err) {
-	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, clientId: clientId, err: err });
+	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, err: err });
 	                    return;
 	                }
-	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, clientId: clientId, data: data });
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, data: data });
 	            });
 	        };
 	    },
 
-	    createdDevice: function createdDevice(clientId, deviceJson, append) {
+	    createdDevice: function createdDevice(id, deviceJson, append) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, id: id });
 	        };
 	    },
 
@@ -26520,8 +26499,6 @@
 	'use strict';
 
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	var React = __webpack_require__(1);
 	var Api = __webpack_require__(208);
@@ -26576,7 +26553,7 @@
 	    _zoneChanged: function _zoneChanged(cmp) {
 	        var zone = cmp.toJson();
 	        var zones = this.state.zones.map(function (zn) {
-	            if (zn.clientId === zone.clientId) {
+	            if (zn.id === zone.id) {
 	                return zone;
 	            }
 	            return zn;
@@ -26593,7 +26570,7 @@
 	        // Update our list of sensors, with the newly updated sensor replacing the old version,
 	        // this will cause a re-render
 	        var sensors = this.state.sensors.map(function (sen) {
-	            if (sen.clientId === sensor.clientId) {
+	            if (sen.id === sensor.idd) {
 	                return sensor;
 	            }
 	            return sen;
@@ -26621,28 +26598,24 @@
 	                return;
 	            }
 
-	            // Now the device has an id, we need to bind the zone to it
-	            var clientId = this.state.zones[index].clientId;
-	            var zoneCell = this.refs["cell_zone_" + clientId];
-
+	            var zone = this.state.zones[index];
+	            var zoneCell = this.refs["cell_zone_" + zone.id];
 	            if (!zoneCell.isChecked()) {
 	                saveZone.bind(this)(index + 1);
 	                return;
 	            }
 
-	            if (this._savedZones[clientId]) {
+	            if (this._savedZones[zone.id]) {
 	                // Already saved this, on a previous call before we ran in to
 	                // an error, skip and keep going
 	                saveZone.bind(this)(index + 1);
 	                return;
 	            }
 
-	            var zone = Object.assign({}, this.state.zones[index]);
-	            zone.deviceId = this._deviceId;
 	            Api.zoneCreate(zone, function (err, zoneData) {
 	                if (err) {
 	                    var errs = {};
-	                    errs[zone.clientId] = err.validationErrors;
+	                    errs[zone.id] = err.validationErrors;
 	                    this.setState({
 	                        zoneErrors: errs,
 	                        saveButtonStatus: 'error'
@@ -26650,7 +26623,7 @@
 	                    return;
 	                }
 
-	                this._savedZones[clientId] = true;
+	                this._savedZones[zone.id] = true;
 	                this.props.createdZone(zoneData);
 	                saveZone.bind(this)(index + 1);
 	            }.bind(this));
@@ -26663,26 +26636,22 @@
 	                return;
 	            }
 
-	            // Now the device has an id, we need to bind the sensor to it
-	            var clientId = this.state.sensors[index].clientId;
-	            var sensorCell = this.refs["cell_sensor_" + clientId];
-
+	            var sensor = this.state.sensors[index];
+	            var sensorCell = this.refs["cell_sensor_" + sensor.id];
 	            if (!sensorCell.isChecked()) {
 	                saveSensor.bind(this)(index + 1);
 	                return;
 	            }
 
-	            if (this._savedSensors[clientId]) {
+	            if (this._savedSensors[sensor.id]) {
 	                saveSensor.bind(this)(index + 1);
 	                return;
 	            }
 
-	            var sensor = Object.assign({}, this.state.sensors[index]);
-	            sensor.deviceId = this._deviceId;
 	            Api.sensorCreate(sensor, function (err, sensorData) {
 	                if (err) {
 	                    var errs = {};
-	                    errs[sensor.clientId] = err.validationErrors;
+	                    errs[sensor.id] = err.validationErrors;
 	                    this.setState({
 	                        sensorErrors: errs,
 	                        saveButtonStatus: 'error'
@@ -26690,7 +26659,7 @@
 	                    return;
 	                }
 
-	                this._savedSensors[clientId] = true;
+	                this._savedSensors[sensor.id] = true;
 	                this.props.createdSensor(sensorData);
 	                saveSensor.bind(this)(index + 1);
 	            }.bind(this));
@@ -26710,10 +26679,9 @@
 	                }
 
 	                this._deviceSaved = true;
-	                this._deviceId = deviceData.id;
 
 	                // Let callers know the device has been saved
-	                this.props.createdDevice(this.state.clientId, deviceData);
+	                this.props.createdDevice(deviceData);
 
 	                // Now save the zones and sensors
 	                saveZone.bind(this)(0);
@@ -26722,26 +26690,23 @@
 	    },
 
 	    render: function render() {
-	        var _React$createElement;
-
 	        var devices = [];
 	        var zones = [];
 	        var sensors = [];
 
 	        var device = this.state.device;
 	        var cell = {
-	            key: device.clientId,
+	            key: device.id,
 	            cell: React.createElement(SystemDeviceListGridCell, {
-	                key: "devicecell-" + device.clientId,
+	                key: "devicecell-" + device.id,
 	                showCheckbox: false,
 	                chkBxChanged: this.deviceChkBxChanged,
-	                clientId: device.clientId,
 	                hasError: this.state.deviceErrors != null,
 	                device: device }),
-	            content: React.createElement(DeviceInfo, (_React$createElement = {
+	            content: React.createElement(DeviceInfo, {
 	                name: device.name,
-	                key: "deviceinfo-" + device.clientId,
-	                ref: "deviceinfo-" + device.clientId,
+	                key: "deviceinfo-" + device.id,
+	                ref: "deviceinfo-" + device.id,
 	                description: device.description,
 	                address: device.address,
 	                addressRequired: device.addressRequired,
@@ -26749,40 +26714,38 @@
 	                modelName: device.modelName,
 	                softwareVersion: device.softwareVersion,
 	                id: device.id,
-	                clientId: device.clientId,
 	                readOnlyFields: 'id',
-	                errors: this.state.deviceErrors
-	            }, _defineProperty(_React$createElement, 'key', device.id || device.clientId), _defineProperty(_React$createElement, 'changed', this._deviceChanged), _defineProperty(_React$createElement, 'type', device.type), _React$createElement))
+	                errors: this.state.deviceErrors,
+	                changed: this._deviceChanged,
+	                type: device.type })
 	        };
 	        devices.push(cell);
 
 	        (this.state.zones || []).forEach(function (zone) {
 	            // If we have an error we need to check for it
-	            var err = this.state.zoneErrors[zone.clientId];
+	            var err = this.state.zoneErrors[zone.id];
 
 	            var cmpZone = {
-	                key: 'zones_' + zone.clientId,
+	                key: 'zones_' + zone.id,
 	                cell: React.createElement(ZoneSensorListGridCell, {
 	                    showCheckbox: true,
 	                    showLevel: false,
 	                    hasError: err != null,
 	                    chkBxChanged: this.zoneChkBxChanged,
-	                    key: "zonecell-" + zone.clientId,
-	                    clientId: zone.clientId,
-	                    ref: "cell_zone_" + zone.clientId,
+	                    key: "zonecell-" + zone.id,
+	                    ref: "cell_zone_" + zone.id,
 	                    zone: zone }),
 	                content: React.createElement(ZoneInfo, {
 	                    readOnlyFields: 'deviceId',
-	                    key: "zoneinfo-" + zone.clientId,
-	                    ref: "zoneinfo-" + zone.clientId,
+	                    key: "zoneinfo-" + zone.id,
+	                    ref: "zoneinfo-" + zone.id,
 	                    name: zone.name,
-	                    clientId: zone.clientId,
 	                    description: zone.description,
 	                    address: zone.address,
 	                    type: zone.type,
 	                    output: zone.output,
 	                    errors: err,
-	                    deviceId: device.clientId,
+	                    deviceId: device.id,
 	                    devices: [device],
 	                    changed: this._zoneChanged })
 	            };
@@ -26790,28 +26753,26 @@
 	        }.bind(this));
 
 	        (this.state.sensors || []).forEach(function (sensor) {
-	            var err = this.state.sensorErrors[sensor.clientId];
+	            var err = this.state.sensorErrors[sensor.id];
 
 	            var cmpSensor = {
-	                key: 'sensor_' + sensor.clientId,
+	                key: 'sensor_' + sensor.id,
 	                cell: React.createElement(ZoneSensorListGridCell, {
 	                    showCheckbox: true,
 	                    chkBxChanged: this.sensorChkBxChanged,
 	                    hasError: err != null,
-	                    key: sensor.clientId,
-	                    clientId: sensor.clientId,
-	                    ref: "cell_sensor_" + sensor.clientId,
+	                    key: sensor.id,
+	                    ref: "cell_sensor_" + sensor.id,
 	                    sensor: sensor }),
 	                content: React.createElement(SensorInfo, {
 	                    readOnlyFields: 'deviceId',
-	                    key: sensor.clientId,
+	                    key: sensor.id,
 	                    name: sensor.name,
 	                    description: sensor.description,
 	                    address: sensor.address,
 	                    attr: sensor.attr,
 	                    errors: err,
-	                    deviceId: device.clientId,
-	                    clientId: sensor.clientId,
+	                    deviceId: device.id,
 	                    devices: [device],
 	                    changed: this._sensorChanged })
 
@@ -28121,9 +28082,8 @@
 	                    modelName: device.modelName,
 	                    softwareVersion: device.softwareVersion,
 	                    id: device.id,
-	                    clientId: device.clientId,
 	                    readOnlyFields: 'id'
-	                }, _defineProperty(_React$createElement, 'key', device.id || device.clientId), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'createdDevice', this.props.createdDevice), _defineProperty(_React$createElement, 'updatedDevice', this.props.updatedDevice), _React$createElement))
+	                }, _defineProperty(_React$createElement, 'key', device.id), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'createdDevice', this.props.createdDevice), _defineProperty(_React$createElement, 'updatedDevice', this.props.updatedDevice), _React$createElement))
 	            };
 
 	            switch (device.type) {
@@ -28241,11 +28201,11 @@
 
 	function mapDispatchToProps(dispatch) {
 	    return {
-	        deviceDelete: function deviceDelete(id, clientId) {
-	            dispatch(SystemActions.deviceDelete(id, clientId));
+	        deviceDelete: function deviceDelete(id) {
+	            dispatch(SystemActions.deviceDelete(id));
 	        },
-	        createdDevice: function createdDevice(clientId, data) {
-	            dispatch(SystemActions.createdDevice(clientId, data));
+	        createdDevice: function createdDevice(id, data) {
+	            dispatch(SystemActions.createdDevice(id, data));
 	        },
 	        updatedDevice: function updatedDevice(data) {
 	            dispatch(SystemActions.updatedDevice(data));
@@ -28668,18 +28628,18 @@
 	                var saveState;
 
 	                // Check for input validation errors from the server
-	                saveState = this.props.scenes.saveState[scene.clientId || scene.id] || {};
+	                saveState = this.props.scenes.saveState[scene.id] || {};
 
 	                return React.createElement(
 	                    'div',
-	                    _extends({}, classes('scene-info'), { key: scene.id || scene.clientId }),
+	                    _extends({}, classes('scene-info'), { key: scene.id }),
 	                    React.createElement(SceneInfo, {
 	                        zones: this.props.zones,
 	                        buttons: this.props.buttons,
 	                        scenes: this.props.scenes.items,
 	                        scene: scene,
 	                        readOnlyFields: 'id',
-	                        key: scene.id || scene.clientId,
+	                        key: scene.id,
 	                        errors: (saveState.err || {}).validationErrors,
 	                        saveScene: this.props.saveScene,
 	                        updateScene: this.props.updateScene,
@@ -28708,7 +28668,7 @@
 	                return {
 	                    key: scene.id,
 	                    cell: React.createElement(SceneListGridCell, { scene: scene }),
-	                    content: React.createElement(SceneControl, { scene: scene, key: scene.id || scene.clientId })
+	                    content: React.createElement(SceneControl, { scene: scene, key: scene.id })
 	                };
 	            });
 	            btns = React.createElement(
@@ -28753,9 +28713,10 @@
 	        updateScene: function updateScene(sceneJson) {
 	            dispatch(SceneActions.update(sceneJson));
 	        },
-	        deleteScene: function deleteScene(clientId, id) {
-	            if (clientId) {
-	                dispatch(SceneActions.destroyClient(clientId));
+	        deleteScene: function deleteScene(id) {
+	            alert('broken needs client id');
+	            if (id) {
+	                dispatch(SceneActions.destroyClient(id));
 	            } else {
 	                dispatch(SceneActions.destroy(id));
 	            }
@@ -28973,7 +28934,6 @@
 	    getInitialState: function getInitialState() {
 	        return {
 	            id: this.props.scene.id || '',
-	            clientId: this.props.scene.clientId,
 	            name: this.props.scene.name || '',
 	            address: this.props.scene.address || '',
 	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
@@ -29001,8 +28961,7 @@
 	            id: this.state.id,
 	            name: this.state.name,
 	            address: this.state.address,
-	            managed: this.state.managed,
-	            clientId: this.state.clientId
+	            managed: this.state.managed
 	        };
 	    },
 
@@ -29010,6 +28969,8 @@
 	        this.setState({ errors: null });
 	        var self = this;
 
+	        //TODO: Broken
+	        alert('this is broken, need to know if scene is new vs on server');
 	        if (this.state.id === '') {
 	            //TODO: Update state on save, not dirty, has id not clientId
 	            this.props.saveScene(this.toJson());
@@ -29020,7 +28981,7 @@
 	    },
 
 	    deleteScene: function deleteScene() {
-	        this.props.deleteScene(this.state.clientId, this.state.id);
+	        this.props.deleteScene(this.state.id);
 	    },
 
 	    commandTypeChanged: function commandTypeChanged(cmdType) {
@@ -29312,6 +29273,7 @@
 	var ZonePicker = __webpack_require__(265);
 	var Api = __webpack_require__(208);
 	var ClassNames = __webpack_require__(226);
+	var uuid = __webpack_require__(315);
 
 	var ZoneSetLevelCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -29320,7 +29282,7 @@
 	    getInitialState: function getInitialState() {
 	        var attr = this.props.command.attributes;
 	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
+	            id: uuid.v4(),
 	            level: attr.Level || 0,
 	            r: attr.R || 0,
 	            g: attr.G || 0,
@@ -29334,8 +29296,7 @@
 	    toJson: function toJson() {
 	        return {
 	            type: 'zoneSetLevel',
-	            clientId: this.state.clientId,
-	            //TODO: correctly capitalize json values
+	            id: this.state.id,
 	            attributes: {
 	                Level: parseFloat(this.state.level),
 	                R: parseInt(this.state.r, 10),
@@ -29579,6 +29540,7 @@
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
 	var ScenePicker = __webpack_require__(267);
+	var uuid = __webpack_require__(315);
 
 	var SceneSetCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -29586,7 +29548,7 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
+	            id: uuid.v4(),
 	            sceneId: this.props.command.attributes.SceneID || '',
 	            errors: null
 	        };
@@ -29601,7 +29563,7 @@
 	    toJson: function toJson() {
 	        return {
 	            type: 'sceneSet',
-	            clientId: this.state.clientId,
+	            id: this.state.id,
 	            attributes: {
 	                SceneID: this.state.sceneId
 	            }
@@ -29721,6 +29683,7 @@
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
 	var ButtonPicker = __webpack_require__(269);
+	var uuid = __webpack_require__(315);
 
 	var ButtonPressCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -29729,7 +29692,7 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
+	            id: uuid.v4(),
 	            buttonId: this.props.command.attributes.ButtonID || '',
 	            errors: null
 	        };
@@ -29744,7 +29707,7 @@
 	    toJson: function toJson() {
 	        return {
 	            type: 'buttonPress',
-	            clientId: this.state.clientId,
+	            id: this.state.id,
 	            attributes: {
 	                ButtonID: this.state.buttonId
 	            }
@@ -29851,6 +29814,7 @@
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
 	var ButtonPicker = __webpack_require__(269);
+	var uuid = __webpack_require__(315);
 
 	var ButtonReleaseCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -29858,7 +29822,7 @@
 	    mixins: [UniqueIdMixin, InputValidationMixin],
 	    getInitialState: function getInitialState() {
 	        return {
-	            clientId: this.getNextIdAndIncrement() + '',
+	            id: uuid.v4(),
 	            buttonId: this.props.command.attributes.ButtonID || '',
 	            errors: null
 	        };
@@ -29873,7 +29837,7 @@
 	    toJson: function toJson() {
 	        return {
 	            type: 'buttonRelease',
-	            clientId: this.state.clientId,
+	            id: this.state.id,
 	            attributes: {
 	                ButtonID: this.state.buttonId
 	            }
@@ -29945,14 +29909,14 @@
 
 	    create: function create(sceneJson) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_CREATE, clientId: sceneJson.clientId });
+	            dispatch({ type: Constants.SCENE_CREATE, id: sceneJson.id });
 
 	            Api.sceneCreate(sceneJson, function (err, data) {
 	                if (err) {
-	                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, clientId: sceneJson.clientId });
+	                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, id: sceneJson.id });
 	                    return;
 	                }
-	                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, clientId: sceneJson.clientId });
+	                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, id: sceneJson.id });
 	            });
 	        };
 	    },
@@ -29971,10 +29935,10 @@
 	        };
 	    },
 
-	    destroyClient: function destroyClient(clientId) {
+	    destroyClient: function destroyClient(id) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_DESTROY, clientId: clientId });
-	            dispatch({ type: Constants.SCENE_DESTROY_RAW, clientId: clientId });
+	            dispatch({ type: Constants.SCENE_DESTROY, id: id });
+	            dispatch({ type: Constants.SCENE_DESTROY_RAW, id: id });
 	        };
 	    },
 
@@ -30446,10 +30410,10 @@
 	            var sensors = this.props.sensors.map(function (sensor) {
 	                return React.createElement(
 	                    'div',
-	                    _extends({}, classes('sensor-info'), { key: sensor.id || sensor.clientId }),
+	                    _extends({}, classes('sensor-info'), { key: sensor.id }),
 	                    React.createElement(SensorInfo, {
 	                        readOnlyFields: 'deviceId',
-	                        key: sensor.id || sensor.clientId,
+	                        key: sensor.id,
 	                        name: sensor.name,
 	                        description: sensor.description,
 	                        address: sensor.address,
@@ -30457,7 +30421,6 @@
 	                        attr: sensor.attr,
 	                        showSaveBtn: true,
 	                        deviceId: sensor.deviceId,
-	                        clientId: sensor.clientId,
 	                        devices: this.props.devices,
 	                        updatedSensor: this.props.updatedSensor })
 	                );
@@ -32351,8 +32314,8 @@
 
 	var Constants = __webpack_require__(209);
 	var initialState = __webpack_require__(306);
+	var uuid = __webpack_require__(315);
 
-	var _clientId = 1;
 	module.exports = function (state, action) {
 	    var newState = Object.assign({}, state);
 
@@ -32370,19 +32333,14 @@
 
 	        case Constants.DEVICE_NEW_CLIENT:
 	            newState.devices = [{
-	                clientId: 'device_cid_' + _clientId
+	                id: uuid.v4()
 	            }].concat(newState.devices);
-	            ++_clientId;
 	            break;
 
 	        case Constants.DEVICE_CREATE:
 	            break;
 	        case Constants.DEVICE_CREATE_RAW:
 	            newState.devices = newState.devices.map(function (device) {
-	                if (action.clientId && device.clientId === action.clientId) {
-	                    return action.data;
-	                }
-
 	                if (device.id === action.data.id) {
 	                    return action.data;
 	                }
@@ -32423,12 +32381,7 @@
 	        case Constants.DEVICE_DESTROY_RAW:
 	            // This is a client device, before it was sent to the server
 	            for (var i = 0; i < newState.devices.length; ++i) {
-	                var found = false;
-	                if (action.id) {
-	                    found = newState.devices[i].id === action.id;
-	                } else {
-	                    found = newState.devices[i].clientId === action.clientId;
-	                }
+	                var found = newState.devices[i].id === action.id;
 
 	                if (found) {
 	                    newState.devices = newState.devices.slice();
@@ -32458,8 +32411,7 @@
 	var Constants = __webpack_require__(209);
 	var initialState = __webpack_require__(306);
 	var CommandsReducer = __webpack_require__(310);
-
-	var _clientId = 1;
+	var uuid = __webpack_require__(315);
 
 	module.exports = function (state, action) {
 	    var newState = Object.assign({}, state);
@@ -32478,14 +32430,13 @@
 
 	        case Constants.SCENE_NEW_CLIENT:
 	            newState.items = [{
-	                clientId: 'scene_cid_' + _clientId + ''
+	                id: uuid.v4()
 	            }].concat(newState.items);
-	            ++_clientId;
 	            break;
 
 	        case Constants.SCENE_CREATE:
 	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.clientId] = {
+	            newState.saveState[action.id] = {
 	                err: null,
 	                status: 'saving'
 	            };
@@ -32493,11 +32444,11 @@
 
 	        case Constants.SCENE_CREATE_RAW:
 	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.clientId].status = 'success';
+	            newState.saveState[action.id].status = 'success';
 
 	            newState.items = newState.items.map(function (scene) {
 	                // Replace with actual scene from the server
-	                if (scene.clientId === action.clientId) {
+	                if (scene.id === action.id) {
 	                    return action.data;
 	                }
 	                return scene;
@@ -32506,7 +32457,7 @@
 
 	        case Constants.SCENE_CREATE_FAIL:
 	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.clientId] = {
+	            newState.saveState[action.id] = {
 	                status: 'error',
 	                err: action.err
 	            };
@@ -32546,12 +32497,7 @@
 	        case Constants.SCENE_DESTROY_RAW:
 	            // This is a client scene, before it was sent to the server
 	            for (var i = 0; i < newState.items.length; ++i) {
-	                var found = false;
-	                if (action.clientId) {
-	                    found = newState.items[i].clientId === action.clientId;
-	                } else {
-	                    found = newState.items[i].id === action.id;
-	                }
+	                var found = found = newState.items[i].id === action.id;
 
 	                if (found) {
 	                    newState.items = newState.items.slice();
@@ -32972,6 +32918,234 @@
 	});
 	module.exports = Testr;*/
 	module.exports = C1;
+
+/***/ },
+/* 315 */
+/***/ function(module, exports, __webpack_require__) {
+
+	//     uuid.js
+	//
+	//     Copyright (c) 2010-2012 Robert Kieffer
+	//     MIT License - http://opensource.org/licenses/mit-license.php
+
+	// Unique ID creation requires a high quality random # generator.  We feature
+	// detect to determine the best RNG source, normalizing to a function that
+	// returns 128-bits of randomness, since that's what's usually required
+	var _rng = __webpack_require__(316);
+
+	// Maps for number <-> hex string conversion
+	var _byteToHex = [];
+	var _hexToByte = {};
+	for (var i = 0; i < 256; i++) {
+	  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
+	  _hexToByte[_byteToHex[i]] = i;
+	}
+
+	// **`parse()` - Parse a UUID into it's component bytes**
+	function parse(s, buf, offset) {
+	  var i = (buf && offset) || 0, ii = 0;
+
+	  buf = buf || [];
+	  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
+	    if (ii < 16) { // Don't overflow!
+	      buf[i + ii++] = _hexToByte[oct];
+	    }
+	  });
+
+	  // Zero out remaining bytes if string was short
+	  while (ii < 16) {
+	    buf[i + ii++] = 0;
+	  }
+
+	  return buf;
+	}
+
+	// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
+	function unparse(buf, offset) {
+	  var i = offset || 0, bth = _byteToHex;
+	  return  bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]];
+	}
+
+	// **`v1()` - Generate time-based UUID**
+	//
+	// Inspired by https://github.com/LiosK/UUID.js
+	// and http://docs.python.org/library/uuid.html
+
+	// random #'s we need to init node and clockseq
+	var _seedBytes = _rng();
+
+	// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+	var _nodeId = [
+	  _seedBytes[0] | 0x01,
+	  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
+	];
+
+	// Per 4.2.2, randomize (14 bit) clockseq
+	var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
+
+	// Previous uuid creation time
+	var _lastMSecs = 0, _lastNSecs = 0;
+
+	// See https://github.com/broofa/node-uuid for API details
+	function v1(options, buf, offset) {
+	  var i = buf && offset || 0;
+	  var b = buf || [];
+
+	  options = options || {};
+
+	  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
+
+	  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+	  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+	  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+	  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+	  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
+
+	  // Per 4.2.1.2, use count of uuid's generated during the current clock
+	  // cycle to simulate higher resolution clock
+	  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
+
+	  // Time since last uuid creation (in msecs)
+	  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
+
+	  // Per 4.2.1.2, Bump clockseq on clock regression
+	  if (dt < 0 && options.clockseq === undefined) {
+	    clockseq = clockseq + 1 & 0x3fff;
+	  }
+
+	  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+	  // time interval
+	  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
+	    nsecs = 0;
+	  }
+
+	  // Per 4.2.1.2 Throw error if too many uuids are requested
+	  if (nsecs >= 10000) {
+	    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
+	  }
+
+	  _lastMSecs = msecs;
+	  _lastNSecs = nsecs;
+	  _clockseq = clockseq;
+
+	  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+	  msecs += 12219292800000;
+
+	  // `time_low`
+	  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+	  b[i++] = tl >>> 24 & 0xff;
+	  b[i++] = tl >>> 16 & 0xff;
+	  b[i++] = tl >>> 8 & 0xff;
+	  b[i++] = tl & 0xff;
+
+	  // `time_mid`
+	  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
+	  b[i++] = tmh >>> 8 & 0xff;
+	  b[i++] = tmh & 0xff;
+
+	  // `time_high_and_version`
+	  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+	  b[i++] = tmh >>> 16 & 0xff;
+
+	  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+	  b[i++] = clockseq >>> 8 | 0x80;
+
+	  // `clock_seq_low`
+	  b[i++] = clockseq & 0xff;
+
+	  // `node`
+	  var node = options.node || _nodeId;
+	  for (var n = 0; n < 6; n++) {
+	    b[i + n] = node[n];
+	  }
+
+	  return buf ? buf : unparse(b);
+	}
+
+	// **`v4()` - Generate random UUID**
+
+	// See https://github.com/broofa/node-uuid for API details
+	function v4(options, buf, offset) {
+	  // Deprecated - 'format' argument, as supported in v1.2
+	  var i = buf && offset || 0;
+
+	  if (typeof(options) == 'string') {
+	    buf = options == 'binary' ? new Array(16) : null;
+	    options = null;
+	  }
+	  options = options || {};
+
+	  var rnds = options.random || (options.rng || _rng)();
+
+	  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+	  rnds[6] = (rnds[6] & 0x0f) | 0x40;
+	  rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+	  // Copy bytes to buffer, if provided
+	  if (buf) {
+	    for (var ii = 0; ii < 16; ii++) {
+	      buf[i + ii] = rnds[ii];
+	    }
+	  }
+
+	  return buf || unparse(rnds);
+	}
+
+	// Export public API
+	var uuid = v4;
+	uuid.v1 = v1;
+	uuid.v4 = v4;
+	uuid.parse = parse;
+	uuid.unparse = unparse;
+
+	module.exports = uuid;
+
+
+/***/ },
+/* 316 */
+/***/ function(module, exports) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {
+	var rng;
+
+	var crypto = global.crypto || global.msCrypto; // for IE 11
+	if (crypto && crypto.getRandomValues) {
+	  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
+	  // Moderately fast, high quality
+	  var _rnds8 = new Uint8Array(16);
+	  rng = function whatwgRNG() {
+	    crypto.getRandomValues(_rnds8);
+	    return _rnds8;
+	  };
+	}
+
+	if (!rng) {
+	  // Math.random()-based (RNG)
+	  //
+	  // If all else fails, use Math.random().  It's fast, but is of unspecified
+	  // quality.
+	  var  _rnds = new Array(16);
+	  rng = function() {
+	    for (var i = 0, r; i < 16; i++) {
+	      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+	      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+	    }
+
+	    return _rnds;
+	  };
+	}
+
+	module.exports = rng;
+
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }
 /******/ ]);

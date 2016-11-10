@@ -1,7 +1,7 @@
 var Constants = require('../constants.js');
 var initialState = require('../initialState.js');
+var uuid = require('uuid');
 
-var _clientId = 1;
 module.exports = function(state, action) {
     var newState = Object.assign({}, state);
 
@@ -19,19 +19,14 @@ module.exports = function(state, action) {
 
     case Constants.DEVICE_NEW_CLIENT:
         newState.devices = [{
-            clientId: 'device_cid_' + _clientId
+            id: uuid.v4()
         }].concat(newState.devices);
-        ++_clientId;
         break;
 
     case Constants.DEVICE_CREATE:
         break;
     case Constants.DEVICE_CREATE_RAW:
         newState.devices = newState.devices.map(function(device) {
-            if (action.clientId && (device.clientId === action.clientId)) {
-                return action.data;
-            }
-
             if (device.id === action.data.id) {
                 return action.data;
             }
@@ -72,12 +67,7 @@ module.exports = function(state, action) {
     case Constants.DEVICE_DESTROY_RAW:
         // This is a client device, before it was sent to the server
         for (var i=0; i<newState.devices.length; ++i) {
-            var found = false;
-            if (action.id) {
-                found = newState.devices[i].id === action.id;
-            } else {
-                found = newState.devices[i].clientId === action.clientId;
-            }
+            var found = newState.devices[i].id === action.id;
 
             if (found) {
                 newState.devices = newState.devices.slice();

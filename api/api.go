@@ -90,9 +90,9 @@ func (r *badRequestErr) Error() string {
 // validationErr - an error that occurs when input fields are not valid e.g. Name field
 // is too long etc.
 type validationErr struct {
-	ClientID string
-	Data     interface{}
-	Errors   *validation.Errors
+	ID     string
+	Data   interface{}
+	Errors *validation.Errors
 }
 
 func (e *validationErr) Error() string {
@@ -114,7 +114,7 @@ func resp(r apiResponse, w http.ResponseWriter) {
 		case *validationErr:
 			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(validation.NewErrorJSON(err.Data, err.ClientID, err.Errors))
+			json.NewEncoder(w).Encode(validation.NewErrorJSON(err.Data, err.ID, err.Errors))
 		case *badRequestErr:
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(struct {

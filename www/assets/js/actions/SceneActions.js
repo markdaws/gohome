@@ -20,14 +20,14 @@ var SceneActions = {
 
     create: function(sceneJson) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_CREATE, clientId: sceneJson.clientId });
+            dispatch({ type: Constants.SCENE_CREATE, id: sceneJson.id });
 
             Api.sceneCreate(sceneJson, function(err, data) {
                 if (err) {
-                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, clientId: sceneJson.clientId });
+                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, id: sceneJson.id });
                     return;
                 }
-                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, clientId: sceneJson.clientId });
+                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, id: sceneJson.id });
             });
         };
     },
@@ -46,10 +46,10 @@ var SceneActions = {
         };
     },
 
-    destroyClient: function(clientId) {
+    destroyClient: function(id) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_DESTROY, clientId: clientId });
-            dispatch({ type: Constants.SCENE_DESTROY_RAW, clientId: clientId });
+            dispatch({ type: Constants.SCENE_DESTROY, id: id });
+            dispatch({ type: Constants.SCENE_DESTROY_RAW, id: id });
         };
     },
 

@@ -1,8 +1,7 @@
 var Constants = require('../constants.js');
 var initialState = require('../initialState.js');
 var CommandsReducer = require('./commandsReducer.js');
-
-var _clientId = 1;
+var  uuid = require('uuid')
 
 module.exports = function(state, action) {
     var newState = Object.assign({}, state);
@@ -21,14 +20,13 @@ module.exports = function(state, action) {
 
     case Constants.SCENE_NEW_CLIENT:
         newState.items = [{
-            clientId: 'scene_cid_' + _clientId + ''
+            id: uuid.v4()
         }].concat(newState.items);
-        ++_clientId;
         break;
 
     case Constants.SCENE_CREATE:
         newState.saveState = Object.assign({}, newState.saveState);
-        newState.saveState[action.clientId] = {
+        newState.saveState[action.id] = {
             err: null,
             status: 'saving'
         };
@@ -36,11 +34,11 @@ module.exports = function(state, action) {
 
     case Constants.SCENE_CREATE_RAW:
         newState.saveState = Object.assign({}, newState.saveState);
-        newState.saveState[action.clientId].status = 'success';
+        newState.saveState[action.id].status = 'success';
 
         newState.items = newState.items.map(function(scene) {
             // Replace with actual scene from the server
-            if (scene.clientId === action.clientId) {
+            if (scene.id === action.id) {
                 return action.data;
             }
             return scene;
@@ -49,7 +47,7 @@ module.exports = function(state, action) {
 
     case Constants.SCENE_CREATE_FAIL:
         newState.saveState = Object.assign({}, newState.saveState);
-        newState.saveState[action.clientId] = {
+        newState.saveState[action.id] = {
             status: 'error',
             err: action.err
         };
@@ -89,12 +87,7 @@ module.exports = function(state, action) {
     case Constants.SCENE_DESTROY_RAW:
         // This is a client scene, before it was sent to the server
         for (var i=0; i<newState.items.length; ++i) {
-            var found = false;
-            if (action.clientId) {
-                found = newState.items[i].clientId === action.clientId;
-            } else {
-                found = newState.items[i].id === action.id;
-            }
+            var found = found = newState.items[i].id === action.id;
 
             if (found) {
                 newState.items = newState.items.slice();

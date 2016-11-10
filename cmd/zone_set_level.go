@@ -3,6 +3,7 @@ package cmd
 import "fmt"
 
 type ZoneSetLevel struct {
+	ID          string
 	ZoneAddress string
 	ZoneID      string
 	ZoneName    string

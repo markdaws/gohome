@@ -3,6 +3,7 @@ package cmd
 import "fmt"
 
 type StringCommand struct {
+	ID    string
 	Value string
 	Args  []interface{}
 }

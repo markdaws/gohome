@@ -38,9 +38,8 @@ var SystemDeviceList = React.createClass({
                              modelName={device.modelName}
                              softwareVersion={device.softwareVersion}
                              id={device.id}
-                             clientId={device.clientId}
                              readOnlyFields="id"
-                             key={device.id || device.clientId}
+                             key={device.id}
                              type={device.type}
                              deviceDelete={this.props.deviceDelete}
                              createdDevice={this.props.createdDevice}
@@ -138,11 +137,11 @@ var SystemDeviceList = React.createClass({
 
 function mapDispatchToProps(dispatch) {
     return {
-        deviceDelete: function(id, clientId) {
-            dispatch(SystemActions.deviceDelete(id, clientId));
+        deviceDelete: function(id) {
+            dispatch(SystemActions.deviceDelete(id));
         },
-        createdDevice: function(clientId, data) {
-            dispatch(SystemActions.createdDevice(clientId, data));
+        createdDevice: function(id, data) {
+            dispatch(SystemActions.createdDevice(id, data));
         },
         updatedDevice: function(data) {
             dispatch(SystemActions.updatedDevice(data));

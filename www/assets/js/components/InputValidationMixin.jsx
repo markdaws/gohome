@@ -2,8 +2,7 @@ var React = require('react');
 
 module.exports = {
     uid: function(field) {
-        var id = (!this.state.clientId) ? this.state.id : this.state.clientId;
-        return id + '_' + field
+        return this.state.id + '_' + field
     },
 
     getErr: function(field) {

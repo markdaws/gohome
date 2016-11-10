@@ -8,27 +8,27 @@ var SystemActions = {
         };
     },
 
-    deviceDelete: function(id, clientId) {
+    deviceDelete: function(id) {
         return function(dispatch) {
             dispatch({ type: Constants.DEVICE_DESTROY });
             if (!id) {
-                dispatch({ type: Constants.DEVICE_DESTROY_RAW, clientId: clientId });
+                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id });
                 return;
             }
 
             Api.deviceDestroy(id, function(err, data) {
                 if (err) {
-                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, clientId: clientId, err: err });
+                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, err: err });
                     return;
                 }
-                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, clientId: clientId, data: data });
+                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, data: data });
             });
         };
     },
 
-    createdDevice: function(clientId, deviceJson, append) {
+    createdDevice: function(id, deviceJson, append) {
         return function(dispatch) {
-            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, clientId: clientId });
+            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, id: id });
         };
     },
 

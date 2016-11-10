@@ -49,7 +49,7 @@ var ImportGroup = React.createClass({
     _zoneChanged: function(cmp) {
         var zone = cmp.toJson();
         var zones = this.state.zones.map(function(zn) {
-            if (zn.clientId === zone.clientId) {
+            if (zn.id === zone.id) {
                 return zone;
             }
             return zn;
@@ -66,7 +66,7 @@ var ImportGroup = React.createClass({
         // Update our list of sensors, with the newly updated sensor replacing the old version,
         // this will cause a re-render
         var sensors = this.state.sensors.map(function(sen) {
-            if (sen.clientId === sensor.clientId) {
+            if (sen.id === sensor.idd) {
                 return sensor;
             }
             return sen;
@@ -94,28 +94,24 @@ var ImportGroup = React.createClass({
                 return;
             }
 
-            // Now the device has an id, we need to bind the zone to it
-            var clientId = this.state.zones[index].clientId;
-            var zoneCell = this.refs["cell_zone_" + clientId];
-
+            var zone = this.state.zones[index];
+            var zoneCell = this.refs["cell_zone_" + zone.id];
             if (!zoneCell.isChecked()) {
                 saveZone.bind(this)(index + 1);
                 return;
             }
 
-            if (this._savedZones[clientId]) {
+            if (this._savedZones[zone.id]) {
                 // Already saved this, on a previous call before we ran in to
                 // an error, skip and keep going
                 saveZone.bind(this)(index + 1);
                 return;
             }
             
-            var zone = Object.assign({}, this.state.zones[index]);
-            zone.deviceId = this._deviceId;
             Api.zoneCreate(zone, function(err, zoneData) {
                 if (err) {
                     var errs = {};
-                    errs[zone.clientId] = err.validationErrors;
+                    errs[zone.id] = err.validationErrors;
                     this.setState({
                         zoneErrors: errs,
                         saveButtonStatus: 'error'
@@ -123,7 +119,7 @@ var ImportGroup = React.createClass({
                     return;
                 }
 
-                this._savedZones[clientId] = true;
+                this._savedZones[zone.id] = true;
                 this.props.createdZone(zoneData);
                 saveZone.bind(this)(index+1);
             }.bind(this));
@@ -136,26 +132,22 @@ var ImportGroup = React.createClass({
                 return;
             }
 
-            // Now the device has an id, we need to bind the sensor to it
-            var clientId = this.state.sensors[index].clientId;
-            var sensorCell = this.refs["cell_sensor_" + clientId];
-
+            var sensor = this.state.sensors[index];
+            var sensorCell = this.refs["cell_sensor_" + sensor.id];
             if (!sensorCell.isChecked()) {
                 saveSensor.bind(this)(index + 1);
                 return;
             }
 
-            if (this._savedSensors[clientId]) {
+            if (this._savedSensors[sensor.id]) {
                 saveSensor.bind(this)(index + 1);
                 return;
             }
 
-            var sensor = Object.assign({}, this.state.sensors[index]);
-            sensor.deviceId = this._deviceId;
             Api.sensorCreate(sensor, function(err, sensorData) {
                 if (err) {
                     var errs = {};
-                    errs[sensor.clientId] = err.validationErrors;
+                    errs[sensor.id] = err.validationErrors;
                     this.setState({
                         sensorErrors: errs,
                         saveButtonStatus: 'error'
@@ -163,7 +155,7 @@ var ImportGroup = React.createClass({
                     return;
                 }
 
-                this._savedSensors[clientId] = true;
+                this._savedSensors[sensor.id] = true;
                 this.props.createdSensor(sensorData);
                 saveSensor.bind(this)(index+1);
             }.bind(this));
@@ -183,10 +175,9 @@ var ImportGroup = React.createClass({
                 }
 
                 this._deviceSaved = true;
-                this._deviceId = deviceData.id;
 
                 // Let callers know the device has been saved
-                this.props.createdDevice(this.state.clientId, deviceData);
+                this.props.createdDevice(deviceData);
 
                 // Now save the zones and sensors
                 saveZone.bind(this)(0);
@@ -201,18 +192,17 @@ var ImportGroup = React.createClass({
 
         var device = this.state.device;
         var cell = {
-            key: device.clientId,
+            key: device.id,
             cell: <SystemDeviceListGridCell
-                      key={"devicecell-" + device.clientId}
+                      key={"devicecell-" + device.id}
                       showCheckbox={false}
                       chkBxChanged={this.deviceChkBxChanged}
-                      clientId={device.clientId}
                       hasError={this.state.deviceErrors != null}
                       device={device} />,
             content: <DeviceInfo
                          name={device.name}
-                         key={"deviceinfo-" + device.clientId}
-                         ref={"deviceinfo-" + device.clientId}
+                         key={"deviceinfo-" + device.id}
+                         ref={"deviceinfo-" + device.id}
                          description={device.description}
                          address={device.address}
                          addressRequired={device.addressRequired}
@@ -220,10 +210,8 @@ var ImportGroup = React.createClass({
                          modelName={device.modelName}
                          softwareVersion={device.softwareVersion}
                          id={device.id}
-                         clientId={device.clientId}
                          readOnlyFields="id"
                          errors={this.state.deviceErrors}
-                         key={device.id || device.clientId}
                          changed={this._deviceChanged}
                          type={device.type} />
         };
@@ -231,31 +219,29 @@ var ImportGroup = React.createClass({
 
         (this.state.zones || []).forEach(function(zone) {
             // If we have an error we need to check for it
-            var err = this.state.zoneErrors[zone.clientId];
+            var err = this.state.zoneErrors[zone.id];
             
             var cmpZone = {
-                key: 'zones_' + zone.clientId,
+                key: 'zones_' + zone.id,
                 cell: <ZoneSensorListGridCell
                           showCheckbox={true}
                           showLevel={false}
                           hasError={err != null}
                           chkBxChanged={this.zoneChkBxChanged}
-                          key={"zonecell-" + zone.clientId}
-                          clientId={zone.clientId}
-                          ref={"cell_zone_" + zone.clientId}
+                          key={"zonecell-" + zone.id}
+                          ref={"cell_zone_" + zone.id}
                           zone={zone} />,
                 content: <ZoneInfo
                              readOnlyFields="deviceId"
-                             key={"zoneinfo-" + zone.clientId}
-                             ref={"zoneinfo-" + zone.clientId}
+                             key={"zoneinfo-" + zone.id}
+                             ref={"zoneinfo-" + zone.id}
                              name={zone.name}
-                             clientId={zone.clientId}
                              description={zone.description}
                              address={zone.address}
                              type={zone.type}
                              output={zone.output}
                              errors={err}
-                             deviceId={device.clientId}
+                             deviceId={device.id}
                              devices={[ device ]}
                              changed={this._zoneChanged} />
             };
@@ -263,28 +249,26 @@ var ImportGroup = React.createClass({
         }.bind(this));
 
         (this.state.sensors || []).forEach(function(sensor) {
-            var err = this.state.sensorErrors[sensor.clientId];
+            var err = this.state.sensorErrors[sensor.id];
             
             var cmpSensor = {
-                key: 'sensor_' + sensor.clientId,
+                key: 'sensor_' + sensor.id,
                 cell: <ZoneSensorListGridCell
                           showCheckbox={true}
                           chkBxChanged={this.sensorChkBxChanged}
                           hasError={err != null}
-                          key={sensor.clientId}
-                          clientId={sensor.clientId}
-                          ref={"cell_sensor_" + sensor.clientId}
+                          key={sensor.id}
+                          ref={"cell_sensor_" + sensor.id}
                           sensor={sensor} />,
                 content: <SensorInfo
                              readOnlyFields="deviceId"
-                             key={sensor.clientId}
+                             key={sensor.id}
                              name={sensor.name}
                              description={sensor.description}
                              address={sensor.address}
                              attr={sensor.attr}
                              errors={err}
-                             deviceId={device.clientId}
-                             clientId={sensor.clientId}
+                             deviceId={device.id}
                              devices={[ device ]}
                              changed={this._sensorChanged} />
 

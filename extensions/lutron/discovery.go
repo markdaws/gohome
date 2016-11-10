@@ -50,22 +50,15 @@ func (d *discoverer) ScanDevices(sys *gohome.System) (*gohome.DiscoveryResults, 
 
 func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 	//TODO: Fix should not suck into a system ...
-
+	//TODO: remove
 	//importer := &importer{System: d.System}
 	//err := importer.FromString(d.System, body)
 	//return nil, err
 
-	// We won't have real IDs for these items yet since they haven't been added to the system
-	// so we give them temp values in the ID fields
-	nextID := 1
-	_ = nextID
 	result := &gohome.DiscoveryResults{}
 
 	// We need to know which device is the Smart Bridge Pro - it is always ID==1 in the config file
 	var smartBridgeProID string = "1"
-
-	//TODO: Remove
-	//var smartBridgeProAddress string = "192.168.0.10:23"
 
 	var configJSON map[string]interface{}
 	if err := json.Unmarshal([]byte(body), &configJSON); err != nil {
@@ -119,8 +112,11 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 				Description: btnName,
 				Device:      device,
 			}
+			b.ID = d.System.NextGlobalID()
 			device.AddButton(b)
 		}
+
+		device.ID = d.System.NextGlobalID()
 		return device
 	}
 
@@ -147,6 +143,7 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 					Description: buttonName,
 					Commands: []cmd.Command{
 						&cmd.ButtonPress{
+							ID:            d.System.NextGlobalID(),
 							ButtonAddress: btn.Address,
 							ButtonID:      btn.ID,
 							DeviceName:    sbp.Name,
@@ -154,6 +151,7 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 							DeviceID:      sbp.ID,
 						},
 						&cmd.ButtonRelease{
+							ID:            d.System.NextGlobalID(),
 							ButtonAddress: btn.Address,
 							ButtonID:      btn.ID,
 							DeviceName:    sbp.Name,
@@ -162,6 +160,7 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 						},
 					},
 				}
+				scene.ID = d.System.NextGlobalID()
 				scenes = append(scenes, scene)
 			}
 		}
@@ -193,7 +192,6 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 			// We need an address for this device, we can't get it from the Lutron config file so by setting
 			// this flag the devices validation will fail when the user tries to import the device
 			dev.AddressRequired = true
-
 			sbp = dev
 
 			//TODO: Needed for serialization?
@@ -277,7 +275,7 @@ func (d *discoverer) FromString(body string) (*gohome.DiscoveryResults, error) {
 			Type:        zoneTypeFinal,
 			Output:      outputTypeFinal,
 		}
-
+		newZone.ID = d.System.NextGlobalID()
 		err := sbp.AddZone(newZone)
 		if err != nil {
 			return nil, fmt.Errorf("err adding zone to device\n", err)

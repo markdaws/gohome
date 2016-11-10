@@ -75,7 +75,7 @@ func main() {
 	//TODO: Remove, simulate user importing lutron information on load
 	reset := true
 	if reset {
-		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro", 1)
+		system := gohome.NewSystem("Lutron Smart Bridge Pro", "Lutron Smart Bridge Pro")
 		intg.RegisterExtensions(system)
 
 		bytes, err := ioutil.ReadFile("main/ip.json")
@@ -106,7 +106,7 @@ func main() {
 		log.V("startup file not found at: %s, creating new system", cfg.SystemPath)
 
 		// First time running the system, create a new blank system, save it
-		sys = gohome.NewSystem("My goHOME system", "", 1)
+		sys = gohome.NewSystem("My goHOME system", "")
 		intg.RegisterExtensions(sys)
 
 		err = store.SaveSystem(cfg.SystemPath, sys, rm)

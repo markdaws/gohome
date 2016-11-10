@@ -13,7 +13,6 @@ type jsonSensor struct {
 	Description string         `json:"description"`
 	Address     string         `json:"address"`
 	DeviceID    string         `json:"deviceId"`
-	ClientID    string         `json:"clientId"`
 	Attr        jsonSensorAttr `json:"attr"`
 }
 type sensors []jsonSensor

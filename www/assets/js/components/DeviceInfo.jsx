@@ -28,7 +28,6 @@ var DeviceInfo = React.createClass({
             address: this.props.address,
             addressRequired: this.props.addressRequired,
             id: this.props.id,
-            clientId: this.props.clientId,
             modelNumber: this.props.modelNumber || '',
             modelName: this.props.modelName || '',
             softwareVersion: this.props.softwareVersion || '',
@@ -56,7 +55,6 @@ var DeviceInfo = React.createClass({
     toJson: function() {
         var s = this.state;
         return {
-            clientId: this.props.clientId,
             name: s.name,
             description: s.description,
             address: s.address,
@@ -93,9 +91,6 @@ var DeviceInfo = React.createClass({
         if (nextProps.id != "" ) {
             this.setState({ id: nextProps.id });
         }
-        if (nextProps.clientId != "") {
-            this.setState({ clientId: nextProps.clientId });
-        }
     },
 
     createDevice: function() {
@@ -109,7 +104,7 @@ var DeviceInfo = React.createClass({
             }
 
             // Let callers know the device has been saved
-            this.props.createdDevice(this.state.clientId, deviceData);
+            this.props.createdDevice(this.state.id, deviceData);
             
             // Now we need to loop through each of the zones and save them
             function saveZone(index) {
@@ -118,10 +113,7 @@ var DeviceInfo = React.createClass({
                     return;
                 }
 
-                // Now the device has an id, we need to bind the zone to it
-                var zoneInfo = this.refs["zoneInfo_" + this.props.zones[index].clientId];
-                var zone = Object.assign({}, zoneInfo.toJson());
-                zone.deviceId = deviceData.id;
+                var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
                 Api.zoneCreate(zone, function(err, zoneData) {
                     if (err) {
                         zoneInfo.setErrors(err.validationErrors);
@@ -144,10 +136,7 @@ var DeviceInfo = React.createClass({
                     return;
                 }
 
-                // Now the device has an id, we need to bind the sensor to it
-                var sensorInfo = this.refs["sensorInfo_" + this.props.sensors[index].clientId];
-                var sensor = Object.assign({}, sensorInfo.toJson());
-                sensor.deviceId = deviceData.id;
+                var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
                 Api.sensorCreate(sensor, function(err, sensorData) {
                     if (err) {
                         sensorInfo.setErrors(err.validationErrors);
@@ -156,7 +145,7 @@ var DeviceInfo = React.createClass({
                         });
                         return;
                     }
-
+pp
                     this.props.savedSensor(sensorData);
                     saveSensor.bind(this)(index+1);
                 }.bind(this));
@@ -190,7 +179,7 @@ var DeviceInfo = React.createClass({
     },
 
     deleteDevice: function() {
-        this.props.deviceDelete(this.state.id, this.state.clientId);
+        this.props.deviceDelete(this.state.id);
     },
 
     typeChanged: function(type) {
@@ -270,16 +259,15 @@ var DeviceInfo = React.createClass({
             zones = this.props.zones.map(function(zone) {
                 return (
                     <ZoneInfo
-                        ref={"zoneInfo_" + zone.clientId}
+                        ref={"zoneInfo_" + zone.id}
                         readOnlyFields="deviceId"
-                        key={zone.id || zone.clientId}
-                        clientId={zone.clientId}
+                        key={zone.id}
                         name={zone.name}
                         description={zone.description}
                         address={zone.address}
                         type={zone.type}
                         output={zone.output}
-                        deviceId={this.state.id || this.state.clientId}
+                        deviceId={this.state.id}
                         devices={[ this.toJson() ]}
                         changed={this._zoneChanged} />
                 );
@@ -293,15 +281,14 @@ var DeviceInfo = React.createClass({
             sensors = this.props.sensors.map(function(sensor) {
                 return (
                     <SensorInfo
-                        ref={"sensorInfo_" + sensor.clientId}
+                        ref={"sensorInfo_" + sensor.id}
                         readOnlyFields="deviceId"
-                        key={sensor.id || sensor.clientId}
-                        clientId={sensor.clientId}
+                        key={sensor.id}
                         name={sensor.name}
                         description={sensor.description}
                         address={sensor.address}
                         attr={sensor.attr}
-                        deviceId={this.state.id || this.state.clientId}
+                        deviceId={this.state.id}
                         devices={[ this.toJson() ]}
                         changed={this._sensorChanged} />
                 );

@@ -3,6 +3,7 @@ package cmd
 import "fmt"
 
 type ButtonPress struct {
+	ID            string
 	ButtonAddress string
 	ButtonID      string
 	DeviceName    string

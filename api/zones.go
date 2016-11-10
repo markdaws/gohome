@@ -227,7 +227,7 @@ func apiAddZoneHandler(
 		if valErrs != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
 			return
 		}
 
@@ -241,7 +241,7 @@ func apiAddZoneHandler(
 			if valErrs, ok := errors.(*validation.Errors); ok {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
 			} else {
 				//Other kind of errors, TODO: log
 				w.WriteHeader(http.StatusBadRequest)
@@ -254,7 +254,7 @@ func apiAddZoneHandler(
 			if valErrs, ok := errors.(*validation.Errors); ok {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
 			} else {
 				//Other kind of errors, TODO: log
 				w.WriteHeader(http.StatusBadRequest)
@@ -268,8 +268,6 @@ func apiAddZoneHandler(
 			return
 		}
 
-		data.ClientID = ""
-		data.ID = z.ID
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(data)
 	}

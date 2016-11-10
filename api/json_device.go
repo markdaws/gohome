@@ -20,7 +20,6 @@ type jsonDevice struct {
 	ModelNumber     string        `json:"modelNumber"`
 	ModelName       string        `json:"modelName"`
 	SoftwareVersion string        `json:"softwareVersion"`
-	ClientID        string        `json:"clientId,omitempty"`
 	Zones           []jsonZone    `json:"zones"`
 	ConnPool        *jsonConnPool `json:"connPool"`
 	Type            string        `json:"type"`

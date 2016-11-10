@@ -46,17 +46,17 @@ var SceneList = React.createClass({
                 var saveState;
 
                 // Check for input validation errors from the server
-                saveState = (this.props.scenes.saveState[scene.clientId || scene.id] || {});
+                saveState = (this.props.scenes.saveState[scene.id] || {});
 
                 return (
-                    <div {...classes('scene-info')} key={scene.id || scene.clientId}>
+                    <div {...classes('scene-info')} key={scene.id}>
                         <SceneInfo
                             zones={this.props.zones}
                             buttons={this.props.buttons}
                             scenes={this.props.scenes.items}
                             scene={scene}
                             readOnlyFields="id"
-                            key={scene.id || scene.clientId}
+                            key={scene.id}
                             errors={(saveState.err || {}).validationErrors}
                             saveScene={this.props.saveScene}
                             updateScene={this.props.updateScene}
@@ -78,7 +78,7 @@ var SceneList = React.createClass({
                 return {
                     key: scene.id,
                     cell: <SceneListGridCell scene={scene} />,
-                    content: <SceneControl scene={scene} key={scene.id || scene.clientId}/>
+                    content: <SceneControl scene={scene} key={scene.id}/>
                 };
             });
             btns = (
@@ -117,9 +117,10 @@ function mapDispatchToProps(dispatch) {
         updateScene: function(sceneJson) {
             dispatch(SceneActions.update(sceneJson));
         },
-        deleteScene: function(clientId, id) {
-            if (clientId) {
-                dispatch(SceneActions.destroyClient(clientId));
+        deleteScene: function(id) {
+            alert('broken needs client id');
+            if (id) {
+                dispatch(SceneActions.destroyClient(id));
             } else {
                 dispatch(SceneActions.destroy(id));
             }

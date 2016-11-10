@@ -126,7 +126,7 @@ func apiAddSensorHandler(
 		if valErrs != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
 			return
 		}
 
@@ -159,7 +159,7 @@ func apiAddSensorHandler(
 			if valErrs, ok := errors.(*validation.Errors); ok {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
 			} else {
 				//Other kind of errors, TODO: log
 				w.WriteHeader(http.StatusBadRequest)
@@ -174,8 +174,6 @@ func apiAddSensorHandler(
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		data.ClientID = ""
-		data.ID = sensor.ID
 		json.NewEncoder(w).Encode(data)
 	}
 }

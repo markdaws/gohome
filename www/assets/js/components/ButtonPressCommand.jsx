@@ -2,13 +2,14 @@ var React = require('react');
 var InputValidationMixin = require('./InputValidationMixin.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var ButtonPicker = require('./ButtonPicker.jsx');
+var uuid = require('uuid');
 
 var ButtonPressCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
 
     getInitialState: function() {
         return {
-            clientId: this.getNextIdAndIncrement() + '',
+            id: uuid.v4(),
             buttonId: this.props.command.attributes.ButtonID || '',
             errors: null,
         }
@@ -23,7 +24,7 @@ var ButtonPressCommand = module.exports = React.createClass({
     toJson: function() {
         return {
             type: 'buttonPress',
-            clientId: this.state.clientId,
+            id: this.state.id,
             attributes: {
                 ButtonID: this.state.buttonId
             }

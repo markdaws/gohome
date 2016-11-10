@@ -28,7 +28,6 @@ var ZoneInfo = React.createClass({
     
     getInitialState: function() {
         return {
-            clientId: this.props.clientId,
             name: this.props.name,
             description: this.props.description,
             address: this.props.address,
@@ -46,7 +45,6 @@ var ZoneInfo = React.createClass({
         var s = this.state
         return {
             id: this.props.id,
-            clientId: s.clientId,
             name: s.name,
             description: s.description,
             address: s.address,

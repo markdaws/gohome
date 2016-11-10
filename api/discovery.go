@@ -76,7 +76,6 @@ func writeDiscoveryResults(result *gohome.DiscoveryResults, w http.ResponseWrite
 				DeviceID:    device.ID,
 				Type:        zn.Type.ToString(),
 				Output:      zn.Output.ToString(),
-				ClientID:    strconv.Itoa(i) + "_zone_" + strconv.Itoa(j),
 			}
 			j++
 		}
@@ -89,10 +88,6 @@ func writeDiscoveryResults(result *gohome.DiscoveryResults, w http.ResponseWrite
 				Name:        sen.Name,
 				Description: sen.Description,
 				Address:     sen.Address,
-
-				//TODO: Shouldn't be setting ClientID here
-				ClientID: strconv.Itoa(i) + "_sensor_" + strconv.Itoa(j),
-
 				Attr: jsonSensorAttr{
 					Name:     sen.Attr.Name,
 					DataType: string(sen.Attr.DataType),
@@ -128,7 +123,6 @@ func writeDiscoveryResults(result *gohome.DiscoveryResults, w http.ResponseWrite
 			ModelNumber:     device.ModelNumber,
 			ModelName:       device.ModelName,
 			SoftwareVersion: device.SoftwareVersion,
-			ClientID:        "device_" + strconv.Itoa(i),
 			Zones:           jsonZones,
 			Sensors:         jsonSensors,
 			ConnPool:        connPoolJSON,

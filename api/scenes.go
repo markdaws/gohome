@@ -92,6 +92,7 @@ func scenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
 			switch xCmd := sCmd.(type) {
 			case *cmd.ZoneSetLevel:
 				cmds[j] = jsonCommand{
+					ID:   xCmd.ID,
 					Type: "zoneSetLevel",
 					Attributes: map[string]interface{}{
 						"ZoneID": xCmd.ZoneID,
@@ -100,6 +101,7 @@ func scenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
 				}
 			case *cmd.ButtonPress:
 				cmds[j] = jsonCommand{
+					ID:   xCmd.ID,
 					Type: "buttonPress",
 					Attributes: map[string]interface{}{
 						"ButtonID": xCmd.ButtonID,
@@ -107,6 +109,7 @@ func scenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
 				}
 			case *cmd.ButtonRelease:
 				cmds[j] = jsonCommand{
+					ID:   xCmd.ID,
 					Type: "buttonRelease",
 					Attributes: map[string]interface{}{
 						"ButtonID": xCmd.ButtonID,
@@ -114,6 +117,7 @@ func scenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
 				}
 			case *cmd.SceneSet:
 				cmds[j] = jsonCommand{
+					ID:   xCmd.ID,
 					Type: "sceneSet",
 					Attributes: map[string]interface{}{
 						"SceneID": xCmd.SceneID,
@@ -235,14 +239,14 @@ func apiSceneHandlerCommandAdd(
 			if _, ok := command.Attributes["ZoneID"]; !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attribute_ZoneID", "required field", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
 			if _, ok = command.Attributes["ZoneID"].(string); !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attributes_ZoneID", "must be a string data type", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
@@ -255,7 +259,7 @@ func apiSceneHandlerCommandAdd(
 				} else {
 					valErrs = validation.NewErrors("attributes_ZoneID", "invalid zone ID", true)
 				}
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
@@ -263,13 +267,13 @@ func apiSceneHandlerCommandAdd(
 			if !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attributes_Level", "required field", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 			if _, ok = command.Attributes["Level"].(float64); !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attributes_Level", "must be a float data type", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
@@ -279,13 +283,13 @@ func apiSceneHandlerCommandAdd(
 				if !ok {
 					w.WriteHeader(http.StatusBadRequest)
 					valErrs := validation.NewErrors("attributes_R", "required field", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 					return
 				}
 				if _, ok = command.Attributes["R"].(float64); !ok {
 					w.WriteHeader(http.StatusBadRequest)
 					valErrs := validation.NewErrors("attributes_R", "must be an integer data type", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 					return
 				}
 
@@ -293,13 +297,13 @@ func apiSceneHandlerCommandAdd(
 				if !ok {
 					w.WriteHeader(http.StatusBadRequest)
 					valErrs := validation.NewErrors("attributes_G", "required field", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 					return
 				}
 				if _, ok = command.Attributes["G"].(float64); !ok {
 					w.WriteHeader(http.StatusBadRequest)
 					valErrs := validation.NewErrors("attributes_G", "must be an integer data type", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 					return
 				}
 
@@ -307,13 +311,13 @@ func apiSceneHandlerCommandAdd(
 				if !ok {
 					w.WriteHeader(http.StatusBadRequest)
 					valErrs := validation.NewErrors("attributes_B", "required field", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 					return
 				}
 				if _, ok = command.Attributes["B"].(float64); !ok {
 					w.WriteHeader(http.StatusBadRequest)
 					valErrs := validation.NewErrors("attributes_B", "must be an integer data type", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 					return
 				}
 
@@ -337,14 +341,14 @@ func apiSceneHandlerCommandAdd(
 			if _, ok := command.Attributes["ButtonID"]; !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attribute_ButtonID", "required field", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
 			if _, ok = command.Attributes["ButtonID"].(string); !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attributes_ButtonID", "must be a string data type", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
@@ -357,7 +361,7 @@ func apiSceneHandlerCommandAdd(
 				} else {
 					valErrs = validation.NewErrors("attributes_ButtonID", "invalid Button ID", true)
 				}
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
@@ -383,14 +387,14 @@ func apiSceneHandlerCommandAdd(
 			if _, ok := command.Attributes["SceneID"]; !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attribute_SceneID", "required field", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
 			if _, ok = command.Attributes["SceneID"].(string); !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				valErrs := validation.NewErrors("attributes_SceneID", "must be a string data type", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 
@@ -403,7 +407,7 @@ func apiSceneHandlerCommandAdd(
 				} else {
 					valErrs = validation.NewErrors("attributes_SceneID", "invalid Scene ID", true)
 				}
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
 				return
 			}
 			finalCmd = &cmd.SceneSet{
@@ -518,7 +522,7 @@ func apiSceneHandlerCreate(savePath string, system *gohome.System, recipeManager
 			if valErrs, ok := err.(*validation.Errors); ok {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&scene, scene.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&scene, scene.ID, valErrs))
 			} else {
 				//Other kind of errors, TODO: log
 				w.WriteHeader(http.StatusBadRequest)
@@ -533,9 +537,6 @@ func apiSceneHandlerCreate(savePath string, system *gohome.System, recipeManager
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-		scene.ID = newScene.ID
-		scene.ClientID = ""
 		json.NewEncoder(w).Encode(scene)
 	}
 }

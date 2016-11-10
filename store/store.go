@@ -16,13 +16,12 @@ import (
 )
 
 type systemJSON struct {
-	Version      string              `json:"version"`
-	Name         string              `json:"name"`
-	Description  string              `json:"description"`
-	NextGlobalID int                 `json:"nextGlobalId"`
-	Scenes       []sceneJSON         `json:"scenes"`
-	Devices      []deviceJSON        `json:"devices"`
-	Recipes      []gohome.RecipeJSON `json:"recipes"`
+	Version     string              `json:"version"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	Scenes      []sceneJSON         `json:"scenes"`
+	Devices     []deviceJSON        `json:"devices"`
+	Recipes     []gohome.RecipeJSON `json:"recipes"`
 }
 
 type buttonJSON struct {
@@ -96,6 +95,7 @@ type authJSON struct {
 }
 
 type commandJSON struct {
+	ID         string                 `json:"id"`
 	Type       string                 `json:"type"`
 	Attributes map[string]interface{} `json:"attributes"`
 }
@@ -120,7 +120,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 		return nil, err
 	}
 
-	sys := gohome.NewSystem(s.Name, s.Description, s.NextGlobalID)
+	sys := gohome.NewSystem(s.Name, s.Description)
 	intg.RegisterExtensions(sys)
 	recipeManager.System = sys
 
@@ -282,6 +282,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			case "zoneSetLevel":
 				z := sys.Zones[command.Attributes["ZoneID"].(string)]
 				finalCmd = &cmd.ZoneSetLevel{
+					ID:          command.ID,
 					ZoneAddress: z.Address,
 					ZoneID:      z.ID,
 					ZoneName:    z.Name,
@@ -295,6 +296,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			case "buttonPress":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
 				finalCmd = &cmd.ButtonPress{
+					ID:            command.ID,
 					ButtonAddress: btn.Address,
 					ButtonID:      btn.ID,
 					DeviceName:    btn.Device.Name,
@@ -304,6 +306,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			case "buttonRelease":
 				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
 				finalCmd = &cmd.ButtonRelease{
+					ID:            command.ID,
 					ButtonAddress: btn.Address,
 					ButtonID:      btn.ID,
 					DeviceName:    btn.Device.Name,
@@ -313,6 +316,7 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			case "sceneSet":
 				scn := sys.Scenes[command.Attributes["SceneID"].(string)]
 				finalCmd = &cmd.SceneSet{
+					ID:        command.ID,
 					SceneID:   scn.ID,
 					SceneName: scn.Name,
 				}
@@ -344,10 +348,9 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 // SaveSystem saves the specified system to disk
 func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeManager) error {
 	out := systemJSON{
-		Version:      "0.1.0",
-		Name:         s.Name,
-		Description:  s.Description,
-		NextGlobalID: s.PeekNextGlobalID(),
+		Version:     "0.1.0",
+		Name:        s.Name,
+		Description: s.Description,
 	}
 
 	out.Scenes = make([]sceneJSON, len(s.Scenes))
@@ -366,6 +369,7 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 			switch xCmd := sCmd.(type) {
 			case *cmd.ZoneSetLevel:
 				cmds[j] = commandJSON{
+					ID:   xCmd.ID,
 					Type: "zoneSetLevel",
 					Attributes: map[string]interface{}{
 						"ZoneID": xCmd.ZoneID,
@@ -377,6 +381,7 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 				}
 			case *cmd.ButtonPress:
 				cmds[j] = commandJSON{
+					ID:   xCmd.ID,
 					Type: "buttonPress",
 					Attributes: map[string]interface{}{
 						"ButtonID": xCmd.ButtonID,
@@ -384,6 +389,7 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 				}
 			case *cmd.ButtonRelease:
 				cmds[j] = commandJSON{
+					ID:   xCmd.ID,
 					Type: "buttonRelease",
 					Attributes: map[string]interface{}{
 						"ButtonID": xCmd.ButtonID,
@@ -391,6 +397,7 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 				}
 			case *cmd.SceneSet:
 				cmds[j] = commandJSON{
+					ID:   xCmd.ID,
 					Type: "sceneSet",
 					Attributes: map[string]interface{}{
 						"SceneID": xCmd.SceneID,

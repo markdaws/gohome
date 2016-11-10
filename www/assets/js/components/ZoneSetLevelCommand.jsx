@@ -4,13 +4,14 @@ var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var ZonePicker = require('./ZonePicker.jsx');
 var Api = require('../utils/API.js');
 var ClassNames = require('classnames');
+var uuid = require('uuid');
 
 var ZoneSetLevelCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         var attr = this.props.command.attributes;
         return {
-            clientId: this.getNextIdAndIncrement() + '',
+            id: uuid.v4(),
             level: attr.Level || 0,
             r: attr.R || 0,
             g: attr.G || 0,
@@ -24,8 +25,7 @@ var ZoneSetLevelCommand = module.exports = React.createClass({
     toJson: function() {
         return {
             type: 'zoneSetLevel',
-            clientId: this.state.clientId,
-            //TODO: correctly capitalize json values
+            id: this.state.id,
             attributes: {
                 Level: parseFloat(this.state.level),
                 R: parseInt(this.state.r, 10),

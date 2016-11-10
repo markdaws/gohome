@@ -85,7 +85,7 @@ func apiAddDeviceHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -148,7 +148,7 @@ func apiAddDeviceHandler(
 			if valErrs, ok := errors.(*validation.Errors); ok {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ClientID, valErrs))
+				json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
 			} else {
 				//Other kind of errors, TODO: log
 				w.WriteHeader(http.StatusBadRequest)
@@ -168,8 +168,6 @@ func apiAddDeviceHandler(
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		data.ClientID = ""
-		data.ID = d.ID
 		json.NewEncoder(w).Encode(data)
 	}
 }

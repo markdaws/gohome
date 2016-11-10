@@ -249,10 +249,10 @@ var ZoneSensorList = React.createClass({
 
             var sensors = this.props.sensors.map(function(sensor) {
                 return (
-                    <div {...classes('sensor-info')} key={sensor.id || sensor.clientId}>
+                    <div {...classes('sensor-info')} key={sensor.id}>
                         <SensorInfo
                             readOnlyFields="deviceId"
-                            key={sensor.id || sensor.clientId}
+                            key={sensor.id}
                             name={sensor.name}
                             description={sensor.description}
                             address={sensor.address}
@@ -260,7 +260,6 @@ var ZoneSensorList = React.createClass({
                             attr={sensor.attr}
                             showSaveBtn={true}
                             deviceId={sensor.deviceId}
-                            clientId={sensor.clientId}
                             devices={this.props.devices}
                             updatedSensor={this.props.updatedSensor} />
                     </div>

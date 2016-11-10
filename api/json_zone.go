@@ -10,11 +10,6 @@ type jsonZone struct {
 	DeviceID    string `json:"deviceId"`
 	Type        string `json:"type"`
 	Output      string `json:"output"`
-
-	// ClientID is an ID assigned on the client to the zone if the zone
-	// hasn't been created yet but still needs to be referenced uniquely
-	// by the client.
-	ClientID string `json:"clientId,omitempty"`
 }
 type zones []jsonZone
 

@@ -1,13 +1,12 @@
 package gohome
 
 import (
-	"strconv"
-
 	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
+	"github.com/nu7hatch/gouuid"
 )
 
 // SystemServices is a collection of services that devices can access
@@ -22,32 +21,30 @@ type SystemServices struct {
 // System is a container that holds information such as all the zones and devices
 // that have been created.
 type System struct {
-	Name         string
-	Description  string
-	Devices      map[string]*Device
-	Scenes       map[string]*Scene
-	Zones        map[string]*zone.Zone
-	Buttons      map[string]*Button
-	Sensors      map[string]*Sensor
-	Recipes      map[string]*Recipe
-	Extensions   *Extensions
-	Services     SystemServices
-	nextGlobalID int
+	Name        string
+	Description string
+	Devices     map[string]*Device
+	Scenes      map[string]*Scene
+	Zones       map[string]*zone.Zone
+	Buttons     map[string]*Button
+	Sensors     map[string]*Sensor
+	Recipes     map[string]*Recipe
+	Extensions  *Extensions
+	Services    SystemServices
 }
 
 // NewSystem returns an initial System instance.  It is still up to the caller
 // to create all of the services and add them to the system after calling this function
-func NewSystem(name, desc string, nextGlobalID int) *System {
+func NewSystem(name, desc string) *System {
 	s := &System{
-		Name:         name,
-		Description:  desc,
-		Devices:      make(map[string]*Device),
-		Scenes:       make(map[string]*Scene),
-		Zones:        make(map[string]*zone.Zone),
-		Sensors:      make(map[string]*Sensor),
-		Buttons:      make(map[string]*Button),
-		Recipes:      make(map[string]*Recipe),
-		nextGlobalID: nextGlobalID,
+		Name:        name,
+		Description: desc,
+		Devices:     make(map[string]*Device),
+		Scenes:      make(map[string]*Scene),
+		Zones:       make(map[string]*zone.Zone),
+		Sensors:     make(map[string]*Sensor),
+		Buttons:     make(map[string]*Button),
+		Recipes:     make(map[string]*Recipe),
 	}
 	s.Extensions = NewExtensions()
 	return s
@@ -56,15 +53,12 @@ func NewSystem(name, desc string, nextGlobalID int) *System {
 // NextGlobalID returns the next unique global ID that can be used as an identifier
 // for an item in the system.
 func (s *System) NextGlobalID() string {
-	gid := s.nextGlobalID
-	s.nextGlobalID++
-	return strconv.Itoa(gid)
-}
-
-// PeekNextGlobalID returns the next global ID that will be returned, but does not
-// increment it
-func (s *System) PeekNextGlobalID() int {
-	return s.nextGlobalID
+	u5, err := uuid.NewV4()
+	if err != nil {
+		//TODO: Fail gracefully from this, keep looping?
+		panic("failed to generate unique id in call to NextGlobalID:" + err.Error())
+	}
+	return u5.String()
 }
 
 // InitDevices loops through all of the devices in the system and initializes them.

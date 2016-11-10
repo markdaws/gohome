@@ -24,7 +24,7 @@ var DevicePicker = React.createClass({
     render: function() {
         var options = [];
         this.props.devices.forEach(function(device) {
-            var id = device.id || device.clientId;
+            var id = device.id;
             options.push(<option key={id} value={id}>{device.name}</option>);
         });
         return (
