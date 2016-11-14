@@ -10,29 +10,31 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
+	ID:          "belkin.wemo.insight",
+	Name:        "Belkin WeMo Insight",
+	Description: "Discover Belkin WeMo Insight devices",
+}, gohome.DiscovererInfo{
+	ID:          "belkin.wemo.maker",
+	Name:        "Belkin WeMo Maker",
+	Description: "Discover Belkin WeMo Maker devices",
+}}
+
 type discovery struct {
 	//TODO: Needed?
 	System *gohome.System
 }
 
 func (d *discovery) Discoverers() []gohome.DiscovererInfo {
-	return []gohome.DiscovererInfo{gohome.DiscovererInfo{
-		ID:          "belkin.wemo.insight",
-		Name:        "Belkin WeMo Insight",
-		Description: "Discover Belkin WeMo Insight devices",
-	}, gohome.DiscovererInfo{
-		ID:          "belkin.wemo.maker",
-		Name:        "Belkin WeMo Maker",
-		Description: "Discover Belkin WeMo Maker devices",
-	}}
+	return infos
 }
 
 func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 	switch ID {
 	case "belkin.wemo.insight":
-		return &discoverer{scanType: belkinExt.DTInsight}
+		return &discoverer{scanType: belkinExt.DTInsight, info: infos[0]}
 	case "belkin.wemo.maker":
-		return &discoverer{scanType: belkinExt.DTMaker}
+		return &discoverer{scanType: belkinExt.DTMaker, info: infos[1]}
 	default:
 		return nil
 	}
@@ -40,6 +42,11 @@ func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 
 type discoverer struct {
 	scanType belkinExt.DeviceType
+	info     gohome.DiscovererInfo
+}
+
+func (d *discoverer) Info() gohome.DiscovererInfo {
+	return d.info
 }
 
 func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {

@@ -25,7 +25,8 @@ var DiscoverDevices = React.createClass({
             discovering: false,
             devices: null,
             scenes: null,
-            uiFields: uiFields
+            uiFields: uiFields,
+            errors: null
         };
     },
 
@@ -33,7 +34,8 @@ var DiscoverDevices = React.createClass({
         this.setState({
             discovering: true,
             devices: null,
-            scenes: null
+            scenes: null,
+            errors: null
         });
         
         Api.discovererScanDevices(
@@ -41,9 +43,10 @@ var DiscoverDevices = React.createClass({
             this.state.uiFields,
             function(err, data) {
                 if (err != null) {
-                    //TODO: Change import button to green/red
-                    console.error("Failed to discover");
-                    console.error(err);
+                    this.setState({
+                        discovering: false,
+                        errors: err
+                    });
                     return;
                 }
                 this.setState({
@@ -95,6 +98,13 @@ var DiscoverDevices = React.createClass({
                 </div>
             );
         }.bind(this));
+
+        var errors;
+        if (this.state.errors) {
+            errors = (
+                <div {...classes('error')}>{this.state.errors.msg}</div>
+            );
+        }
         importBody = (
             <div>
                 <div {...classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : '')}>
@@ -108,6 +118,7 @@ var DiscoverDevices = React.createClass({
                         onClick={this.discover}>Discover Devices</button>
                     <i {...classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin')}></i>
                 </div>
+                {errors}
                 <h3 {...classes('no-devices', this.state.devices && deviceCount === 0 ? '' : 'hidden')}>
                     {deviceCount} device{deviceCount > 1 ? 's' : ''} found
                 </h3>

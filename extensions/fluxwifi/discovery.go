@@ -7,6 +7,12 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
+	ID:          "fluxwifi.bulbs",
+	Name:        "FluxWIFI",
+	Description: "Discover FluxWIFI bulbs",
+}}
+
 type discovery struct {
 	//TODO: Needed?
 	System *gohome.System
@@ -19,23 +25,24 @@ func (d *discovery) Discoverers() []gohome.DiscovererInfo {
 	// discovery info, the Name/Description fields will be displayed to the user, then
 	// the ID is then passed back to the DiscovererFromID function, where we can then
 	// return the appropriate discoverer instance
-	return []gohome.DiscovererInfo{gohome.DiscovererInfo{
-		ID:          "fluxwifi.bulbs",
-		Name:        "FluxWIFI",
-		Description: "Discover FluxWIFI bulbs",
-	}}
+	return infos
 }
 
 func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 	switch ID {
 	case "fluxwifi.bulbs":
-		return &discoverer{}
+		return &discoverer{infos[0]}
 	default:
 		return nil
 	}
 }
 
-type discoverer struct {
+type discoverer struct{
+	info gohome.DiscovererInfo
+}
+
+func (d *discoverer) Info() gohome.DiscovererInfo {
+	return d.info
 }
 
 func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {

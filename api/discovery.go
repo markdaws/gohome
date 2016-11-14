@@ -2,14 +2,15 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/zone"
+	errExt "github.com/pkg/errors"
 )
 
 // RegisterDiscoveryHandlers registers all of the discovery specific API REST routes
@@ -51,7 +52,7 @@ func apiListDiscoveryHandler(system *gohome.System) func(http.ResponseWriter, *h
 			}
 		}
 		if err := json.NewEncoder(w).Encode(jsonInfos); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "failed to encode JSON"), w)
 		}
 	}
 }
@@ -150,73 +151,38 @@ func apiDiscoveryHandler(sys *gohome.System) func(http.ResponseWriter, *http.Req
 
 		discoverer := sys.Extensions.FindDiscovererFromID(sys, discovererID)
 		if discoverer == nil {
-			log.V("unknown discoverer id %s", discovererID)
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("unknown discoverer id %s", discovererID), w)
 			return
 		}
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("request body too large, max 1MB", w)
 			return
 		}
 
 		var uiFields map[string]string
-		if len(body) > 0 {
+		info := discoverer.Info()
+		if len(info.UIFields) > 0 {
 			if err := json.Unmarshal(body, &uiFields); err != nil {
-				log.V("error unmarhsaling uiFields %s", err)
-				w.WriteHeader(http.StatusBadRequest)
+				respBadRequest(fmt.Sprintf("error unmarhsaling uiFields %s", err), w)
 				return
+			}
+
+			for _, uiField := range info.UIFields {
+				if uiField.Required && uiFields[uiField.ID] == "" {
+					respBadRequest(fmt.Sprintf("Missing required field: '%s'", uiField.Label), w)
+					return
+				}
 			}
 		}
 
 		res, err := discoverer.ScanDevices(sys, uiFields)
 		if err != nil {
-			log.V("error scanning devices %s", err)
-			w.WriteHeader(http.StatusBadRequest)
+			respErr(err, w)
 			return
 		}
 
 		writeDiscoveryResults(sys, res, w)
 	}
 }
-
-//TODO: Remove...
-/*
-func apiFromStringDiscoveryHandler(sys *gohome.System) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		vars := mux.Vars(r)
-		discovererID := vars["discovererID"]
-
-		discoverer := sys.Extensions.FindDiscovererFromID(sys, discovererID)
-		if discoverer == nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		fmt.Println(string(body))
-
-		unquotedBody, err := strconv.Unquote(string(body))
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-		}
-		res, err := discoverer.FromString(unquotedBody)
-
-		if err != nil {
-			fmt.Println(err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		fmt.Printf("%+v\n", res)
-		writeDiscoveryResults(sys, res, w)
-	}
-}
-*/

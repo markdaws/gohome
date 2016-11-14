@@ -7,30 +7,38 @@ import (
 	"github.com/markdaws/gohome/zone"
 )
 
+var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
+	ID:          "connectedbytcp.bulbs",
+	Name:        "ConnectedByTCP Bulbs",
+	Description: "Discover ConnectedByTCP bulbs",
+	PreScanInfo: "IMPORTANT: You must press the \"Scan\" button on your physical hub hardware before trying to discover devices.  If you don't the scan will fail.",
+}}
+
 type discovery struct {
 	//TODO: Needed?
 	System *gohome.System
 }
 
 func (d *discovery) Discoverers() []gohome.DiscovererInfo {
-	return []gohome.DiscovererInfo{gohome.DiscovererInfo{
-		ID:          "connectedbytcp.bulbs",
-		Name:        "ConnectedByTCP Bulbs",
-		Description: "Discover ConnectedByTCP bulbs",
-		PreScanInfo: "IMPORTANT: You must press the \"Scan\" button on your physical hub hardware before trying to discover devices.  If you don't the scan will fail.",
-	}}
+	return infos
 }
 
 func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 	switch ID {
 	case "connectedbytcp.bulbs":
-		return &discoverer{}
+		return &discoverer{info: infos[0]}
 	default:
 		return nil
 	}
 }
 
-type discoverer struct{}
+type discoverer struct {
+	info gohome.DiscovererInfo
+}
+
+func (d *discoverer) Info() gohome.DiscovererInfo {
+	return d.info
+}
 
 func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {
 	infos, err := connectedbytcpExt.Scan(5)

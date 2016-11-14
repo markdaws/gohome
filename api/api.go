@@ -108,6 +108,10 @@ func respBadRequest(msg string, w http.ResponseWriter) {
 	}, w)
 }
 
+func respErr(err error, w http.ResponseWriter) {
+	resp(apiResponse{Err: err}, w)
+}
+
 func resp(r apiResponse, w http.ResponseWriter) {
 	if r.Err != nil {
 		switch err := r.Err.(type) {
@@ -118,17 +122,30 @@ func resp(r apiResponse, w http.ResponseWriter) {
 		case *badRequestErr:
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(struct {
-				Msg string
-			}{Msg: err.Msg})
+				Err struct {
+					Msg string `json:"msg"`
+				} `json:"err"`
+			}{Err: struct {
+				Msg string `json:"msg"`
+			}{err.Msg}})
 		default:
-			log.E("Unknown error", r.Err)
 			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(struct {
+				Err struct {
+					Msg string `json:"msg"`
+				} `json:"err"`
+			}{Err: struct {
+				Msg string `json:"msg"`
+			}{err.Error()}})
 		}
 		return
 	}
 
 	if r.Data != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(r.Data)
+		err := json.NewEncoder(w).Encode(r.Data)
+		if err != nil {
+			log.V("error writing JSON to client %s", err)
+		}
 	}
 }

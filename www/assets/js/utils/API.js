@@ -493,9 +493,7 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                callback({
-                    err: err
-                });
+                callback(xhr.responseJSON.err)
             }
         });
     },

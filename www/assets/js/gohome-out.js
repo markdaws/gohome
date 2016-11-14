@@ -50,9 +50,9 @@
 	var ReactDOM = __webpack_require__(34);
 	var ControlApp = __webpack_require__(172);
 	var Provider = __webpack_require__(173).Provider;
-	var store = __webpack_require__(304);
+	var store = __webpack_require__(306);
 
-	var C1 = __webpack_require__(314);
+	var C1 = __webpack_require__(316);
 
 	//TODO: Remove - testing
 	/*
@@ -21448,11 +21448,11 @@
 	var ReactRedux = __webpack_require__(173);
 	var System = __webpack_require__(201);
 	var SceneList = __webpack_require__(255);
-	var ZoneSensorList = __webpack_require__(277);
-	var Logging = __webpack_require__(287);
-	var RecipeApp = __webpack_require__(289);
+	var ZoneSensorList = __webpack_require__(279);
+	var Logging = __webpack_require__(289);
+	var RecipeApp = __webpack_require__(291);
 	var Constants = __webpack_require__(209);
-	var SceneActions = __webpack_require__(271);
+	var SceneActions = __webpack_require__(273);
 	var SensorActions = __webpack_require__(224);
 	var SystemActions = __webpack_require__(229);
 	var ZoneActions = __webpack_require__(223);
@@ -21462,7 +21462,7 @@
 	    name: 'ControlApp',
 	    prefix: 'b-'
 	});
-	__webpack_require__(302);
+	__webpack_require__(304);
 
 	var ControlApp = React.createClass({
 	    displayName: 'ControlApp',
@@ -23579,7 +23579,8 @@
 	            discovering: false,
 	            devices: null,
 	            scenes: null,
-	            uiFields: uiFields
+	            uiFields: uiFields,
+	            errors: null
 	        };
 	    },
 
@@ -23587,14 +23588,16 @@
 	        this.setState({
 	            discovering: true,
 	            devices: null,
-	            scenes: null
+	            scenes: null,
+	            errors: null
 	        });
 
 	        Api.discovererScanDevices(this.props.discoverer.id, this.state.uiFields, function (err, data) {
 	            if (err != null) {
-	                //TODO: Change import button to green/red
-	                console.error("Failed to discover");
-	                console.error(err);
+	                this.setState({
+	                    discovering: false,
+	                    errors: err
+	                });
 	                return;
 	            }
 	            this.setState({
@@ -23650,6 +23653,15 @@
 	                })
 	            );
 	        }.bind(this));
+
+	        var errors;
+	        if (this.state.errors) {
+	            errors = React.createElement(
+	                'div',
+	                classes('error'),
+	                this.state.errors.msg
+	            );
+	        }
 	        importBody = React.createElement(
 	            'div',
 	            null,
@@ -23674,6 +23686,7 @@
 	                ),
 	                React.createElement('i', classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin'))
 	            ),
+	            errors,
 	            React.createElement(
 	                'h3',
 	                classes('no-devices', this.state.devices && deviceCount === 0 ? '' : 'hidden'),
@@ -24847,9 +24860,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                callback({
-	                    err: err
-	                });
+	                callback(xhr.responseJSON.err);
 	            }
 	        });
 	    }
@@ -26483,7 +26494,7 @@
 	var SystemDeviceListGridCell = __webpack_require__(231);
 	var ZoneSensorListGridCell = __webpack_require__(234);
 	var DeviceInfo = __webpack_require__(204);
-	var Grid = __webpack_require__(237);
+	var Grid = __webpack_require__(250);
 	var ZoneInfo = __webpack_require__(211);
 	var SensorInfo = __webpack_require__(220);
 	var SaveBtn = __webpack_require__(207);
@@ -27213,282 +27224,7 @@
 
 
 /***/ },
-/* 237 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var React = __webpack_require__(1);
-	var ReactTransitionGroup = __webpack_require__(238);
-	var ReactDOM = __webpack_require__(34);
-	var ClassNames = __webpack_require__(226);
-	var BEMHelper = __webpack_require__(215);
-
-	var classes = new BEMHelper({
-	    name: 'Grid',
-	    prefix: 'b-'
-	});
-	__webpack_require__(241);
-
-	var Grid = React.createClass({
-	    displayName: 'Grid',
-
-	    debug: function debug(msg) {
-	        if (this.props.debugName) {
-	            console.log('[' + this.props.debugName + '] - ' + msg);
-	        }
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            cells: [],
-	            cellWidth: 110,
-	            cellHeight: 125,
-	            spacingH: 0,
-	            spacingV: 0
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        this.debug('getInitialState');
-
-	        return {
-	            cellIndices: { x: -1, y: -1 },
-	            expanderIndex: -1,
-	            selectedIndex: -1,
-	            expanded: false,
-	            cellWidth: this.props.cellWidth,
-	            cellHeight: this.props.cellHeight
-	        };
-	    },
-
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        // If the cells changed, then we are goign to re-render, close the expander
-	        if (nextProps.cells && nextProps.cells !== this.props.cells) {
-	            //TODO: Needed? causing issues when updating items on import, revist
-	            //this.closeExpander();
-	        }
-	    },
-
-	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
-	        //TODO: Fix
-	        return true;
-	        if (nextProps.cells && nextProps.cells != this.props.cells) {
-	            return true;
-	        }
-	        if (nextState.cellWidth && nextState.cellWidth !== this.state.cellWidth) {
-	            return true;
-	        }
-	        if (nextState.cellHeight && nextState.cellHeight !== this.state.cellHeight) {
-	            return true;
-	        }
-	        if (nextState.expanderIndex != undefined && nextState.expanderIndex !== this.state.expanderIndex) {
-	            return true;
-	        }
-	        return false;
-	    },
-
-	    calcCellDimensions: function calcCellDimensions() {
-	        var $this = $(ReactDOM.findDOMNode(this));
-	        var gridWidthNoPadding = $this.width();
-	        var cellsPerRow = Math.floor(gridWidthNoPadding / this.props.cellWidth);
-
-	        var fittedWidth = Math.floor(this.props.cellWidth + (gridWidthNoPadding - cellsPerRow * this.props.cellWidth) / cellsPerRow);
-	        return {
-	            width: fittedWidth,
-	            // height always remains constant
-	            height: this.props.cellHeight
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        if (this.props.debugName) {
-	            console.log('mounting grid: ' + this.props.debugName);
-	        }
-
-	        var dimensions = this.calcCellDimensions();
-	        this.setState({
-	            cellWidth: dimensions.width,
-	            cellHeight: dimensions.height
-	        });
-	    },
-
-	    componentDidUpdate: function componentDidUpdate() {
-	        var dimensions = this.calcCellDimensions();
-	        if (dimensions.width !== this.state.cellWidth || dimensions.height !== this.state.cellHeight) {
-	            this.setState({
-	                cellWidth: dimensions.width,
-	                cellHeight: dimensions.height
-	            });
-	        }
-	    },
-
-	    closeExpander: function closeExpander() {
-	        this.debug('closeExpander');
-
-	        this.setState({
-	            expanded: false,
-	            cellIndices: { x: -1, y: -1 },
-	            expanderIndex: -1,
-	            selectedIndex: -1,
-	            expanderContent: null
-	        });
-	    },
-
-	    cellClicked: function cellClicked(evt) {
-	        var $this = $(ReactDOM.findDOMNode(this));
-
-	        //width() returns without padding
-	        var gridWidthNoPadding = $this.width();
-
-	        var cellsPerRow = Math.floor(gridWidthNoPadding / this.state.cellWidth);
-
-	        var $target = $(evt.target);
-	        var targetPos = $target.position();
-
-	        var cellXPos = Math.floor(targetPos.left / this.state.cellWidth);
-	        var yOffset = targetPos.top;
-
-	        var cellIndex = $target.data('cell-index');
-	        if (this.state.expanded) {
-	            // Have to take into account the expander height when calculating which
-	            // cell the user is clicking on
-	            if (cellIndex > this.state.expanderIndex - 1) {
-	                var expanderHeight = $this.find('.cmp-ExpanderWrapper').height();
-	                yOffset -= expanderHeight;
-	            }
-	        }
-
-	        var cellYPos = Math.floor(yOffset / this.props.cellHeight);
-	        var expanderIndex = Math.min(this.props.cells.length, (cellYPos + 1) * cellsPerRow);
-
-	        if (cellXPos === this.state.cellIndices.x && cellYPos === this.state.cellIndices.y) {
-	            this.closeExpander();
-	        } else {
-	            this.setState({
-	                cellIndices: { x: cellXPos, y: cellYPos },
-	                expanderIndex: expanderIndex,
-	                selectedIndex: cellYPos * cellsPerRow + cellXPos,
-	                expanded: true,
-	                expanderContent: this.props.cells[cellIndex].content
-	            });
-	        }
-	    },
-
-	    expanderWillMount: function expanderWillMount(content) {
-	        this.props.expanderWillMount && this.props.expanderWillMount(content);
-	    },
-
-	    render: function render() {
-	        function makeCellWrapper(index, selectedIndex, cell) {
-	            var content = cell.cell;
-	            return React.createElement(
-	                'div',
-	                _extends({
-	                    key: cell.key,
-	                    ref: "cellWrapper-" + index,
-	                    onClick: this.cellClicked
-	                }, classes('cell', '', 'pull-left'), {
-	                    'data-cell-index': index,
-	                    style: {
-	                        width: this.state.cellWidth,
-	                        height: this.state.cellHeight
-	                    } }),
-	                content,
-	                React.createElement('i', classes('expanded-arrow', index !== selectedIndex ? 'hidden' : '', 'fa fa-caret-up'))
-	            );
-	        }
-
-	        var content = [];
-	        var key = '';
-	        if (this.state.selectedIndex !== -1) {
-	            key = this.props.cells[this.state.selectedIndex].key;
-	        }
-
-	        if (this.props.debugName) {
-	            console.log('[' + this.props.debugName + '] selectedIndex: ' + this.state.selectedIndex);
-	        }
-
-	        var transitionGroup = React.createElement(
-	            ReactTransitionGroup,
-	            { key: key + "transition" },
-	            React.createElement(
-	                ExpanderWrapper,
-	                { key: key + 'wrapper' },
-	                this.state.expanderContent
-	            )
-	        );
-
-	        for (var i = 0; i < this.props.cells.length; ++i) {
-	            content.push(makeCellWrapper.bind(this)(i, this.state.selectedIndex, this.props.cells[i]));
-	            if (this.state.expanded && this.state.expanderIndex === i + 1) {
-	                content.push(transitionGroup);
-	            }
-	        }
-
-	        if (!this.state.expanded) {
-	            //TODO: This isn't working, looks like multiple transition groups are causing issues, revist.
-	            //This should make the expander animate closed, but seems to have some bugs
-	            //content.push(transitionGroup);
-	        }
-
-	        return React.createElement(
-	            'div',
-	            classes(),
-	            React.createElement(
-	                'div',
-	                { key: 'wha', className: 'clearfix beforeExpander' },
-	                content,
-	                React.createElement('div', { style: { clear: "both" } })
-	            )
-	        );
-	    }
-	});
-
-	var expClasses = new BEMHelper({
-	    name: 'Expander',
-	    prefix: 'b-'
-	});
-
-	var ExpanderWrapper = React.createClass({
-	    displayName: 'ExpanderWrapper',
-
-	    // Part of the calls for TransitionGroup, have to set the CSS property
-	    // to the initial value, then after a small delay set the end animation value
-	    componentWillAppear: function componentWillAppear(cb) {
-	        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
-	        $this.css({ 'margin-top': -500 });
-	        setTimeout(function () {
-	            cb();
-	        }, 10);
-	    },
-	    componentDidAppear: function componentDidAppear() {
-	        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
-	        $this.css({ 'margin-top': '0px' });
-	    },
-	    componentWillLeave: function componentWillLeave(cb) {
-	        var $this = $(ReactDOM.findDOMNode(this)).find('animateWrapper');
-	        $this.css({ 'margin-top': -500 });
-	        cb();
-	    },
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            expClasses(),
-	            React.createElement(
-	                'div',
-	                { className: 'animateWrapper' },
-	                this.props.children
-	            )
-	        );
-	    }
-	});
-
-	module.exports = Grid;
-
-/***/ },
+/* 237 */,
 /* 238 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -27970,7 +27706,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__text-area {\n  width: 100%;\n  height: 140px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__text-area--hidden {\n  display: none;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__text-area {\n  width: 100%;\n  height: 140px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__text-area--hidden {\n  display: none;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
@@ -28575,7 +28311,7 @@
 	var SceneControl = __webpack_require__(259);
 	var SceneInfo = __webpack_require__(262);
 	var UniqueIdMixin = __webpack_require__(205);
-	var SceneActions = __webpack_require__(271);
+	var SceneActions = __webpack_require__(273);
 	var Grid = __webpack_require__(250);
 	var BEMHelper = __webpack_require__(215);
 
@@ -28583,7 +28319,7 @@
 	    name: 'SceneList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(275);
+	__webpack_require__(277);
 
 	var SceneList = React.createClass({
 	    displayName: 'SceneList',
@@ -28898,15 +28634,15 @@
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
 	var CommandInfo = __webpack_require__(263);
-	var CommandTypePicker = __webpack_require__(272);
-	var SceneActions = __webpack_require__(271);
+	var CommandTypePicker = __webpack_require__(274);
+	var SceneActions = __webpack_require__(273);
 	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
 	    name: 'SceneInfo',
 	    prefix: 'b-'
 	});
-	__webpack_require__(273);
+	__webpack_require__(275);
 
 	var SceneInfo = React.createClass({
 	    displayName: 'SceneInfo',
@@ -29140,13 +28876,13 @@
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var ZoneSetLevelCommand = __webpack_require__(264);
-	var SceneSetCommand = __webpack_require__(266);
+	var SceneSetCommand = __webpack_require__(268);
 	var SaveBtn = __webpack_require__(207);
-	var ButtonPressCommand = __webpack_require__(268);
-	var ButtonReleaseCommand = __webpack_require__(270);
+	var ButtonPressCommand = __webpack_require__(270);
+	var ButtonReleaseCommand = __webpack_require__(272);
 	var Api = __webpack_require__(208);
 	var Constants = __webpack_require__(209);
-	var SceneActions = __webpack_require__(271);
+	var SceneActions = __webpack_require__(273);
 
 	var CommandInfo = React.createClass({
 	    displayName: 'CommandInfo',
@@ -29262,7 +28998,7 @@
 	var ZonePicker = __webpack_require__(265);
 	var Api = __webpack_require__(208);
 	var ClassNames = __webpack_require__(226);
-	var uuid = __webpack_require__(315);
+	var uuid = __webpack_require__(266);
 
 	var ZoneSetLevelCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -29523,13 +29259,241 @@
 /* 266 */
 /***/ function(module, exports, __webpack_require__) {
 
+	//     uuid.js
+	//
+	//     Copyright (c) 2010-2012 Robert Kieffer
+	//     MIT License - http://opensource.org/licenses/mit-license.php
+
+	// Unique ID creation requires a high quality random # generator.  We feature
+	// detect to determine the best RNG source, normalizing to a function that
+	// returns 128-bits of randomness, since that's what's usually required
+	var _rng = __webpack_require__(267);
+
+	// Maps for number <-> hex string conversion
+	var _byteToHex = [];
+	var _hexToByte = {};
+	for (var i = 0; i < 256; i++) {
+	  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
+	  _hexToByte[_byteToHex[i]] = i;
+	}
+
+	// **`parse()` - Parse a UUID into it's component bytes**
+	function parse(s, buf, offset) {
+	  var i = (buf && offset) || 0, ii = 0;
+
+	  buf = buf || [];
+	  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
+	    if (ii < 16) { // Don't overflow!
+	      buf[i + ii++] = _hexToByte[oct];
+	    }
+	  });
+
+	  // Zero out remaining bytes if string was short
+	  while (ii < 16) {
+	    buf[i + ii++] = 0;
+	  }
+
+	  return buf;
+	}
+
+	// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
+	function unparse(buf, offset) {
+	  var i = offset || 0, bth = _byteToHex;
+	  return  bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]];
+	}
+
+	// **`v1()` - Generate time-based UUID**
+	//
+	// Inspired by https://github.com/LiosK/UUID.js
+	// and http://docs.python.org/library/uuid.html
+
+	// random #'s we need to init node and clockseq
+	var _seedBytes = _rng();
+
+	// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+	var _nodeId = [
+	  _seedBytes[0] | 0x01,
+	  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
+	];
+
+	// Per 4.2.2, randomize (14 bit) clockseq
+	var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
+
+	// Previous uuid creation time
+	var _lastMSecs = 0, _lastNSecs = 0;
+
+	// See https://github.com/broofa/node-uuid for API details
+	function v1(options, buf, offset) {
+	  var i = buf && offset || 0;
+	  var b = buf || [];
+
+	  options = options || {};
+
+	  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
+
+	  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+	  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+	  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+	  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+	  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
+
+	  // Per 4.2.1.2, use count of uuid's generated during the current clock
+	  // cycle to simulate higher resolution clock
+	  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
+
+	  // Time since last uuid creation (in msecs)
+	  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
+
+	  // Per 4.2.1.2, Bump clockseq on clock regression
+	  if (dt < 0 && options.clockseq === undefined) {
+	    clockseq = clockseq + 1 & 0x3fff;
+	  }
+
+	  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+	  // time interval
+	  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
+	    nsecs = 0;
+	  }
+
+	  // Per 4.2.1.2 Throw error if too many uuids are requested
+	  if (nsecs >= 10000) {
+	    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
+	  }
+
+	  _lastMSecs = msecs;
+	  _lastNSecs = nsecs;
+	  _clockseq = clockseq;
+
+	  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+	  msecs += 12219292800000;
+
+	  // `time_low`
+	  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+	  b[i++] = tl >>> 24 & 0xff;
+	  b[i++] = tl >>> 16 & 0xff;
+	  b[i++] = tl >>> 8 & 0xff;
+	  b[i++] = tl & 0xff;
+
+	  // `time_mid`
+	  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
+	  b[i++] = tmh >>> 8 & 0xff;
+	  b[i++] = tmh & 0xff;
+
+	  // `time_high_and_version`
+	  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+	  b[i++] = tmh >>> 16 & 0xff;
+
+	  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+	  b[i++] = clockseq >>> 8 | 0x80;
+
+	  // `clock_seq_low`
+	  b[i++] = clockseq & 0xff;
+
+	  // `node`
+	  var node = options.node || _nodeId;
+	  for (var n = 0; n < 6; n++) {
+	    b[i + n] = node[n];
+	  }
+
+	  return buf ? buf : unparse(b);
+	}
+
+	// **`v4()` - Generate random UUID**
+
+	// See https://github.com/broofa/node-uuid for API details
+	function v4(options, buf, offset) {
+	  // Deprecated - 'format' argument, as supported in v1.2
+	  var i = buf && offset || 0;
+
+	  if (typeof(options) == 'string') {
+	    buf = options == 'binary' ? new Array(16) : null;
+	    options = null;
+	  }
+	  options = options || {};
+
+	  var rnds = options.random || (options.rng || _rng)();
+
+	  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+	  rnds[6] = (rnds[6] & 0x0f) | 0x40;
+	  rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+	  // Copy bytes to buffer, if provided
+	  if (buf) {
+	    for (var ii = 0; ii < 16; ii++) {
+	      buf[i + ii] = rnds[ii];
+	    }
+	  }
+
+	  return buf || unparse(rnds);
+	}
+
+	// Export public API
+	var uuid = v4;
+	uuid.v1 = v1;
+	uuid.v4 = v4;
+	uuid.parse = parse;
+	uuid.unparse = unparse;
+
+	module.exports = uuid;
+
+
+/***/ },
+/* 267 */
+/***/ function(module, exports) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {
+	var rng;
+
+	var crypto = global.crypto || global.msCrypto; // for IE 11
+	if (crypto && crypto.getRandomValues) {
+	  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
+	  // Moderately fast, high quality
+	  var _rnds8 = new Uint8Array(16);
+	  rng = function whatwgRNG() {
+	    crypto.getRandomValues(_rnds8);
+	    return _rnds8;
+	  };
+	}
+
+	if (!rng) {
+	  // Math.random()-based (RNG)
+	  //
+	  // If all else fails, use Math.random().  It's fast, but is of unspecified
+	  // quality.
+	  var  _rnds = new Array(16);
+	  rng = function() {
+	    for (var i = 0, r; i < 16; i++) {
+	      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+	      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+	    }
+
+	    return _rnds;
+	  };
+	}
+
+	module.exports = rng;
+
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 268 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
-	var ScenePicker = __webpack_require__(267);
-	var uuid = __webpack_require__(315);
+	var ScenePicker = __webpack_require__(269);
+	var uuid = __webpack_require__(266);
 
 	var SceneSetCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -29599,7 +29563,7 @@
 	module.exports = SceneSetCommand;
 
 /***/ },
-/* 267 */
+/* 269 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29663,7 +29627,7 @@
 	module.exports = ScenePicker;
 
 /***/ },
-/* 268 */
+/* 270 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29671,8 +29635,8 @@
 	var React = __webpack_require__(1);
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
-	var ButtonPicker = __webpack_require__(269);
-	var uuid = __webpack_require__(315);
+	var ButtonPicker = __webpack_require__(271);
+	var uuid = __webpack_require__(266);
 
 	var ButtonPressCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -29741,7 +29705,7 @@
 	module.exports = ButtonPressCommand;
 
 /***/ },
-/* 269 */
+/* 271 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29794,7 +29758,7 @@
 	module.exports = ButtonPicker;
 
 /***/ },
-/* 270 */
+/* 272 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29802,8 +29766,8 @@
 	var React = __webpack_require__(1);
 	var InputValidationMixin = __webpack_require__(206);
 	var UniqueIdMixin = __webpack_require__(205);
-	var ButtonPicker = __webpack_require__(269);
-	var uuid = __webpack_require__(315);
+	var ButtonPicker = __webpack_require__(271);
+	var uuid = __webpack_require__(266);
 
 	var ButtonReleaseCommand = module.exports = React.createClass({
 	    displayName: 'exports',
@@ -29871,7 +29835,7 @@
 	module.exports = ButtonReleaseCommand;
 
 /***/ },
-/* 271 */
+/* 273 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29990,7 +29954,7 @@
 	module.exports = SceneActions;
 
 /***/ },
-/* 272 */
+/* 274 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30050,13 +30014,13 @@
 	module.exports = CommandTypePicker;
 
 /***/ },
-/* 273 */
+/* 275 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(274);
+	var content = __webpack_require__(276);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(219)(content, {});
@@ -30076,7 +30040,7 @@
 	}
 
 /***/ },
-/* 274 */
+/* 276 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(218)();
@@ -30090,13 +30054,13 @@
 
 
 /***/ },
-/* 275 */
+/* 277 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(276);
+	var content = __webpack_require__(278);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(219)(content, {});
@@ -30116,7 +30080,7 @@
 	}
 
 /***/ },
-/* 276 */
+/* 278 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(218)();
@@ -30130,7 +30094,7 @@
 
 
 /***/ },
-/* 277 */
+/* 279 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30142,12 +30106,12 @@
 	var ClassNames = __webpack_require__(226);
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var ZoneControl = __webpack_require__(278);
-	var SensorMonitor = __webpack_require__(282);
+	var ZoneControl = __webpack_require__(280);
+	var SensorMonitor = __webpack_require__(284);
 	var ZoneActions = __webpack_require__(223);
 	var SensorActions = __webpack_require__(224);
 	var Grid = __webpack_require__(250);
-	var SensorMonitor = __webpack_require__(282);
+	var SensorMonitor = __webpack_require__(284);
 	var ZoneInfo = __webpack_require__(211);
 	var SensorInfo = __webpack_require__(220);
 	var ZoneSensorListGridCell = __webpack_require__(234);
@@ -30158,7 +30122,7 @@
 	    name: 'ZoneSensorList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(285);
+	__webpack_require__(287);
 
 	//TODO: Need to get the correct state when we come out of edit mode, currently lost
 
@@ -30569,7 +30533,7 @@
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(ZoneSensorList);
 
 /***/ },
-/* 278 */
+/* 280 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30577,7 +30541,7 @@
 	var ClassNames = __webpack_require__(226);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var CssMixin = __webpack_require__(279);
+	var CssMixin = __webpack_require__(281);
 	var Api = __webpack_require__(208);
 	var ClassNames = __webpack_require__(226);
 	var BEMHelper = __webpack_require__(215);
@@ -30586,7 +30550,7 @@
 	    name: 'ZoneControl',
 	    prefix: 'b-'
 	});
-	__webpack_require__(280);
+	__webpack_require__(282);
 
 	var ZoneControl = React.createClass({
 	    displayName: 'ZoneControl',
@@ -30834,7 +30798,7 @@
 	module.exports = ZoneControl;
 
 /***/ },
-/* 279 */
+/* 281 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -30846,13 +30810,13 @@
 	};
 
 /***/ },
-/* 280 */
+/* 282 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(281);
+	var content = __webpack_require__(283);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(219)(content, {});
@@ -30872,7 +30836,7 @@
 	}
 
 /***/ },
-/* 281 */
+/* 283 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(218)();
@@ -30886,7 +30850,7 @@
 
 
 /***/ },
-/* 282 */
+/* 284 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30894,7 +30858,7 @@
 	var ClassNames = __webpack_require__(226);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var CssMixin = __webpack_require__(279);
+	var CssMixin = __webpack_require__(281);
 	var Api = __webpack_require__(208);
 	var BEMHelper = __webpack_require__(215);
 
@@ -30902,7 +30866,7 @@
 	    name: 'SensorMonitor',
 	    prefix: 'b-'
 	});
-	__webpack_require__(283);
+	__webpack_require__(285);
 
 	var SensorMonitor = React.createClass({
 	    displayName: 'SensorMonitor',
@@ -30965,13 +30929,13 @@
 	module.exports = SensorMonitor;
 
 /***/ },
-/* 283 */
+/* 285 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(284);
+	var content = __webpack_require__(286);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(219)(content, {});
@@ -30991,7 +30955,7 @@
 	}
 
 /***/ },
-/* 284 */
+/* 286 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(218)();
@@ -31005,13 +30969,13 @@
 
 
 /***/ },
-/* 285 */
+/* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(286);
+	var content = __webpack_require__(288);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(219)(content, {});
@@ -31031,7 +30995,7 @@
 	}
 
 /***/ },
-/* 286 */
+/* 288 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(218)();
@@ -31045,14 +31009,14 @@
 
 
 /***/ },
-/* 287 */
+/* 289 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var LogLine = __webpack_require__(288);
+	var LogLine = __webpack_require__(290);
 
 	var Logging = React.createClass({
 	    displayName: 'Logging',
@@ -31188,7 +31152,7 @@
 	module.exports = Logging;
 
 /***/ },
-/* 288 */
+/* 290 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -31233,14 +31197,14 @@
 	module.exports = LogLine;
 
 /***/ },
-/* 289 */
+/* 291 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var NewRecipe = __webpack_require__(290);
-	var RecipeList = __webpack_require__(300);
+	var NewRecipe = __webpack_require__(292);
+	var RecipeList = __webpack_require__(302);
 
 	var RecipeApp = React.createClass({
 	    displayName: 'RecipeApp',
@@ -31307,16 +31271,16 @@
 	module.exports = RecipeApp;
 
 /***/ },
-/* 290 */
+/* 292 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var IngredientList = __webpack_require__(291);
-	var TriggerList = __webpack_require__(293);
-	var ActionList = __webpack_require__(295);
-	var CookBookList = __webpack_require__(297);
+	var IngredientList = __webpack_require__(293);
+	var TriggerList = __webpack_require__(295);
+	var ActionList = __webpack_require__(297);
+	var CookBookList = __webpack_require__(299);
 
 	var NewRecipe = React.createClass({
 	    displayName: 'NewRecipe',
@@ -31600,13 +31564,13 @@
 	module.exports = NewRecipe;
 
 /***/ },
-/* 291 */
+/* 293 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Ingredient = __webpack_require__(292);
+	var Ingredient = __webpack_require__(294);
 
 	var IngredientList = React.createClass({
 	    displayName: 'IngredientList',
@@ -31643,7 +31607,7 @@
 	module.exports = IngredientList;
 
 /***/ },
-/* 292 */
+/* 294 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -31740,13 +31704,13 @@
 	module.exports = Ingredient;
 
 /***/ },
-/* 293 */
+/* 295 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Trigger = __webpack_require__(294);
+	var Trigger = __webpack_require__(296);
 
 	var TriggerList = React.createClass({
 	    displayName: 'TriggerList',
@@ -31771,7 +31735,7 @@
 	module.exports = TriggerList;
 
 /***/ },
-/* 294 */
+/* 296 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -31811,13 +31775,13 @@
 	module.exports = Trigger;
 
 /***/ },
-/* 295 */
+/* 297 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var Action = __webpack_require__(296);
+	var Action = __webpack_require__(298);
 
 	var ActionList = React.createClass({
 	    displayName: 'ActionList',
@@ -31841,7 +31805,7 @@
 	module.exports = ActionList;
 
 /***/ },
-/* 296 */
+/* 298 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -31881,13 +31845,13 @@
 	module.exports = Action;
 
 /***/ },
-/* 297 */
+/* 299 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var CookBook = __webpack_require__(298);
+	var CookBook = __webpack_require__(300);
 
 	var CookBookList = React.createClass({
 	    displayName: 'CookBookList',
@@ -31911,13 +31875,13 @@
 	module.exports = CookBookList;
 
 /***/ },
-/* 298 */
+/* 300 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var AssetsMixin = __webpack_require__(299);
+	var AssetsMixin = __webpack_require__(301);
 
 	var CookBook = React.createClass({
 	    displayName: 'CookBook',
@@ -31945,7 +31909,7 @@
 	module.exports = CookBook;
 
 /***/ },
-/* 299 */
+/* 301 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -31957,7 +31921,7 @@
 	};
 
 /***/ },
-/* 300 */
+/* 302 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -31965,7 +31929,7 @@
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	var React = __webpack_require__(1);
-	var RecipeInfo = __webpack_require__(301);
+	var RecipeInfo = __webpack_require__(303);
 
 	var RecipeList = React.createClass({
 	    displayName: 'RecipeList',
@@ -32033,7 +31997,7 @@
 	module.exports = RecipeList;
 
 /***/ },
-/* 301 */
+/* 303 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32127,13 +32091,13 @@
 	module.exports = RecipeInfo;
 
 /***/ },
-/* 302 */
+/* 304 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(303);
+	var content = __webpack_require__(305);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(219)(content, {});
@@ -32153,7 +32117,7 @@
 	}
 
 /***/ },
-/* 303 */
+/* 305 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(218)();
@@ -32167,20 +32131,20 @@
 
 
 /***/ },
-/* 304 */
+/* 306 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Redux = __webpack_require__(180);
-	var thunk = __webpack_require__(305).default;
-	var initialState = __webpack_require__(306);
-	var buttonReducer = __webpack_require__(307);
-	var systemReducer = __webpack_require__(308);
-	var scenesReducer = __webpack_require__(309);
-	var sensorReducer = __webpack_require__(311);
-	var zonesReducer = __webpack_require__(312);
-	var loadStatusReducer = __webpack_require__(313);
+	var thunk = __webpack_require__(307).default;
+	var initialState = __webpack_require__(308);
+	var buttonReducer = __webpack_require__(309);
+	var systemReducer = __webpack_require__(310);
+	var scenesReducer = __webpack_require__(311);
+	var sensorReducer = __webpack_require__(313);
+	var zonesReducer = __webpack_require__(314);
+	var loadStatusReducer = __webpack_require__(315);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
@@ -32194,7 +32158,7 @@
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
 
 /***/ },
-/* 305 */
+/* 307 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -32222,7 +32186,7 @@
 	exports['default'] = thunk;
 
 /***/ },
-/* 306 */
+/* 308 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -32268,13 +32232,13 @@
 	};
 
 /***/ },
-/* 307 */
+/* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(306);
+	var initialState = __webpack_require__(308);
 
 	module.exports = function (state, action) {
 	    var newState = [];
@@ -32299,14 +32263,14 @@
 	};
 
 /***/ },
-/* 308 */
+/* 310 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(306);
-	var uuid = __webpack_require__(315);
+	var initialState = __webpack_require__(308);
+	var uuid = __webpack_require__(266);
 
 	module.exports = function (state, action) {
 	    var newState = Object.assign({}, state);
@@ -32395,15 +32359,15 @@
 	};
 
 /***/ },
-/* 309 */
+/* 311 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(306);
-	var CommandsReducer = __webpack_require__(310);
-	var uuid = __webpack_require__(315);
+	var initialState = __webpack_require__(308);
+	var CommandsReducer = __webpack_require__(312);
+	var uuid = __webpack_require__(266);
 
 	module.exports = function (state, action) {
 	    var newState = Object.assign({}, state);
@@ -32525,7 +32489,7 @@
 	};
 
 /***/ },
-/* 310 */
+/* 312 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32563,13 +32527,13 @@
 	};
 
 /***/ },
-/* 311 */
+/* 313 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(306);
+	var initialState = __webpack_require__(308);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -32617,13 +32581,13 @@
 	};
 
 /***/ },
-/* 312 */
+/* 314 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(209);
-	var initialState = __webpack_require__(306);
+	var initialState = __webpack_require__(308);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -32679,7 +32643,7 @@
 	};
 
 /***/ },
-/* 313 */
+/* 315 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32711,7 +32675,7 @@
 	};
 
 /***/ },
-/* 314 */
+/* 316 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32910,234 +32874,6 @@
 	});
 	module.exports = Testr;*/
 	module.exports = C1;
-
-/***/ },
-/* 315 */
-/***/ function(module, exports, __webpack_require__) {
-
-	//     uuid.js
-	//
-	//     Copyright (c) 2010-2012 Robert Kieffer
-	//     MIT License - http://opensource.org/licenses/mit-license.php
-
-	// Unique ID creation requires a high quality random # generator.  We feature
-	// detect to determine the best RNG source, normalizing to a function that
-	// returns 128-bits of randomness, since that's what's usually required
-	var _rng = __webpack_require__(316);
-
-	// Maps for number <-> hex string conversion
-	var _byteToHex = [];
-	var _hexToByte = {};
-	for (var i = 0; i < 256; i++) {
-	  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
-	  _hexToByte[_byteToHex[i]] = i;
-	}
-
-	// **`parse()` - Parse a UUID into it's component bytes**
-	function parse(s, buf, offset) {
-	  var i = (buf && offset) || 0, ii = 0;
-
-	  buf = buf || [];
-	  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
-	    if (ii < 16) { // Don't overflow!
-	      buf[i + ii++] = _hexToByte[oct];
-	    }
-	  });
-
-	  // Zero out remaining bytes if string was short
-	  while (ii < 16) {
-	    buf[i + ii++] = 0;
-	  }
-
-	  return buf;
-	}
-
-	// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
-	function unparse(buf, offset) {
-	  var i = offset || 0, bth = _byteToHex;
-	  return  bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]];
-	}
-
-	// **`v1()` - Generate time-based UUID**
-	//
-	// Inspired by https://github.com/LiosK/UUID.js
-	// and http://docs.python.org/library/uuid.html
-
-	// random #'s we need to init node and clockseq
-	var _seedBytes = _rng();
-
-	// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-	var _nodeId = [
-	  _seedBytes[0] | 0x01,
-	  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
-	];
-
-	// Per 4.2.2, randomize (14 bit) clockseq
-	var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
-
-	// Previous uuid creation time
-	var _lastMSecs = 0, _lastNSecs = 0;
-
-	// See https://github.com/broofa/node-uuid for API details
-	function v1(options, buf, offset) {
-	  var i = buf && offset || 0;
-	  var b = buf || [];
-
-	  options = options || {};
-
-	  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
-
-	  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-	  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-	  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-	  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
-	  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
-
-	  // Per 4.2.1.2, use count of uuid's generated during the current clock
-	  // cycle to simulate higher resolution clock
-	  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
-
-	  // Time since last uuid creation (in msecs)
-	  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
-
-	  // Per 4.2.1.2, Bump clockseq on clock regression
-	  if (dt < 0 && options.clockseq === undefined) {
-	    clockseq = clockseq + 1 & 0x3fff;
-	  }
-
-	  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-	  // time interval
-	  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
-	    nsecs = 0;
-	  }
-
-	  // Per 4.2.1.2 Throw error if too many uuids are requested
-	  if (nsecs >= 10000) {
-	    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
-	  }
-
-	  _lastMSecs = msecs;
-	  _lastNSecs = nsecs;
-	  _clockseq = clockseq;
-
-	  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
-	  msecs += 12219292800000;
-
-	  // `time_low`
-	  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-	  b[i++] = tl >>> 24 & 0xff;
-	  b[i++] = tl >>> 16 & 0xff;
-	  b[i++] = tl >>> 8 & 0xff;
-	  b[i++] = tl & 0xff;
-
-	  // `time_mid`
-	  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
-	  b[i++] = tmh >>> 8 & 0xff;
-	  b[i++] = tmh & 0xff;
-
-	  // `time_high_and_version`
-	  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
-	  b[i++] = tmh >>> 16 & 0xff;
-
-	  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
-	  b[i++] = clockseq >>> 8 | 0x80;
-
-	  // `clock_seq_low`
-	  b[i++] = clockseq & 0xff;
-
-	  // `node`
-	  var node = options.node || _nodeId;
-	  for (var n = 0; n < 6; n++) {
-	    b[i + n] = node[n];
-	  }
-
-	  return buf ? buf : unparse(b);
-	}
-
-	// **`v4()` - Generate random UUID**
-
-	// See https://github.com/broofa/node-uuid for API details
-	function v4(options, buf, offset) {
-	  // Deprecated - 'format' argument, as supported in v1.2
-	  var i = buf && offset || 0;
-
-	  if (typeof(options) == 'string') {
-	    buf = options == 'binary' ? new Array(16) : null;
-	    options = null;
-	  }
-	  options = options || {};
-
-	  var rnds = options.random || (options.rng || _rng)();
-
-	  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-	  rnds[6] = (rnds[6] & 0x0f) | 0x40;
-	  rnds[8] = (rnds[8] & 0x3f) | 0x80;
-
-	  // Copy bytes to buffer, if provided
-	  if (buf) {
-	    for (var ii = 0; ii < 16; ii++) {
-	      buf[i + ii] = rnds[ii];
-	    }
-	  }
-
-	  return buf || unparse(rnds);
-	}
-
-	// Export public API
-	var uuid = v4;
-	uuid.v1 = v1;
-	uuid.v4 = v4;
-	uuid.parse = parse;
-	uuid.unparse = unparse;
-
-	module.exports = uuid;
-
-
-/***/ },
-/* 316 */
-/***/ function(module, exports) {
-
-	/* WEBPACK VAR INJECTION */(function(global) {
-	var rng;
-
-	var crypto = global.crypto || global.msCrypto; // for IE 11
-	if (crypto && crypto.getRandomValues) {
-	  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
-	  // Moderately fast, high quality
-	  var _rnds8 = new Uint8Array(16);
-	  rng = function whatwgRNG() {
-	    crypto.getRandomValues(_rnds8);
-	    return _rnds8;
-	  };
-	}
-
-	if (!rng) {
-	  // Math.random()-based (RNG)
-	  //
-	  // If all else fails, use Math.random().  It's fast, but is of unspecified
-	  // quality.
-	  var  _rnds = new Array(16);
-	  rng = function() {
-	    for (var i = 0, r; i < 16; i++) {
-	      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
-	      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
-	    }
-
-	    return _rnds;
-	  };
-	}
-
-	module.exports = rng;
-
-
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }
 /******/ ]);

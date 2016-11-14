@@ -11,7 +11,33 @@ import (
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/zone"
+	errExt "github.com/pkg/errors"
 )
+
+var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
+	ID:          "lutron.l-bdgpro2-wh",
+	Name:        "Lutron Smart Bridge Pro",
+	Description: "Discover Lutron Smart Bridge Pro hubs",
+
+	PreScanInfo: "To get your configuration information, go to the Lutron app, then go: " +
+		"Settings -> Advanced -> Integration -> Send Integration Report. Copy and paste the contents " +
+		"of the email into the box below.  You also need the IP address of the Smart Bridge device, to find " +
+		"that go to Settings -> Advanced -> Integration -> Network Settings.",
+	UIFields: []gohome.UIField{
+		gohome.UIField{
+			ID:          "ipaddress",
+			Label:       "IP Address",
+			Description: "The IP Address of the Lutron Smart Hub",
+			Required:    true,
+		},
+		gohome.UIField{
+			ID:          "integrationreport",
+			Label:       "Integration Report",
+			Description: "The Integration report for the Smart Home Hub",
+			Required:    true,
+		},
+	},
+}}
 
 type discovery struct {
 	System *gohome.System
@@ -19,36 +45,13 @@ type discovery struct {
 
 func (d *discovery) Discoverers() []gohome.DiscovererInfo {
 	// List all of the discoverers we support
-	return []gohome.DiscovererInfo{gohome.DiscovererInfo{
-		ID:          "lutron.l-bdgpro2-wh",
-		Name:        "Lutron Smart Bridge Pro",
-		Description: "Discover Lutron Smart Bridge Pro hubs",
-
-		PreScanInfo: "To get your configuration information, go to the Lutron app, then go: " +
-			"Settings -> Advanced -> Integration -> Send Integration Report. Copy and paste the contents " +
-			"of the email into the box below.  You also need the IP address of the Smart Bridge device, to find " +
-			"that go to Settings -> Advanced -> Integration -> Network Settings.",
-		UIFields: []gohome.UIField{
-			gohome.UIField{
-				ID:          "ipaddress",
-				Label:       "IP Address",
-				Description: "The IP Address of the Lutron Smart Hub",
-				Required:    true,
-			},
-			gohome.UIField{
-				ID:          "integrationreport",
-				Label:       "Integration Report",
-				Description: "The Integration report for the Smart Home Hub",
-				Required:    true,
-			},
-		},
-	}}
+	return infos
 }
 
 func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 	switch ID {
 	case "lutron.l-bdgpro2-wh":
-		return &discoverer{System: d.System}
+		return &discoverer{System: d.System, info: infos[0]}
 	default:
 		return nil
 	}
@@ -56,6 +59,15 @@ func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 
 type discoverer struct {
 	System *gohome.System
+	info   gohome.DiscovererInfo
+}
+
+func (d *discoverer) Info() gohome.DiscovererInfo {
+	return d.info
+}
+
+func badConfig(err error) error {
+	return errExt.Wrap(err, "invalid integration report")
 }
 
 func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {
@@ -66,16 +78,16 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 	var configJSON map[string]interface{}
 	if err := json.Unmarshal([]byte(uiFields["integrationreport"]), &configJSON); err != nil {
-		return nil, err
+		return nil, badConfig(err)
 	}
 
 	root, ok := configJSON["LIPIdList"].(map[string]interface{})
 	if !ok {
-		return nil, errors.New("Missing LIPIdList key, or value not a map")
+		return nil, badConfig(errors.New("missing LIPIdList key, or value not a map"))
 	}
 	devices, ok := root["Devices"].([]interface{})
 	if !ok {
-		return nil, errors.New("Missing Devices key, or value not a map")
+		return nil, badConfig(errors.New("missing Devices key, or value not a map"))
 	}
 
 	var makeDevice = func(
@@ -128,13 +140,13 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		var scenes = []*gohome.Scene{}
 		buttons, ok := deviceMap["Buttons"].([]interface{})
 		if !ok {
-			return nil, errors.New("Missing Buttons key, or value not array")
+			return nil, badConfig(errors.New("missing Buttons key, or value not array"))
 		}
 
 		for _, buttonMap := range buttons {
 			button, ok := buttonMap.(map[string]interface{})
 			if !ok {
-				return nil, errors.New("Expected Button elements to be objects")
+				return nil, badConfig(errors.New("expected Button elements to be objects"))
 			}
 			if name, ok := button["Name"]; ok && !strings.HasPrefix(name.(string), "Button ") {
 				var buttonID string = strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
@@ -177,7 +189,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	for _, deviceMap := range devices {
 		device, ok := deviceMap.(map[string]interface{})
 		if !ok {
-			return nil, errors.New("Expected Devices elements to be objects")
+			return nil, badConfig(errors.New("expected Devices elements to be objects"))
 		}
 
 		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
@@ -220,13 +232,13 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	}
 
 	if sbp == nil {
-		return nil, errors.New("Did not find Smart Bridge Pro with ID:" + smartBridgeProID)
+		return nil, badConfig(errors.New("did not find Smart Bridge Pro with ID:" + smartBridgeProID))
 	}
 
 	for _, deviceMap := range devices {
 		device, ok := deviceMap.(map[string]interface{})
 		if !ok {
-			return nil, errors.New("Expected Devices elements to be objects")
+			return nil, badConfig(errors.New("expected Devices elements to be objects"))
 		}
 
 		// Don't want to re-add the SBP
@@ -241,7 +253,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 	zones, ok := root["Zones"].([]interface{})
 	if !ok {
-		return nil, errors.New("Missing Zones key")
+		return nil, badConfig(errors.New("missing Zones key"))
 	}
 
 	for _, zoneMap := range zones {
@@ -283,7 +295,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		newZone.ID = d.System.NextGlobalID()
 		err := sbp.AddZone(newZone)
 		if err != nil {
-			return nil, fmt.Errorf("err adding zone to device\n", err)
+			return nil, badConfig(fmt.Errorf("error adding zone to device\n", err))
 		}
 	}
 

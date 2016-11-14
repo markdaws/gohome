@@ -77,6 +77,7 @@ type DiscoveryResults struct {
 // Discoverer represents an interface for types that can discover devices on the network or from
 // a config file string.
 type Discoverer interface {
+	Info() DiscovererInfo
 	ScanDevices(*System, map[string]string) (*DiscoveryResults, error)
 }
 
