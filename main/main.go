@@ -200,7 +200,7 @@ func getIPV4NonLoopbackAddr() (string, error) {
 // populated to some default values
 func defaultConfig(systemPath string) config {
 	addr := "127.0.0.1"
-	useLocalhost := false
+	useLocalhost := true
 	if !useLocalhost {
 		// Find the first public address we can bind to
 		var err error

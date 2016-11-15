@@ -316,12 +316,7 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                var errors = (xhr.responseJSON || {}).errors;
-                callback({
-                    err: err,
-                    status: status,
-                    validationErrors: errors
-                });
+                callback(xhr.responseJSON.err);
             }
         });
     },
@@ -338,12 +333,7 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                var errors = (xhr.responseJSON || {}).errors;
-                callback({
-                    err: err,
-                    xhr: xhr,
-                    validationErrors: errors
-                });
+                callback(xhr.responseJSON.err);
             }
         });        
     },
@@ -379,12 +369,7 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                var errors = (xhr.responseJSON || {}).errors;
-                callback({
-                    err: err,
-                    status: status,
-                    validationErrors: errors
-                });
+                callback(xhr.responseJSON.err);
             }
         });
     },
@@ -401,12 +386,7 @@ var API = {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
-                var errors = (xhr.responseJSON || {}).errors;
-                callback({
-                    err: err,
-                    xhr: xhr,
-                    validationErrors: errors
-                });
+                callback(xhr.responseJSON.err);
             }
         });        
     },

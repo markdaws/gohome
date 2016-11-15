@@ -67,10 +67,14 @@ var SensorInfo = React.createClass({
     save: function() {
         this.setState({ errors: null });
         Api.sensorUpdate(this.toJson(), function(err, sensorData) {
-            if (err) {
+            if (err && !err.validation) {
+                //TODO: Dispatch general error
+                this.setState({ saveButtonStatus: 'error' })
+                return;
+            } else if (err && err.validation) {
                 this.setState({
                     saveButtonStatus: 'error',
-                    errors: err.validationErrors
+                    errors: err.validation.errors[this.props.id]
                 });
                 return;
             }

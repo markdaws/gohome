@@ -24702,12 +24702,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    status: status,
-	                    validationErrors: errors
-	                });
+	                callback(xhr.responseJSON.err);
 	            }
 	        });
 	    },
@@ -24724,12 +24719,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    validationErrors: errors
-	                });
+	                callback(xhr.responseJSON.err);
 	            }
 	        });
 	    },
@@ -24765,12 +24755,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    status: status,
-	                    validationErrors: errors
-	                });
+	                callback(xhr.responseJSON.err);
 	            }
 	        });
 	    },
@@ -24787,12 +24772,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    validationErrors: errors
-	                });
+	                callback(xhr.responseJSON.err);
 	            }
 	        });
 	    },
@@ -25177,10 +25157,14 @@
 	    save: function save() {
 	        this.setState({ errors: null });
 	        Api.zoneUpdate(this.toJson(), function (err, zoneData) {
-	            if (err) {
+	            if (err && !err.validation) {
+	                //TODO: Dispatch general error
+	                this.setState({ saveButtonStatus: 'error' });
+	                return;
+	            } else if (err && err.validation) {
 	                this.setState({
 	                    saveButtonStatus: 'error',
-	                    errors: err.validationErrors
+	                    errors: err.validation.errors[this.state.id]
 	                });
 	                return;
 	            }
@@ -26034,10 +26018,14 @@
 	    save: function save() {
 	        this.setState({ errors: null });
 	        Api.sensorUpdate(this.toJson(), function (err, sensorData) {
-	            if (err) {
+	            if (err && !err.validation) {
+	                //TODO: Dispatch general error
+	                this.setState({ saveButtonStatus: 'error' });
+	                return;
+	            } else if (err && err.validation) {
 	                this.setState({
 	                    saveButtonStatus: 'error',
-	                    errors: err.validationErrors
+	                    errors: err.validation.errors[this.props.id]
 	                });
 	                return;
 	            }
@@ -30407,9 +30395,7 @@
 	            var otherZones = [];
 	            var sensors = [];
 
-	            console.log("rendering");
 	            this.props.zones.forEach(function (zone) {
-	                console.log("ZNID: " + zone.id);
 	                var cmpZone = {
 	                    key: 'zones_' + zone.id,
 	                    cell: React.createElement(ZoneSensorListGridCell, {
@@ -30443,7 +30429,6 @@
 	            }.bind(this));
 
 	            this.props.sensors.forEach(function (sensor) {
-	                console.log("SENID: " + sensor.id);
 	                var cmpSensor = {
 	                    key: 'sensor_' + sensor.id,
 	                    cell: React.createElement(ZoneSensorListGridCell, {
@@ -31018,7 +31003,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ZoneSensorList {\n  position: relative;\n  width: 100%;\n  background-color: #fff;\n}\n.b-ZoneSensorList__zone-info {\n  margin-bottom: 50px;\n  margin-left: 12px;\n  margin-right: 12px;\n}\n.b-ZoneSensorList__grid-section--hidden {\n  display: none;\n}\n.b-ZoneSensorList__grid-header {\n  margin: 0;\n  padding: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n.b-ZoneSensorList__grid-header--hidden {\n  display: none;\n}\n.b-ZoneSensorList__buttons {\n  position: absolute;\n  top: 0px;\n  right: 0px;\n  padding: 12px;\n}\n.b-ZoneSensorList__buttons--editing {\n  position: static;\n}\n", ""]);
+	exports.push([module.id, ".b-ZoneSensorList {\n  position: relative;\n  width: 100%;\n  background-color: #fff;\n}\n.b-ZoneSensorList__zone-info,\n.b-ZoneSensorList__sensor-info {\n  margin-bottom: 50px;\n  margin-left: 12px;\n  margin-right: 12px;\n}\n.b-ZoneSensorList__grid-section--hidden {\n  display: none;\n}\n.b-ZoneSensorList__grid-header {\n  margin: 0;\n  padding: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n.b-ZoneSensorList__grid-header--hidden {\n  display: none;\n}\n.b-ZoneSensorList__buttons {\n  position: absolute;\n  top: 0px;\n  right: 0px;\n  padding: 12px;\n}\n.b-ZoneSensorList__buttons--editing {\n  position: static;\n}\n", ""]);
 
 	// exports
 

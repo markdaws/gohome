@@ -102,10 +102,14 @@ var ZoneInfo = React.createClass({
     save: function() {
         this.setState({ errors: null });
         Api.zoneUpdate(this.toJson(), function(err, zoneData) {
-            if (err) {
+            if (err && !err.validation) {
+                //TODO: Dispatch general error
+                this.setState({ saveButtonStatus: 'error' })
+                return;
+            } else if (err && err.validation) {
                 this.setState({
                     saveButtonStatus: 'error',
-                    errors: err.validationErrors
+                    errors: err.validation.errors[this.state.id]
                 });
                 return;
             }

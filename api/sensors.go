@@ -80,6 +80,20 @@ func apiUpdateSensorHandler(
 			return
 		}
 
+		updatedSen := &gohome.Sensor{
+			ID:          data.ID,
+			Name:        data.Name,
+			Description: data.Description,
+			Address:     data.Address,
+			DeviceID:    data.DeviceID,
+		}
+		errors := updatedSen.Validate()
+		if errors != nil {
+			respValErr(&data, data.ID, errors, w)
+			return
+		}
+
+		// Update the fields in real sensor
 		sen.Name = data.Name
 		sen.Address = data.Address
 		sen.Description = data.Description
