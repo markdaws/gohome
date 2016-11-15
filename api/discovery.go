@@ -165,13 +165,13 @@ func apiDiscoveryHandler(sys *gohome.System) func(http.ResponseWriter, *http.Req
 		info := discoverer.Info()
 		if len(info.UIFields) > 0 {
 			if err := json.Unmarshal(body, &uiFields); err != nil {
-				respBadRequest(fmt.Sprintf("error unmarhsaling uiFields %s", err), w)
+				respBadRequest(fmt.Sprintf("error unmarshaling uiFields %s", err), w)
 				return
 			}
 
 			for _, uiField := range info.UIFields {
 				if uiField.Required && uiFields[uiField.ID] == "" {
-					respBadRequest(fmt.Sprintf("Missing required field: '%s'", uiField.Label), w)
+					respBadRequest(fmt.Sprintf("missing required field: '%s'", uiField.Label), w)
 					return
 				}
 			}

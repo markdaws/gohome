@@ -108,6 +108,16 @@ func respBadRequest(msg string, w http.ResponseWriter) {
 	}, w)
 }
 
+func respValErr(data interface{}, ID string, errs *validation.Errors, w http.ResponseWriter) {
+	resp(apiResponse{
+		Err: &validationErr{
+			ID:     ID,
+			Data:   data,
+			Errors: errs,
+		},
+	}, w)
+}
+
 func respErr(err error, w http.ResponseWriter) {
 	resp(apiResponse{Err: err}, w)
 }
@@ -118,7 +128,13 @@ func resp(r apiResponse, w http.ResponseWriter) {
 		case *validationErr:
 			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(validation.NewErrorJSON(err.Data, err.ID, err.Errors))
+			json.NewEncoder(w).Encode(struct {
+				Err struct {
+					ValErr validation.ErrorJSON `json:"validation"`
+				} `json:"err"`
+			}{Err: struct {
+				ValErr validation.ErrorJSON `json:"validation"`
+			}{validation.NewErrorJSON(err.Data, err.ID, err.Errors)}})
 		case *badRequestErr:
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(struct {

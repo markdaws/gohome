@@ -38,6 +38,12 @@ module.exports = keyMirror({
     DEVICE_DESTROY_RAW: null,
     DEVICE_DESTROY_FAIL: null,
 
+    // A new global error has been fired
+    ERROR: null,
+
+    // Clears all of the global errors
+    ERROR_CLEAR: null,
+
     // Load all of the buttons from the server
     BUTTON_LOAD_ALL: null,
     BUTTON_LOAD_ALL_RAW: null,

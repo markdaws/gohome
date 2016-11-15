@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/validation"
 	"github.com/markdaws/gohome/zone"
+	errExt "github.com/pkg/errors"
 )
 
 // RegisterDeviceHandlers registers the REST API routes relating to devices
@@ -81,7 +83,7 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		if err := json.NewEncoder(w).Encode(DevicesToJSON(system.Devices)); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(err, w)
 		}
 	}
 }
@@ -96,13 +98,13 @@ func apiDeviceHandlerDelete(
 		deviceID := mux.Vars(r)["id"]
 		device, ok := system.Devices[deviceID]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid device ID: %s", deviceID), w)
 			return
 		}
 		system.DeleteDevice(device)
 		err := store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "failed to save changes to disk"), w)
 			return
 		}
 
@@ -120,21 +122,18 @@ func apiAddDeviceHandler(
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
 		if err != nil {
-			log.V("Failed to ready request body %s", err)
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("failed to read request body: %s", err), w)
 			return
 		}
 
 		var data jsonDevice
 		if err = json.Unmarshal(body, &data); err != nil {
-			log.V("error unmarhsaling device %s", err)
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid request body: %s", err), w)
 			return
 		}
 
 		if _, ok := system.Devices[data.ID]; ok {
-			log.V("trying to add duplicate device %s", data.ID)
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("trying to add a device with a duplicate ID: %s", data.ID), w)
 			return
 		}
 
@@ -187,9 +186,7 @@ func apiAddDeviceHandler(
 
 		valErrs := d.Validate()
 		if valErrs != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
+			respValErr(&data, data.ID, valErrs, w)
 			return
 		}
 
@@ -204,8 +201,7 @@ func apiAddDeviceHandler(
 			}
 			err := d.AddButton(btn)
 			if err != nil {
-				log.V("failed to add button to device: %s", err)
-				w.WriteHeader(http.StatusBadRequest)
+				respBadRequest(fmt.Sprintf("failed to add button to device: %s", err), w)
 				return
 			}
 			newButtons = append(newButtons, btn)
@@ -214,8 +210,7 @@ func apiAddDeviceHandler(
 		newZones := make([]*zone.Zone, 0, len(data.Zones))
 		for _, zn := range data.Zones {
 			if _, ok := system.Zones[zn.ID]; ok {
-				log.V("trying to add duplicate zone %s", zn.ID)
-				w.WriteHeader(http.StatusBadRequest)
+				respBadRequest(fmt.Sprintf("trying to add duplicate zone %s", zn.ID), w)
 				return
 			}
 
@@ -231,21 +226,16 @@ func apiAddDeviceHandler(
 
 			valErrs := z.Validate()
 			if valErrs != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&zn, zn.ID, valErrs))
+				respValErr(&data, data.ID, valErrs, w)
 				return
 			}
 
 			errors := d.AddZone(z)
 			if errors != nil {
 				if valErrs, ok := errors.(*validation.Errors); ok {
-					w.WriteHeader(http.StatusBadRequest)
-					w.Header().Set("Content-Type", "application/json; charset=utf-8")
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&zn, zn.ID, valErrs))
+					respValErr(&zn, zn.ID, valErrs, w)
 				} else {
-					log.V("error adding zone to device %s", errors)
-					w.WriteHeader(http.StatusBadRequest)
+					respBadRequest(fmt.Sprintf("error adding zone to device %s", errors), w)
 				}
 				return
 			}
@@ -255,8 +245,7 @@ func apiAddDeviceHandler(
 		newSensors := make([]*gohome.Sensor, 0, len(data.Sensors))
 		for _, sen := range data.Sensors {
 			if _, ok := system.Sensors[sen.ID]; ok {
-				log.V("trying to add duplicate sensor %s", sen.ID)
-				w.WriteHeader(http.StatusBadRequest)
+				respBadRequest(fmt.Sprintf("trying to add duplicate sensor %s", sen.ID), w)
 				return
 			}
 
@@ -275,16 +264,13 @@ func apiAddDeviceHandler(
 
 			valErrs := sensor.Validate()
 			if valErrs != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&sen, sen.ID, valErrs))
+				respValErr(&sen, sen.ID, valErrs, w)
 				return
 			}
 
 			err = d.AddSensor(sensor)
 			if err != nil {
-				log.V("error adding sensor to device %s", err)
-				w.WriteHeader(http.StatusBadRequest)
+				respBadRequest(fmt.Sprintf("error adding sensor to device %s", err), w)
 				return
 			}
 			newSensors = append(newSensors, sensor)
@@ -310,7 +296,7 @@ func apiAddDeviceHandler(
 
 		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
-			log.V("error writing changes to disk %s", err)
+			respErr(errExt.Wrap(err, "error writing changes to disk"), w)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -329,19 +315,19 @@ func apiDeviceHandlerUpdate(
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("failed to read request body: %s", err), w)
 			return
 		}
 
 		var data jsonDevice
 		if err = json.Unmarshal(body, &data); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("failed to parse JSON body: %s", err), w)
 			return
 		}
 
 		d, ok := system.Devices[data.ID]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid device ID: %s", data.ID), w)
 			return
 		}
 
@@ -358,16 +344,9 @@ func apiDeviceHandlerUpdate(
 			nil,
 			nil)
 
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
 		errors := updatedDev.Validate()
 		if errors != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, errors))
+			respValErr(&data, data.ID, errors, w)
 			return
 		}
 
@@ -382,7 +361,7 @@ func apiDeviceHandlerUpdate(
 
 		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "failed to save new settings to disk"), w)
 			return
 		}
 

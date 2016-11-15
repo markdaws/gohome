@@ -93,11 +93,12 @@ var DeviceInfo = React.createClass({
     },
 
     createDevice: function() {
+        //TODO: Revisit now ew have one API to save everything at once
         Api.deviceCreate(this.toJson(), function(err, deviceData) {
             if (err) {
                 this.setState({
                     saveButtonStatus: 'error',
-                    errors: err.validationErrors
+                    errors: err.validation.errors
                 });
                 return;
             }
@@ -115,7 +116,7 @@ var DeviceInfo = React.createClass({
                 var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
                 Api.zoneCreate(zone, function(err, zoneData) {
                     if (err) {
-                        zoneInfo.setErrors(err.validationErrors);
+                        zoneInfo.setErrors(err.validation.errors);
                         this.setState({
                             saveButtonStatus: 'error'
                         });
@@ -138,13 +139,13 @@ var DeviceInfo = React.createClass({
                 var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
                 Api.sensorCreate(sensor, function(err, sensorData) {
                     if (err) {
-                        sensorInfo.setErrors(err.validationErrors);
+                        sensorInfo.setErrors(err.validation.errors);
                         this.setState({
                             saveButtonStatus: 'error'
                         });
                         return;
                     }
-pp
+
                     this.props.savedSensor(sensorData);
                     saveSensor.bind(this)(index+1);
                 }.bind(this));
@@ -155,14 +156,21 @@ pp
 
     updateDevice: function() {
         Api.deviceUpdate(this.toJson(), function(err, deviceData) {
-            if (err) {
+            if (err && !err.validation) {
+                //TODO: Dispatch general error so it can be displayed somewhere in the UI ...
                 this.setState({
                     saveButtonStatus: 'error',
-                    errors: err.validationErrors
+                });
+                return;
+            } else if (err && err.validation) {
+                this.setState({
+                    saveButtonStatus: 'error',
+                    errors: err.validation.errors[this.state.id]
                 });
                 return;
             }
 
+            this.setState({ saveButtonStatus: 'success' });
             this.props.updatedDevice(deviceData);
         }.bind(this));
     },
@@ -394,6 +402,9 @@ function mapDispatchToProps(dispatch) {
         },
         savedSensor: function(sensorJson) {
             dispatch(SensorActions.importedSensor(sensorJson));
+        },
+        raiseError: function(error) {
+            //TODO:
         }
     };
 }

@@ -1,4 +1,4 @@
-var Constants = require('../constants.js');
+ var Constants = require('../constants.js');
 var initialState = require('../initialState.js');
 
 module.exports = function(state, action) {

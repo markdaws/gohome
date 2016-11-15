@@ -65,6 +65,11 @@ var ControlApp = React.createClass({
             );
         }
 
+        if (this.props.errors && this.props.errors.length > 0) {
+            console.error(this.props.errors)
+            
+        }
+        
         return (
             <div {...classes()}>
                 <ul className="nav nav-tabs" role="tablist">
@@ -140,7 +145,8 @@ function mapStateToProps(state) {
         scenes: state.scenes,
         buttons: state.buttons,
         sensors: state.sensors,
-        appLoadStatus: state.appLoadStatus
+        appLoadStatus: state.appLoadStatus,
+        errors: state.errors
     };
 }
 
@@ -160,6 +166,9 @@ function mapDispatchToProps(dispatch) {
         },
         loadAllSensors: function() {
             dispatch(SensorActions.loadAll());
+        },
+        clearErrors: function() {
+            //TODO:
         }
     }
 }

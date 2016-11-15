@@ -21514,6 +21514,10 @@
 	            );
 	        }
 
+	        if (this.props.errors && this.props.errors.length > 0) {
+	            console.error(this.props.errors);
+	        }
+
 	        return React.createElement(
 	            'div',
 	            classes(),
@@ -21606,7 +21610,8 @@
 	        scenes: state.scenes,
 	        buttons: state.buttons,
 	        sensors: state.sensors,
-	        appLoadStatus: state.appLoadStatus
+	        appLoadStatus: state.appLoadStatus,
+	        errors: state.errors
 	    };
 	}
 
@@ -21626,6 +21631,9 @@
 	        },
 	        loadAllSensors: function loadAllSensors() {
 	            dispatch(SensorActions.loadAll());
+	        },
+	        clearErrors: function clearErrors() {
+	            //TODO:
 	        }
 	    };
 	}
@@ -23831,11 +23839,12 @@
 	    },
 
 	    createDevice: function createDevice() {
+	        //TODO: Revisit now ew have one API to save everything at once
 	        Api.deviceCreate(this.toJson(), function (err, deviceData) {
 	            if (err) {
 	                this.setState({
 	                    saveButtonStatus: 'error',
-	                    errors: err.validationErrors
+	                    errors: err.validation.errors
 	                });
 	                return;
 	            }
@@ -23853,7 +23862,7 @@
 	                var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
 	                Api.zoneCreate(zone, function (err, zoneData) {
 	                    if (err) {
-	                        zoneInfo.setErrors(err.validationErrors);
+	                        zoneInfo.setErrors(err.validation.errors);
 	                        this.setState({
 	                            saveButtonStatus: 'error'
 	                        });
@@ -23876,13 +23885,13 @@
 	                var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
 	                Api.sensorCreate(sensor, function (err, sensorData) {
 	                    if (err) {
-	                        sensorInfo.setErrors(err.validationErrors);
+	                        sensorInfo.setErrors(err.validation.errors);
 	                        this.setState({
 	                            saveButtonStatus: 'error'
 	                        });
 	                        return;
 	                    }
-	                    pp;
+
 	                    this.props.savedSensor(sensorData);
 	                    saveSensor.bind(this)(index + 1);
 	                }.bind(this));
@@ -23892,14 +23901,21 @@
 
 	    updateDevice: function updateDevice() {
 	        Api.deviceUpdate(this.toJson(), function (err, deviceData) {
-	            if (err) {
+	            if (err && !err.validation) {
+	                //TODO: Dispatch general error so it can be displayed somewhere in the UI ...
+	                this.setState({
+	                    saveButtonStatus: 'error'
+	                });
+	                return;
+	            } else if (err && err.validation) {
 	                this.setState({
 	                    saveButtonStatus: 'error',
-	                    errors: err.validationErrors
+	                    errors: err.validation.errors[this.state.id]
 	                });
 	                return;
 	            }
 
+	            this.setState({ saveButtonStatus: 'success' });
 	            this.props.updatedDevice(deviceData);
 	        }.bind(this));
 	    },
@@ -24187,6 +24203,9 @@
 	        },
 	        savedSensor: function savedSensor(sensorJson) {
 	            dispatch(SensorActions.importedSensor(sensorJson));
+	        },
+	        raiseError: function raiseError(error) {
+	            //TODO:
 	        }
 	    };
 	}
@@ -24405,12 +24424,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    validationErrors: errors
-	                });
+	                callback(xhr.responseJSON.err);
 	            }
 	        });
 	    },
@@ -24426,12 +24440,7 @@
 	                callback(null, data);
 	            },
 	            error: function error(xhr, status, err) {
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    validationErrors: errors
-	                });
+	                callback(xhr.responseJSON.err);
 	            }
 	        });
 	    },
@@ -24912,6 +24921,12 @@
 	    DEVICE_DESTROY: null,
 	    DEVICE_DESTROY_RAW: null,
 	    DEVICE_DESTROY_FAIL: null,
+
+	    // A new global error has been fired
+	    ERROR: null,
+
+	    // Clears all of the global errors
+	    ERROR_CLEAR: null,
 
 	    // Load all of the buttons from the server
 	    BUTTON_LOAD_ALL: null,
@@ -32145,6 +32160,7 @@
 	var sensorReducer = __webpack_require__(313);
 	var zonesReducer = __webpack_require__(314);
 	var loadStatusReducer = __webpack_require__(315);
+	var errorReducer = __webpack_require__(317);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
@@ -32152,7 +32168,8 @@
 	    zones: zonesReducer,
 	    buttons: buttonReducer,
 	    sensors: sensorReducer,
-	    appLoadStatus: loadStatusReducer
+	    appLoadStatus: loadStatusReducer,
+	    errors: errorReducer
 	});
 
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
@@ -32227,7 +32244,10 @@
 	            scenesLoaded: false,
 	            buttonsLoaded: false,
 	            sensorsLoaded: false
-	        }
+	        },
+
+	        // An array of errors that should be displayed in the app
+	        errors: []
 	    };
 	};
 
@@ -32874,6 +32894,30 @@
 	});
 	module.exports = Testr;*/
 	module.exports = C1;
+
+/***/ },
+/* 317 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(209);
+	var initialState = __webpack_require__(308);
+
+	module.exports = function (state, action) {
+	    var newState = state;
+
+	    switch (action.type) {
+	        case Constants.ERROR:
+	            newState = [action.data].concat(newState);
+	            break;
+
+	        default:
+	            newState = state || initialState().errors;
+	    }
+
+	    return newState;
+	};
 
 /***/ }
 /******/ ]);

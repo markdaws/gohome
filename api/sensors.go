@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/store"
-	"github.com/markdaws/gohome/validation"
+	errExt "github.com/pkg/errors"
 )
 
 // RegisterSensorHandlers registers the REST API routes relating to devices
@@ -49,7 +50,7 @@ func apiSensorsHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		if err := json.NewEncoder(w).Encode(SensorsToJSON(system.Sensors)); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "failed to encode to JSON"), w)
 		}
 	}
 }
@@ -63,19 +64,19 @@ func apiUpdateSensorHandler(
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("failed to read request body: %s", err), w)
 			return
 		}
 
 		var data jsonSensor
 		if err = json.Unmarshal(body, &data); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid JSON body: %s", err), w)
 			return
 		}
 
 		sen, ok := system.Sensors[data.ID]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid sensor ID: %s", data.ID), w)
 			return
 		}
 
@@ -85,7 +86,7 @@ func apiUpdateSensorHandler(
 
 		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "failed to save system to disk"), w)
 			return
 		}
 
@@ -128,21 +129,19 @@ func apiAddSensorHandler(
 
 		valErrs := sensor.Validate()
 		if valErrs != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(validation.NewErrorJSON(&data, data.ID, valErrs))
+			respValErr(&data, data.ID, valErrs, w)
 			return
 		}
 
 		//Add the sensor to the owner device
 		dev, ok := system.Devices[data.DeviceID]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid device ID: %s", data.DeviceID), w)
 			return
 		}
 		err = dev.AddSensor(sensor)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(errExt.Wrap(err, "failed to add sensor to device").Error(), w)
 			return
 		}
 
@@ -150,7 +149,7 @@ func apiAddSensorHandler(
 
 		err = store.SaveSystem(savePath, system, recipeManager)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "failed to save system to disk"), w)
 			return
 		}
 

@@ -34,6 +34,9 @@ module.exports = function() {
             scenesLoaded: false,
             buttonsLoaded: false,
             sensorsLoaded: false
-        }
+        },
+
+        // An array of errors that should be displayed in the app
+        errors: []
     };
 };

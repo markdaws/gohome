@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
+	errExt "github.com/pkg/errors"
 )
 
 // RegisterButtonHandlers registers all of the button specific API REST routes
@@ -38,7 +39,7 @@ func apiButtonsHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		if err := json.NewEncoder(w).Encode(ButtonsToJSON(system.Buttons)); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "failed to encode to JSON"), w)
 		}
 	}
 }

@@ -7,7 +7,7 @@ var scenesReducer = require('./reducers/scenesReducer.js');
 var sensorReducer = require('./reducers/sensorReducer.js');
 var zonesReducer = require('./reducers/zonesReducer.js');
 var loadStatusReducer = require('./reducers/loadStatusReducer.js');
-
+var errorReducer = require('./reducers/errorReducer.js');
 
 var rootReducer = Redux.combineReducers({
     system: systemReducer,
@@ -15,7 +15,8 @@ var rootReducer = Redux.combineReducers({
     zones: zonesReducer,
     buttons: buttonReducer,
     sensors: sensorReducer,
-    appLoadStatus: loadStatusReducer
+    appLoadStatus: loadStatusReducer,
+    errors: errorReducer
 });
 
 module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
