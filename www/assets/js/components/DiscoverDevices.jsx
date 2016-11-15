@@ -23,6 +23,7 @@ var DiscoverDevices = React.createClass({
         });
         return {
             discovering: false,
+            discovered: false,
             devices: null,
             scenes: null,
             uiFields: uiFields,
@@ -33,6 +34,7 @@ var DiscoverDevices = React.createClass({
     discover: function() {
         this.setState({
             discovering: true,
+            discovered: false,
             devices: null,
             scenes: null,
             errors: null
@@ -45,12 +47,14 @@ var DiscoverDevices = React.createClass({
                 if (err != null) {
                     this.setState({
                         discovering: false,
+                        discovered: true,
                         errors: err
                     });
                     return;
                 }
                 this.setState({
                     discovering: false,
+                    discovered: true,
                     scenes: data.scenes,
                     devices: data.devices
                 });
@@ -64,19 +68,6 @@ var DiscoverDevices = React.createClass({
     },
     
     render: function() {
-        var devices
-        if (this.state.devices && this.state.devices.length > 0) {
-            devices = this.state.devices.map(function(device) {
-                return <ImportGroup
-                           key={device.id}
-                           device={device}
-                           createdDevice={this.props.importedDevice}
-                           createdZones={this.props.importedZones}
-                           createdSensors={this.props.importedSensors}
-                       />;
-            }.bind(this));
-        }
-
         var importBody;
         var deviceCount = 0;
         if (this.state.devices) {
@@ -84,7 +75,6 @@ var DiscoverDevices = React.createClass({
         }
 
         var uiFields = this.props.discoverer.uiFields.map(function(uiField) {
-            //id/name/description
             return (
                 <div className="form-group" key={uiField.id}>
                     <label htmlFor={uiField.id}>{uiField.label}</label>
@@ -105,8 +95,18 @@ var DiscoverDevices = React.createClass({
                 <div {...classes('error')}>{this.state.errors.msg}</div>
             );
         }
-        importBody = (
-            <div>
+
+        var importGroup;
+        if (this.state.discovered) {
+            importGroup = <ImportGroup
+                    devices={this.state.devices}
+                    createdDevice={this.props.importedDevice}
+                    createdZones={this.props.importedZones}
+                    createdSensors={this.props.importedSensors} />;
+        }
+
+        return (
+            <div {...classes()}>
                 <div {...classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : '')}>
                     {this.props.discoverer.preScanInfo}
                 </div>
@@ -115,23 +115,16 @@ var DiscoverDevices = React.createClass({
                 </div>
                 <div {...classes('discover')}>
                     <button {...classes('', '', (this.state.discovering ? 'disabled' : '') + ' btn btn-primary')}
-                        onClick={this.discover}>Discover Devices</button>
+                        onClick={this.discover}>Discover</button>
                     <i {...classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin')}></i>
                 </div>
                 {errors}
-                <h3 {...classes('no-devices', this.state.devices && deviceCount === 0 ? '' : 'hidden')}>
-                    {deviceCount} device{deviceCount > 1 ? 's' : ''} found
+                <h3 {...classes('no-devices', this.state.discovered && deviceCount === 0 ? '' : 'hidden')}>
+                    {deviceCount} device{deviceCount > 1 || deviceCount == 0 ? 's' : ''} found
                 </h3>
-                <p {...classes('found-devices', this.state.devices && this.state.devices.length > 0 ? '' : ' hidden')}>
-                    Click "Import" on each device you wish to add to your system. Uncheck the check boxes next to items
-                    you do not want to import.
-                </p>
-                {devices}
-            </div>
-        );
-        return (
-            <div {...classes()}>
-                {importBody}
+                <div {...classes('import-group')}>
+                    {importGroup}
+                </div>
             </div>
         );
     }

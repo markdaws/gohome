@@ -57,6 +57,11 @@ func DevicesToJSON(devs map[string]*gohome.Device) []jsonDevice {
 		jsonZones := ZonesToJSON(device.Zones)
 		jsonSensors := SensorsToJSON(device.Sensors)
 
+		hubID := ""
+		if device.Hub != nil {
+			hubID = device.Hub.ID
+		}
+
 		devices[i] = jsonDevice{
 			ID:              device.ID,
 			Address:         device.Address,
@@ -71,6 +76,7 @@ func DevicesToJSON(devs map[string]*gohome.Device) []jsonDevice {
 			ConnPool:        connPoolJSON,
 			Auth:            authJSON,
 			Type:            string(device.Type),
+			HubID:           hubID,
 		}
 		i++
 	}
@@ -146,6 +152,15 @@ func apiAddDeviceHandler(
 			}
 		}
 
+		var hub *gohome.Device
+		var foundHub bool
+		if data.HubID != "" {
+			if hub, foundHub = system.Devices[data.HubID]; !foundHub {
+				respBadRequest(fmt.Sprintf("invalid hub ID: %s", data.HubID), w)
+				return
+			}
+		}
+
 		d := gohome.NewDevice(
 			data.ModelNumber,
 			data.ModelName,
@@ -154,7 +169,7 @@ func apiAddDeviceHandler(
 			data.ID,
 			data.Name,
 			data.Description,
-			nil,
+			hub,
 			nil,
 			nil,
 			auth,
@@ -226,7 +241,7 @@ func apiAddDeviceHandler(
 
 			valErrs := z.Validate()
 			if valErrs != nil {
-				respValErr(&data, data.ID, valErrs, w)
+				respValErr(&zn, zn.ID, valErrs, w)
 				return
 			}
 

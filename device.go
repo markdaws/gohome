@@ -155,7 +155,7 @@ func (d *Device) Validate() *validation.Errors {
 
 // String returns a friendly string describing the device that can be useful for debugging
 func (d *Device) String() string {
-	return fmt.Sprintf("Device[%s]", d.Name)
+	return fmt.Sprintf("Device[ID:%s, Address:%s, Name: %s]", d.ID, d.Address, d.Name)
 }
 
 // AddZone adds the zone to the device

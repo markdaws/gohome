@@ -23526,9 +23526,9 @@
 	            'div',
 	            classes(),
 	            React.createElement(
-	                'h3',
+	                'h2',
 	                classes('header'),
-	                'Import Hardware'
+	                'Add Hardware'
 	            ),
 	            React.createElement(
 	                'select',
@@ -23585,6 +23585,7 @@
 	        });
 	        return {
 	            discovering: false,
+	            discovered: false,
 	            devices: null,
 	            scenes: null,
 	            uiFields: uiFields,
@@ -23595,6 +23596,7 @@
 	    discover: function discover() {
 	        this.setState({
 	            discovering: true,
+	            discovered: false,
 	            devices: null,
 	            scenes: null,
 	            errors: null
@@ -23604,12 +23606,14 @@
 	            if (err != null) {
 	                this.setState({
 	                    discovering: false,
+	                    discovered: true,
 	                    errors: err
 	                });
 	                return;
 	            }
 	            this.setState({
 	                discovering: false,
+	                discovered: true,
 	                scenes: data.scenes,
 	                devices: data.devices
 	            });
@@ -23623,19 +23627,6 @@
 	    },
 
 	    render: function render() {
-	        var devices;
-	        if (this.state.devices && this.state.devices.length > 0) {
-	            devices = this.state.devices.map(function (device) {
-	                return React.createElement(ImportGroup, {
-	                    key: device.id,
-	                    device: device,
-	                    createdDevice: this.props.importedDevice,
-	                    createdZones: this.props.importedZones,
-	                    createdSensors: this.props.importedSensors
-	                });
-	            }.bind(this));
-	        }
-
 	        var importBody;
 	        var deviceCount = 0;
 	        if (this.state.devices) {
@@ -23643,7 +23634,6 @@
 	        }
 
 	        var uiFields = this.props.discoverer.uiFields.map(function (uiField) {
-	            //id/name/description
 	            return React.createElement(
 	                'div',
 	                { className: 'form-group', key: uiField.id },
@@ -23670,9 +23660,19 @@
 	                this.state.errors.msg
 	            );
 	        }
-	        importBody = React.createElement(
+
+	        var importGroup;
+	        if (this.state.discovered) {
+	            importGroup = React.createElement(ImportGroup, {
+	                devices: this.state.devices,
+	                createdDevice: this.props.importedDevice,
+	                createdZones: this.props.importedZones,
+	                createdSensors: this.props.importedSensors });
+	        }
+
+	        return React.createElement(
 	            'div',
-	            null,
+	            classes(),
 	            React.createElement(
 	                'div',
 	                classes('pre-import-instructions', this.props.discoverer.preScanInfo == '' ? 'hidden' : ''),
@@ -23690,30 +23690,24 @@
 	                    'button',
 	                    _extends({}, classes('', '', (this.state.discovering ? 'disabled' : '') + ' btn btn-primary'), {
 	                        onClick: this.discover }),
-	                    'Discover Devices'
+	                    'Discover'
 	                ),
 	                React.createElement('i', classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin'))
 	            ),
 	            errors,
 	            React.createElement(
 	                'h3',
-	                classes('no-devices', this.state.devices && deviceCount === 0 ? '' : 'hidden'),
+	                classes('no-devices', this.state.discovered && deviceCount === 0 ? '' : 'hidden'),
 	                deviceCount,
 	                ' device',
-	                deviceCount > 1 ? 's' : '',
+	                deviceCount > 1 || deviceCount == 0 ? 's' : '',
 	                ' found'
 	            ),
 	            React.createElement(
-	                'p',
-	                classes('found-devices', this.state.devices && this.state.devices.length > 0 ? '' : ' hidden'),
-	                'Click "Import" on each device you wish to add to your system. Uncheck the check boxes next to items you do not want to import.'
-	            ),
-	            devices
-	        );
-	        return React.createElement(
-	            'div',
-	            classes(),
-	            importBody
+	                'div',
+	                classes('import-group'),
+	                importGroup
+	            )
 	        );
 	    }
 	});
@@ -23773,6 +23767,7 @@
 	            description: this.props.description || '',
 	            address: this.props.address,
 	            id: this.props.id,
+	            hubId: this.props.hubId,
 	            modelNumber: this.props.modelNumber || '',
 	            modelName: this.props.modelName || '',
 	            softwareVersion: this.props.softwareVersion || '',
@@ -23808,6 +23803,7 @@
 	            modelName: s.modelName,
 	            softwareVersion: s.softwareVersion,
 	            auth: s.auth,
+	            hubId: s.hubId,
 	            buttons: this.props.buttons,
 	            connPool: this.props.connPool,
 	            cmdBuilder: this.props.cmdBuilder,
@@ -26512,16 +26508,29 @@
 	    displayName: 'ImportGroup',
 
 	    getInitialState: function getInitialState() {
-	        this._deviceSaved = false;
 	        this._unselected = {};
+	        this._savedDevices = {};
+	        this._savedZones = {};
+	        this._savedSensors = {};
 
+	        // We render all devices/zones/sensors together
+	        var zones = [];
+	        var sensors = [];
+	        this.props.devices.forEach(function (device) {
+	            device.zones.forEach(function (zone) {
+	                zones.push(zone);
+	            });
+	            device.sensors.forEach(function (sensor) {
+	                sensors.push(sensor);
+	            });
+	        });
 	        return {
-	            device: this.props.device,
-	            zones: this.props.device.zones,
-	            sensors: this.props.device.sensors,
-	            deviceErrors: null,
+	            devices: this.props.devices,
+	            zones: zones,
+	            sensors: sensors,
 	            zoneErrors: {},
 	            sensorErrors: {},
+	            deviceErrors: {},
 	            saveButtonStatus: ''
 	        };
 	    },
@@ -26547,21 +26556,20 @@
 	    },
 
 	    _deviceChanged: function _deviceChanged(cmp) {
-	        if (this._deviceSaved) {
-	            return;
-	        }
-
+	        var device = cmp.toJson();
+	        var devices = this.state.devices.map(function (dev) {
+	            if (dev.id === device.id) {
+	                return device;
+	            }
+	            return dev;
+	        });
 	        this.setState({
-	            device: cmp.toJson(),
+	            devices: devices,
 	            saveButtonStatus: ''
 	        });
 	    },
 
 	    _zoneChanged: function _zoneChanged(cmp) {
-	        if (this._deviceSaved) {
-	            return;
-	        }
-
 	        var zone = cmp.toJson();
 	        var zones = this.state.zones.map(function (zn) {
 	            if (zn.id === zone.id) {
@@ -26576,9 +26584,6 @@
 	    },
 
 	    _sensorChanged: function _sensorChanged(cmp) {
-	        if (this._deviceSaved) {
-	            return;
-	        }
 	        var sensor = cmp.toJson();
 
 	        // Update our list of sensors, with the newly updated sensor replacing the old version,
@@ -26596,97 +26601,172 @@
 	    },
 
 	    importClicked: function importClicked() {
-	        var _this = this;
-
 	        this.refs["devicegrid"].closeExpander();
 	        this.refs["zonegrid"].closeExpander();
 	        this.refs["sensorgrid"].closeExpander();
 	        this.setState({
+	            deviceErrors: {},
 	            zoneErrors: {},
-	            sensorErrors: {},
-	            deviceErrors: null
+	            sensorErrors: {}
 	        });
 
-	        var device = this.state.device;
-	        device.zones = this.state.zones.filter(function (zone) {
-	            return !zone.isDupe && !this._unselected[zone.id];
-	        }.bind(this));
-	        device.sensors = this.state.sensors.filter(function (sensor) {
-	            return !sensor.isDupe && !this._unselected[sensor.id];
-	        }.bind(this));
+	        // When we are saving devices, we need to sort the devices so that
+	        // we save devices that don't have a hub before devices that do have
+	        // a hub, because we can't save a device that points to a hub that we
+	        // haven't potentially saved yet
+	        var sortedDevices = [].concat(this.state.devices).sort(function (x, y) {
+	            var xHasHub = x.hubId !== '';
+	            var yHasHub = y.hubId !== '';
 
-	        if (device.isDupe) {
-	            (function () {
-	                var saveZone = function saveZone(index) {
-	                    if (index >= device.zones.length) {
-	                        //TODO: Sensors
-	                        this.setState({ saveButtonStatus: 'success' });
+	            if (xHasHub && yHasHub || !xHasHub && !yHasHub) {
+	                return 0;
+	            } else if (xHasHub && !yHasHub) {
+	                return 1;
+	            } else {
+	                return -1;
+	            }
+	            return x.hubId > y.hubId;
+	        });
+
+	        function saveDevice(devIndex) {
+	            var _this = this;
+
+	            if (devIndex >= sortedDevices.length) {
+	                this.setState({ saveButtonStatus: 'success' });
+	                return;
+	            }
+
+	            var device = sortedDevices[devIndex];
+
+	            // We grouped all of the zones/sensors together, now we need to break them
+	            // up in to their respective devices so they can be saved
+	            device.zones = this.state.zones.filter(function (zone) {
+	                return zone.deviceId === device.id && !zone.isDupe && !this._unselected[zone.id] && !this._savedZones[zone.id];
+	            }.bind(this));
+	            device.sensors = this.state.sensors.filter(function (sensor) {
+	                return sensor.deviceId === device.id && !sensor.isDupe && !this._unselected[sensor.id] && !this._savedSensors[sensor.id];
+	            }.bind(this));
+
+	            if (device.isDupe || this._savedDevices[device.id]) {
+	                (function () {
+	                    // Don't save the device, save any new zones + sensors we found that aren't dupes
+	                    var saveZone = function saveZone(index) {
+	                        if (index >= device.zones.length) {
+	                            // saved all of the zones, move on to the sensors
+	                            saveSensor.bind(this)(0);
+	                            return;
+	                        }
+
+	                        var zone = device.zones[index];
+	                        Api.zoneCreate(zone, function (err, zoneData) {
+	                            if (err) {
+	                                var zoneErrs = {};
+	                                zoneErrs[zone.id] = err.validation.errors[zone.id];
+	                                this.setState({
+	                                    saveButtonStatus: 'error',
+	                                    zoneErrors: zoneErrs
+	                                });
+	                                return;
+	                            }
+	                            this.props.createdZones([zone]);
+	                            this._savedZones[zone.id] = true;
+	                            saveZone.bind(this)(index + 1);
+	                        }.bind(this));
+	                    };
+
+	                    var saveSensor = function saveSensor(index) {
+	                        if (index >= device.sensors.length) {
+	                            // Move on to the next device
+	                            saveDevice.bind(this)(devIndex + 1);
+	                            return;
+	                        }
+
+	                        var sensor = device.sensors[index];
+	                        Api.sensorCreate(sensor, function (err, sensorData) {
+	                            if (err) {
+	                                var sensorErrs = {};
+	                                sensorErrs[sensor.id] = err.validation.errors[sensor.id];
+	                                this.setState({
+	                                    saveButtonStatus: 'error',
+	                                    sensorErrors: sensorErrs
+	                                });
+	                                return;
+	                            }
+	                            this.props.createdSensors([sensor]);
+	                            this._savedSensors[sensor.id] = true;
+	                            saveSensor.bind(this)(index + 1);
+	                        }.bind(this));
+	                    };
+
+	                    saveZone.bind(_this)(0);
+	                })();
+	            } else {
+	                Api.deviceCreate(device, function (err, deviceData) {
+	                    if (err) {
+	                        var zoneErrs = {};
+	                        var sensorErrs = {};
+	                        this.state.zones.forEach(function (zone) {
+	                            if (err.validation.errors[zone.id]) {
+	                                zoneErrs[zone.id] = err.validation.errors[zone.id];
+	                            }
+	                        });
+	                        this.state.sensors.forEach(function (sensor) {
+	                            if (err.validation.errors[sensor.id]) {
+	                                sensorErrs[sensor.id] = err.validation.errors[sensor.id];
+	                            }
+	                        });
+
+	                        this.setState({
+	                            saveButtonStatus: 'error',
+	                            zoneErrors: zoneErrs,
+	                            sensorErrors: sensorErrs,
+	                            deviceErrors: err.validation.errors[device.id] || {}
+	                        });
 	                        return;
 	                    }
 
-	                    var zone = device.zones[index];
-	                    Api.zoneCreate(zone, function (err, zoneData) {
-	                        if (err) {
-	                            var zoneErrs = {};
-	                            zoneErrs[zone.id] = err.validationErrors[zone.id];
-	                            this.setState({
-	                                saveButtonStatus: 'error',
-	                                zoneErrors: zoneErrs
-	                            });
-	                            return;
-	                        }
-	                        this.props.createdZones([zone]);
-	                        saveZone.bind(this)(index + 1);
+	                    // Let callers know the device has been saved
+	                    this.props.createdDevice(deviceData);
+	                    this.props.createdZones(device.zones);
+	                    this.props.createdSensors(device.sensors);
+
+	                    this._savedDevices[device.id] = true;
+	                    device.zones.forEach(function (zone) {
+	                        this._savedZones[zone.id] = true;
 	                    }.bind(this));
-	                };
+	                    device.sensors.forEach(function (sensor) {
+	                        this._savedSensors[sensor.id] = true;
+	                    }.bind(this));
 
-	                saveZone.bind(_this)(0);
-	            })();
-	        } else {
-	            Api.deviceCreate(device, function (err, deviceData) {
-	                if (err) {
-	                    var zoneErrs = {};
-	                    var sensorErrs = {};
-	                    this.state.zones.forEach(function (zone) {
-	                        if (err.validationErrors[zone.id]) {
-	                            zoneErrs[zone.id] = err.validationErrors[zone.id];
-	                        }
-	                    });
-	                    this.state.sensors.forEach(function (sensor) {
-	                        if (err.validationErrors[sensor.id]) {
-	                            sensorErrs[sensor.id] = err.validationErrors[sensor.id];
-	                        }
-	                    });
-
-	                    this.setState({
-	                        saveButtonStatus: 'error',
-	                        zoneErrors: zoneErrs,
-	                        sensorErrors: sensorErrs,
-	                        deviceErrors: err.validationErrors[this.state.device.id]
-	                    });
-	                    return;
-	                }
-
-	                this._deviceSaved = true;
-
-	                // Let callers know the device has been saved
-	                this.props.createdDevice(deviceData);
-	                this.props.createdZones(this.state.device.zones);
-	                this.props.createdSensors(this.state.device.sensors);
-
-	                this.setState({ saveButtonStatus: 'success' });
-	            }.bind(this));
+	                    // Move on to the next device
+	                    saveDevice.bind(this)(devIndex + 1);
+	                }.bind(this));
+	            }
 	        }
+	        saveDevice.bind(this)(0);
+	    },
+
+	    getDeviceById: function getDeviceById(id) {
+	        var devices = this.state.devices;
+	        for (var i = 0; i < devices.length; ++i) {
+	            if (devices[i].id === id) {
+	                return devices[i];
+	            }
+	        }
+	        return null;
 	    },
 
 	    render: function render() {
 	        var devices = [];
 	        var zones = [];
 	        var sensors = [];
-	        var device = this.state.device;
 
-	        // Only render non dupes
-	        if (!device.isDupe) {
+	        (this.state.devices || []).forEach(function (device) {
+	            if (device.isDupe) {
+	                return;
+	            }
+
+	            var err = this.state.deviceErrors[device.id];
 	            var cell = {
 	                key: device.id,
 	                cell: React.createElement(SystemDeviceListGridCell, {
@@ -26694,27 +26774,26 @@
 	                    id: device.id,
 	                    showCheckbox: false,
 	                    chkBxChanged: this.deviceChkBxChanged,
-	                    hasError: this.state.deviceErrors != null,
-	                    hasSuccess: this._deviceSaved,
+	                    hasError: err != null,
+	                    hasSuccess: this._savedDevices[device.id],
 	                    device: device }),
 	                content: React.createElement(DeviceInfo, _extends({}, device, {
 	                    key: "deviceinfo-" + device.id,
 	                    ref: "deviceinfo-" + device.id,
 	                    readOnlyFields: 'id',
-	                    errors: this.state.deviceErrors,
+	                    errors: err,
 	                    changed: this._deviceChanged }))
 	            };
 	            devices.push(cell);
-	        }
+	        }.bind(this));
 
 	        (this.state.zones || []).forEach(function (zone) {
 	            if (zone.isDupe) {
 	                return;
 	            }
 
-	            // If we have an error we need to check for it
 	            var err = this.state.zoneErrors[zone.id];
-
+	            var device = this.getDeviceById(zone.deviceId);
 	            var cmpZone = {
 	                key: 'zones_' + zone.id,
 	                cell: React.createElement(ZoneSensorListGridCell, {
@@ -26722,7 +26801,7 @@
 	                    showCheckbox: true,
 	                    showLevel: false,
 	                    hasError: err != null,
-	                    hasSuccess: this._deviceSaved && !this._unselected[zone.id],
+	                    hasSuccess: this._savedZones[zone.id],
 	                    chkBxChanged: this.zoneChkBxChanged,
 	                    key: "zonecell-" + zone.id,
 	                    ref: "cell_zone_" + zone.id,
@@ -26745,7 +26824,7 @@
 	            }
 
 	            var err = this.state.sensorErrors[sensor.id];
-
+	            var device = this.getDeviceById(sensor.deviceId);
 	            var cmpSensor = {
 	                key: 'sensor_' + sensor.id,
 	                cell: React.createElement(ZoneSensorListGridCell, {
@@ -26753,7 +26832,7 @@
 	                    showCheckbox: true,
 	                    chkBxChanged: this.sensorChkBxChanged,
 	                    hasError: err != null,
-	                    hasSuccess: this._deviceSaved && !this._unselected[sensor.id],
+	                    hasSuccess: this._savedSensors[sensor.id],
 	                    key: sensor.id,
 	                    ref: "cell_sensor_" + sensor.id,
 	                    sensor: sensor }),
@@ -26769,47 +26848,62 @@
 	            sensors.push(cmpSensor);
 	        }.bind(this));
 
+	        var hasNonDupes = devices.length > 0 || zones.length > 0 || sensors.length > 0;
+	        var body;
+	        if (hasNonDupes) {
+	            body = React.createElement(
+	                'div',
+	                null,
+	                React.createElement(
+	                    'div',
+	                    classes('import', '', 'pull-right clearfix'),
+	                    React.createElement(SaveBtn, {
+	                        clicked: this.importClicked,
+	                        text: 'Import', status: this.state.saveButtonStatus })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    classes('devices', devices.length === 0 ? 'hidden' : ''),
+	                    React.createElement(
+	                        'h2',
+	                        classes('header'),
+	                        'Devices'
+	                    ),
+	                    React.createElement(Grid, { ref: 'devicegrid', key: 'devicegrid', cells: devices })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    _extends({ key: 'aa' }, classes('zones', zones.length === 0 ? 'hidden' : '')),
+	                    React.createElement(
+	                        'h2',
+	                        classes('header'),
+	                        'Zones'
+	                    ),
+	                    React.createElement(Grid, { ref: 'zonegrid', key: 'zonegrid', cells: zones })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    classes('sensors', sensors.length === 0 ? 'hidden' : ''),
+	                    React.createElement(
+	                        'h2',
+	                        classes('header'),
+	                        'Sensors'
+	                    ),
+	                    React.createElement(Grid, { ref: 'sensorgrid', key: 'sensorgrid', cells: sensors })
+	                ),
+	                React.createElement('div', { style: { clear: 'both' } })
+	            );
+	        } else {
+	            body = React.createElement(
+	                'div',
+	                classes('no-new'),
+	                'No new devices/zones/sensors found. Items previously imported will not be shown again unless you delete them from the system'
+	            );
+	        }
 	        return React.createElement(
 	            'div',
 	            classes('', '', 'clearfix'),
-	            React.createElement(
-	                'div',
-	                classes('import', '', 'pull-right clearfix'),
-	                React.createElement(SaveBtn, {
-	                    clicked: this.importClicked,
-	                    text: 'Import', status: this.state.saveButtonStatus })
-	            ),
-	            React.createElement(
-	                'div',
-	                classes('devices', devices.length === 0 ? 'hidden' : ''),
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Device'
-	                ),
-	                React.createElement(Grid, { ref: 'devicegrid', key: 'devicegrid', cells: devices })
-	            ),
-	            React.createElement(
-	                'div',
-	                _extends({ key: 'aa' }, classes('zones', zones.length === 0 ? 'hidden' : '')),
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Zones'
-	                ),
-	                React.createElement(Grid, { ref: 'zonegrid', key: 'zonegrid', cells: zones })
-	            ),
-	            React.createElement(
-	                'div',
-	                classes('sensors', sensors.length === 0 ? 'hidden' : ''),
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Sensors'
-	                ),
-	                React.createElement(Grid, { ref: 'sensorgrid', key: 'sensorgrid', cells: sensors })
-	            ),
-	            React.createElement('div', { style: { clear: 'both' } })
+	            body
 	        );
 	    }
 	});
@@ -27669,7 +27763,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ImportGroup {\n  border: 1px solid #eee;\n  border-radius: 4px;\n  padding: 8px;\n}\n.b-ImportGroup__header {\n  margin-top: 0;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: left;\n}\n.b-ImportGroup__devices--hidden {\n  display: none;\n}\n.b-ImportGroup__zones--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-ImportGroup {\n  border: 1px solid #eee;\n  border-radius: 4px;\n  padding: 8px;\n}\n.b-ImportGroup__import {\n  margin-bottom: 12px;\n}\n.b-ImportGroup.b-ImportGroup__no-new {\n  font-weight: 200;\n}\n.b-ImportGroup__header {\n  margin-top: 0;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: left;\n}\n.b-ImportGroup__devices--hidden {\n  display: none;\n}\n.b-ImportGroup__zones--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
@@ -27709,7 +27803,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__text-area {\n  width: 100%;\n  height: 140px;\n  border: 1px solid #ccc;\n}\n.b-DiscoverDevices__text-area--hidden {\n  display: none;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-DiscoverDevices__device-info {\n  background-color: #eee;\n}\n.b-DiscoverDevices__import-group {\n  margin-top: 12px;\n}\n.b-DiscoverDevices__pre-import-instructions {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n}\n.b-DiscoverDevices__pre-import-instructions--hidden {\n  display: none;\n}\n.b-DiscoverDevices__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__discover {\n  margin-top: 12px;\n  position: relative;\n}\n.b-DiscoverDevices__no-devices {\n  font-weight: 200;\n  text-align: center;\n}\n.b-DiscoverDevices__no-devices--hidden {\n  display: none;\n}\n.b-DiscoverDevices__spinner {\n  position: absolute;\n  top: 6px;\n  font-size: 24px;\n  margin-left: 12px;\n}\n.b-DiscoverDevices__spinner--hidden {\n  display: none;\n}\n.b-DiscoverDevices__found-devices {\n  font-weight: 200;\n  margin-top: 12px;\n}\n.b-DiscoverDevices__found-devices.b-DiscoverDevices__found-devices--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
@@ -30222,6 +30316,16 @@
 	            this._monitorId = '';
 	        }
 
+	        // Just incase we are getting many refresh requests, due to re-rendering,
+	        // importing many devices, have a small delay before we actually fire a request
+	        clearTimeout(this._refreshTimeout);
+	        this._refreshTimeout = setTimeout(function () {
+	            this.refreshMonitoringInternal(zones, sensors);
+	        }.bind(this), 1000);
+	    },
+
+	    // do not call directly, call refreshMonitoring
+	    refreshMonitoringInternal: function refreshMonitoringInternal(zones, sensors) {
 	        var monitorGroup = {
 	            timeoutInSeconds: this._monitorTimeout,
 	            sensorIds: [],
@@ -30237,18 +30341,18 @@
 
 	        var subscribeId = ++this._lastSubscribeId;
 	        Api.monitorSubscribe(monitorGroup, function (err, data) {
+	            if (subscribeId !== this._lastSubscribeId) {
+	                // This is an old callback we subscribed to before the most recent, unsub
+	                Api.monitorUnsubscribe(data.monitorId);
+	                return;
+	            }
+
 	            if (err != null) {
 	                setTimeout(function () {
 	                    if (this._keepRefreshingConnection) {
 	                        this.refreshMonitoring(this.props.zones, this.props.sensors);
 	                    }
 	                }.bind(this), this._retryDuration);
-	                return;
-	            }
-
-	            if (subscribeId !== this._lastSubscribeId) {
-	                // This is an old callback we subscribed to before the most recent, unsub
-	                Api.monitorUnsubscribe(data.monitorId);
 	                return;
 	            }
 

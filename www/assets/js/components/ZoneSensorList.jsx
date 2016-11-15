@@ -112,6 +112,16 @@ var ZoneSensorList = React.createClass({
             this._monitorId = '';
         }
 
+        // Just incase we are getting many refresh requests, due to re-rendering,
+        // importing many devices, have a small delay before we actually fire a request
+        clearTimeout(this._refreshTimeout);
+        this._refreshTimeout = setTimeout(function() {
+            this.refreshMonitoringInternal(zones, sensors);
+        }.bind(this), 1000);
+    },
+
+    // do not call directly, call refreshMonitoring
+    refreshMonitoringInternal: function(zones, sensors) {
         var monitorGroup = {
             timeoutInSeconds: this._monitorTimeout,
             sensorIds: [],
@@ -127,6 +137,12 @@ var ZoneSensorList = React.createClass({
 
         var subscribeId = ++this._lastSubscribeId;
         Api.monitorSubscribe(monitorGroup, function(err, data) {
+            if (subscribeId !== this._lastSubscribeId) {
+                // This is an old callback we subscribed to before the most recent, unsub
+                Api.monitorUnsubscribe(data.monitorId);
+                return
+            }
+
             if (err != null) {
                 setTimeout(function() {
                     if (this._keepRefreshingConnection) {
@@ -134,12 +150,6 @@ var ZoneSensorList = React.createClass({
                     }
                 }.bind(this), this._retryDuration);
                 return;
-            }
-
-            if (subscribeId !== this._lastSubscribeId) {
-                // This is an old callback we subscribed to before the most recent, unsub
-                Api.monitorUnsubscribe(data.monitorId);
-                return
             }
 
             this._monitorId = data.monitorId;

@@ -53,7 +53,7 @@ var Import = React.createClass({
         
         return (
             <div {...classes()}>
-                <h3 {...classes('header')}>Import Hardware</h3>
+                <h2 {...classes('header')}>Add Hardware</h2>
                 <select className="form-control" onChange={this.productSelected} value={this.state.selectedProduct}>
                     <option value="">Choose a product ...</option>
                     {options}

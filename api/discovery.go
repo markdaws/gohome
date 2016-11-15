@@ -66,12 +66,46 @@ func writeDiscoveryResults(sys *gohome.System, result *gohome.DiscoveryResults, 
 
 	inputDevices := make(map[string]*gohome.Device)
 	dupeDevices := make(map[string]*gohome.Device)
+	deviceToDupe := make(map[string]*gohome.Device)
 
 	// Given the discovery results, we search the existing system to see if the discovery results
 	// are returning any duplicate device/zone/sensor entries, if so we mark them appropriately
 	// and return the existing devices to the user, with any new devices/zones/sensors appended
 
 	for _, device := range result.Devices {
+		//TODO: Error - using Hub as an equality check, but at this point the hubs are
+		//different since we are using new device IDs, need to do one pass looking for devices
+		//that don't have hubs, then fix all the hubIDs to point to dupe hubs then do another pass
+		//on devices that have hubs
+
+		if device.Hub != nil {
+			continue
+		}
+
+		if dupeDevice, isDupe := sys.IsDupeDevice(device); isDupe {
+			dupeDevices[dupeDevice.ID] = device
+			deviceToDupe[device.ID] = dupeDevice
+		} else {
+			inputDevices[device.ID] = device
+		}
+	}
+
+	for _, device := range result.Devices {
+		//TODO: Error - using Hub as an equality check, but at this point the hubs are
+		//different since we are using new device IDs, need to do one pass looking for devices
+		//that don't have hubs, then fix all the hubIDs to point to dupe hubs then do another pass
+		//on devices that have hubs
+
+		if device.Hub == nil {
+			continue
+		}
+
+		//Need to fix the hubID if it points to a dupe device
+		if dupeDevice, ok := deviceToDupe[device.Hub.ID]; ok {
+			fmt.Printf("found dupe hub on: %s\n", device.Name)
+			device.Hub = dupeDevice
+		}
+
 		if dupeDevice, isDupe := sys.IsDupeDevice(device); isDupe {
 			dupeDevices[dupeDevice.ID] = device
 		} else {

@@ -52,6 +52,7 @@ type jsonDevice struct {
 	ConnPool        *jsonConnPool `json:"connPool"`
 	Type            string        `json:"type"`
 	Auth            *jsonAuth     `json:"auth"`
+	HubID           string        `json:"hubId"`
 	IsDupe          bool          `json:"isDupe"`
 }
 type devices []jsonDevice

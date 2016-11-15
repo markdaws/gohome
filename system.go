@@ -1,6 +1,8 @@
 package gohome
 
 import (
+	"fmt"
+
 	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
 	"github.com/markdaws/gohome/log"
@@ -175,6 +177,10 @@ func (s *System) AddRecipe(r *Recipe) {
 // though they are the same device
 func (s *System) IsDupeDevice(x *Device) (*Device, bool) {
 	for _, y := range s.Devices {
+		if x.Name == y.Name {
+			fmt.Printf("%s vs %s\n", x, y)
+		}
+
 		if x.Address == y.Address {
 			// Two devices are considered equal if they share the same address, however
 			// if they have the same address but different hubs (if they have one) then
@@ -182,6 +188,8 @@ func (s *System) IsDupeDevice(x *Device) (*Device, bool) {
 
 			xHasHub := x.Hub != nil
 			yHasHub := y.Hub != nil
+
+			fmt.Println("xhashub:", xHasHub, ", yhasbug:", yHasHub)
 
 			// Even though they have the same address, they have different hubs
 			// so they are different
@@ -195,6 +203,7 @@ func (s *System) IsDupeDevice(x *Device) (*Device, bool) {
 				return y, true
 			}
 
+			fmt.Println("xhubId:", x.Hub.ID, ", yhubid:", y.Hub.ID)
 			// If we are here both devices have the same address and they both have a hub
 			// if the hubs are equal then the devices are equal
 			return y, x.Hub.ID == y.Hub.ID
