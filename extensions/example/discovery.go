@@ -78,13 +78,13 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	log.V("scanning for example hardware")
 
 	dev := gohome.NewDevice(
+		"",
+		"fake hardware name",
+		"fake hardware description",
 		"example.hardware.1",
 		"example model name",
 		"example softeare version 1.0",
 		"some.fake.IP.address",
-		"",
-		"fake hardware name",
-		"fake hardware description",
 		nil,
 		nil,
 		nil,

@@ -99,13 +99,13 @@ type Device struct {
 
 // NewDevice returns an initialized device object
 func NewDevice(
+	ID,
+	name,
+	description,
 	modelNumber,
 	modelName,
 	softwareVersion,
-	address,
-	ID,
-	name,
-	description string,
+	address string,
 	hub *Device,
 	cmdBuilder cmd.Builder,
 	connPool *pool.ConnectionPool,
@@ -172,7 +172,7 @@ func (d *Device) AddZone(z *zone.Zone) error {
 	return nil
 }
 
-// Addbuttons adds a button as a child of this device
+// AddButton adds a button as a child of this device
 func (d *Device) AddButton(b *Button) error {
 	if _, ok := d.Buttons[b.Address]; ok {
 		return fmt.Errorf("button with address: %s already added to parent device", b.Address)

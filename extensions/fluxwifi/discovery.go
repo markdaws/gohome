@@ -37,7 +37,7 @@ func (d *discovery) DiscovererFromID(ID string) gohome.Discoverer {
 	}
 }
 
-type discoverer struct{
+type discoverer struct {
 	info gohome.DiscovererInfo
 }
 
@@ -57,13 +57,13 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		modelNumber := "fluxwifi"
 
 		dev := gohome.NewDevice(
+			"",
+			name,
+			"",
 			modelNumber,
 			"",
 			"",
 			info.IP,
-			"",
-			name,
-			"",
 			nil,
 			nil,
 			pool.NewPool(pool.Config{

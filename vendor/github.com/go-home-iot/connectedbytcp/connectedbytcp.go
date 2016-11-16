@@ -2,6 +2,7 @@ package connectedbytcp
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/xml"
 	"errors"
@@ -37,88 +38,15 @@ type ScanResponse struct {
 	URN        string
 }
 
-// Discover returns the address e.g. https://192.168.0.23 of the ConnectByTCP Hub if
-// one was found on the network.
-func Scan(waitTimeSeconds int) ([]ScanResponse, error) {
-	URN := "urn:greenwavereality-com:service:gop:1"
-	var responses []ScanResponse
-	l := tcpListener{
-		URN:       URN,
-		Responses: &responses,
-	}
-
-	c, err := gossdp.NewSsdpClientWithLogger(l, l)
-	if err != nil {
-		return nil, fmt.Errorf("failed to start ssdp discovery client: %s", err)
-	}
-
-	defer c.Stop()
-	go c.Start()
-	err = c.ListenFor(URN)
-	if err != nil {
-		return nil, fmt.Errorf("discovery failed: %s", err)
-	}
-
-	time.Sleep(time.Duration(waitTimeSeconds) * time.Second)
-	return responses, nil
-}
-
-// GetToken returns the security token required to make any API calls to the
-// ConnectedByTCP hub. In order for this function to succeed, you must press
-// the physical "sync" button on the hub before calling this function. Calling
-// this function without first pressing the sync button will cause a
-// ErrUnauthorized error to be returned.  The address field should be in the
-// format "https://192.168.0.23" for example.
-func GetToken(address string) (string, error) {
-	id, err := uuid.NewV4()
-	if err != nil {
-		return "", fmt.Errorf("failed to generate token: %s", err)
-	}
-
-	data := fmt.Sprintf("<gip><version>1</version><email>%s</email><password>%s</password></gip>", id, id)
-	resp, err := postData(address, "GWRLogin", data)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
-	if err != nil {
-		return "", fmt.Errorf("error fetching token: %s", err)
-	}
-
-	// example responses
-	// OK - <gip><version>1</version><rc>200</rc><token>xyzaqlifpzoo7lao56xoy3m0pu3wsy1n4dnzobkj</token></gip>
-	// Not synced - <gip><version>1</version><rc>404</rc></gip>
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading token response: %s", err)
-	}
-
-	rBody := string(b)
-	if strings.Contains(rBody, "<rc>401</rc>") ||
-		strings.Contains(rBody, "<rc>404</rc>") {
-		return "", ErrUnauthorized
-	}
-
-	type response struct {
-		Token string `xml:"token"`
-	}
-	var r response
-	err = xml.Unmarshal([]byte(rBody), &r)
-	if err != nil {
-		return "", fmt.Errorf("error reading xml response: %s", err)
-	}
-
-	if r.Token == "" {
-		return "", fmt.Errorf("token not found, empty")
-	}
-	return r.Token, nil
-}
-
 // Device represents the device information returned by the ConnectedByTCP hub
 // in the response to the RoomGetCarousel call
 type Device struct {
-	DID        string  `xml:"did"`
-	Known      float64 `xml:"known"`
-	State      float64 `xml:"state"`
+	DID   string  `xml:"did"`
+	Known float64 `xml:"known"`
+	// 0 == off, 1 == on
+	State float64 `xml:"state"`
+	// Intensity level of the bulb
+	Level      float64 `xml:"level"`
 	Offline    float64 `xml:"offline"`
 	Node       float64 `xml:"node"`
 	Port       float64 `xml:"port"`
@@ -161,13 +89,100 @@ type GIP struct {
 	Rooms []Room `xml:"gwrcmd>gdata>gip>room"`
 }
 
+// Discover returns the address e.g. https://192.168.0.23 of the ConnectByTCP Hub if
+// one was found on the network.
+func Scan(waitTimeSeconds int) ([]ScanResponse, error) {
+	URN := "urn:greenwavereality-com:service:gop:1"
+	var responses []ScanResponse
+	l := tcpListener{
+		URN:       URN,
+		Responses: &responses,
+	}
+
+	c, err := gossdp.NewSsdpClientWithLogger(l, l)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start ssdp discovery client: %s", err)
+	}
+
+	defer c.Stop()
+	go c.Start()
+	err = c.ListenFor(URN)
+	if err != nil {
+		return nil, fmt.Errorf("discovery failed: %s", err)
+	}
+
+	time.Sleep(time.Duration(waitTimeSeconds) * time.Second)
+	return responses, nil
+}
+
+// GetToken returns the security token required to make any API calls to the
+// ConnectedByTCP hub. In order for this function to succeed, you must press
+// the physical "sync" button on the hub before calling this function. Calling
+// this function without first pressing the sync button will cause a
+// ErrUnauthorized error to be returned.  The address field should be in the
+// format "https://192.168.0.23" for example.
+//
+// The context.Context instance is passed to the network code, so you can
+// use it to set timeouts for the request.  If you want to set a timeout,
+// just call context.WithTimeout() and pass in the result.  IF you want a
+// blank context, just use context.TOOD()
+//
+// IMPORTANT: It seems that every time you get a token the previous token becomes invalid,
+// so you will need to update wherever you are using it after calling this function.  Also
+// the official app also generates tokens if you scan so things may stop working if you use
+// the official app after getting these tokens, if so then you will need to generate a new one
+func GetToken(ctx context.Context, address string) (string, error) {
+	id, err := uuid.NewV4()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate token: %s", err)
+	}
+
+	data := fmt.Sprintf("<gip><version>1</version><email>%s</email><password>%s</password></gip>", id, id)
+
+	resp, err := postData(ctx, address, "GWRLogin", data)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	if err != nil {
+		return "", fmt.Errorf("error fetching token: %s", err)
+	}
+
+	// example responses
+	// OK - <gip><version>1</version><rc>200</rc><token>xyzaqlifpzoo7lao56xoy3m0pu3wsy1n4dnzobkj</token></gip>
+	// Not synced - <gip><version>1</version><rc>404</rc></gip>
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading token response: %s", err)
+	}
+
+	rBody := string(b)
+	if strings.Contains(rBody, "<rc>401</rc>") ||
+		strings.Contains(rBody, "<rc>404</rc>") {
+		return "", ErrUnauthorized
+	}
+
+	type response struct {
+		Token string `xml:"token"`
+	}
+	var r response
+	err = xml.Unmarshal([]byte(rBody), &r)
+	if err != nil {
+		return "", fmt.Errorf("error reading xml response: %s", err)
+	}
+
+	if r.Token == "" {
+		return "", fmt.Errorf("token not found, empty")
+	}
+	return r.Token, nil
+}
+
 // RoomGetCarousel return the room and device information from the ConnectedByTCP
 // hub.  Call this to get room and bulb information, such as device IDs, names etc.
 // Address should be in the form "https://192.168.0.23" for example and the token
 // value should be the token you retried from the GetToken function call
-func RoomGetCarousel(address, token string) (*GIP, error) {
+func RoomGetCarousel(ctx context.Context, address, token string) (*GIP, error) {
 	data := fmt.Sprintf("<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>%s</token><fields>name,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>", token)
-	resp, err := postData(address, "GWRBatch", data)
+	resp, err := postData(ctx, address, "GWRBatch", data)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -193,40 +208,40 @@ func RoomGetCarousel(address, token string) (*GIP, error) {
 // VerifyConnection connects to the hub and tries to perform an API call to verify that the
 // supplied parameters are correct. If no error is returned then the call was successful and
 // the address and token are valid values
-func VerifyConnection(address, token string) error {
+func VerifyConnection(ctx context.Context, address, token string) error {
 	//See if we can get some status successfully
-	_, err := RoomGetCarousel(address, token)
+	_, err := RoomGetCarousel(ctx, address, token)
 	return err
 }
 
 // TurnOn turns the bulb on
-func TurnOn(hubAddress, zoneAddress, token string) error {
-	return SetLevel(hubAddress, zoneAddress, token, 1)
+func TurnOn(ctx context.Context, hubAddress, zoneAddress, token string) error {
+	return SetLevel(ctx, hubAddress, zoneAddress, token, 1)
 }
 
 // TurnOff turns the bulb off
-func TurnOff(hubAddress, zoneAddress, token string) error {
-	return SetLevel(hubAddress, zoneAddress, token, 0)
+func TurnOff(ctx context.Context, hubAddress, zoneAddress, token string) error {
+	return SetLevel(ctx, hubAddress, zoneAddress, token, 0)
 }
 
 // SetLevel sets the bulb to the specified level
-func SetLevel(hubAddress, zoneAddress, token string, level int32) error {
+func SetLevel(ctx context.Context, hubAddress, zoneAddress, token string, level int32) error {
 	if level == 0 {
-		return setLevel(hubAddress, zoneAddress, token, 0)
+		return setLevel(ctx, hubAddress, zoneAddress, token, 0)
 	} else if level == 1 {
-		return setLevel(hubAddress, zoneAddress, token, 1)
+		return setLevel(ctx, hubAddress, zoneAddress, token, 1)
 	} else {
 		// 0 -> off, 1 -> on, if the light was set to 0 then you have to set a 1 first
 		// before trying to set any other level
-		err := setLevel(hubAddress, zoneAddress, token, 1)
+		err := setLevel(ctx, hubAddress, zoneAddress, token, 1)
 		if err != nil {
 			return err
 		}
-		return setLevel(hubAddress, zoneAddress, token, level)
+		return setLevel(ctx, hubAddress, zoneAddress, token, level)
 	}
 }
 
-func setLevel(hubAddress, zoneAddress, token string, level int32) error {
+func setLevel(ctx context.Context, hubAddress, zoneAddress, token string, level int32) error {
 	var data string
 	if level == 0 || level == 1 {
 		data = "<gip><version>1</version><token>%s</token><did>%s</did><value>%d</value></gip>"
@@ -236,7 +251,7 @@ func setLevel(hubAddress, zoneAddress, token string, level int32) error {
 	data = fmt.Sprintf(data, token, zoneAddress, level)
 	data = fmt.Sprintf("<gwrcmds><gwrcmd><gcmd>DeviceSendCommand</gcmd><gdata>%s</gdata></gwrcmd></gwrcmds>", data)
 
-	resp, err := postData(hubAddress, "GWRBatch", data)
+	resp, err := postData(ctx, hubAddress, "GWRBatch", data)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -253,14 +268,21 @@ func setLevel(hubAddress, zoneAddress, token string, level int32) error {
 	return nil
 }
 
-func postData(address, command, data string) (*http.Response, error) {
+func postData(ctx context.Context, address, command, data string) (*http.Response, error) {
 	tr := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
 		DisableKeepAlives: true,
 	}
-	client := &http.Client{Transport: tr}
+
 	cmd := fmt.Sprintf(rootCmd, command, data)
-	return client.Post(address+"/gwr/gpo.php", "text/xml; charset=\"utf-8\"", bytes.NewReader([]byte(cmd)))
+	req, err := http.NewRequest("POST", address+"/gwr/gpo.php", bytes.NewReader([]byte(cmd)))
+	if err != nil {
+		return nil, err
+	}
+
+	req = req.WithContext(ctx)
+	client := &http.Client{Transport: tr}
+	return client.Do(req)
 }
 
 type tcpListener struct {

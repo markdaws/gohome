@@ -99,13 +99,13 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		auth *gohome.Auth) *gohome.Device {
 
 		device := gohome.NewDevice(
+			"",
+			name,
+			"",
 			modelNumber,
 			"",
 			"",
 			address,
-			"",
-			name,
-			"",
 			hub,
 			nil,
 			nil,

@@ -1,10 +1,14 @@
 package connectedbytcp
 
 import (
+	"context"
+	"time"
+
 	connectedbytcpExt "github.com/go-home-iot/connectedbytcp"
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/zone"
+	errExt "github.com/pkg/errors"
 )
 
 var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
@@ -48,19 +52,22 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 	devices := make([]*gohome.Device, len(infos))
 	for i, info := range infos {
-		token, err := connectedbytcpExt.GetToken(info.Location)
+		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+		defer cancel()
+		token, err := connectedbytcpExt.GetToken(ctx, info.Location)
 		if err != nil {
-			return nil, err
+			return nil, errExt.Wrap(err, "call to GetToken failed, make sure you pressed the 'Scan' button on the physical hub")
 		}
 
 		dev := gohome.NewDevice(
+			"",
+			"ConnectedByTcp - ID: "+info.DeviceID,
+			"",
 			"tcp600gwb",
 			"tcp600gwb",
 			"",
 			info.Location,
-			"",
-			"ConnectedByTcp - ID: "+info.DeviceID,
-			"",
 			nil,
 			nil,
 			pool.NewPool(pool.Config{
@@ -74,7 +81,10 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		dev.ID = sys.NextGlobalID()
 
 		// Get all of the rooms and all the zones in each room
-		resp, err := connectedbytcpExt.RoomGetCarousel(info.Location, token)
+		ctx = context.TODO()
+		ctx, cancel = context.WithTimeout(ctx, time.Second*10)
+		defer cancel()
+		resp, err := connectedbytcpExt.RoomGetCarousel(ctx, info.Location, token)
 		if err != nil {
 			return nil, err
 		}

@@ -25,7 +25,7 @@ var ImportGroup = React.createClass({
         // We render all devices/zones/sensors together
         var zones = [];
         var sensors = [];
-        this.props.devices.forEach(function(device) {
+        (this.props.devices || []).forEach(function(device) {
             device.zones.forEach(function(zone) {
                 zones.push(zone);
             });
@@ -306,7 +306,7 @@ var ImportGroup = React.createClass({
             var device = this.getDeviceById(zone.deviceId);
             var cmpZone = {
                 key: 'zones_' + zone.id,
-                cell: <ZoneSensorListGridCell
+                cell: <ZoneSensorCell
                           id={zone.id}
                           showCheckbox={true}
                           showLevel={false}
@@ -388,8 +388,8 @@ var ImportGroup = React.createClass({
         } else {
             body = (
                 <div {...classes('no-new')}>
-                    No new devices/zones/sensors found. Items previously imported will not be shown again
-                    unless you delete them from the system
+                    No new devices/zones/sensors were found. Items previously imported will not be shown again
+                    unless you delete them from the system.
                 </div>
             );
         }

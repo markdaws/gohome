@@ -137,13 +137,13 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 		log.V("loaded Device: ID:%s, Name:%s, Model:%s, Address:%s", d.ID, d.Name, d.ModelNumber, d.Address)
 
 		dev := gohome.NewDevice(
+			d.ID,
+			d.Name,
+			d.Description,
 			d.ModelNumber,
 			d.ModelName,
 			d.SoftwareVersion,
 			d.Address,
-			d.ID,
-			d.Name,
-			d.Description,
 			nil,
 			nil,
 			nil,

@@ -49,13 +49,13 @@ func (imp *importer) FromString(system *gohome.System, data string) error {
 		auth *gohome.Auth) *gohome.Device {
 
 		device := gohome.NewDevice(
+			"",
+			name,
+			"",
 			modelNumber,
 			"",
 			"",
 			address,
-			"",
-			name,
-			"",
 			hub,
 			nil,
 			nil,

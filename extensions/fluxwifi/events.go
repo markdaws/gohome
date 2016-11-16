@@ -31,11 +31,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 				continue
 			}
 
-			for _, zone := range c.Device.Zones {
-				if _, ok := evt.ZoneIDs[zone.ID]; !ok {
-					continue
-				}
-
+			for _, zone := range c.Device.OwnedZones(evt.ZoneIDs) {
 				log.V("%s - %s", c.ConsumerName(), evt)
 
 				conn, err := c.Device.Connections.Get(time.Second*5, true)

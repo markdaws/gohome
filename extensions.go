@@ -64,7 +64,6 @@ type DiscovererInfo struct {
 	// scanning for devices. An example might be some text saying:
 	// "Press the sync button on the hub before scanning" - it can be
 	// instructions the user should perform before scanning.
-	//TODO: Rename this, applies to scanning and importing
 	PreScanInfo string
 }
 
@@ -158,7 +157,7 @@ func (e *Extensions) FindEvents(sys *System, d *Device) *ExtEvents {
 	return nil
 }
 
-//TODO:
+// FindDiscovererFromID returns a Discoverer instance matching the specified ID
 func (e *Extensions) FindDiscovererFromID(sys *System, ID string) Discoverer {
 	for _, ext := range e.extensions {
 		discovery := ext.Discovery(sys)
@@ -174,7 +173,8 @@ func (e *Extensions) FindDiscovererFromID(sys *System, ID string) Discoverer {
 	return nil
 }
 
-//TODO:
+// ListDiscoverers returns a slice containing all of the Discoverers registered with
+// all of the extensions in the system
 func (e *Extensions) ListDiscoverers(sys *System) []DiscovererInfo {
 	allInfos := []DiscovererInfo{}
 

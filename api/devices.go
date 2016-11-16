@@ -162,13 +162,13 @@ func apiAddDeviceHandler(
 		}
 
 		d := gohome.NewDevice(
+			data.ID,
+			data.Name,
+			data.Description,
 			data.ModelNumber,
 			data.ModelName,
 			data.SoftwareVersion,
 			data.Address,
-			data.ID,
-			data.Name,
-			data.Description,
 			hub,
 			nil,
 			nil,
@@ -347,13 +347,13 @@ func apiDeviceHandlerUpdate(
 		}
 
 		updatedDev := gohome.NewDevice(
+			data.ID,
+			data.Name,
+			data.Description,
 			data.ModelNumber,
 			"",
 			"",
 			data.Address,
-			data.ID,
-			data.Name,
-			data.Description,
 			nil,
 			nil,
 			nil,

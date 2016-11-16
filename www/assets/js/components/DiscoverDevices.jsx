@@ -97,7 +97,7 @@ var DiscoverDevices = React.createClass({
         }
 
         var importGroup;
-        if (this.state.discovered) {
+        if (this.state.discovered && !this.state.errors) {
             importGroup = <ImportGroup
                     devices={this.state.devices}
                     createdDevice={this.props.importedDevice}
@@ -119,9 +119,6 @@ var DiscoverDevices = React.createClass({
                     <i {...classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin')}></i>
                 </div>
                 {errors}
-                <h3 {...classes('no-devices', this.state.discovered && deviceCount === 0 ? '' : 'hidden')}>
-                    {deviceCount} device{deviceCount > 1 || deviceCount == 0 ? 's' : ''} found
-                </h3>
                 <div {...classes('import-group')}>
                     {importGroup}
                 </div>

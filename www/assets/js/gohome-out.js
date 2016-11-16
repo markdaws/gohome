@@ -23662,7 +23662,7 @@
 	        }
 
 	        var importGroup;
-	        if (this.state.discovered) {
+	        if (this.state.discovered && !this.state.errors) {
 	            importGroup = React.createElement(ImportGroup, {
 	                devices: this.state.devices,
 	                createdDevice: this.props.importedDevice,
@@ -23695,14 +23695,6 @@
 	                React.createElement('i', classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin'))
 	            ),
 	            errors,
-	            React.createElement(
-	                'h3',
-	                classes('no-devices', this.state.discovered && deviceCount === 0 ? '' : 'hidden'),
-	                deviceCount,
-	                ' device',
-	                deviceCount > 1 || deviceCount == 0 ? 's' : '',
-	                ' found'
-	            ),
 	            React.createElement(
 	                'div',
 	                classes('import-group'),
@@ -26516,7 +26508,7 @@
 	        // We render all devices/zones/sensors together
 	        var zones = [];
 	        var sensors = [];
-	        this.props.devices.forEach(function (device) {
+	        (this.props.devices || []).forEach(function (device) {
 	            device.zones.forEach(function (zone) {
 	                zones.push(zone);
 	            });
@@ -26796,7 +26788,7 @@
 	            var device = this.getDeviceById(zone.deviceId);
 	            var cmpZone = {
 	                key: 'zones_' + zone.id,
-	                cell: React.createElement(ZoneSensorListGridCell, {
+	                cell: React.createElement(ZoneSensorCell, {
 	                    id: zone.id,
 	                    showCheckbox: true,
 	                    showLevel: false,
@@ -26897,7 +26889,7 @@
 	            body = React.createElement(
 	                'div',
 	                classes('no-new'),
-	                'No new devices/zones/sensors found. Items previously imported will not be shown again unless you delete them from the system'
+	                'No new devices/zones/sensors were found. Items previously imported will not be shown again unless you delete them from the system.'
 	            );
 	        }
 	        return React.createElement(

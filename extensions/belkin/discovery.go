@@ -69,13 +69,13 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 
 		dev := gohome.NewDevice(
+			sys.NextGlobalID(),
+			devInfo.FriendlyName,
+			devInfo.ModelDescription,
 			devInfo.ModelNumber,
 			devInfo.ModelName,
 			devInfo.FirmwareVersion,
 			strings.Replace(devInfo.Scan.Location, "/setup.xml", "", -1),
-			sys.NextGlobalID(),
-			devInfo.FriendlyName,
-			devInfo.ModelDescription,
 			nil,
 			nil,
 			nil,

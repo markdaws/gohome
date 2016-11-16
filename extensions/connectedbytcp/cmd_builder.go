@@ -1,7 +1,9 @@
 package connectedbytcp
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	connectedbytcpExt "github.com/go-home-iot/connectedbytcp"
 	"github.com/markdaws/gohome"
@@ -19,7 +21,10 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcpExt.TurnOn(d.Address, z.Address, d.Auth.Token)
+				ctx := context.TODO()
+				ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+				defer cancel()
+				return connectedbytcpExt.TurnOn(ctx, d.Address, z.Address, d.Auth.Token)
 			},
 			Friendly: "connectedbytcp.cmdBuilder.ZoneTurnOn",
 		}, nil
@@ -29,7 +34,10 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcpExt.TurnOff(d.Address, z.Address, d.Auth.Token)
+				ctx := context.TODO()
+				ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+				defer cancel()
+				return connectedbytcpExt.TurnOff(ctx, d.Address, z.Address, d.Auth.Token)
 			},
 			Friendly: "connectedbytcp.cmdBuilder.ZoneTurnOff",
 		}, nil
@@ -39,7 +47,10 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		d := b.System.Devices[z.DeviceID]
 		return &cmd.Func{
 			Func: func() error {
-				return connectedbytcpExt.SetLevel(d.Address, z.Address, d.Auth.Token, int32(command.Level.Value))
+				ctx := context.TODO()
+				ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+				defer cancel()
+				return connectedbytcpExt.SetLevel(ctx, d.Address, z.Address, d.Auth.Token, int32(command.Level.Value))
 			},
 			Friendly: "connectedbytcp.cmdBuilder.ZoneSetLevel",
 		}, nil

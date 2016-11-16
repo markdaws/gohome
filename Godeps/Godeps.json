@@ -17,7 +17,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/connectedbytcp",
-			"Rev": "bc543a2553e68c63cf78f42032faf09653dcb0c5"
+			"Rev": "a787de893059238873bc0d788b52cbbbaf73ea6e"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/connection-pool",
@@ -69,6 +69,11 @@
 		{
 			"ImportPath": "github.com/nu7hatch/gouuid",
 			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
+		},
+		{
+			"ImportPath": "github.com/pkg/errors",
+			"Comment": "v0.8.0-2-g248dadf",
+			"Rev": "248dadf4e9068a0b3e79f02ed0a610d935de5302"
 		},
 		{
 			"ImportPath": "github.com/pmezard/go-difflib/difflib",

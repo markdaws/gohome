@@ -7,6 +7,8 @@ import (
 	"github.com/markdaws/gohome/validation"
 )
 
+// Scene represents a target state for the system. A scene is just a list of commands
+// that should be executed when the scene is chosen
 type Scene struct {
 	Address     string
 	ID          string
@@ -21,6 +23,7 @@ type Scene struct {
 	Commands []cmd.Command
 }
 
+// DeleteCommand deletes a command from the scene
 func (s *Scene) DeleteCommand(i int) error {
 	if i < 0 || i >= len(s.Commands) {
 		return fmt.Errorf("invalid command index")
@@ -30,14 +33,17 @@ func (s *Scene) DeleteCommand(i int) error {
 	return nil
 }
 
+// AddCommand adds a new command to the scene
 func (s *Scene) AddCommand(c cmd.Command) error {
 	s.Commands = append(s.Commands, c)
 	return nil
 }
 
+// Validate verfies the scene is in a good state
 func (s *Scene) Validate() *validation.Errors {
 	//TODO: Verify that there isn't an infinite loop where scene A -> B -> C -> A otherwise
 	//app will crash
+
 	errors := &validation.Errors{}
 
 	if s.Name == "" {
