@@ -2,12 +2,12 @@ var React = require('react');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
-    name: 'SystemDeviceListGridCell',
+    name: 'DeviceCell',
     prefix: 'b-'
 });
-require('../../css/components/SystemDeviceListGridCell.less')
+require('../../css/components/DeviceCell.less')
 
-var SystemDeviceListGridCell = React.createClass({
+var DeviceCell = React.createClass({
     getInitialState: function() {
         return {
             checkboxChecked: this.props.checkboxChecked,
@@ -69,4 +69,4 @@ var SystemDeviceListGridCell = React.createClass({
         );
     }
 });
-module.exports = SystemDeviceListGridCell;
+module.exports = DeviceCell;

@@ -9,7 +9,7 @@ var Grid = require('./Grid.jsx');
 var SensorMonitor = require('./SensorMonitor.jsx');
 var ZoneInfo = require('./ZoneInfo.jsx');
 var SensorInfo = require('./SensorInfo.jsx');
-var ZoneSensorListGridCell = require('./ZoneSensorListGridCell.jsx');
+var ZoneSensorCell = require('./ZoneSensorCell.jsx');
 var Api = require('../utils/API.js');
 var BEMHelper = require('react-bem-helper');
 
@@ -293,7 +293,7 @@ var ZoneSensorList = React.createClass({
             this.props.zones.forEach(function(zone) {
                 var cmpZone = {
                     key: 'zones_' + zone.id,
-                    cell: <ZoneSensorListGridCell
+                    cell: <ZoneSensorCell
                               key={zone.id}
                               ref={"cell_zone_" + zone.id}
                               zone={zone} />,
@@ -326,7 +326,7 @@ var ZoneSensorList = React.createClass({
             this.props.sensors.forEach(function(sensor) {
                 var cmpSensor = {
                     key: 'sensor_' + sensor.id,
-                    cell: <ZoneSensorListGridCell
+                    cell: <ZoneSensorCell
                               key={sensor.id}
                               ref={"cell_sensor_" + sensor.id}
                               sensor={sensor} />,

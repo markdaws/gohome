@@ -1,8 +1,8 @@
 var React = require('react');
 var Api = require('../utils/API.js');
 var BEMHelper = require('react-bem-helper');
-var SystemDeviceListGridCell = require('./SystemDeviceListGridCell.jsx');
-var ZoneSensorListGridCell = require('./ZoneSensorListGridCell.jsx');
+var DeviceCell = require('./DeviceCell.jsx');
+var ZoneSensorCell = require('./ZoneSensorCell.jsx');
 var DeviceInfo = require('./DeviceInfo.jsx');
 var Grid = require('./Grid.jsx');
 var ZoneInfo = require('./ZoneInfo.jsx');
@@ -278,7 +278,7 @@ var ImportGroup = React.createClass({
             var err = this.state.deviceErrors[device.id];
             var cell = {
                 key: device.id,
-                cell: <SystemDeviceListGridCell
+                cell: <DeviceCell
                           key={"devicecell-" + device.id}
                           id={device.id}
                           showCheckbox={false}
@@ -338,7 +338,7 @@ var ImportGroup = React.createClass({
             var device = this.getDeviceById(sensor.deviceId);
             var cmpSensor = {
                 key: 'sensor_' + sensor.id,
-                cell: <ZoneSensorListGridCell
+                cell: <ZoneSensorCell
                           id={sensor.id}
                           showCheckbox={true}
                           chkBxChanged={this.sensorChkBxChanged}

@@ -23391,7 +23391,7 @@
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var Import = __webpack_require__(202);
-	var SystemDeviceList = __webpack_require__(249);
+	var DeviceList = __webpack_require__(321);
 	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
@@ -23434,7 +23434,7 @@
 	                    'You don\'t have any hardware. Click on the "Import" button to get started.'
 	                );
 	            } else {
-	                body = React.createElement(SystemDeviceList, { devices: this.props.devices });
+	                body = React.createElement(DeviceList, { devices: this.props.devices });
 	            }
 
 	            header = React.createElement(
@@ -26490,8 +26490,8 @@
 	var React = __webpack_require__(1);
 	var Api = __webpack_require__(208);
 	var BEMHelper = __webpack_require__(215);
-	var SystemDeviceListGridCell = __webpack_require__(231);
-	var ZoneSensorListGridCell = __webpack_require__(234);
+	var DeviceCell = __webpack_require__(324);
+	var ZoneSensorCell = __webpack_require__(318);
 	var DeviceInfo = __webpack_require__(204);
 	var Grid = __webpack_require__(250);
 	var ZoneInfo = __webpack_require__(211);
@@ -26769,7 +26769,7 @@
 	            var err = this.state.deviceErrors[device.id];
 	            var cell = {
 	                key: device.id,
-	                cell: React.createElement(SystemDeviceListGridCell, {
+	                cell: React.createElement(DeviceCell, {
 	                    key: "devicecell-" + device.id,
 	                    id: device.id,
 	                    showCheckbox: false,
@@ -26827,7 +26827,7 @@
 	            var device = this.getDeviceById(sensor.deviceId);
 	            var cmpSensor = {
 	                key: 'sensor_' + sensor.id,
-	                cell: React.createElement(ZoneSensorListGridCell, {
+	                cell: React.createElement(ZoneSensorCell, {
 	                    id: sensor.id,
 	                    showCheckbox: true,
 	                    chkBxChanged: this.sensorChkBxChanged,
@@ -26910,417 +26910,12 @@
 	module.exports = ImportGroup;
 
 /***/ },
-/* 231 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(215);
-
-	var classes = new BEMHelper({
-	    name: 'SystemDeviceListGridCell',
-	    prefix: 'b-'
-	});
-	__webpack_require__(232);
-
-	var SystemDeviceListGridCell = React.createClass({
-	    displayName: 'SystemDeviceListGridCell',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            checkboxChecked: this.props.checkboxChecked
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            showCheckbox: false,
-	            checkboxChecked: true,
-	            hasError: false,
-	            hasSuccess: false
-	        };
-	    },
-
-	    isChecked: function isChecked() {
-	        return this.state.checkboxChecked;
-	    },
-
-	    checkboxClicked: function checkboxClicked(evt) {
-	        evt.stopPropagation();
-	    },
-
-	    checkboxChanged: function checkboxChanged(evt) {
-	        this.setState({ checkboxChecked: evt.target.checked });
-	        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
-	    },
-
-	    render: function render() {
-	        var chkBx;
-	        if (this.props.showCheckbox) {
-	            chkBx = React.createElement('input', _extends({}, classes('checkbox'), {
-	                type: 'checkbox',
-	                onChange: this.checkboxChanged,
-	                onClick: this.checkboxClicked,
-	                checked: this.state.checkboxChecked
-	            }));
-	        }
-
-	        var state = '';
-	        if (this.props.hasError) {
-	            state = 'error';
-	        } else if (this.props.hasSuccess) {
-	            state = 'success';
-	        }
-	        return React.createElement(
-	            'div',
-	            classes('', state),
-	            chkBx,
-	            React.createElement(
-	                'div',
-	                classes('icon'),
-	                React.createElement('i', { className: 'icon ion-cube' })
-	            ),
-	            React.createElement(
-	                'div',
-	                classes('name'),
-	                this.props.device.name
-	            )
-	        );
-	    }
-	});
-	module.exports = SystemDeviceListGridCell;
-
-/***/ },
-/* 232 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(233);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceListGridCell.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceListGridCell.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 233 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(218)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SystemDeviceListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-SystemDeviceListGridCell--error {\n  background-color: #ffdddd;\n}\n.b-SystemDeviceListGridCell--success {\n  background-color: #ddffdd;\n}\n.b-SystemDeviceListGridCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-SystemDeviceListGridCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-SystemDeviceListGridCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 234 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
-	var Classnames = __webpack_require__(226);
-	var BEMHelper = __webpack_require__(215);
-
-	//TODO: Rename this class, used outside the list
-
-	var classes = new BEMHelper({
-	    name: 'ZoneSensorListGridCell',
-	    prefix: 'b-'
-	});
-	__webpack_require__(235);
-
-	var ZoneSensorListGridCell = React.createClass({
-	    displayName: 'ZoneSensorListGridCell',
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            hasError: false,
-	            hasSuccess: false,
-	            showCheckbox: false,
-	            showLevel: true,
-	            checkboxChecked: true
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            level: this.props.level || { value: 0, r: 0, g: 0, b: 0 },
-	            attr: null,
-	            checkboxChecked: this.props.checkboxChecked
-	        };
-	    },
-
-	    isChecked: function isChecked() {
-	        return this.state.checkboxChecked;
-	    },
-
-	    setLevel: function setLevel(level) {
-	        this.setState({ level: level });
-
-	        /*
-	        var $this = $(ReactDOM.findDOMNode(this));
-	        //TODO: Clip rect is not updating on ios safari, so just change the
-	        //opacity of the bulb for now
-	        //var y = parseInt(30 + (55 * ((100-val)/100)));
-	        //$this.find('.clipRect').attr('y', y);
-	        */
-	        //$this.find('.light').css('opacity', val/100);
-	    },
-
-	    setAttr: function setAttr(attr) {
-	        this.setState({ attr: attr });
-	    },
-
-	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
-	        //TODO: Fix
-	        return true;
-	        if (nextProps.zone && this.props.zone && this.props.zone.name !== nextProps.zone.name) {
-	            return true;
-	        }
-	        if (nextProps.sensor && this.props.sensor && this.props.sensor.name !== nextProps.sensor.name) {
-	            return true;
-	        }
-	        if (nextState.level && this.state.level && nextState.level.value !== this.state.level.value) {
-	            //TODO: RGB
-	            return true;
-	        }
-	        if (nextState.attr && this.state.attr && nextState.attr.value !== this.state.attr.value) {
-	            //TODO: RGB
-	            return true;
-	        }
-
-	        return false;
-	    },
-
-	    checkboxClicked: function checkboxClicked(evt) {
-	        evt.stopPropagation();
-	    },
-
-	    checkboxChanged: function checkboxChanged(evt) {
-	        this.setState({ checkboxChecked: evt.target.checked });
-	        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
-	    },
-
-	    render: function render() {
-	        var icon1, icon2, name;
-	        var type;
-	        var val = '';
-	        var opacity = 0;
-	        var color = 'yellow';
-
-	        if (this.props.zone) {
-	            switch (this.props.zone.type) {
-	                case 'light':
-	                    type = 'light';
-	                    icon1 = 'icon ion-ios-lightbulb-outline';
-	                    break;
-	                case 'shade':
-	                    type = 'shade';
-	                    icon1 = 'icon ion-ios-arrow-thin-up';
-	                    icon2 = 'icon ion-ios-arrow-thin-down';
-	                    break;
-	                case 'switch':
-	                    type = 'switch';
-	                    icon1 = 'icon ion-ios-bolt-outline';
-	                    break;
-	                default:
-	                    icon1 = 'icon ion-ios-help-empty';
-	                    break;
-	            }
-	            name = this.props.zone.name;
-
-	            if (this.state.level) {
-	                if (this.props.zone.output === 'binary') {
-	                    opacity = this.state.level.value === 0 ? 0 : 1;
-	                    val = this.state.level.value === 0 ? 'off' : 'on';
-	                } else if (this.props.zone.output === 'rgb') {
-	                    opacity = 1;
-
-	                    var lev = this.state.level;
-	                    val = this.state.level.value === 0 ? 'off' : 'on';
-	                    color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
-	                } else {
-	                    opacity = this.state.level.value / 100;
-	                    val = parseInt(this.state.level.value, 10) + '%';
-	                }
-
-	                if (this.props.zone && this.props.zone.type === 'switch') {
-	                    if (this.state.level.value === 0) {
-	                        val = 'off';
-	                    } else {
-	                        val = 'on';
-	                    }
-	                }
-	            }
-	        } else {
-	            icon1 = 'icon ion-ios-pulse';
-	            type = 'sensor';
-	            name = this.props.sensor.name;
-
-	            if (this.state.attr) {
-	                val = this.state.attr.value;
-
-	                // If there is a states map, which gives value -> ui string then
-	                // use that string instead of the raw value
-	                var uiVal = this.state.attr.states && this.state.attr.states[val];
-	                if (uiVal) {
-	                    val = uiVal;
-	                }
-	            }
-	        }
-
-	        var icon1Cmp, icon2Cmp;
-	        icon1Cmp = React.createElement('i', { className: icon1 });
-	        if (icon2) {
-	            icon2Cmp = React.createElement('i', { className: icon2 });
-	        }
-
-	        if (!this.props.showLevel) {
-	            val = null;
-	        }
-
-	        var chkBx;
-	        if (this.props.showCheckbox) {
-	            chkBx = React.createElement('input', _extends({}, classes('checkbox'), {
-	                type: 'checkbox',
-	                onChange: this.checkboxChanged,
-	                onClick: this.checkboxClicked,
-	                checked: this.state.checkboxChecked
-	            }));
-	        }
-
-	        var state = '';
-	        if (this.props.hasError) {
-	            state = 'error';
-	        } else if (this.props.hasSuccess) {
-	            state = 'success';
-	        }
-	        return React.createElement(
-	            'div',
-	            classes('', state),
-	            chkBx,
-	            React.createElement(
-	                'div',
-	                classes('icon'),
-	                icon1Cmp,
-	                icon2Cmp
-	            ),
-	            React.createElement(
-	                'svg',
-	                _extends({}, classes('switch-color', type), {
-	                    viewBox: '0 0 200 200',
-	                    xmlns: 'http://www.w3.org/2000/svg',
-	                    xlinkHref: 'http://www.w3.org/1999/xlink' }),
-	                React.createElement('path', {
-	                    d: 'M105 45 L82 75 L100 75 L95 100 L120 67 L100 65',
-	                    stroke: 'yellow',
-	                    style: { 'opacity': opacity },
-	                    fill: 'yellow' })
-	            ),
-	            React.createElement(
-	                'svg',
-	                _extends({}, classes('light-color', type), {
-	                    viewBox: '0 0 200 200',
-	                    xmlns: 'http://www.w3.org/2000/svg',
-	                    xlinkHref: 'http://www.w3.org/1999/xlink' }),
-	                React.createElement(
-	                    'g',
-	                    null,
-	                    React.createElement(
-	                        'clipPath',
-	                        { id: 'lightClip' },
-	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '29', width: '200', height: '65' })
-	                    )
-	                ),
-	                React.createElement('circle', {
-	                    cx: '100',
-	                    cy: '53',
-	                    r: '25',
-	                    fill: color,
-	                    clipPath: 'url(#lightClip)',
-	                    style: { 'opacity': opacity, 'clipPath': 'url(#lightClip)' } })
-	            ),
-	            React.createElement(
-	                'div',
-	                classes('level'),
-	                val
-	            ),
-	            React.createElement(
-	                'div',
-	                classes('name'),
-	                name
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneSensorListGridCell;
-
-/***/ },
-/* 235 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(236);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorListGridCell.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorListGridCell.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 236 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(218)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-ZoneSensorListGridCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-ZoneSensorListGridCell--error {\n  background-color: #ffdddd;\n}\n.b-ZoneSensorListGridCell--success {\n  background-color: #ddffdd;\n}\n.b-ZoneSensorListGridCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-ZoneSensorListGridCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-ZoneSensorListGridCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorListGridCell__switch-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__switch-color--switch {\n  display: block;\n}\n.b-ZoneSensorListGridCell__light-color {\n  display: none;\n}\n.b-ZoneSensorListGridCell__light-color--light {\n  display: block;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
+/* 231 */,
+/* 232 */,
+/* 233 */,
+/* 234 */,
+/* 235 */,
+/* 236 */,
 /* 237 */,
 /* 238 */
 /***/ function(module, exports, __webpack_require__) {
@@ -27849,194 +27444,7 @@
 
 
 /***/ },
-/* 249 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(173);
-	var DeviceInfo = __webpack_require__(204);
-	var SystemActions = __webpack_require__(229);
-	var Grid = __webpack_require__(250);
-	var SystemDeviceListGridCell = __webpack_require__(231);
-	var BEMHelper = __webpack_require__(215);
-
-	var classes = new BEMHelper({
-	    name: 'SystemDeviceList',
-	    prefix: 'b-'
-	});
-	__webpack_require__(251);
-
-	var SystemDeviceList = React.createClass({
-	    displayName: 'SystemDeviceList',
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            devices: []
-	        };
-	    },
-
-	    render: function render() {
-	        var switches = [],
-	            shades = [],
-	            dimmers = [],
-	            hubs = [],
-	            remotes = [],
-	            unknown = [];
-	        this.props.devices.forEach(function (device) {
-	            var _React$createElement;
-
-	            var cell = {
-	                key: device.id,
-	                cell: React.createElement(SystemDeviceListGridCell, {
-	                    key: device.id,
-	                    device: device }),
-	                content: React.createElement(DeviceInfo, (_React$createElement = {
-	                    name: device.name,
-	                    key: device.id,
-	                    showSaveBtn: true,
-	                    description: device.description,
-	                    address: device.address,
-	                    modelNumber: device.modelNumber,
-	                    modelName: device.modelName,
-	                    softwareVersion: device.softwareVersion,
-	                    id: device.id,
-	                    readOnlyFields: 'id'
-	                }, _defineProperty(_React$createElement, 'key', device.id), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'createdDevice', this.props.createdDevice), _defineProperty(_React$createElement, 'updatedDevice', this.props.updatedDevice), _React$createElement))
-	            };
-
-	            switch (device.type) {
-	                case 'dimmer':
-	                    dimmers.push(cell);
-	                    break;
-	                case 'switch':
-	                    switches.push(cell);
-	                    break;
-	                case 'shade':
-	                    shades.push(cell);
-	                    break;
-	                case 'hub':
-	                    hubs.push(cell);
-	                    break;
-	                case 'remote':
-	                    remotes.push(cell);
-	                    break;
-	                default:
-	                    unknown.push(cell);
-	                    break;
-	            }
-	        }.bind(this));
-
-	        var dimmerSection;
-	        if (dimmers.length > 0) {
-	            dimmerSection = React.createElement(
-	                'div',
-	                { key: 'dimmerSection' },
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Dimmers'
-	                ),
-	                React.createElement(Grid, { cells: dimmers })
-	            );
-	        }
-	        var switchSection;
-	        if (switches.length > 0) {
-	            switchSection = React.createElement(
-	                'div',
-	                { key: 'switchSection' },
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Switches'
-	                ),
-	                React.createElement(Grid, { cells: switches })
-	            );
-	        }
-	        var shadeSection;
-	        if (shades.length > 0) {
-	            shadeSection = React.createElement(
-	                'div',
-	                { key: 'shadeSection' },
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Shades'
-	                ),
-	                React.createElement(Grid, { cells: shades })
-	            );
-	        }
-	        var hubSection;
-	        if (hubs.length > 0) {
-	            hubSection = React.createElement(
-	                'div',
-	                { className: hubs.length > 0 ? "" : " hidden" },
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Hubs'
-	                ),
-	                React.createElement(Grid, { cells: hubs })
-	            );
-	        }
-	        var remoteSection;
-	        if (remotes.length > 0) {
-	            remoteSection = React.createElement(
-	                'div',
-	                { key: 'remoteSection' },
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Remotes'
-	                ),
-	                React.createElement(Grid, { cells: remotes })
-	            );
-	        }
-	        var deviceSection;
-	        if (unknown.length > 0) {
-	            deviceSection = React.createElement(
-	                'div',
-	                { key: 'deviceSection' },
-	                React.createElement(
-	                    'h2',
-	                    classes('header'),
-	                    'Devices'
-	                ),
-	                React.createElement(Grid, { cells: unknown })
-	            );
-	        }
-	        return React.createElement(
-	            'div',
-	            classes(),
-	            dimmerSection,
-	            switchSection,
-	            shadeSection,
-	            hubSection,
-	            remoteSection,
-	            deviceSection
-	        );
-	    }
-	});
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        deviceDelete: function deviceDelete(id) {
-	            dispatch(SystemActions.deviceDelete(id));
-	        },
-	        createdDevice: function createdDevice(id, data) {
-	            dispatch(SystemActions.createdDevice(id, data));
-	        },
-	        updatedDevice: function updatedDevice(data) {
-	            dispatch(SystemActions.updatedDevice(data));
-	        }
-	    };
-	}
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(SystemDeviceList);
-
-/***/ },
+/* 249 */,
 /* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -28313,46 +27721,8 @@
 	module.exports = Grid;
 
 /***/ },
-/* 251 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(252);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceList.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SystemDeviceList.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 252 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(218)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SystemDeviceList__header {\n  margin-top: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
+/* 251 */,
+/* 252 */,
 /* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -30211,7 +29581,7 @@
 	var SensorMonitor = __webpack_require__(284);
 	var ZoneInfo = __webpack_require__(211);
 	var SensorInfo = __webpack_require__(220);
-	var ZoneSensorListGridCell = __webpack_require__(234);
+	var ZoneSensorCell = __webpack_require__(318);
 	var Api = __webpack_require__(208);
 	var BEMHelper = __webpack_require__(215);
 
@@ -30502,7 +29872,7 @@
 	            this.props.zones.forEach(function (zone) {
 	                var cmpZone = {
 	                    key: 'zones_' + zone.id,
-	                    cell: React.createElement(ZoneSensorListGridCell, {
+	                    cell: React.createElement(ZoneSensorCell, {
 	                        key: zone.id,
 	                        ref: "cell_zone_" + zone.id,
 	                        zone: zone }),
@@ -30535,7 +29905,7 @@
 	            this.props.sensors.forEach(function (sensor) {
 	                var cmpSensor = {
 	                    key: 'sensor_' + sensor.id,
-	                    cell: React.createElement(ZoneSensorListGridCell, {
+	                    cell: React.createElement(ZoneSensorCell, {
 	                        key: sensor.id,
 	                        ref: "cell_sensor_" + sensor.id,
 	                        sensor: sensor }),
@@ -33007,6 +32377,645 @@
 
 	    return newState;
 	};
+
+/***/ },
+/* 318 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Classnames = __webpack_require__(226);
+	var BEMHelper = __webpack_require__(215);
+
+	//TODO: Rename this class, used outside the list
+
+	var classes = new BEMHelper({
+	    name: 'ZoneSensorCell',
+	    prefix: 'b-'
+	});
+	__webpack_require__(319);
+
+	var ZoneSensorCell = React.createClass({
+	    displayName: 'ZoneSensorCell',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            hasError: false,
+	            hasSuccess: false,
+	            showCheckbox: false,
+	            showLevel: true,
+	            checkboxChecked: true
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            level: this.props.level || { value: 0, r: 0, g: 0, b: 0 },
+	            attr: null,
+	            checkboxChecked: this.props.checkboxChecked
+	        };
+	    },
+
+	    isChecked: function isChecked() {
+	        return this.state.checkboxChecked;
+	    },
+
+	    setLevel: function setLevel(level) {
+	        this.setState({ level: level });
+
+	        /*
+	        var $this = $(ReactDOM.findDOMNode(this));
+	        //TODO: Clip rect is not updating on ios safari, so just change the
+	        //opacity of the bulb for now
+	        //var y = parseInt(30 + (55 * ((100-val)/100)));
+	        //$this.find('.clipRect').attr('y', y);
+	        */
+	        //$this.find('.light').css('opacity', val/100);
+	    },
+
+	    setAttr: function setAttr(attr) {
+	        this.setState({ attr: attr });
+	    },
+
+	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        //TODO: Fix
+	        return true;
+	        if (nextProps.zone && this.props.zone && this.props.zone.name !== nextProps.zone.name) {
+	            return true;
+	        }
+	        if (nextProps.sensor && this.props.sensor && this.props.sensor.name !== nextProps.sensor.name) {
+	            return true;
+	        }
+	        if (nextState.level && this.state.level && nextState.level.value !== this.state.level.value) {
+	            //TODO: RGB
+	            return true;
+	        }
+	        if (nextState.attr && this.state.attr && nextState.attr.value !== this.state.attr.value) {
+	            //TODO: RGB
+	            return true;
+	        }
+
+	        return false;
+	    },
+
+	    checkboxClicked: function checkboxClicked(evt) {
+	        evt.stopPropagation();
+	    },
+
+	    checkboxChanged: function checkboxChanged(evt) {
+	        this.setState({ checkboxChecked: evt.target.checked });
+	        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
+	    },
+
+	    render: function render() {
+	        var icon1, icon2, name;
+	        var type;
+	        var val = '';
+	        var opacity = 0;
+	        var color = 'yellow';
+
+	        if (this.props.zone) {
+	            switch (this.props.zone.type) {
+	                case 'light':
+	                    type = 'light';
+	                    icon1 = 'icon ion-ios-lightbulb-outline';
+	                    break;
+	                case 'shade':
+	                    type = 'shade';
+	                    icon1 = 'icon ion-ios-arrow-thin-up';
+	                    icon2 = 'icon ion-ios-arrow-thin-down';
+	                    break;
+	                case 'switch':
+	                    type = 'switch';
+	                    icon1 = 'icon ion-ios-bolt-outline';
+	                    break;
+	                default:
+	                    icon1 = 'icon ion-ios-help-empty';
+	                    break;
+	            }
+	            name = this.props.zone.name;
+
+	            if (this.state.level) {
+	                if (this.props.zone.output === 'binary') {
+	                    opacity = this.state.level.value === 0 ? 0 : 1;
+	                    val = this.state.level.value === 0 ? 'off' : 'on';
+	                } else if (this.props.zone.output === 'rgb') {
+	                    opacity = 1;
+
+	                    var lev = this.state.level;
+	                    val = this.state.level.value === 0 ? 'off' : 'on';
+	                    color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
+	                } else {
+	                    opacity = this.state.level.value / 100;
+	                    val = parseInt(this.state.level.value, 10) + '%';
+	                }
+
+	                if (this.props.zone && this.props.zone.type === 'switch') {
+	                    if (this.state.level.value === 0) {
+	                        val = 'off';
+	                    } else {
+	                        val = 'on';
+	                    }
+	                }
+	            }
+	        } else {
+	            icon1 = 'icon ion-ios-pulse';
+	            type = 'sensor';
+	            name = this.props.sensor.name;
+
+	            if (this.state.attr) {
+	                val = this.state.attr.value;
+
+	                // If there is a states map, which gives value -> ui string then
+	                // use that string instead of the raw value
+	                var uiVal = this.state.attr.states && this.state.attr.states[val];
+	                if (uiVal) {
+	                    val = uiVal;
+	                }
+	            }
+	        }
+
+	        var icon1Cmp, icon2Cmp;
+	        icon1Cmp = React.createElement('i', { className: icon1 });
+	        if (icon2) {
+	            icon2Cmp = React.createElement('i', { className: icon2 });
+	        }
+
+	        if (!this.props.showLevel) {
+	            val = null;
+	        }
+
+	        var chkBx;
+	        if (this.props.showCheckbox) {
+	            chkBx = React.createElement('input', _extends({}, classes('checkbox'), {
+	                type: 'checkbox',
+	                onChange: this.checkboxChanged,
+	                onClick: this.checkboxClicked,
+	                checked: this.state.checkboxChecked
+	            }));
+	        }
+
+	        var state = '';
+	        if (this.props.hasError) {
+	            state = 'error';
+	        } else if (this.props.hasSuccess) {
+	            state = 'success';
+	        }
+	        return React.createElement(
+	            'div',
+	            classes('', state),
+	            chkBx,
+	            React.createElement(
+	                'div',
+	                classes('icon'),
+	                icon1Cmp,
+	                icon2Cmp
+	            ),
+	            React.createElement(
+	                'svg',
+	                _extends({}, classes('switch-color', type), {
+	                    viewBox: '0 0 200 200',
+	                    xmlns: 'http://www.w3.org/2000/svg',
+	                    xlinkHref: 'http://www.w3.org/1999/xlink' }),
+	                React.createElement('path', {
+	                    d: 'M105 45 L82 75 L100 75 L95 100 L120 67 L100 65',
+	                    stroke: 'yellow',
+	                    style: { 'opacity': opacity },
+	                    fill: 'yellow' })
+	            ),
+	            React.createElement(
+	                'svg',
+	                _extends({}, classes('light-color', type), {
+	                    viewBox: '0 0 200 200',
+	                    xmlns: 'http://www.w3.org/2000/svg',
+	                    xlinkHref: 'http://www.w3.org/1999/xlink' }),
+	                React.createElement(
+	                    'g',
+	                    null,
+	                    React.createElement(
+	                        'clipPath',
+	                        { id: 'lightClip' },
+	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '29', width: '200', height: '65' })
+	                    )
+	                ),
+	                React.createElement('circle', {
+	                    cx: '100',
+	                    cy: '53',
+	                    r: '25',
+	                    fill: color,
+	                    clipPath: 'url(#lightClip)',
+	                    style: { 'opacity': opacity, 'clipPath': 'url(#lightClip)' } })
+	            ),
+	            React.createElement(
+	                'div',
+	                classes('level'),
+	                val
+	            ),
+	            React.createElement(
+	                'div',
+	                classes('name'),
+	                name
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneSensorCell;
+
+/***/ },
+/* 319 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(320);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorCell.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 320 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-ZoneSensorCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-ZoneSensorCell--error {\n  background-color: #ffdddd;\n}\n.b-ZoneSensorCell--success {\n  background-color: #ddffdd;\n}\n.b-ZoneSensorCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-ZoneSensorCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-ZoneSensorCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorCell__switch-color {\n  display: none;\n}\n.b-ZoneSensorCell__switch-color--switch {\n  display: block;\n}\n.b-ZoneSensorCell__light-color {\n  display: none;\n}\n.b-ZoneSensorCell__light-color--light {\n  display: block;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 321 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(173);
+	var DeviceInfo = __webpack_require__(204);
+	var SystemActions = __webpack_require__(229);
+	var Grid = __webpack_require__(250);
+	var DeviceCell = __webpack_require__(324);
+	var BEMHelper = __webpack_require__(215);
+
+	var classes = new BEMHelper({
+	    name: 'DeviceList',
+	    prefix: 'b-'
+	});
+	__webpack_require__(322);
+
+	var DeviceList = React.createClass({
+	    displayName: 'DeviceList',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            devices: []
+	        };
+	    },
+
+	    render: function render() {
+	        var switches = [],
+	            shades = [],
+	            dimmers = [],
+	            hubs = [],
+	            remotes = [],
+	            unknown = [];
+	        this.props.devices.forEach(function (device) {
+	            var _React$createElement;
+
+	            var cell = {
+	                key: device.id,
+	                cell: React.createElement(DeviceCell, {
+	                    key: device.id,
+	                    device: device }),
+	                content: React.createElement(DeviceInfo, (_React$createElement = {
+	                    name: device.name,
+	                    key: device.id,
+	                    showSaveBtn: true,
+	                    description: device.description,
+	                    address: device.address,
+	                    modelNumber: device.modelNumber,
+	                    modelName: device.modelName,
+	                    softwareVersion: device.softwareVersion,
+	                    id: device.id,
+	                    readOnlyFields: 'id'
+	                }, _defineProperty(_React$createElement, 'key', device.id), _defineProperty(_React$createElement, 'type', device.type), _defineProperty(_React$createElement, 'deviceDelete', this.props.deviceDelete), _defineProperty(_React$createElement, 'createdDevice', this.props.createdDevice), _defineProperty(_React$createElement, 'updatedDevice', this.props.updatedDevice), _React$createElement))
+	            };
+
+	            switch (device.type) {
+	                case 'dimmer':
+	                    dimmers.push(cell);
+	                    break;
+	                case 'switch':
+	                    switches.push(cell);
+	                    break;
+	                case 'shade':
+	                    shades.push(cell);
+	                    break;
+	                case 'hub':
+	                    hubs.push(cell);
+	                    break;
+	                case 'remote':
+	                    remotes.push(cell);
+	                    break;
+	                default:
+	                    unknown.push(cell);
+	                    break;
+	            }
+	        }.bind(this));
+
+	        var dimmerSection;
+	        if (dimmers.length > 0) {
+	            dimmerSection = React.createElement(
+	                'div',
+	                { key: 'dimmerSection' },
+	                React.createElement(
+	                    'h2',
+	                    classes('header'),
+	                    'Dimmers'
+	                ),
+	                React.createElement(Grid, { cells: dimmers })
+	            );
+	        }
+	        var switchSection;
+	        if (switches.length > 0) {
+	            switchSection = React.createElement(
+	                'div',
+	                { key: 'switchSection' },
+	                React.createElement(
+	                    'h2',
+	                    classes('header'),
+	                    'Switches'
+	                ),
+	                React.createElement(Grid, { cells: switches })
+	            );
+	        }
+	        var shadeSection;
+	        if (shades.length > 0) {
+	            shadeSection = React.createElement(
+	                'div',
+	                { key: 'shadeSection' },
+	                React.createElement(
+	                    'h2',
+	                    classes('header'),
+	                    'Shades'
+	                ),
+	                React.createElement(Grid, { cells: shades })
+	            );
+	        }
+	        var hubSection;
+	        if (hubs.length > 0) {
+	            hubSection = React.createElement(
+	                'div',
+	                { className: hubs.length > 0 ? "" : " hidden" },
+	                React.createElement(
+	                    'h2',
+	                    classes('header'),
+	                    'Hubs'
+	                ),
+	                React.createElement(Grid, { cells: hubs })
+	            );
+	        }
+	        var remoteSection;
+	        if (remotes.length > 0) {
+	            remoteSection = React.createElement(
+	                'div',
+	                { key: 'remoteSection' },
+	                React.createElement(
+	                    'h2',
+	                    classes('header'),
+	                    'Remotes'
+	                ),
+	                React.createElement(Grid, { cells: remotes })
+	            );
+	        }
+	        var deviceSection;
+	        if (unknown.length > 0) {
+	            deviceSection = React.createElement(
+	                'div',
+	                { key: 'deviceSection' },
+	                React.createElement(
+	                    'h2',
+	                    classes('header'),
+	                    'Devices'
+	                ),
+	                React.createElement(Grid, { cells: unknown })
+	            );
+	        }
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            dimmerSection,
+	            switchSection,
+	            shadeSection,
+	            hubSection,
+	            remoteSection,
+	            deviceSection
+	        );
+	    }
+	});
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        deviceDelete: function deviceDelete(id) {
+	            dispatch(SystemActions.deviceDelete(id));
+	        },
+	        createdDevice: function createdDevice(id, data) {
+	            dispatch(SystemActions.createdDevice(id, data));
+	        },
+	        updatedDevice: function updatedDevice(data) {
+	            dispatch(SystemActions.updatedDevice(data));
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceList);
+
+/***/ },
+/* 322 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(323);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceList.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceList.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 323 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-DeviceList__header {\n  margin-top: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 324 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var React = __webpack_require__(1);
+	var BEMHelper = __webpack_require__(215);
+
+	var classes = new BEMHelper({
+	    name: 'DeviceCell',
+	    prefix: 'b-'
+	});
+	__webpack_require__(325);
+
+	var DeviceCell = React.createClass({
+	    displayName: 'DeviceCell',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            checkboxChecked: this.props.checkboxChecked
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            showCheckbox: false,
+	            checkboxChecked: true,
+	            hasError: false,
+	            hasSuccess: false
+	        };
+	    },
+
+	    isChecked: function isChecked() {
+	        return this.state.checkboxChecked;
+	    },
+
+	    checkboxClicked: function checkboxClicked(evt) {
+	        evt.stopPropagation();
+	    },
+
+	    checkboxChanged: function checkboxChanged(evt) {
+	        this.setState({ checkboxChecked: evt.target.checked });
+	        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
+	    },
+
+	    render: function render() {
+	        var chkBx;
+	        if (this.props.showCheckbox) {
+	            chkBx = React.createElement('input', _extends({}, classes('checkbox'), {
+	                type: 'checkbox',
+	                onChange: this.checkboxChanged,
+	                onClick: this.checkboxClicked,
+	                checked: this.state.checkboxChecked
+	            }));
+	        }
+
+	        var state = '';
+	        if (this.props.hasError) {
+	            state = 'error';
+	        } else if (this.props.hasSuccess) {
+	            state = 'success';
+	        }
+	        return React.createElement(
+	            'div',
+	            classes('', state),
+	            chkBx,
+	            React.createElement(
+	                'div',
+	                classes('icon'),
+	                React.createElement('i', { className: 'icon ion-cube' })
+	            ),
+	            React.createElement(
+	                'div',
+	                classes('name'),
+	                this.props.device.name
+	            )
+	        );
+	    }
+	});
+	module.exports = DeviceCell;
+
+/***/ },
+/* 325 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(326);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(219)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceCell.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 326 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(218)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-DeviceCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-DeviceCell--error {\n  background-color: #ffdddd;\n}\n.b-DeviceCell--success {\n  background-color: #ddffdd;\n}\n.b-DeviceCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-DeviceCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-DeviceCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
+
+	// exports
+
 
 /***/ }
 /******/ ]);

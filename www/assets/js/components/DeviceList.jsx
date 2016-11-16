@@ -3,16 +3,16 @@ var ReactRedux = require('react-redux');
 var DeviceInfo = require('./DeviceInfo.jsx');
 var SystemActions = require('../actions/SystemActions.js');
 var Grid = require('./Grid.jsx');
-var SystemDeviceListGridCell = require('./SystemDeviceListGridCell.jsx')
+var DeviceCell = require('./DeviceCell.jsx')
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
-    name: 'SystemDeviceList',
+    name: 'DeviceList',
     prefix: 'b-'
 });
-require('../../css/components/SystemDeviceList.less')
+require('../../css/components/DeviceList.less')
 
-var SystemDeviceList = React.createClass({
+var DeviceList = React.createClass({
     getDefaultProps: function() {
         return {
             devices: []
@@ -24,7 +24,7 @@ var SystemDeviceList = React.createClass({
         this.props.devices.forEach(function(device) {
             var cell = {
                 key: device.id,
-                cell: <SystemDeviceListGridCell
+                cell: <DeviceCell
                           key={device.id}
                           device={device} />,
                 content: <DeviceInfo
@@ -147,4 +147,4 @@ function mapDispatchToProps(dispatch) {
         }
     };
 }
-module.exports = ReactRedux.connect(null, mapDispatchToProps)(SystemDeviceList);
+module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceList);

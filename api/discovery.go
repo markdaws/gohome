@@ -73,11 +73,11 @@ func writeDiscoveryResults(sys *gohome.System, result *gohome.DiscoveryResults, 
 	// and return the existing devices to the user, with any new devices/zones/sensors appended
 
 	for _, device := range result.Devices {
-		//TODO: Error - using Hub as an equality check, but at this point the hubs are
-		//different since we are using new device IDs, need to do one pass looking for devices
-		//that don't have hubs, then fix all the hubIDs to point to dupe hubs then do another pass
-		//on devices that have hubs
-
+		// We are using Hub as an equality check, but in the case where we have discovered items on
+		// the network which were previously imported, we now have to go through the discovery
+		// information and find all the potential hub devices (items with Hub == nil) then loop again
+		// and find all of the devices where Hub != nil and see if we have to replace those hub references
+		// with references to already imported devices- phew
 		if device.Hub != nil {
 			continue
 		}
@@ -90,12 +90,8 @@ func writeDiscoveryResults(sys *gohome.System, result *gohome.DiscoveryResults, 
 		}
 	}
 
+	// Loop again patching all of the Hub references with any items that were already imported
 	for _, device := range result.Devices {
-		//TODO: Error - using Hub as an equality check, but at this point the hubs are
-		//different since we are using new device IDs, need to do one pass looking for devices
-		//that don't have hubs, then fix all the hubIDs to point to dupe hubs then do another pass
-		//on devices that have hubs
-
 		if device.Hub == nil {
 			continue
 		}

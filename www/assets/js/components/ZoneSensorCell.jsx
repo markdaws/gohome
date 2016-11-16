@@ -6,12 +6,12 @@ var BEMHelper = require('react-bem-helper');
 //TODO: Rename this class, used outside the list
 
 var classes = new BEMHelper({
-    name: 'ZoneSensorListGridCell',
+    name: 'ZoneSensorCell',
     prefix: 'b-'
 });
-require('../../css/components/ZoneSensorListGridCell.less')
+require('../../css/components/ZoneSensorCell.less')
 
-var ZoneSensorListGridCell = React.createClass({
+var ZoneSensorCell = React.createClass({
     getDefaultProps: function() {
         return {
             hasError: false,
@@ -224,4 +224,4 @@ var ZoneSensorListGridCell = React.createClass({
         );
     }
 });
-module.exports = ZoneSensorListGridCell;
+module.exports = ZoneSensorCell;

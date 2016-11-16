@@ -1,7 +1,7 @@
 var React = require('react');
 var ReactRedux = require('react-redux');
 var Import = require('./Import.jsx');
-var SystemDeviceList = require('./SystemDeviceList.jsx');
+var DeviceList = require('./DeviceList.jsx');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
@@ -38,7 +38,7 @@ var System = React.createClass({
                     </h5>
                 );
             } else {
-                body = <SystemDeviceList devices={this.props.devices}/>                
+                body = <DeviceList devices={this.props.devices}/>                
             }
 
             header = (
