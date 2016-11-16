@@ -68,8 +68,12 @@ var SceneList = React.createClass({
             }.bind(this));
             btns = (
                 <div {...classes('buttons', '', 'clearfix')}>
-                    <button className="btn btn-primary btnNew pull-left" onClick={this.props.newClientScene}>New</button>
-                    <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
+                    <button className="btn btn-default btnNew pull-left" onClick={this.props.newClientScene}>
+                        <i className="fa fa-plus"></i>
+                    </button>
+                    <button className="btn btn-default btnDone pull-right" onClick={this.endEdit}>
+                        <i className="fa fa-times"></i>
+                    </button>
                 </div>
             );
         } else {
@@ -89,7 +93,9 @@ var SceneList = React.createClass({
                 </div>
             );
 
-            body = <Grid cells={gridCells} />
+            if (gridCells.length > 0) {
+                body = <Grid cells={gridCells} />
+            }
         }
 
         return (

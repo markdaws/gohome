@@ -57,7 +57,7 @@ func apiRefreshSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(
 
 func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024))
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
 		if err != nil {
 			respBadRequest("Content length too long, max length 1024 bytes", w)
 			return

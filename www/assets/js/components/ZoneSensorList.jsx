@@ -232,7 +232,9 @@ var ZoneSensorList = React.createClass({
             btns = (
                 <div>
                     <div {...classes('buttons', 'editing', 'clearfix')}>
-                        <button className="btn btn-success btnDone pull-right" onClick={this.endEdit}>Done</button>
+                        <button className="btn btn-default btnDone pull-right" onClick={this.endEdit}>
+                            <i className="fa fa-times"></i>
+                        </button>
                     </div>
                 </div>
             );

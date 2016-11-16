@@ -28,8 +28,12 @@ var System = React.createClass({
     render: function() {
         var body, header
         if (this.state.importing) {
-            body = <Import/>
-            header = <button {...classes('exit', '', 'btn btn-danger pull-right')} onClick={this.cancelImport}>Exit</button>
+            body = <Import/>;
+            header = (
+                <button {...classes('exit', '', 'btn btn-default pull-right')} onClick={this.cancelImport}>
+                    <i className="fa fa-times"></i>
+                </button>
+            );
         } else {
             if (this.props.devices.length === 0) {
                 body = (

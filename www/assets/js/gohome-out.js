@@ -23423,8 +23423,8 @@
 	            body = React.createElement(Import, null);
 	            header = React.createElement(
 	                'button',
-	                _extends({}, classes('exit', '', 'btn btn-danger pull-right'), { onClick: this.cancelImport }),
-	                'Exit'
+	                _extends({}, classes('exit', '', 'btn btn-default pull-right'), { onClick: this.cancelImport }),
+	                React.createElement('i', { className: 'fa fa-times' })
 	            );
 	        } else {
 	            if (this.props.devices.length === 0) {
@@ -27837,13 +27837,13 @@
 	                classes('buttons', '', 'clearfix'),
 	                React.createElement(
 	                    'button',
-	                    { className: 'btn btn-primary btnNew pull-left', onClick: this.props.newClientScene },
-	                    'New'
+	                    { className: 'btn btn-default btnNew pull-left', onClick: this.props.newClientScene },
+	                    React.createElement('i', { className: 'fa fa-plus' })
 	                ),
 	                React.createElement(
 	                    'button',
-	                    { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
-	                    'Done'
+	                    { className: 'btn btn-default btnDone pull-right', onClick: this.endEdit },
+	                    React.createElement('i', { className: 'fa fa-times' })
 	                )
 	            );
 	        } else {
@@ -27865,7 +27865,9 @@
 	                )
 	            );
 
-	            body = React.createElement(Grid, { cells: gridCells });
+	            if (gridCells.length > 0) {
+	                body = React.createElement(Grid, { cells: gridCells });
+	            }
 	        }
 
 	        return React.createElement(
@@ -29803,8 +29805,8 @@
 	                    classes('buttons', 'editing', 'clearfix'),
 	                    React.createElement(
 	                        'button',
-	                        { className: 'btn btn-success btnDone pull-right', onClick: this.endEdit },
-	                        'Done'
+	                        { className: 'btn btn-default btnDone pull-right', onClick: this.endEdit },
+	                        React.createElement('i', { className: 'fa fa-times' })
 	                    )
 	                )
 	            );

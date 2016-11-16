@@ -78,7 +78,7 @@ type producer struct {
 }
 
 func (p *producer) ProducerName() string {
-	return fmt.Sprintf("FluxwifiEventProducer - %s", p.Name)
+	return fmt.Sprintf("ConnectedByTCPEventProducer - %s", p.Name)
 }
 func (p *producer) StartProducing(b *evtbus.Bus) {
 	p.producing = true
@@ -141,9 +141,3 @@ func getZoneValuesByAddress(d *gohome.Device) (map[string]float32, error) {
 	}
 	return zoneValueByAddress, nil
 }
-
-/*
-	ctx := context.TODO()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
-	defer cancel()
-*/

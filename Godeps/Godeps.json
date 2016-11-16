@@ -41,7 +41,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/lutron",
-			"Rev": "9bb4eec1de7c2bfb46744274174319dc4142ec5d"
+			"Rev": "09b4ac00ddd4d857e488918100fcdd3518ea1b10"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/upnp",
