@@ -1,8 +1,0 @@
-Keep track of a list of test cases, either manual or to automate:
-
-- Add a new device
-- Add a new zone
-- Add a new sensor
-- Edit device
-- Edit Zone
-- Edit Sensor
