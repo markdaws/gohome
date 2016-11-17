@@ -6,7 +6,6 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
-//TODO: ButtonReleased
 //TODO: SceneSet
 
 // SensorAttrChangedEvt represents an event when the attributes of a sensor have

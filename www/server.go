@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	gzip "github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
 )
@@ -52,12 +53,12 @@ func (s *wwwServer) listenAndServe(addr string) error {
 	imageHandler := http.FileServer(http.Dir(s.rootPath + "/assets/images/"))
 
 	sub := r.PathPrefix("/assets").Subrouter()
-	sub.Handle("/css/{filename}", http.StripPrefix("/assets/css/", cssHandler))
-	sub.Handle("/css/ext/{filename}", http.StripPrefix("/assets/css/ext/", extCssHandler))
-	sub.Handle("/js/{filename}", http.StripPrefix("/assets/js/", jsHandler))
-	sub.Handle("/js/ext/{filename}", http.StripPrefix("/assets/js/ext/", jsExtHandler))
+	sub.Handle("/css/{filename}", http.StripPrefix("/assets/css/", gzip.GzipHandler(cssHandler)))
+	sub.Handle("/css/ext/{filename}", http.StripPrefix("/assets/css/ext/", gzip.GzipHandler(extCssHandler)))
+	sub.Handle("/js/{filename}", http.StripPrefix("/assets/js/", gzip.GzipHandler(jsHandler)))
+	sub.Handle("/js/ext/{filename}", http.StripPrefix("/assets/js/ext/", gzip.GzipHandler(jsExtHandler)))
 	sub.Handle("/fonts/{filename}", http.StripPrefix("/assets/fonts/", fontHandler))
-	sub.Handle("/jsx/{filename}", http.StripPrefix("/assets/jsx/", jsxHandler))
+	sub.Handle("/jsx/{filename}", http.StripPrefix("/assets/jsx/", gzip.GzipHandler(jsxHandler)))
 	sub.Handle("/images/ext/{filename}", http.StripPrefix("/assets/images/ext/", extImageHandler))
 	sub.Handle("/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
 	r.HandleFunc("/", rootHandler(s.rootPath))

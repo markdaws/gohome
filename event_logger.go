@@ -14,7 +14,9 @@ import (
 // the event log
 type EventLogger struct {
 	// Path the directory and file name where the log will be saved
-	Path    string
+	Path string
+
+	// Verbose if set to true outputs more noisy events to the event log
 	Verbose bool
 }
 

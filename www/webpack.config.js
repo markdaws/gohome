@@ -1,6 +1,8 @@
 var path = require('path');
 var webpack = require('webpack');
 
+var minify = false;
+
 module.exports = {
     entry: './assets/js/gohome.js',
     output: {
@@ -23,5 +25,10 @@ module.exports = {
                 loader: 'style-loader!css-loader!less-loader'
             },
         ]
-    }
+    },
+    plugins: minify ? [
+        new webpack.optimize.UglifyJsPlugin({
+            minimize: true
+        })
+    ] : []
 };
