@@ -46,7 +46,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 						}
 
 						if attrs.Switch != nil {
-							c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+							c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 								ZoneName: zone.Name,
 								ZoneID:   zone.ID,
 								Level:    cmd.Level{Value: float32(*attrs.Switch)},
@@ -60,7 +60,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 							continue
 						}
 
-						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 							ZoneName: zone.Name,
 							ZoneID:   zone.ID,
 							Level:    cmd.Level{Value: float32(state)},
@@ -148,7 +148,7 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 				},
 			})
 		} else if attrs.Switch != nil && hasZone {
-			p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+			p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 				ZoneName: zone.Name,
 				ZoneID:   zone.ID,
 				Level:    cmd.Level{Value: float32(*attrs.Switch)},
@@ -167,7 +167,7 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 		if level == 8 {
 			level = 1
 		}
-		p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+		p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 			ZoneName: zone.Name,
 			ZoneID:   zone.ID,
 			Level:    cmd.Level{Value: float32(level)},

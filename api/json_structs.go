@@ -53,6 +53,7 @@ type jsonDevice struct {
 	Type            string        `json:"type"`
 	Auth            *jsonAuth     `json:"auth"`
 	HubID           string        `json:"hubId"`
+	DeviceIDs       []string      `json:"deviceIds"`
 	IsDupe          bool          `json:"isDupe"`
 }
 type devices []jsonDevice

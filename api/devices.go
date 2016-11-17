@@ -62,6 +62,11 @@ func DevicesToJSON(devs map[string]*gohome.Device) []jsonDevice {
 			hubID = device.Hub.ID
 		}
 
+		var deviceIDs []string
+		for _, dev := range device.Devices {
+			deviceIDs = append(deviceIDs, dev.ID)
+		}
+
 		devices[i] = jsonDevice{
 			ID:              device.ID,
 			Address:         device.Address,
@@ -77,6 +82,7 @@ func DevicesToJSON(devs map[string]*gohome.Device) []jsonDevice {
 			Auth:            authJSON,
 			Type:            string(device.Type),
 			HubID:           hubID,
+			DeviceIDs:       deviceIDs,
 		}
 		i++
 	}

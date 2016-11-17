@@ -114,13 +114,17 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 			})
 
 			err = dev.Stream(conn, func(evt lutronExt.Event) {
+				if !p.producing {
+					return
+				}
+
 				switch e := evt.(type) {
 				case *lutronExt.ZoneLevelEvt:
 					z, ok := p.Device.Zones[e.Address]
 					if !ok {
 						return
 					}
-					p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+					p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 						ZoneName: z.Name,
 						ZoneID:   z.ID,
 						Level:    cmd.Level{Value: e.Level},
@@ -133,9 +137,10 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 					}
 
 					if btn := sourceDevice.Buttons[e.Address]; btn != nil {
-						p.System.Services.EvtBus.Enqueue(&cmd.ButtonPress{
-							ButtonAddress: btn.Address,
-							ButtonID:      btn.ID,
+						p.System.Services.EvtBus.Enqueue(&gohome.ButtonPressEvt{
+							BtnAddress:    btn.Address,
+							BtnID:         btn.ID,
+							BtnName:       btn.Name,
 							DeviceName:    sourceDevice.Name,
 							DeviceAddress: sourceDevice.Address,
 							DeviceID:      sourceDevice.ID,
@@ -149,9 +154,10 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 					}
 
 					if btn := sourceDevice.Buttons[e.Address]; btn != nil {
-						p.System.Services.EvtBus.Enqueue(&cmd.ButtonRelease{
-							ButtonAddress: btn.Address,
-							ButtonID:      btn.ID,
+						p.System.Services.EvtBus.Enqueue(&gohome.ButtonReleaseEvt{
+							BtnAddress:    btn.Address,
+							BtnID:         btn.ID,
+							BtnName:       btn.Name,
 							DeviceName:    sourceDevice.Name,
 							DeviceAddress: sourceDevice.Address,
 							DeviceID:      sourceDevice.ID,
@@ -175,5 +181,5 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 
 func (p *eventProducer) StopProducing() {
 	p.producing = false
-	//TODO: get out of the event loop, stop the scanner
+	//TODO: Stop the scanner
 }

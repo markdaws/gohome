@@ -29,21 +29,21 @@ const (
 // multiple sensors
 type SensorAttr struct {
 	// Name the name of the attribute e.g. temperature
-	Name string
+	Name string `json:"name"`
 
 	// Value the current value of the attribute
-	Value string
+	Value string `json:"value"`
 
 	// DataType the type of data the sensor is returning
-	DataType SensorDataType
+	DataType SensorDataType `json:"dataType"`
 
-	UnitOfMeasure string
+	UnitOfMeasure string `json:"uom"`
 
 	// States is a map of values -> Name that can be displayed in the UI. For example,
 	// the sensor may have Value==1 which means "Open" and 0 which means "Closed" you can
 	// add those mappings to the States map so the UI can show a user friendly string instead
 	// of the raw sensor values
-	States map[string]string
+	States map[string]string `json:"states"`
 }
 
 // String returns a debug string containing information about the sensor

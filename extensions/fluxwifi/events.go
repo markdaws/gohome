@@ -47,7 +47,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 				} else {
 					if state.Power < 2 {
 						// 2 -> unknown, so only process if it is 0 or 1
-						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 							ZoneName: zone.Name,
 							ZoneID:   zone.ID,
 							Level: cmd.Level{
@@ -101,7 +101,7 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 				} else {
 					if state.Power < 2 {
 						// 2 -> unknown, so only process if it is 0 or 1
-						p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+						p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 							ZoneName: zone.Name,
 							ZoneID:   zone.ID,
 							Level: cmd.Level{

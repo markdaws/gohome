@@ -24,6 +24,8 @@ type config struct {
 	// SystemPath is a path to the json file containing all of the system information
 	SystemPath string `json:"systemPath"`
 
+	EventLogPath string `json::eventLogPath"`
+
 	// WWWAddr is the IP address for the WWW server
 	WWWAddr string `json:"wwwAddr"`
 
@@ -119,10 +121,9 @@ func main() {
 	monitor := gohome.NewMonitor(sys, sys.Services.EvtBus, nil, nil)
 	sys.Services.Monitor = monitor
 
-	// Log all of the events on the bus to the system log
-	// TODO: Remove or json values so we can play back
-	lc := &gohome.LogConsumer{}
-	eb.AddConsumer(lc)
+	// Log all of the events on the bus to the event log
+	evtLogger := &gohome.EventLogger{Path: cfg.EventLogPath, Verbose: false}
+	eb.AddConsumer(evtLogger)
 
 	log.V("Initing devices...")
 	sys.InitDevices()
@@ -212,6 +213,7 @@ func defaultConfig(systemPath string) config {
 
 	cfg := config{
 		SystemPath:     systemPath + "/gohome.json",
+		EventLogPath:   systemPath + "/events.json",
 		WWWAddr:        addr,
 		WWWPort:        "8000",
 		APIAddr:        addr,

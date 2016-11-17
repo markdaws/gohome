@@ -74,6 +74,10 @@ type DeviceLostEvt struct {
 }
 ```
 
+###ZoneLevelReporting
+//TODO:
+###SensorAttributeReporting
+//TODO:
 ###ClientConnectedEvt
 //TODO:
 ###ClientDisconnectedEvt

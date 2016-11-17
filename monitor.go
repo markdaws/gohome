@@ -292,7 +292,7 @@ func (m *Monitor) Unsubscribe(monitorID string) {
 		monitorID, emptyZoneToGroupCount, emptySensorToGroupCount)
 }
 
-func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
+func (m *Monitor) sensorAttrReporting(sensorID string, attr SensorAttr) {
 	m.mutex.RLock()
 	groups, ok := m.sensorToGroups[sensorID]
 	m.mutex.RUnlock()
@@ -313,6 +313,11 @@ func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
 		}
 	}
 
+	s, ok := m.system.Sensors[sensorID]
+	if !ok {
+		return
+	}
+
 	m.mutex.Lock()
 	m.sensorValues[sensorID] = attr
 	m.mutex.Unlock()
@@ -328,9 +333,16 @@ func (m *Monitor) sensorAttrChanged(sensorID string, attr SensorAttr) {
 		m.mutex.RUnlock()
 		group.Handler.Update(cb)
 	}
+
+	m.system.Services.EvtBus.Enqueue(&SensorAttrChangedEvt{
+		SensorID:   sensorID,
+		SensorName: s.Name,
+		Attr:       attr,
+	})
+
 }
 
-func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) bool {
+func (m *Monitor) zoneLevelReporting(zoneID string, val cmd.Level) bool {
 	m.mutex.RLock()
 	groups, ok := m.zoneToGroups[zoneID]
 	m.mutex.RUnlock()
@@ -349,6 +361,11 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) bool {
 		}
 	}
 
+	z, ok := m.system.Zones[zoneID]
+	if !ok {
+		return false
+	}
+
 	m.mutex.Lock()
 	m.zoneValues[zoneID] = val
 	m.mutex.Unlock()
@@ -364,6 +381,12 @@ func (m *Monitor) zoneLevelChanged(zoneID string, val cmd.Level) bool {
 		m.mutex.RUnlock()
 		group.Handler.Update(cb)
 	}
+
+	m.system.Services.EvtBus.Enqueue(&ZoneLevelChangedEvt{
+		ZoneName: z.Name,
+		ZoneID:   z.ID,
+		Level:    val,
+	})
 
 	return true
 }
@@ -448,24 +471,21 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 			showHandled := true
 
 			switch evt := e.(type) {
-			case *SensorAttrChangedEvt:
-				m.sensorAttrChanged(evt.SensorID, evt.Attr)
+			case *SensorAttrReportingEvt:
+				m.sensorAttrReporting(evt.SensorID, evt.Attr)
 
 			case *SensorsReportingEvt:
 				for sensorID, attr := range evt.Sensors {
-					m.sensorAttrChanged(sensorID, attr)
+					m.sensorAttrReporting(sensorID, attr)
 				}
 
 			case *ZonesReportingEvt:
 				for zoneID, val := range evt.Zones {
-					m.zoneLevelChanged(zoneID, val)
+					m.zoneLevelReporting(zoneID, val)
 				}
 
-			case *ZoneLevelChangedEvt:
-				updatedCache := m.zoneLevelChanged(evt.ZoneID, evt.Level)
-				if updatedCache {
-					log.V("Monitor - updated value: %s", e)
-				}
+			case *ZoneLevelReportingEvt:
+				m.zoneLevelReporting(evt.ZoneID, evt.Level)
 				showHandled = false
 
 			case *DeviceProducingEvt:

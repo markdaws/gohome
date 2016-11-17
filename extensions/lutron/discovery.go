@@ -248,6 +248,8 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 		var deviceName string = device["Name"].(string)
 		gohomeDevice := makeDevice("", deviceName, deviceID, device, sbp, nil)
+		sbp.AddDevice(gohomeDevice)
+
 		result.Devices = append(result.Devices, gohomeDevice)
 	}
 

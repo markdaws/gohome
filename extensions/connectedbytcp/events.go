@@ -54,7 +54,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 					continue
 				}
 
-				c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+				c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 					ZoneName: zone.Name,
 					ZoneID:   zone.ID,
 					Level: cmd.Level{
@@ -101,7 +101,7 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 					continue
 				}
 
-				p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+				p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 					ZoneName: zone.Name,
 					ZoneID:   zone.ID,
 					Level: cmd.Level{

@@ -230,7 +230,7 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 	// Sensor1 update should only update handler1
 	attr1 := sensor1.Attr
 	attr1.Value = "10"
-	evtBus.Enqueue(&gohome.SensorAttrChangedEvt{
+	evtBus.Enqueue(&gohome.SensorAttrReportingEvt{
 		SensorID: sensor1.ID,
 		Attr:     attr1,
 	})
@@ -245,7 +245,7 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 	mockHandler1.ChangeBatches = nil
 	attr3 := sensor3.Attr
 	attr3.Value = "30"
-	evtBus.Enqueue(&gohome.SensorAttrChangedEvt{
+	evtBus.Enqueue(&gohome.SensorAttrReportingEvt{
 		SensorID: sensor3.ID,
 		Attr:     attr3,
 	})
@@ -261,7 +261,7 @@ func TestMultipleGroupsOnTheSameSensorAreUpdated(t *testing.T) {
 	mockHandler2.ChangeBatches = nil
 	attr2 := sensor2.Attr
 	attr2.Value = "20"
-	evtBus.Enqueue(&gohome.SensorAttrChangedEvt{
+	evtBus.Enqueue(&gohome.SensorAttrReportingEvt{
 		SensorID: sensor2.ID,
 		Attr:     attr2,
 	})
@@ -405,7 +405,7 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 
 	// Zone1 update should only update handler1
 	lvl1 := cmd.Level{Value: 10}
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone1.ID,
 		Level:  lvl1,
 	})
@@ -419,7 +419,7 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 	// Zone3 update should only update handler2
 	mockHandler1.ChangeBatches = nil
 	lvl3 := cmd.Level{Value: 30}
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone3.ID,
 		Level:  lvl3,
 	})
@@ -435,7 +435,7 @@ func TestMultipleGroupsOnTheSameZoneAreUpdated(t *testing.T) {
 	mockHandler2.ChangeBatches = nil
 
 	lvl2 := cmd.Level{Value: 20}
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone2.ID,
 		Level:  lvl2,
 	})
@@ -505,7 +505,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	// zone1 change should only affect handler1
 	lvl1 := cmd.Level{Value: 10}
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone1.ID,
 		Level:  lvl1,
 	})
@@ -519,7 +519,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	// zone3 change should only affect handler2
 	lvl3 := cmd.Level{Value: 30}
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone3.ID,
 		Level:  lvl3,
 	})
@@ -533,7 +533,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	// zone2 change should affect handler1 and handler2
 	lvl2 := cmd.Level{Value: 20}
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone2.ID,
 		Level:  lvl2,
 	})
@@ -549,7 +549,7 @@ func TestUnsubscribe(t *testing.T) {
 	m.InvalidateValues(mID2)
 	mockHandler1.ChangeBatches = nil
 	mockHandler2.ChangeBatches = nil
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone1.ID,
 		Level:  lvl1,
 	})
@@ -559,7 +559,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	mockHandler1.ChangeBatches = nil
 	mockHandler2.ChangeBatches = nil
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone2.ID,
 		Level:  lvl2,
 	})
@@ -569,7 +569,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	mockHandler1.ChangeBatches = nil
 	mockHandler2.ChangeBatches = nil
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone3.ID,
 		Level:  lvl3,
 	})
@@ -609,13 +609,13 @@ func TestGroupExpires(t *testing.T) {
 	//Expired group should not receive any updates
 	mockHandler1.ChangeBatches = nil
 	lvl1 := cmd.Level{Value: 10}
-	evtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+	evtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 		ZoneID: zone1.ID,
 		Level:  lvl1,
 	})
 	attr1 := sensor1.Attr
 	attr1.Value = "10"
-	evtBus.Enqueue(&gohome.SensorAttrChangedEvt{
+	evtBus.Enqueue(&gohome.SensorAttrReportingEvt{
 		SensorID: sensor1.ID,
 		Attr:     attr1,
 	})

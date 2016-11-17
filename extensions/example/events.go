@@ -56,7 +56,7 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 			for _, zone := range p.Device.Zones {
 				lvl := float32(rand.Intn(101))
 
-				p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+				p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 					ZoneName: zone.Name,
 					ZoneID:   zone.ID,
 					Level: cmd.Level{
@@ -128,7 +128,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 
 				// Get the latest value for this device, we will just return a random
 				// value for the purpose of this example
-				c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelChangedEvt{
+				c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
 					ZoneName: zone.Name,
 					ZoneID:   zone.ID,
 					Level: cmd.Level{

@@ -5,10 +5,10 @@ import "fmt"
 // Level represent the level of a zone.  It can contain a single level value
 // or hold RGB values if the zone supports that information
 type Level struct {
-	Value float32
-	R     byte
-	G     byte
-	B     byte
+	Value float32 `json:"level"`
+	R     byte    `json:"r"`
+	G     byte    `json:"g"`
+	B     byte    `json:"b"`
 }
 
 func (l Level) String() string {

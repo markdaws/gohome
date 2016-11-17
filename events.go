@@ -6,42 +6,126 @@ import (
 	"github.com/markdaws/gohome/cmd"
 )
 
-//TODO: ButtonPressed
 //TODO: ButtonReleased
 //TODO: SceneSet
-//TODO: Delete event/event.go
 
 // SensorAttrChangedEvt represents an event when the attributes of a sensor have
 // changed state
 type SensorAttrChangedEvt struct {
 	// SensorID is the ID of the sensor whos values have changed
-	SensorID string
+	SensorID string `json:"id"`
 
 	// SensorName is the name of the sensor whos values have changed
-	SensorName string
+	SensorName string `json:"name"`
 
 	// Information on the attribute that changed
-	Attr SensorAttr
+	Attr SensorAttr `json:"attr"`
 }
 
 func (e *SensorAttrChangedEvt) String() string {
 	return fmt.Sprintf("SensorAttrChangedEvt[Name:%s, ID:%s, %s]", e.SensorName, e.SensorID, e.Attr.String())
 }
 
+// SensorAttrReportingEvt represents an event when the attributes of a sensor are
+// reported back to the system. This doesn't mean they have changed, just that
+// the system asked for the latest value and this is it
+type SensorAttrReportingEvt struct {
+	// SensorID is the ID of the sensor whos values have changed
+	SensorID string `json:"id"`
+
+	// SensorName is the name of the sensor whos values have changed
+	SensorName string `json:"name"`
+
+	// Information on the attribute that changed
+	Attr SensorAttr `json:"attr"`
+}
+
+func (e *SensorAttrReportingEvt) String() string {
+	return fmt.Sprintf("SensorAttrReportingEvt[Name:%s, ID:%s, %s]", e.SensorName, e.SensorID, e.Attr.String())
+}
+
 // ZoneLevelChangedEvt represents an event when a zones level changes
 type ZoneLevelChangedEvt struct {
 	// ZoneID is the ID of the zone whos value has changed
-	ZoneID string
+	ZoneID string `json:"id"`
 
 	// ZoneName is the name of the zone whos value changed
-	ZoneName string
+	ZoneName string `json:"name"`
 
 	// Level contains the current zone level information
-	Level cmd.Level
+	Level cmd.Level `json:"level"`
 }
 
 func (e *ZoneLevelChangedEvt) String() string {
 	return fmt.Sprintf("ZoneLevelChangedEvt[Name:%s, ID:%s %s]", e.ZoneName, e.ZoneID, e.Level.String())
+}
+
+// ZoneLevelReportingEvt represents an event when a zones level was queried and the value is being reported
+type ZoneLevelReportingEvt struct {
+	// ZoneID is the ID of the zone whos value has changed
+	ZoneID string `json:"id"`
+
+	// ZoneName is the name of the zone whos value changed
+	ZoneName string `json:"name"`
+
+	// Level contains the current zone level information
+	Level cmd.Level `json:"level"`
+}
+
+func (e *ZoneLevelReportingEvt) String() string {
+	return fmt.Sprintf("ZoneLevelReportingEvt[Name:%s, ID:%s %s]", e.ZoneName, e.ZoneID, e.Level.String())
+}
+
+// ButtonPressEvt is raised when a button is pressed in the system
+type ButtonPressEvt struct {
+	// BtnAddress is the address of the button
+	BtnAddress string `json:"address"`
+
+	// BtnID is the global ID of the button
+	BtnID string `json:"id"`
+
+	// BtnName is the name of the button
+	BtnName string `json:"name"`
+
+	// DeviceID is the ID of the device to which the button belongs
+	DeviceID string `json:"deviceId"`
+
+	// DeviceName is the name of the device
+	DeviceName string `json:"deviceName"`
+
+	// DeviceAddress is the address of the device
+	DeviceAddress string `json:"deviceAddress"`
+}
+
+func (e *ButtonPressEvt) String() string {
+	return fmt.Sprintf("ButtonPressEvt[Addr:%s, ID: %s, Name:%s, DevAddr:%s, DevID:%s, DevName:%s",
+		e.BtnAddress, e.BtnID, e.BtnName, e.DeviceAddress, e.DeviceID, e.DeviceName)
+}
+
+// ButtonPressEvt is raised when a button is released in the system
+type ButtonReleaseEvt struct {
+	// BtnAddress is the address of the button
+	BtnAddress string `json:"address"`
+
+	// BtnID is the global ID of the button
+	BtnID string `json:"id"`
+
+	// BtnName is the name of the button
+	BtnName string `json:"name"`
+
+	// DeviceID is the ID of the device to which the button belongs
+	DeviceID string `json:"deviceId"`
+
+	// DeviceName is the name of the device
+	DeviceName string `json:"deviceName"`
+
+	// DeviceAddress is the address of the device
+	DeviceAddress string `json:"deviceAddress"`
+}
+
+func (e *ButtonReleaseEvt) String() string {
+	return fmt.Sprintf("ButtonReleaseEvt[Addr:%s, ID: %s, Name:%s, DevAddr:%s, DevID:%s, DevName:%s",
+		e.BtnAddress, e.BtnID, e.BtnName, e.DeviceAddress, e.DeviceID, e.DeviceName)
 }
 
 // SensorsReportEvt is an event indicating that sensors included in the SensorIDs map
@@ -137,9 +221,9 @@ func (dl *DeviceLostEvt) String() string {
 
 // ClientConnectedEvt is raised when a client registers to get updates for zone and sensor values
 type ClientConnectedEvt struct {
-	ConnectionID string
-	MonitorID    string
-	Origin       string
+	ConnectionID string `json:"connectionId"`
+	MonitorID    string `json:"-"`
+	Origin       string `json:"origin"`
 }
 
 func (cc *ClientConnectedEvt) String() string {
@@ -149,7 +233,7 @@ func (cc *ClientConnectedEvt) String() string {
 
 // ClientDisconnectedEvt is raised when a client connection is closed
 type ClientDisconnectedEvt struct {
-	ConnectionID string
+	ConnectionID string `json:"connectionId"`
 }
 
 func (cc *ClientDisconnectedEvt) String() string {
