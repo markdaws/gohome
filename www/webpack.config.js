@@ -24,6 +24,13 @@ module.exports = {
                 test: /\.less$/,
                 loader: 'style-loader!css-loader!less-loader'
             },
+        ],
+        postLoaders: [
+            {
+                test: /\.js$/,
+                exclude: /node_modules/, // do not lint third-party code
+                loader: 'jshint-loader'
+            }
         ]
     },
     plugins: minify ? [

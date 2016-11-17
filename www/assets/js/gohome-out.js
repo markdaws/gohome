@@ -21451,10 +21451,10 @@
 	var Logging = __webpack_require__(288);
 	var RecipeApp = __webpack_require__(290);
 	var SceneActions = __webpack_require__(272);
-	var SensorActions = __webpack_require__(224);
-	var SystemActions = __webpack_require__(229);
-	var ZoneActions = __webpack_require__(223);
-	var BEMHelper = __webpack_require__(215);
+	var SensorActions = __webpack_require__(209);
+	var SystemActions = __webpack_require__(205);
+	var ZoneActions = __webpack_require__(208);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'ControlApp',
@@ -23389,7 +23389,7 @@
 	var React = __webpack_require__(1);
 	var Import = __webpack_require__(202);
 	var DeviceList = __webpack_require__(249);
-	var BEMHelper = __webpack_require__(215);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'System',
@@ -23462,8 +23462,8 @@
 
 	var React = __webpack_require__(1);
 	var DiscoverDevices = __webpack_require__(203);
-	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(215);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'Import',
@@ -23557,12 +23557,12 @@
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var Api = __webpack_require__(208);
-	var SystemActions = __webpack_require__(229);
-	var ZoneActions = __webpack_require__(223);
-	var SensorActions = __webpack_require__(224);
-	var ImportGroup = __webpack_require__(230);
-	var BEMHelper = __webpack_require__(215);
+	var Api = __webpack_require__(204);
+	var SystemActions = __webpack_require__(205);
+	var ZoneActions = __webpack_require__(208);
+	var SensorActions = __webpack_require__(209);
+	var ImportGroup = __webpack_require__(210);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'DiscoverDevices',
@@ -23717,649 +23717,6 @@
 
 /***/ },
 /* 204 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(173);
-	var UniqueIdMixin = __webpack_require__(205);
-	var InputValidationMixin = __webpack_require__(206);
-	var SaveBtn = __webpack_require__(207);
-	var Api = __webpack_require__(208);
-	var ZoneInfo = __webpack_require__(211);
-	var SensorInfo = __webpack_require__(220);
-	var ZoneActions = __webpack_require__(223);
-	var SensorActions = __webpack_require__(224);
-	var DeviceTypePicker = __webpack_require__(225);
-	var Classnames = __webpack_require__(226);
-	var BEMHelper = __webpack_require__(215);
-
-	var classes = new BEMHelper({
-	    name: 'DeviceInfo',
-	    prefix: 'b-'
-	});
-	__webpack_require__(227);
-
-	var DeviceInfo = React.createClass({
-	    displayName: 'DeviceInfo',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        //TODO: need state?
-	        return {
-	            name: this.props.name || '',
-	            description: this.props.description || '',
-	            address: this.props.address,
-	            id: this.props.id,
-	            hubId: this.props.hubId,
-	            modelNumber: this.props.modelNumber || '',
-	            modelName: this.props.modelName || '',
-	            softwareVersion: this.props.softwareVersion || '',
-	            auth: this.props.auth,
-	            showToken: false,
-	            errors: this.props.errors,
-	            saveButtonStatus: '',
-	            dirty: !this.props.id,
-	            connPool: this.props.connPool,
-	            cmdBuilder: this.props.cmdBuilder,
-	            type: this.props.type
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            zones: [],
-	            sensors: [],
-	            showSaveBtn: false,
-	            showZones: false,
-	            showSensors: false
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        var s = this.state;
-	        return {
-	            id: s.id,
-	            name: s.name,
-	            description: s.description,
-	            address: s.address,
-	            modelNumber: s.modelNumber,
-	            modelName: s.modelName,
-	            softwareVersion: s.softwareVersion,
-	            auth: s.auth,
-	            hubId: s.hubId,
-	            buttons: this.props.buttons,
-	            connPool: this.props.connPool,
-	            cmdBuilder: this.props.cmdBuilder,
-	            type: s.type
-	        };
-	    },
-
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        //TODO: Needed?
-	        if (nextProps.name != "") {
-	            this.setState({ name: nextProps.name });
-	        }
-	        if (nextProps.description != "") {
-	            this.setState({ description: nextProps.description });
-	        }
-	        if (nextProps.address != "") {
-	            this.setState({ address: nextProps.address });
-	        }
-	        if (nextProps.type != "") {
-	            this.setState({ type: nextProps.type });
-	        }
-	        if (nextProps.token != "") {
-	            this.setState({ token: nextProps.token });
-	        }
-	        if (nextProps.id != "") {
-	            this.setState({ id: nextProps.id });
-	        }
-	    },
-
-	    createDevice: function createDevice() {
-	        //TODO: Revisit now ew have one API to save everything at once
-	        Api.deviceCreate(this.toJson(), function (err, deviceData) {
-	            if (err) {
-	                this.setState({
-	                    saveButtonStatus: 'error',
-	                    errors: err.validation.errors
-	                });
-	                return;
-	            }
-
-	            // Let callers know the device has been saved
-	            this.props.createdDevice(this.state.id, deviceData);
-
-	            // Now we need to loop through each of the zones and save them
-	            function saveZone(index) {
-	                if (index >= this.props.zones.length) {
-	                    saveSensor.bind(this)(0);
-	                    return;
-	                }
-
-	                var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
-	                Api.zoneCreate(zone, function (err, zoneData) {
-	                    if (err) {
-	                        zoneInfo.setErrors(err.validation.errors);
-	                        this.setState({
-	                            saveButtonStatus: 'error'
-	                        });
-	                        return;
-	                    }
-
-	                    this.props.savedZone(zoneData);
-	                    saveZone.bind(this)(index + 1);
-	                }.bind(this));
-	            }
-	            saveZone.bind(this)(0);
-
-	            // Loop through sensors saving
-	            function saveSensor(index) {
-	                if (index >= this.props.sensors.length) {
-	                    this.setState({ saveButtonStatus: 'success' });
-	                    return;
-	                }
-
-	                var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
-	                Api.sensorCreate(sensor, function (err, sensorData) {
-	                    if (err) {
-	                        sensorInfo.setErrors(err.validation.errors);
-	                        this.setState({
-	                            saveButtonStatus: 'error'
-	                        });
-	                        return;
-	                    }
-
-	                    this.props.savedSensor(sensorData);
-	                    saveSensor.bind(this)(index + 1);
-	                }.bind(this));
-	            }
-	        }.bind(this));
-	    },
-
-	    updateDevice: function updateDevice() {
-	        Api.deviceUpdate(this.toJson(), function (err, deviceData) {
-	            if (err && !err.validation) {
-	                //TODO: Dispatch general error so it can be displayed somewhere in the UI ...
-	                this.setState({
-	                    saveButtonStatus: 'error'
-	                });
-	                return;
-	            } else if (err && err.validation) {
-	                this.setState({
-	                    saveButtonStatus: 'error',
-	                    errors: err.validation.errors[this.state.id]
-	                });
-	                return;
-	            }
-
-	            this.setState({ saveButtonStatus: 'success' });
-	            this.props.updatedDevice(deviceData);
-	        }.bind(this));
-	    },
-
-	    save: function save() {
-	        this.setState({ errors: null });
-
-	        if (this.state.id) {
-	            this.updateDevice();
-	        } else {
-	            this.createDevice();
-	        }
-	    },
-
-	    deleteDevice: function deleteDevice() {
-	        this.props.deviceDelete(this.state.id);
-	    },
-
-	    typeChanged: function typeChanged(type) {
-	        this.changed({
-	            target: {
-	                getAttribute: function getAttribute() {
-	                    return 'type';
-	                },
-	                value: type
-	            }
-	        }, function () {
-	            this.props.changed && this.props.changed(this);
-	        });
-	    },
-
-	    _changed: function _changed(evt) {
-	        this.setState({ saveButtonStatus: '' });
-
-	        if (evt) {
-	            this.changed(evt, function () {
-	                this.props.changed && this.props.changed(this);
-	            }.bind(this));
-	        }
-	    },
-
-	    _zoneChanged: function _zoneChanged() {
-	        this._changed();
-	    },
-
-	    _sensorChanged: function _sensorChanged() {
-	        this._changed();
-	    },
-
-	    render: function render() {
-	        var token;
-	        if (this.props.showToken) {
-	            token = React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "token") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("token") },
-	                    'Security Token'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.token,
-	                    'data-statepath': 'token',
-	                    onChange: this._changed,
-	                    className: 'token form-control',
-	                    type: 'text',
-	                    id: this.uid("token") }),
-	                this.errMsg('token')
-	            );
-	        }
-
-	        var saveBtn;
-	        if (this.props.showSaveBtn && this.state.dirty) {
-	            saveBtn = React.createElement(SaveBtn, {
-	                clicked: this.save,
-	                text: 'Save',
-	                status: this.state.saveButtonStatus });
-	        }
-
-	        var deleteBtn;
-	        if (this.props.deleteDevice) {
-	            deleteBtn = React.createElement(
-	                'button',
-	                _extends({}, classes('delete', '', 'btn btn-link pull-right'), { onClick: this.deleteDevice }),
-	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
-	            );
-	        }
-
-	        var zones;
-	        if (this.props.zones.length === 0) {
-	            zones = React.createElement(
-	                'h4',
-	                null,
-	                '0 zones found'
-	            );
-	        } else {
-	            zones = this.props.zones.map(function (zone) {
-	                return React.createElement(ZoneInfo, {
-	                    ref: "zoneInfo_" + zone.id,
-	                    readOnlyFields: 'deviceId',
-	                    key: zone.id,
-	                    name: zone.name,
-	                    description: zone.description,
-	                    address: zone.address,
-	                    type: zone.type,
-	                    output: zone.output,
-	                    deviceId: this.state.id,
-	                    devices: [this.toJson()],
-	                    changed: this._zoneChanged });
-	            }.bind(this));
-	        }
-
-	        var sensors;
-	        if (this.props.sensors.length === 0) {
-	            sensors = React.createElement(
-	                'h4',
-	                null,
-	                '0 sensors found'
-	            );
-	        } else {
-	            sensors = this.props.sensors.map(function (sensor) {
-	                return React.createElement(SensorInfo, {
-	                    ref: "sensorInfo_" + sensor.id,
-	                    readOnlyFields: 'deviceId',
-	                    key: sensor.id,
-	                    name: sensor.name,
-	                    description: sensor.description,
-	                    address: sensor.address,
-	                    attr: sensor.attr,
-	                    deviceId: this.state.id,
-	                    devices: [this.toJson()],
-	                    changed: this._sensorChanged });
-	            }.bind(this));
-	        }
-
-	        return React.createElement(
-	            'div',
-	            classes('', '', 'well well-sm'),
-	            deleteBtn,
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "name") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("name") }),
-	                    'Name*'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.name,
-	                    'data-statepath': 'name',
-	                    onChange: this._changed,
-	                    className: 'name form-control',
-	                    type: 'text',
-	                    id: this.uid("name") }),
-	                this.errMsg("name")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "id") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("id") }),
-	                    'ID'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.id,
-	                    readOnly: this.isReadOnly("id"),
-	                    'data-statepath': 'id',
-	                    onChange: this._changed,
-	                    className: 'id form-control',
-	                    type: 'text',
-	                    id: this.uid("id") }),
-	                this.errMsg("id")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "type") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("type") }),
-	                    'Type*'
-	                ),
-	                React.createElement(DeviceTypePicker, { type: this.state.type, changed: this.typeChanged }),
-	                this.errMsg('type')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "description") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
-	                    'Description'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.description,
-	                    'data-statepath': 'description',
-	                    onChange: this._changed,
-	                    className: 'description form-control',
-	                    type: 'text',
-	                    id: this.uid("description") }),
-	                this.errMsg("description")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "modelNumber") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("modelNumber") }),
-	                    'Model Number'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.modelNumber,
-	                    readOnly: this.isReadOnly("modelNumber"),
-	                    'data-statepath': 'modelNumber',
-	                    onChange: this._changed,
-	                    className: 'modelNumber form-control',
-	                    type: 'text',
-	                    id: this.uid("modelNumber") }),
-	                this.errMsg("modelNumber")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "address") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
-	                    'Address'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.address,
-	                    'data-statepath': 'address',
-	                    onChange: this._changed,
-	                    className: 'address form-control',
-	                    type: 'text',
-	                    id: this.uid("address") }),
-	                this.errMsg("address")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: Classnames({ clearfix: true, hidden: !this.props.showZones }) },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("zones") },
-	                    'Zones',
-	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse zones', id: this.uid("zones") },
-	                zones
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: Classnames({ clearfix: true, hidden: !this.props.showSensors }) },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("sensors") },
-	                    'Sensors',
-	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse sensors', id: this.uid("sensors") },
-	                sensors
-	            ),
-	            token,
-	            React.createElement(
-	                'div',
-	                { className: 'pull-right' },
-	                saveBtn
-	            ),
-	            React.createElement('div', { style: { clear: "both" } })
-	        );
-	    }
-	});
-
-	function mapDispatchToProps(dispatch) {
-	    return {
-	        savedZone: function savedZone(zoneJson) {
-	            dispatch(ZoneActions.importedZone(zoneJson));
-	        },
-	        savedSensor: function savedSensor(sensorJson) {
-	            dispatch(SensorActions.importedSensor(sensorJson));
-	        },
-	        raiseError: function raiseError(error) {
-	            //TODO:
-	        }
-	    };
-	}
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceInfo);
-
-/***/ },
-/* 205 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	var _current = 0;
-
-	module.exports = {
-	    getNextIdAndIncrement: function getNextIdAndIncrement() {
-	        _current += 1;
-	        return _current;
-	    },
-
-	    getCurrentId: function getCurrentId() {
-	        return _current;
-	    }
-	};
-
-/***/ },
-/* 206 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	module.exports = {
-	    uid: function uid(field) {
-	        return this.state.id + '_' + field;
-	    },
-
-	    getErr: function getErr(field) {
-	        var errors = this.state.errors;
-	        if (!errors) {
-	            return null;
-	        }
-	        //TODO: delete
-	        //return errors[this.uid(field)];
-	        return errors[field];
-	    },
-
-	    hasErr: function hasErr(field) {
-	        return this.getErr(field) != null;
-	    },
-
-	    errMsg: function errMsg(field) {
-	        var err = this.getErr(field);
-	        if (!err) {
-	            return;
-	        }
-	        return React.createElement(
-	            'span',
-	            { className: 'help-block' },
-	            "Error - " + err.message
-	        );
-	    },
-
-	    addErr: function addErr(classes, field) {
-	        if (this.hasErr(field)) {
-	            return classes + " has-error";
-	        }
-	        return classes;
-	    },
-
-	    changed: function changed(evt, cb) {
-	        var statePath = evt.target.getAttribute('data-statepath');
-	        var s = {};
-	        s[statePath] = evt.target.value;
-	        s.dirty = true;
-
-	        var errors = this.state['errors'] || {};
-	        delete errors[this.uid(statePath)];
-	        s.errors = errors;
-	        this.setState(s, cb);
-	    },
-
-	    isReadOnly: function isReadOnly(field) {
-	        var fields = this.props.readOnlyFields || '';
-	        var items = fields.split(',');
-	        for (var i = 0; i < items.length; ++i) {
-	            if (items[i] === field) {
-	                return true;
-	            }
-	        }
-	        return false;
-	    }
-	};
-
-/***/ },
-/* 207 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var SaveBtn = React.createClass({
-	    displayName: 'SaveBtn',
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            status: 'default'
-	        };
-	    },
-
-	    clicked: function clicked() {
-	        this.props.clicked();
-	    },
-
-	    render: function render() {
-	        var btnType, body;
-	        var disabled = true;
-
-	        switch (this.props.status) {
-	            case SaveBtn.STATUS.Saving:
-	                btnType = 'btn-primary';
-	                body = React.createElement(
-	                    'div',
-	                    null,
-	                    React.createElement('i', { className: 'fa fa-spinner fa-spin' })
-	                );
-	                break;
-	            case SaveBtn.STATUS.Error:
-	                btnType = "btn-danger";
-	                body = React.createElement(
-	                    'div',
-	                    null,
-	                    'Error'
-	                );
-	                break;
-	            case SaveBtn.STATUS.Success:
-	                btnType = "btn-success";
-	                body = React.createElement(
-	                    'div',
-	                    null,
-	                    React.createElement('span', { className: 'glyphicon glyphicon-ok' })
-	                );
-	                break;
-	            default:
-	                btnType = "btn-primary";
-	                body = React.createElement(
-	                    'div',
-	                    null,
-	                    this.props.text
-	                );
-	                disabled = false;
-	                break;
-	        }
-
-	        var disabledClass = disabled ? " disabled" : "";
-	        return React.createElement(
-	            'button',
-	            { className: "cmp-SaveBtn btn " + btnType + disabledClass, onClick: this.clicked },
-	            body
-	        );
-	    }
-	});
-
-	SaveBtn.STATUS = {
-	    Default: 'default',
-	    Saving: 'saving',
-	    Success: 'success',
-	    Error: 'error'
-	};
-	module.exports = SaveBtn;
-
-/***/ },
-/* 208 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -24835,12 +24192,94 @@
 	module.exports = API;
 
 /***/ },
-/* 209 */
+/* 205 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var keyMirror = __webpack_require__(210);
+	var Constants = __webpack_require__(206);
+	var Api = __webpack_require__(204);
+
+	var SystemActions = {
+	    deviceNew: function deviceNew() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_NEW_CLIENT });
+	        };
+	    },
+
+	    deviceDelete: function deviceDelete(id) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_DESTROY });
+	            if (!id) {
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id });
+	                return;
+	            }
+
+	            Api.deviceDestroy(id, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, data: data });
+	            });
+	        };
+	    },
+
+	    createdDevice: function createdDevice(id, deviceJson, append) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, id: id });
+	        };
+	    },
+
+	    updatedDevice: function updatedDevice(deviceJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_UPDATE_RAW, data: deviceJson });
+	        };
+	    },
+
+	    importedDevice: function importedDevice(deviceJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_IMPORT_RAW, data: deviceJson });
+	        };
+	    },
+
+	    loadAllDevices: function loadAllDevices() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
+
+	            Api.deviceLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.DEVICE_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.DEVICE_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    },
+
+	    loadAllButtons: function loadAllButtons() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.BUTTON_LOAD_ALL });
+
+	            Api.buttonLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    }
+	};
+	module.exports = SystemActions;
+
+/***/ },
+/* 206 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var keyMirror = __webpack_require__(207);
 
 	/*
 	 The pattern here is that you have a actionType e.g. SCENE_DESTROY, responses from the
@@ -24963,7 +24402,7 @@
 	});
 
 /***/ },
-/* 210 */
+/* 207 */
 /***/ function(module, exports) {
 
 	/**
@@ -25022,1132 +24461,13 @@
 
 
 /***/ },
-/* 211 */
+/* 208 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var React = __webpack_require__(1);
-	var UniqueIdMixin = __webpack_require__(205);
-	var InputValidationMixin = __webpack_require__(206);
-	var DevicePicker = __webpack_require__(212);
-	var ZoneOutputPicker = __webpack_require__(213);
-	var ZoneTypePicker = __webpack_require__(214);
-	var SaveBtn = __webpack_require__(207);
-	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(215);
-
-	var classes = new BEMHelper({
-	    name: 'ZoneInfo',
-	    prefix: 'b-'
-	});
-	__webpack_require__(216);
-
-	//TODO: Remove individual props from this cmp, just pass in zone
-
-	var ZoneInfo = React.createClass({
-	    displayName: 'ZoneInfo',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            showSaveBtn: false
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            name: this.props.name,
-	            description: this.props.description,
-	            address: this.props.address,
-	            deviceId: this.props.deviceId,
-	            type: this.props.type,
-	            output: this.props.output,
-	            errors: this.props.errors,
-	            id: this.props.id,
-	            dirty: false,
-	            saveButtonStatus: ''
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        var s = this.state;
-	        return {
-	            id: this.props.id,
-	            name: s.name,
-	            description: s.description,
-	            address: s.address,
-	            deviceId: s.deviceId,
-	            type: s.type,
-	            output: s.output
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    _changed: function _changed(evt) {
-	        this.setState({ saveButtonStatus: '' }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	        this.changed(evt);
-	    },
-
-	    devicePickerChanged: function devicePickerChanged(deviceId) {
-	        this.setState({ deviceId: deviceId }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    typeChanged: function typeChanged(type) {
-	        if (this.state.type === type) {
-	            return;
-	        }
-
-	        this.setState({
-	            saveButtonStatus: '',
-	            type: type,
-	            dirty: true
-	        }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    outputChanged: function outputChanged(output) {
-	        if (this.state.output === output) {
-	            return;
-	        }
-
-	        this.setState({
-	            saveButtonStatus: '',
-	            output: output,
-	            dirty: true
-	        }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    save: function save() {
-	        this.setState({ errors: null });
-	        Api.zoneUpdate(this.toJson(), function (err, zoneData) {
-	            if (err && !err.validation) {
-	                //TODO: Dispatch general error
-	                this.setState({ saveButtonStatus: 'error' });
-	                return;
-	            } else if (err && err.validation) {
-	                this.setState({
-	                    saveButtonStatus: 'error',
-	                    errors: err.validation.errors[this.state.id]
-	                });
-	                return;
-	            }
-
-	            this.setState({ saveButtonStatus: 'success' });
-	            this.props.updatedZone(zoneData);
-	        }.bind(this));
-	    },
-
-	    render: function render() {
-	        var saveBtn;
-	        if (this.props.showSaveBtn && this.state.dirty) {
-	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
-	                clicked: this.save,
-	                text: 'Save',
-	                status: this.state.saveButtonStatus }));
-	        }
-
-	        return React.createElement(
-	            'div',
-	            classes('', '', 'well well-sm'),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr('form-group', 'name') },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
-	                    'Name*'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.name,
-	                    'data-statepath': 'name',
-	                    onChange: this._changed,
-	                    className: 'name form-control',
-	                    type: 'text',
-	                    id: this.uid('name') }),
-	                this.errMsg('name')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "type") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("type") }),
-	                    'Type*'
-	                ),
-	                React.createElement(ZoneTypePicker, { type: this.props.type, changed: this.typeChanged }),
-	                this.errMsg('type')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "output") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("output") }),
-	                    'Output*'
-	                ),
-	                React.createElement(ZoneOutputPicker, { output: this.props.output, changed: this.outputChanged }),
-	                this.errMsg('output')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: '' },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("moreInfo") },
-	                    'More Details',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse moreInfo', id: this.uid("moreInfo") },
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", 'description') },
-	                    React.createElement(
-	                        'label',
-	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
-	                        'Description'
-	                    ),
-	                    React.createElement('input', {
-	                        value: this.state.description,
-	                        'data-statepath': 'description',
-	                        onChange: this._changed,
-	                        className: 'description form-control',
-	                        type: 'text',
-	                        id: this.uid("description") }),
-	                    this.errMsg('description')
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "address") },
-	                    React.createElement(
-	                        'label',
-	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
-	                        'Address'
-	                    ),
-	                    React.createElement('input', {
-	                        value: this.state.address,
-	                        'data-statepath': 'address',
-	                        onChange: this._changed,
-	                        className: 'address form-control',
-	                        type: 'text',
-	                        id: this.uid("address") }),
-	                    this.errMsg('address')
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "deviceId") },
-	                    React.createElement(
-	                        'label',
-	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("deviceId") }),
-	                        'Device*'
-	                    ),
-	                    React.createElement(DevicePicker, {
-	                        disabled: this.isReadOnly("deviceId"),
-	                        defaultId: this.props.deviceId,
-	                        devices: this.props.devices,
-	                        changed: this.devicePickerChanged }),
-	                    this.errMsg('deviceId')
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'pull-right' },
-	                saveBtn
-	            ),
-	            React.createElement('div', { style: { clear: 'both' } })
-	        );
-	    }
-	});
-	module.exports = ZoneInfo;
-
-/***/ },
-/* 212 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var React = __webpack_require__(1);
-
-	var DevicePicker = React.createClass({
-	    displayName: "DevicePicker",
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            devices: []
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.defaultId
-	        };
-	    },
-
-	    //TODO: If only one item in the list, select by default on load
-	    //TODO: if output or type is unknown need to update zone control to be
-	    //able to handle those values
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.devices.forEach(function (device) {
-	            var id = device.id;
-	            options.push(React.createElement(
-	                "option",
-	                { key: id, value: id },
-	                device.name
-	            ));
-	        });
-	        return React.createElement(
-	            "div",
-	            { className: "cmp-DevicePicker" },
-	            React.createElement(
-	                "select",
-	                {
-	                    disabled: this.props.disabled,
-	                    className: "form-control",
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    "option",
-	                    { value: "" },
-	                    "Select a device..."
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = DevicePicker;
-
-/***/ },
-/* 213 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ZoneOutputPicker = React.createClass({
-	    displayName: 'ZoneOutputPicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.output || 'continuous'
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        // If a value wasn't passed in, raise a changed notification so callers
-	        // can set their value accordingly since we default to unknown
-	        if (this.state.value === 'continuous') {
-	            this.props.changed && this.props.changed(this.state.value);
-	        }
-	    },
-
-	    selected: function selected(evt) {
-	        this.setOutput(evt.target.value);
-	    },
-
-	    setOutput: function setOutput(output) {
-	        this.setState({ value: output });
-	        this.props.changed && this.props.changed(output);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneOutputPicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: 'unknown' },
-	                    'Unknown'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'continuous' },
-	                    'Continuous'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'binary' },
-	                    'Binary'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'rgb' },
-	                    'RGB'
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneOutputPicker;
-
-/***/ },
-/* 214 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ZoneTypePicker = React.createClass({
-	    displayName: 'ZoneTypePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.type || 'unknown'
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        // If a value wasn't passed in, raise a changed notification so callers
-	        // can set their value accordingly since we default to unknown
-	        if (this.state.value === 'unknown') {
-	            this.props.changed && this.props.changed(this.state.value);
-	        }
-	    },
-
-	    selected: function selected(evt) {
-	        this.setType(evt.target.value);
-	    },
-
-	    setType: function setType(type) {
-	        this.setState({ value: type });
-	        this.props.changed && this.props.changed(type);
-	    },
-
-	    render: function render() {
-	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Switch", val: "switch" }, { str: "Shade", val: "shade" }];
-	        var nodes = types.map(function (type) {
-	            return React.createElement(
-	                'option',
-	                { value: type.val, key: type.val },
-	                type.str
-	            );
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneTypePicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                nodes
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneTypePicker;
-
-/***/ },
-/* 215 */
-/***/ function(module, exports) {
-
-	function isObject(obj) {
-	  var type = typeof obj;
-	  return type === 'function' || type === 'object' && !!obj;
-	}
-
-	function isString(string) {
-	  return typeof string === 'string';
-	}
-
-	function isFunction(functionToCheck) {
-	  var getType = {};
-	  return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
-	}
-
-	function objectToArray(object) {
-	  var keys   = Object.keys(object);
-	  var output = [];
-
-	  keys.forEach(function(key) {
-	    var predicate = object[key];
-
-	    if (isFunction(predicate)) {
-	      predicate = predicate();
-	    }
-
-	    if (predicate) {
-	      output.push(key);
-	    }
-	  });
-
-	  return output;
-	}
-
-	function listToArray(list) {
-	  if (isString(list) && list !== '') {
-	    return list.split(' ');
-	  } else if (list && list.length) {
-	    return list;
-	  } else if (isObject(list)) {
-	    return objectToArray(list);
-	  } else {
-	    return [];
-	  }
-	}
-
-	module.exports = function(options) {
-	  if (isString(options)) {
-	    options = { name: options };
-	  }
-
-	  return function(first, modifiers, extraClassNames) {
-	    var blockName = options.name;
-	    var rootName = blockName;
-	    var classNames = [];
-	    var modifierDelimiter = options.modifierDelimiter || '--';
-	    var element;
-
-	    // This means the first parameter is not the element, but a configuration variable
-	    if (isObject(first)) {
-	      element = first.element;
-	      modifiers = first.modifiers || first.modifier;
-	      extraClassNames = first.extra;
-	    } else {
-	      element = first;
-	    }
-
-	    if (element) {
-	      rootName += '__' + element;
-	    }
-
-	    classNames.push(rootName);
-
-	    // Compose an array of modifiers
-	    listToArray(modifiers).forEach(function(modifier) {
-	      classNames.push(rootName + modifierDelimiter + modifier);
-	    });
-
-	    // Add a prefix to all the classes in the classNames array
-	    if (options.prefix) {
-	      for (var i = 0; i < classNames.length; i++) {
-	        classNames[i] = options.prefix + classNames[i];
-	      }
-	    }
-	    // Compose an array of extraClassNames
-	    listToArray(extraClassNames).forEach(function(extraClassName) {
-	      classNames.push(extraClassName);
-	    });
-
-	    return {
-	      className: classNames.join(' ').trim()
-	    };
-	  };
-	};
-
-
-/***/ },
-/* 216 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(217);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneInfo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneInfo.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 217 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(218)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-ZoneInfo {\n  margin-bottom: 0;\n}\n.b-ZoneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-ZoneInfo__save {\n  padding-left: 12px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 218 */
-/***/ function(module, exports) {
-
-	/*
-		MIT License http://www.opensource.org/licenses/mit-license.php
-		Author Tobias Koppers @sokra
-	*/
-	// css base code, injected by the css-loader
-	module.exports = function() {
-		var list = [];
-
-		// return the list of modules as css string
-		list.toString = function toString() {
-			var result = [];
-			for(var i = 0; i < this.length; i++) {
-				var item = this[i];
-				if(item[2]) {
-					result.push("@media " + item[2] + "{" + item[1] + "}");
-				} else {
-					result.push(item[1]);
-				}
-			}
-			return result.join("");
-		};
-
-		// import a list of modules into the list
-		list.i = function(modules, mediaQuery) {
-			if(typeof modules === "string")
-				modules = [[null, modules, ""]];
-			var alreadyImportedModules = {};
-			for(var i = 0; i < this.length; i++) {
-				var id = this[i][0];
-				if(typeof id === "number")
-					alreadyImportedModules[id] = true;
-			}
-			for(i = 0; i < modules.length; i++) {
-				var item = modules[i];
-				// skip already imported module
-				// this implementation is not 100% perfect for weird media query combinations
-				//  when a module is imported multiple times with different media queries.
-				//  I hope this will never occur (Hey this way we have smaller bundles)
-				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-					if(mediaQuery && !item[2]) {
-						item[2] = mediaQuery;
-					} else if(mediaQuery) {
-						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-					}
-					list.push(item);
-				}
-			}
-		};
-		return list;
-	};
-
-
-/***/ },
-/* 219 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*
-		MIT License http://www.opensource.org/licenses/mit-license.php
-		Author Tobias Koppers @sokra
-	*/
-	var stylesInDom = {},
-		memoize = function(fn) {
-			var memo;
-			return function () {
-				if (typeof memo === "undefined") memo = fn.apply(this, arguments);
-				return memo;
-			};
-		},
-		isOldIE = memoize(function() {
-			return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase());
-		}),
-		getHeadElement = memoize(function () {
-			return document.head || document.getElementsByTagName("head")[0];
-		}),
-		singletonElement = null,
-		singletonCounter = 0,
-		styleElementsInsertedAtTop = [];
-
-	module.exports = function(list, options) {
-		if(false) {
-			if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
-		}
-
-		options = options || {};
-		// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-		// tags it will allow on a page
-		if (typeof options.singleton === "undefined") options.singleton = isOldIE();
-
-		// By default, add <style> tags to the bottom of <head>.
-		if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
-
-		var styles = listToStyles(list);
-		addStylesToDom(styles, options);
-
-		return function update(newList) {
-			var mayRemove = [];
-			for(var i = 0; i < styles.length; i++) {
-				var item = styles[i];
-				var domStyle = stylesInDom[item.id];
-				domStyle.refs--;
-				mayRemove.push(domStyle);
-			}
-			if(newList) {
-				var newStyles = listToStyles(newList);
-				addStylesToDom(newStyles, options);
-			}
-			for(var i = 0; i < mayRemove.length; i++) {
-				var domStyle = mayRemove[i];
-				if(domStyle.refs === 0) {
-					for(var j = 0; j < domStyle.parts.length; j++)
-						domStyle.parts[j]();
-					delete stylesInDom[domStyle.id];
-				}
-			}
-		};
-	}
-
-	function addStylesToDom(styles, options) {
-		for(var i = 0; i < styles.length; i++) {
-			var item = styles[i];
-			var domStyle = stylesInDom[item.id];
-			if(domStyle) {
-				domStyle.refs++;
-				for(var j = 0; j < domStyle.parts.length; j++) {
-					domStyle.parts[j](item.parts[j]);
-				}
-				for(; j < item.parts.length; j++) {
-					domStyle.parts.push(addStyle(item.parts[j], options));
-				}
-			} else {
-				var parts = [];
-				for(var j = 0; j < item.parts.length; j++) {
-					parts.push(addStyle(item.parts[j], options));
-				}
-				stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
-			}
-		}
-	}
-
-	function listToStyles(list) {
-		var styles = [];
-		var newStyles = {};
-		for(var i = 0; i < list.length; i++) {
-			var item = list[i];
-			var id = item[0];
-			var css = item[1];
-			var media = item[2];
-			var sourceMap = item[3];
-			var part = {css: css, media: media, sourceMap: sourceMap};
-			if(!newStyles[id])
-				styles.push(newStyles[id] = {id: id, parts: [part]});
-			else
-				newStyles[id].parts.push(part);
-		}
-		return styles;
-	}
-
-	function insertStyleElement(options, styleElement) {
-		var head = getHeadElement();
-		var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1];
-		if (options.insertAt === "top") {
-			if(!lastStyleElementInsertedAtTop) {
-				head.insertBefore(styleElement, head.firstChild);
-			} else if(lastStyleElementInsertedAtTop.nextSibling) {
-				head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling);
-			} else {
-				head.appendChild(styleElement);
-			}
-			styleElementsInsertedAtTop.push(styleElement);
-		} else if (options.insertAt === "bottom") {
-			head.appendChild(styleElement);
-		} else {
-			throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
-		}
-	}
-
-	function removeStyleElement(styleElement) {
-		styleElement.parentNode.removeChild(styleElement);
-		var idx = styleElementsInsertedAtTop.indexOf(styleElement);
-		if(idx >= 0) {
-			styleElementsInsertedAtTop.splice(idx, 1);
-		}
-	}
-
-	function createStyleElement(options) {
-		var styleElement = document.createElement("style");
-		styleElement.type = "text/css";
-		insertStyleElement(options, styleElement);
-		return styleElement;
-	}
-
-	function createLinkElement(options) {
-		var linkElement = document.createElement("link");
-		linkElement.rel = "stylesheet";
-		insertStyleElement(options, linkElement);
-		return linkElement;
-	}
-
-	function addStyle(obj, options) {
-		var styleElement, update, remove;
-
-		if (options.singleton) {
-			var styleIndex = singletonCounter++;
-			styleElement = singletonElement || (singletonElement = createStyleElement(options));
-			update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
-			remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
-		} else if(obj.sourceMap &&
-			typeof URL === "function" &&
-			typeof URL.createObjectURL === "function" &&
-			typeof URL.revokeObjectURL === "function" &&
-			typeof Blob === "function" &&
-			typeof btoa === "function") {
-			styleElement = createLinkElement(options);
-			update = updateLink.bind(null, styleElement);
-			remove = function() {
-				removeStyleElement(styleElement);
-				if(styleElement.href)
-					URL.revokeObjectURL(styleElement.href);
-			};
-		} else {
-			styleElement = createStyleElement(options);
-			update = applyToTag.bind(null, styleElement);
-			remove = function() {
-				removeStyleElement(styleElement);
-			};
-		}
-
-		update(obj);
-
-		return function updateStyle(newObj) {
-			if(newObj) {
-				if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
-					return;
-				update(obj = newObj);
-			} else {
-				remove();
-			}
-		};
-	}
-
-	var replaceText = (function () {
-		var textStore = [];
-
-		return function (index, replacement) {
-			textStore[index] = replacement;
-			return textStore.filter(Boolean).join('\n');
-		};
-	})();
-
-	function applyToSingletonTag(styleElement, index, remove, obj) {
-		var css = remove ? "" : obj.css;
-
-		if (styleElement.styleSheet) {
-			styleElement.styleSheet.cssText = replaceText(index, css);
-		} else {
-			var cssNode = document.createTextNode(css);
-			var childNodes = styleElement.childNodes;
-			if (childNodes[index]) styleElement.removeChild(childNodes[index]);
-			if (childNodes.length) {
-				styleElement.insertBefore(cssNode, childNodes[index]);
-			} else {
-				styleElement.appendChild(cssNode);
-			}
-		}
-	}
-
-	function applyToTag(styleElement, obj) {
-		var css = obj.css;
-		var media = obj.media;
-
-		if(media) {
-			styleElement.setAttribute("media", media)
-		}
-
-		if(styleElement.styleSheet) {
-			styleElement.styleSheet.cssText = css;
-		} else {
-			while(styleElement.firstChild) {
-				styleElement.removeChild(styleElement.firstChild);
-			}
-			styleElement.appendChild(document.createTextNode(css));
-		}
-	}
-
-	function updateLink(linkElement, obj) {
-		var css = obj.css;
-		var sourceMap = obj.sourceMap;
-
-		if(sourceMap) {
-			// http://stackoverflow.com/a/26603875
-			css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
-		}
-
-		var blob = new Blob([css], { type: "text/css" });
-
-		var oldSrc = linkElement.href;
-
-		linkElement.href = URL.createObjectURL(blob);
-
-		if(oldSrc)
-			URL.revokeObjectURL(oldSrc);
-	}
-
-
-/***/ },
-/* 220 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var React = __webpack_require__(1);
-	var UniqueIdMixin = __webpack_require__(205);
-	var InputValidationMixin = __webpack_require__(206);
-	var DevicePicker = __webpack_require__(212);
-	var BEMHelper = __webpack_require__(215);
-	var SaveBtn = __webpack_require__(207);
-	var Api = __webpack_require__(208);
-
-	var classes = new BEMHelper({
-	    name: 'SensorInfo',
-	    prefix: 'b-'
-	});
-	__webpack_require__(221);
-
-	var SensorInfo = React.createClass({
-	    displayName: 'SensorInfo',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            showSaveBtn: false
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            name: this.props.name,
-	            description: this.props.description,
-	            address: this.props.address,
-	            deviceId: this.props.deviceId,
-	            errors: this.props.errors,
-	            saveButtonStatus: ''
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        var s = this.state;
-	        return {
-	            name: s.name,
-	            description: s.description,
-	            address: s.address,
-	            deviceId: s.deviceId,
-	            id: this.props.id,
-	            attr: this.props.attr
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    _changed: function _changed(evt) {
-	        this.setState({ saveButtonStatus: '' });
-	        this.changed(evt, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    devicePickerChanged: function devicePickerChanged(deviceId) {
-	        this.setState({
-	            deviceId: deviceId,
-	            saveButtonStatus: ''
-	        }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    save: function save() {
-	        this.setState({ errors: null });
-	        Api.sensorUpdate(this.toJson(), function (err, sensorData) {
-	            if (err && !err.validation) {
-	                //TODO: Dispatch general error
-	                this.setState({ saveButtonStatus: 'error' });
-	                return;
-	            } else if (err && err.validation) {
-	                this.setState({
-	                    saveButtonStatus: 'error',
-	                    errors: err.validation.errors[this.props.id]
-	                });
-	                return;
-	            }
-
-	            this.setState({ saveButtonStatus: 'success' });
-	            this.props.updatedSensor(sensorData);
-	        }.bind(this));
-	    },
-
-	    render: function render() {
-	        var saveBtn;
-	        if (this.props.showSaveBtn && this.state.dirty) {
-	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
-	                clicked: this.save,
-	                text: 'Save',
-	                status: this.state.saveButtonStatus }));
-	        }
-
-	        return React.createElement(
-	            'div',
-	            classes('', '', 'well well-sm'),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr('form-group', 'name') },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
-	                    'Name*'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.name,
-	                    'data-statepath': 'name',
-	                    onChange: this._changed,
-	                    className: 'name form-control',
-	                    type: 'text',
-	                    id: this.uid('name') }),
-	                this.errMsg('name')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", 'description') },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
-	                    'Description'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.description,
-	                    'data-statepath': 'description',
-	                    onChange: this._changed,
-	                    className: 'description form-control',
-	                    type: 'text',
-	                    id: this.uid("description") }),
-	                this.errMsg('description')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "address") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
-	                    'Address'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.address,
-	                    'data-statepath': 'address',
-	                    onChange: this._changed,
-	                    className: 'address form-control',
-	                    type: 'text',
-	                    id: this.uid("address") }),
-	                this.errMsg('address')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "deviceId") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("deviceId") }),
-	                    'Device*'
-	                ),
-	                React.createElement(DevicePicker, {
-	                    disabled: this.isReadOnly("deviceId"),
-	                    defaultId: this.props.deviceId,
-	                    devices: this.props.devices,
-	                    changed: this.devicePickerChanged }),
-	                this.errMsg('deviceId')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'pull-right' },
-	                saveBtn
-	            ),
-	            React.createElement('div', { style: { clear: 'both' } })
-	        );
-	    }
-	});
-	module.exports = SensorInfo;
-
-/***/ },
-/* 221 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(222);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorInfo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorInfo.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 222 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(218)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SensorInfo {\n  margin-bottom: 0;\n}\n.b-SensorInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 223 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(208);
+	var Constants = __webpack_require__(206);
+	var Api = __webpack_require__(204);
 
 	var ZoneActions = {
 	    loadAll: function loadAll() {
@@ -26182,13 +24502,13 @@
 	module.exports = ZoneActions;
 
 /***/ },
-/* 224 */
+/* 209 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(208);
+	var Constants = __webpack_require__(206);
+	var Api = __webpack_require__(204);
 
 	var SensorActions = {
 	    loadAll: function loadAll() {
@@ -26224,242 +24544,7 @@
 	module.exports = SensorActions;
 
 /***/ },
-/* 225 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var DeviceTypePicker = React.createClass({
-	    displayName: 'DeviceTypePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.type || 'unknown'
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        // If a value wasn't passed in, raise a changed notification so callers
-	        // can set their value accordingly since we default to unknown
-	        if (this.state.value === 'unknown') {
-	            this.props.changed && this.props.changed(this.state.value);
-	        }
-	    },
-
-	    selected: function selected(evt) {
-	        this.setType(evt.target.value);
-	    },
-
-	    setType: function setType(type) {
-	        this.setState({ value: type });
-	        this.props.changed && this.props.changed(type);
-	    },
-
-	    render: function render() {
-	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Dimmer", val: "dimmer" }, { str: "Shade", val: "shade" }, { str: "Switch", val: "switch" }, { str: "Hub", val: "hub" }, { str: "Remote", val: "remote" }];
-	        var nodes = types.map(function (type) {
-	            return React.createElement(
-	                'option',
-	                { value: type.val, key: type.val },
-	                type.str
-	            );
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-DeviceTypePicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                nodes
-	            )
-	        );
-	    }
-	});
-	module.exports = DeviceTypePicker;
-
-/***/ },
-/* 226 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-	  Copyright (c) 2016 Jed Watson.
-	  Licensed under the MIT License (MIT), see
-	  http://jedwatson.github.io/classnames
-	*/
-	/* global define */
-
-	(function () {
-		'use strict';
-
-		var hasOwn = {}.hasOwnProperty;
-
-		function classNames () {
-			var classes = [];
-
-			for (var i = 0; i < arguments.length; i++) {
-				var arg = arguments[i];
-				if (!arg) continue;
-
-				var argType = typeof arg;
-
-				if (argType === 'string' || argType === 'number') {
-					classes.push(arg);
-				} else if (Array.isArray(arg)) {
-					classes.push(classNames.apply(null, arg));
-				} else if (argType === 'object') {
-					for (var key in arg) {
-						if (hasOwn.call(arg, key) && arg[key]) {
-							classes.push(key);
-						}
-					}
-				}
-			}
-
-			return classes.join(' ');
-		}
-
-		if (typeof module !== 'undefined' && module.exports) {
-			module.exports = classNames;
-		} else if (true) {
-			// register as 'classnames', consistent with npm package name
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
-				return classNames;
-			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-		} else {
-			window.classNames = classNames;
-		}
-	}());
-
-
-/***/ },
-/* 227 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(228);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 228 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(218)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-DeviceInfo {\n  margin-bottom: 0;\n}\n.b-DeviceInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-DeviceInfo__delete {\n  padding: 0;\n}\n.b-DeviceInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n  margin-bottom: 20px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 229 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(208);
-
-	var SystemActions = {
-	    deviceNew: function deviceNew() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_NEW_CLIENT });
-	        };
-	    },
-
-	    deviceDelete: function deviceDelete(id) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_DESTROY });
-	            if (!id) {
-	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id });
-	                return;
-	            }
-
-	            Api.deviceDestroy(id, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.DEVICE_DESTROY_FAIL, id: id, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.DEVICE_DESTROY_RAW, id: id, data: data });
-	            });
-	        };
-	    },
-
-	    createdDevice: function createdDevice(id, deviceJson, append) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_CREATE_RAW, data: deviceJson, id: id });
-	        };
-	    },
-
-	    updatedDevice: function updatedDevice(deviceJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_UPDATE_RAW, data: deviceJson });
-	        };
-	    },
-
-	    importedDevice: function importedDevice(deviceJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_IMPORT_RAW, data: deviceJson });
-	        };
-	    },
-
-	    loadAllDevices: function loadAllDevices() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
-
-	            Api.deviceLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.DEVICE_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.DEVICE_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    },
-
-	    loadAllButtons: function loadAllButtons() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.BUTTON_LOAD_ALL });
-
-	            Api.buttonLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    }
-	};
-	module.exports = SystemActions;
-
-/***/ },
-/* 230 */
+/* 210 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26467,15 +24552,15 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(215);
-	var DeviceCell = __webpack_require__(231);
-	var ZoneSensorCell = __webpack_require__(234);
-	var DeviceInfo = __webpack_require__(204);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(211);
+	var DeviceCell = __webpack_require__(212);
+	var ZoneSensorCell = __webpack_require__(217);
+	var DeviceInfo = __webpack_require__(220);
 	var Grid = __webpack_require__(237);
-	var ZoneInfo = __webpack_require__(211);
-	var SensorInfo = __webpack_require__(220);
-	var SaveBtn = __webpack_require__(207);
+	var ZoneInfo = __webpack_require__(224);
+	var SensorInfo = __webpack_require__(230);
+	var SaveBtn = __webpack_require__(223);
 
 	var classes = new BEMHelper({
 	    name: 'ImportGroup',
@@ -26888,7 +24973,106 @@
 	module.exports = ImportGroup;
 
 /***/ },
-/* 231 */
+/* 211 */
+/***/ function(module, exports) {
+
+	function isObject(obj) {
+	  var type = typeof obj;
+	  return type === 'function' || type === 'object' && !!obj;
+	}
+
+	function isString(string) {
+	  return typeof string === 'string';
+	}
+
+	function isFunction(functionToCheck) {
+	  var getType = {};
+	  return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+	}
+
+	function objectToArray(object) {
+	  var keys   = Object.keys(object);
+	  var output = [];
+
+	  keys.forEach(function(key) {
+	    var predicate = object[key];
+
+	    if (isFunction(predicate)) {
+	      predicate = predicate();
+	    }
+
+	    if (predicate) {
+	      output.push(key);
+	    }
+	  });
+
+	  return output;
+	}
+
+	function listToArray(list) {
+	  if (isString(list) && list !== '') {
+	    return list.split(' ');
+	  } else if (list && list.length) {
+	    return list;
+	  } else if (isObject(list)) {
+	    return objectToArray(list);
+	  } else {
+	    return [];
+	  }
+	}
+
+	module.exports = function(options) {
+	  if (isString(options)) {
+	    options = { name: options };
+	  }
+
+	  return function(first, modifiers, extraClassNames) {
+	    var blockName = options.name;
+	    var rootName = blockName;
+	    var classNames = [];
+	    var modifierDelimiter = options.modifierDelimiter || '--';
+	    var element;
+
+	    // This means the first parameter is not the element, but a configuration variable
+	    if (isObject(first)) {
+	      element = first.element;
+	      modifiers = first.modifiers || first.modifier;
+	      extraClassNames = first.extra;
+	    } else {
+	      element = first;
+	    }
+
+	    if (element) {
+	      rootName += '__' + element;
+	    }
+
+	    classNames.push(rootName);
+
+	    // Compose an array of modifiers
+	    listToArray(modifiers).forEach(function(modifier) {
+	      classNames.push(rootName + modifierDelimiter + modifier);
+	    });
+
+	    // Add a prefix to all the classes in the classNames array
+	    if (options.prefix) {
+	      for (var i = 0; i < classNames.length; i++) {
+	        classNames[i] = options.prefix + classNames[i];
+	      }
+	    }
+	    // Compose an array of extraClassNames
+	    listToArray(extraClassNames).forEach(function(extraClassName) {
+	      classNames.push(extraClassName);
+	    });
+
+	    return {
+	      className: classNames.join(' ').trim()
+	    };
+	  };
+	};
+
+
+/***/ },
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -26896,13 +25080,13 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(215);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'DeviceCell',
 	    prefix: 'b-'
 	});
-	__webpack_require__(232);
+	__webpack_require__(213);
 
 	var DeviceCell = React.createClass({
 	    displayName: 'DeviceCell',
@@ -26972,16 +25156,16 @@
 	module.exports = DeviceCell;
 
 /***/ },
-/* 232 */
+/* 213 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(233);
+	var content = __webpack_require__(214);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -26998,10 +25182,10 @@
 	}
 
 /***/ },
-/* 233 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -27012,7 +25196,315 @@
 
 
 /***/ },
-/* 234 */
+/* 215 */
+/***/ function(module, exports) {
+
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	// css base code, injected by the css-loader
+	module.exports = function() {
+		var list = [];
+
+		// return the list of modules as css string
+		list.toString = function toString() {
+			var result = [];
+			for(var i = 0; i < this.length; i++) {
+				var item = this[i];
+				if(item[2]) {
+					result.push("@media " + item[2] + "{" + item[1] + "}");
+				} else {
+					result.push(item[1]);
+				}
+			}
+			return result.join("");
+		};
+
+		// import a list of modules into the list
+		list.i = function(modules, mediaQuery) {
+			if(typeof modules === "string")
+				modules = [[null, modules, ""]];
+			var alreadyImportedModules = {};
+			for(var i = 0; i < this.length; i++) {
+				var id = this[i][0];
+				if(typeof id === "number")
+					alreadyImportedModules[id] = true;
+			}
+			for(i = 0; i < modules.length; i++) {
+				var item = modules[i];
+				// skip already imported module
+				// this implementation is not 100% perfect for weird media query combinations
+				//  when a module is imported multiple times with different media queries.
+				//  I hope this will never occur (Hey this way we have smaller bundles)
+				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+					if(mediaQuery && !item[2]) {
+						item[2] = mediaQuery;
+					} else if(mediaQuery) {
+						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+					}
+					list.push(item);
+				}
+			}
+		};
+		return list;
+	};
+
+
+/***/ },
+/* 216 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	var stylesInDom = {},
+		memoize = function(fn) {
+			var memo;
+			return function () {
+				if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+				return memo;
+			};
+		},
+		isOldIE = memoize(function() {
+			return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase());
+		}),
+		getHeadElement = memoize(function () {
+			return document.head || document.getElementsByTagName("head")[0];
+		}),
+		singletonElement = null,
+		singletonCounter = 0,
+		styleElementsInsertedAtTop = [];
+
+	module.exports = function(list, options) {
+		if(false) {
+			if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+		}
+
+		options = options || {};
+		// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+		// tags it will allow on a page
+		if (typeof options.singleton === "undefined") options.singleton = isOldIE();
+
+		// By default, add <style> tags to the bottom of <head>.
+		if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
+
+		var styles = listToStyles(list);
+		addStylesToDom(styles, options);
+
+		return function update(newList) {
+			var mayRemove = [];
+			for(var i = 0; i < styles.length; i++) {
+				var item = styles[i];
+				var domStyle = stylesInDom[item.id];
+				domStyle.refs--;
+				mayRemove.push(domStyle);
+			}
+			if(newList) {
+				var newStyles = listToStyles(newList);
+				addStylesToDom(newStyles, options);
+			}
+			for(var i = 0; i < mayRemove.length; i++) {
+				var domStyle = mayRemove[i];
+				if(domStyle.refs === 0) {
+					for(var j = 0; j < domStyle.parts.length; j++)
+						domStyle.parts[j]();
+					delete stylesInDom[domStyle.id];
+				}
+			}
+		};
+	}
+
+	function addStylesToDom(styles, options) {
+		for(var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+			if(domStyle) {
+				domStyle.refs++;
+				for(var j = 0; j < domStyle.parts.length; j++) {
+					domStyle.parts[j](item.parts[j]);
+				}
+				for(; j < item.parts.length; j++) {
+					domStyle.parts.push(addStyle(item.parts[j], options));
+				}
+			} else {
+				var parts = [];
+				for(var j = 0; j < item.parts.length; j++) {
+					parts.push(addStyle(item.parts[j], options));
+				}
+				stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+			}
+		}
+	}
+
+	function listToStyles(list) {
+		var styles = [];
+		var newStyles = {};
+		for(var i = 0; i < list.length; i++) {
+			var item = list[i];
+			var id = item[0];
+			var css = item[1];
+			var media = item[2];
+			var sourceMap = item[3];
+			var part = {css: css, media: media, sourceMap: sourceMap};
+			if(!newStyles[id])
+				styles.push(newStyles[id] = {id: id, parts: [part]});
+			else
+				newStyles[id].parts.push(part);
+		}
+		return styles;
+	}
+
+	function insertStyleElement(options, styleElement) {
+		var head = getHeadElement();
+		var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1];
+		if (options.insertAt === "top") {
+			if(!lastStyleElementInsertedAtTop) {
+				head.insertBefore(styleElement, head.firstChild);
+			} else if(lastStyleElementInsertedAtTop.nextSibling) {
+				head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling);
+			} else {
+				head.appendChild(styleElement);
+			}
+			styleElementsInsertedAtTop.push(styleElement);
+		} else if (options.insertAt === "bottom") {
+			head.appendChild(styleElement);
+		} else {
+			throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
+		}
+	}
+
+	function removeStyleElement(styleElement) {
+		styleElement.parentNode.removeChild(styleElement);
+		var idx = styleElementsInsertedAtTop.indexOf(styleElement);
+		if(idx >= 0) {
+			styleElementsInsertedAtTop.splice(idx, 1);
+		}
+	}
+
+	function createStyleElement(options) {
+		var styleElement = document.createElement("style");
+		styleElement.type = "text/css";
+		insertStyleElement(options, styleElement);
+		return styleElement;
+	}
+
+	function createLinkElement(options) {
+		var linkElement = document.createElement("link");
+		linkElement.rel = "stylesheet";
+		insertStyleElement(options, linkElement);
+		return linkElement;
+	}
+
+	function addStyle(obj, options) {
+		var styleElement, update, remove;
+
+		if (options.singleton) {
+			var styleIndex = singletonCounter++;
+			styleElement = singletonElement || (singletonElement = createStyleElement(options));
+			update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
+			remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
+		} else if(obj.sourceMap &&
+			typeof URL === "function" &&
+			typeof URL.createObjectURL === "function" &&
+			typeof URL.revokeObjectURL === "function" &&
+			typeof Blob === "function" &&
+			typeof btoa === "function") {
+			styleElement = createLinkElement(options);
+			update = updateLink.bind(null, styleElement);
+			remove = function() {
+				removeStyleElement(styleElement);
+				if(styleElement.href)
+					URL.revokeObjectURL(styleElement.href);
+			};
+		} else {
+			styleElement = createStyleElement(options);
+			update = applyToTag.bind(null, styleElement);
+			remove = function() {
+				removeStyleElement(styleElement);
+			};
+		}
+
+		update(obj);
+
+		return function updateStyle(newObj) {
+			if(newObj) {
+				if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
+					return;
+				update(obj = newObj);
+			} else {
+				remove();
+			}
+		};
+	}
+
+	var replaceText = (function () {
+		var textStore = [];
+
+		return function (index, replacement) {
+			textStore[index] = replacement;
+			return textStore.filter(Boolean).join('\n');
+		};
+	})();
+
+	function applyToSingletonTag(styleElement, index, remove, obj) {
+		var css = remove ? "" : obj.css;
+
+		if (styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = replaceText(index, css);
+		} else {
+			var cssNode = document.createTextNode(css);
+			var childNodes = styleElement.childNodes;
+			if (childNodes[index]) styleElement.removeChild(childNodes[index]);
+			if (childNodes.length) {
+				styleElement.insertBefore(cssNode, childNodes[index]);
+			} else {
+				styleElement.appendChild(cssNode);
+			}
+		}
+	}
+
+	function applyToTag(styleElement, obj) {
+		var css = obj.css;
+		var media = obj.media;
+
+		if(media) {
+			styleElement.setAttribute("media", media)
+		}
+
+		if(styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = css;
+		} else {
+			while(styleElement.firstChild) {
+				styleElement.removeChild(styleElement.firstChild);
+			}
+			styleElement.appendChild(document.createTextNode(css));
+		}
+	}
+
+	function updateLink(linkElement, obj) {
+		var css = obj.css;
+		var sourceMap = obj.sourceMap;
+
+		if(sourceMap) {
+			// http://stackoverflow.com/a/26603875
+			css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+		}
+
+		var blob = new Blob([css], { type: "text/css" });
+
+		var oldSrc = linkElement.href;
+
+		linkElement.href = URL.createObjectURL(blob);
+
+		if(oldSrc)
+			URL.revokeObjectURL(oldSrc);
+	}
+
+
+/***/ },
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27020,13 +25512,13 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(215);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'ZoneSensorCell',
 	    prefix: 'b-'
 	});
-	__webpack_require__(235);
+	__webpack_require__(218);
 
 	var ZoneSensorCell = React.createClass({
 	    displayName: 'ZoneSensorCell',
@@ -27255,16 +25747,16 @@
 	module.exports = ZoneSensorCell;
 
 /***/ },
-/* 235 */
+/* 218 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(236);
+	var content = __webpack_require__(219);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -27281,15 +25773,1523 @@
 	}
 
 /***/ },
-/* 236 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
 	// module
 	exports.push([module.id, ".b-ZoneSensorCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-ZoneSensorCell--error {\n  background-color: #ffdddd;\n}\n.b-ZoneSensorCell--success {\n  background-color: #ddffdd;\n}\n.b-ZoneSensorCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-ZoneSensorCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-ZoneSensorCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorCell__switch-color {\n  display: none;\n}\n.b-ZoneSensorCell__switch-color--switch {\n  display: block;\n}\n.b-ZoneSensorCell__light-color {\n  display: none;\n}\n.b-ZoneSensorCell__light-color--light {\n  display: block;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 220 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var React = __webpack_require__(1);
+	var ReactRedux = __webpack_require__(173);
+	var UniqueIdMixin = __webpack_require__(221);
+	var InputValidationMixin = __webpack_require__(222);
+	var SaveBtn = __webpack_require__(223);
+	var Api = __webpack_require__(204);
+	var ZoneInfo = __webpack_require__(224);
+	var SensorInfo = __webpack_require__(230);
+	var ZoneActions = __webpack_require__(208);
+	var SensorActions = __webpack_require__(209);
+	var DeviceTypePicker = __webpack_require__(233);
+	var Classnames = __webpack_require__(234);
+	var BEMHelper = __webpack_require__(211);
+
+	var classes = new BEMHelper({
+	    name: 'DeviceInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(235);
+
+	var DeviceInfo = React.createClass({
+	    displayName: 'DeviceInfo',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        //TODO: need state?
+	        return {
+	            name: this.props.name || '',
+	            description: this.props.description || '',
+	            address: this.props.address,
+	            id: this.props.id,
+	            hubId: this.props.hubId,
+	            modelNumber: this.props.modelNumber || '',
+	            modelName: this.props.modelName || '',
+	            softwareVersion: this.props.softwareVersion || '',
+	            auth: this.props.auth,
+	            showToken: false,
+	            errors: this.props.errors,
+	            saveButtonStatus: '',
+	            dirty: !this.props.id,
+	            connPool: this.props.connPool,
+	            cmdBuilder: this.props.cmdBuilder,
+	            type: this.props.type
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            zones: [],
+	            sensors: [],
+	            showSaveBtn: false,
+	            showZones: false,
+	            showSensors: false
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        var s = this.state;
+	        return {
+	            id: s.id,
+	            name: s.name,
+	            description: s.description,
+	            address: s.address,
+	            modelNumber: s.modelNumber,
+	            modelName: s.modelName,
+	            softwareVersion: s.softwareVersion,
+	            auth: s.auth,
+	            hubId: s.hubId,
+	            buttons: this.props.buttons,
+	            connPool: this.props.connPool,
+	            cmdBuilder: this.props.cmdBuilder,
+	            type: s.type
+	        };
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        //TODO: Needed?
+	        if (nextProps.name != "") {
+	            this.setState({ name: nextProps.name });
+	        }
+	        if (nextProps.description != "") {
+	            this.setState({ description: nextProps.description });
+	        }
+	        if (nextProps.address != "") {
+	            this.setState({ address: nextProps.address });
+	        }
+	        if (nextProps.type != "") {
+	            this.setState({ type: nextProps.type });
+	        }
+	        if (nextProps.token != "") {
+	            this.setState({ token: nextProps.token });
+	        }
+	        if (nextProps.id != "") {
+	            this.setState({ id: nextProps.id });
+	        }
+	    },
+
+	    createDevice: function createDevice() {
+	        //TODO: Revisit now ew have one API to save everything at once
+	        Api.deviceCreate(this.toJson(), function (err, deviceData) {
+	            if (err) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validation.errors
+	                });
+	                return;
+	            }
+
+	            // Let callers know the device has been saved
+	            this.props.createdDevice(this.state.id, deviceData);
+
+	            // Now we need to loop through each of the zones and save them
+	            function saveZone(index) {
+	                if (index >= this.props.zones.length) {
+	                    saveSensor.bind(this)(0);
+	                    return;
+	                }
+
+	                var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
+	                Api.zoneCreate(zone, function (err, zoneData) {
+	                    if (err) {
+	                        zoneInfo.setErrors(err.validation.errors);
+	                        this.setState({
+	                            saveButtonStatus: 'error'
+	                        });
+	                        return;
+	                    }
+
+	                    this.props.savedZone(zoneData);
+	                    saveZone.bind(this)(index + 1);
+	                }.bind(this));
+	            }
+	            saveZone.bind(this)(0);
+
+	            // Loop through sensors saving
+	            function saveSensor(index) {
+	                if (index >= this.props.sensors.length) {
+	                    this.setState({ saveButtonStatus: 'success' });
+	                    return;
+	                }
+
+	                var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
+	                Api.sensorCreate(sensor, function (err, sensorData) {
+	                    if (err) {
+	                        sensorInfo.setErrors(err.validation.errors);
+	                        this.setState({
+	                            saveButtonStatus: 'error'
+	                        });
+	                        return;
+	                    }
+
+	                    this.props.savedSensor(sensorData);
+	                    saveSensor.bind(this)(index + 1);
+	                }.bind(this));
+	            }
+	        }.bind(this));
+	    },
+
+	    updateDevice: function updateDevice() {
+	        Api.deviceUpdate(this.toJson(), function (err, deviceData) {
+	            if (err && !err.validation) {
+	                //TODO: Dispatch general error so it can be displayed somewhere in the UI ...
+	                this.setState({
+	                    saveButtonStatus: 'error'
+	                });
+	                return;
+	            } else if (err && err.validation) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validation.errors[this.state.id]
+	                });
+	                return;
+	            }
+
+	            this.setState({ saveButtonStatus: 'success' });
+	            this.props.updatedDevice(deviceData);
+	        }.bind(this));
+	    },
+
+	    save: function save() {
+	        this.setState({ errors: null });
+
+	        if (this.state.id) {
+	            this.updateDevice();
+	        } else {
+	            this.createDevice();
+	        }
+	    },
+
+	    deleteDevice: function deleteDevice() {
+	        this.props.deviceDelete(this.state.id);
+	    },
+
+	    typeChanged: function typeChanged(type) {
+	        this.changed({
+	            target: {
+	                getAttribute: function getAttribute() {
+	                    return 'type';
+	                },
+	                value: type
+	            }
+	        }, function () {
+	            this.props.changed && this.props.changed(this);
+	        });
+	    },
+
+	    _changed: function _changed(evt) {
+	        this.setState({ saveButtonStatus: '' });
+
+	        if (evt) {
+	            this.changed(evt, function () {
+	                this.props.changed && this.props.changed(this);
+	            }.bind(this));
+	        }
+	    },
+
+	    _zoneChanged: function _zoneChanged() {
+	        this._changed();
+	    },
+
+	    _sensorChanged: function _sensorChanged() {
+	        this._changed();
+	    },
+
+	    render: function render() {
+	        var token;
+	        if (this.props.showToken) {
+	            token = React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "token") },
+	                React.createElement(
+	                    'label',
+	                    { className: 'control-label', htmlFor: this.uid("token") },
+	                    'Security Token'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.token,
+	                    'data-statepath': 'token',
+	                    onChange: this._changed,
+	                    className: 'token form-control',
+	                    type: 'text',
+	                    id: this.uid("token") }),
+	                this.errMsg('token')
+	            );
+	        }
+
+	        var saveBtn;
+	        if (this.props.showSaveBtn && this.state.dirty) {
+	            saveBtn = React.createElement(SaveBtn, {
+	                clicked: this.save,
+	                text: 'Save',
+	                status: this.state.saveButtonStatus });
+	        }
+
+	        var deleteBtn;
+	        if (this.props.deleteDevice) {
+	            deleteBtn = React.createElement(
+	                'button',
+	                _extends({}, classes('delete', '', 'btn btn-link pull-right'), { onClick: this.deleteDevice }),
+	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
+	            );
+	        }
+
+	        var zones;
+	        if (this.props.zones.length === 0) {
+	            zones = React.createElement(
+	                'h4',
+	                null,
+	                '0 zones found'
+	            );
+	        } else {
+	            zones = this.props.zones.map(function (zone) {
+	                return React.createElement(ZoneInfo, {
+	                    ref: "zoneInfo_" + zone.id,
+	                    readOnlyFields: 'deviceId',
+	                    key: zone.id,
+	                    name: zone.name,
+	                    description: zone.description,
+	                    address: zone.address,
+	                    type: zone.type,
+	                    output: zone.output,
+	                    deviceId: this.state.id,
+	                    devices: [this.toJson()],
+	                    changed: this._zoneChanged });
+	            }.bind(this));
+	        }
+
+	        var sensors;
+	        if (this.props.sensors.length === 0) {
+	            sensors = React.createElement(
+	                'h4',
+	                null,
+	                '0 sensors found'
+	            );
+	        } else {
+	            sensors = this.props.sensors.map(function (sensor) {
+	                return React.createElement(SensorInfo, {
+	                    ref: "sensorInfo_" + sensor.id,
+	                    readOnlyFields: 'deviceId',
+	                    key: sensor.id,
+	                    name: sensor.name,
+	                    description: sensor.description,
+	                    address: sensor.address,
+	                    attr: sensor.attr,
+	                    deviceId: this.state.id,
+	                    devices: [this.toJson()],
+	                    changed: this._sensorChanged });
+	            }.bind(this));
+	        }
+
+	        return React.createElement(
+	            'div',
+	            classes('', '', 'well well-sm'),
+	            deleteBtn,
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "name") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("name") }),
+	                    'Name*'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this._changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid("name") }),
+	                this.errMsg("name")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "id") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("id") }),
+	                    'ID'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.id,
+	                    readOnly: this.isReadOnly("id"),
+	                    'data-statepath': 'id',
+	                    onChange: this._changed,
+	                    className: 'id form-control',
+	                    type: 'text',
+	                    id: this.uid("id") }),
+	                this.errMsg("id")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "type") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("type") }),
+	                    'Type*'
+	                ),
+	                React.createElement(DeviceTypePicker, { type: this.state.type, changed: this.typeChanged }),
+	                this.errMsg('type')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "description") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
+	                    'Description'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.description,
+	                    'data-statepath': 'description',
+	                    onChange: this._changed,
+	                    className: 'description form-control',
+	                    type: 'text',
+	                    id: this.uid("description") }),
+	                this.errMsg("description")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "modelNumber") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("modelNumber") }),
+	                    'Model Number'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.modelNumber,
+	                    readOnly: this.isReadOnly("modelNumber"),
+	                    'data-statepath': 'modelNumber',
+	                    onChange: this._changed,
+	                    className: 'modelNumber form-control',
+	                    type: 'text',
+	                    id: this.uid("modelNumber") }),
+	                this.errMsg("modelNumber")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "address") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
+	                    'Address'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this._changed,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
+	                this.errMsg("address")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: Classnames({ clearfix: true, hidden: !this.props.showZones }) },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("zones") },
+	                    'Zones',
+	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse zones', id: this.uid("zones") },
+	                zones
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: Classnames({ clearfix: true, hidden: !this.props.showSensors }) },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("sensors") },
+	                    'Sensors',
+	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse sensors', id: this.uid("sensors") },
+	                sensors
+	            ),
+	            token,
+	            React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                saveBtn
+	            ),
+	            React.createElement('div', { style: { clear: "both" } })
+	        );
+	    }
+	});
+
+	function mapDispatchToProps(dispatch) {
+	    return {
+	        savedZone: function savedZone(zoneJson) {
+	            dispatch(ZoneActions.importedZone(zoneJson));
+	        },
+	        savedSensor: function savedSensor(sensorJson) {
+	            dispatch(SensorActions.importedSensor(sensorJson));
+	        },
+	        raiseError: function raiseError(error) {
+	            //TODO:
+	        }
+	    };
+	}
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceInfo);
+
+/***/ },
+/* 221 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	var _current = 0;
+
+	module.exports = {
+	    getNextIdAndIncrement: function getNextIdAndIncrement() {
+	        _current += 1;
+	        return _current;
+	    },
+
+	    getCurrentId: function getCurrentId() {
+	        return _current;
+	    }
+	};
+
+/***/ },
+/* 222 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	module.exports = {
+	    uid: function uid(field) {
+	        return this.state.id + '_' + field;
+	    },
+
+	    getErr: function getErr(field) {
+	        var errors = this.state.errors;
+	        if (!errors) {
+	            return null;
+	        }
+	        //TODO: delete
+	        //return errors[this.uid(field)];
+	        return errors[field];
+	    },
+
+	    hasErr: function hasErr(field) {
+	        return this.getErr(field) != null;
+	    },
+
+	    errMsg: function errMsg(field) {
+	        var err = this.getErr(field);
+	        if (!err) {
+	            return;
+	        }
+	        return React.createElement(
+	            'span',
+	            { className: 'help-block' },
+	            "Error - " + err.message
+	        );
+	    },
+
+	    addErr: function addErr(classes, field) {
+	        if (this.hasErr(field)) {
+	            return classes + " has-error";
+	        }
+	        return classes;
+	    },
+
+	    changed: function changed(evt, cb) {
+	        var statePath = evt.target.getAttribute('data-statepath');
+	        var s = {};
+	        s[statePath] = evt.target.value;
+	        s.dirty = true;
+
+	        var errors = this.state['errors'] || {};
+	        delete errors[this.uid(statePath)];
+	        s.errors = errors;
+	        this.setState(s, cb);
+	    },
+
+	    isReadOnly: function isReadOnly(field) {
+	        var fields = this.props.readOnlyFields || '';
+	        var items = fields.split(',');
+	        for (var i = 0; i < items.length; ++i) {
+	            if (items[i] === field) {
+	                return true;
+	            }
+	        }
+	        return false;
+	    }
+	};
+
+/***/ },
+/* 223 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var SaveBtn = React.createClass({
+	    displayName: 'SaveBtn',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            status: 'default'
+	        };
+	    },
+
+	    clicked: function clicked() {
+	        this.props.clicked();
+	    },
+
+	    render: function render() {
+	        var btnType, body;
+	        var disabled = true;
+
+	        switch (this.props.status) {
+	            case SaveBtn.STATUS.Saving:
+	                btnType = 'btn-primary';
+	                body = React.createElement(
+	                    'div',
+	                    null,
+	                    React.createElement('i', { className: 'fa fa-spinner fa-spin' })
+	                );
+	                break;
+	            case SaveBtn.STATUS.Error:
+	                btnType = "btn-danger";
+	                body = React.createElement(
+	                    'div',
+	                    null,
+	                    'Error'
+	                );
+	                break;
+	            case SaveBtn.STATUS.Success:
+	                btnType = "btn-success";
+	                body = React.createElement(
+	                    'div',
+	                    null,
+	                    React.createElement('span', { className: 'glyphicon glyphicon-ok' })
+	                );
+	                break;
+	            default:
+	                btnType = "btn-primary";
+	                body = React.createElement(
+	                    'div',
+	                    null,
+	                    this.props.text
+	                );
+	                disabled = false;
+	                break;
+	        }
+
+	        var disabledClass = disabled ? " disabled" : "";
+	        return React.createElement(
+	            'button',
+	            { className: "cmp-SaveBtn btn " + btnType + disabledClass, onClick: this.clicked },
+	            body
+	        );
+	    }
+	});
+
+	SaveBtn.STATUS = {
+	    Default: 'default',
+	    Saving: 'saving',
+	    Success: 'success',
+	    Error: 'error'
+	};
+	module.exports = SaveBtn;
+
+/***/ },
+/* 224 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var React = __webpack_require__(1);
+	var UniqueIdMixin = __webpack_require__(221);
+	var InputValidationMixin = __webpack_require__(222);
+	var DevicePicker = __webpack_require__(225);
+	var ZoneOutputPicker = __webpack_require__(226);
+	var ZoneTypePicker = __webpack_require__(227);
+	var SaveBtn = __webpack_require__(223);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(211);
+
+	var classes = new BEMHelper({
+	    name: 'ZoneInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(228);
+
+	//TODO: Remove individual props from this cmp, just pass in zone
+
+	var ZoneInfo = React.createClass({
+	    displayName: 'ZoneInfo',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            showSaveBtn: false
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            name: this.props.name,
+	            description: this.props.description,
+	            address: this.props.address,
+	            deviceId: this.props.deviceId,
+	            type: this.props.type,
+	            output: this.props.output,
+	            errors: this.props.errors,
+	            id: this.props.id,
+	            dirty: false,
+	            saveButtonStatus: ''
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        var s = this.state;
+	        return {
+	            id: this.props.id,
+	            name: s.name,
+	            description: s.description,
+	            address: s.address,
+	            deviceId: s.deviceId,
+	            type: s.type,
+	            output: s.output
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    _changed: function _changed(evt) {
+	        this.setState({ saveButtonStatus: '' }, function () {
+	            this.props.changed && this.props.changed(this);
+	        }.bind(this));
+	        this.changed(evt);
+	    },
+
+	    devicePickerChanged: function devicePickerChanged(deviceId) {
+	        this.setState({ deviceId: deviceId }, function () {
+	            this.props.changed && this.props.changed(this);
+	        }.bind(this));
+	    },
+
+	    typeChanged: function typeChanged(type) {
+	        if (this.state.type === type) {
+	            return;
+	        }
+
+	        this.setState({
+	            saveButtonStatus: '',
+	            type: type,
+	            dirty: true
+	        }, function () {
+	            this.props.changed && this.props.changed(this);
+	        }.bind(this));
+	    },
+
+	    outputChanged: function outputChanged(output) {
+	        if (this.state.output === output) {
+	            return;
+	        }
+
+	        this.setState({
+	            saveButtonStatus: '',
+	            output: output,
+	            dirty: true
+	        }, function () {
+	            this.props.changed && this.props.changed(this);
+	        }.bind(this));
+	    },
+
+	    save: function save() {
+	        this.setState({ errors: null });
+	        Api.zoneUpdate(this.toJson(), function (err, zoneData) {
+	            if (err && !err.validation) {
+	                //TODO: Dispatch general error
+	                this.setState({ saveButtonStatus: 'error' });
+	                return;
+	            } else if (err && err.validation) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validation.errors[this.state.id]
+	                });
+	                return;
+	            }
+
+	            this.setState({ saveButtonStatus: 'success' });
+	            this.props.updatedZone(zoneData);
+	        }.bind(this));
+	    },
+
+	    render: function render() {
+	        var saveBtn;
+	        if (this.props.showSaveBtn && this.state.dirty) {
+	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
+	                clicked: this.save,
+	                text: 'Save',
+	                status: this.state.saveButtonStatus }));
+	        }
+
+	        return React.createElement(
+	            'div',
+	            classes('', '', 'well well-sm'),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr('form-group', 'name') },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
+	                    'Name*'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this._changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid('name') }),
+	                this.errMsg('name')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "type") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("type") }),
+	                    'Type*'
+	                ),
+	                React.createElement(ZoneTypePicker, { type: this.props.type, changed: this.typeChanged }),
+	                this.errMsg('type')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "output") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("output") }),
+	                    'Output*'
+	                ),
+	                React.createElement(ZoneOutputPicker, { output: this.props.output, changed: this.outputChanged }),
+	                this.errMsg('output')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: '' },
+	                React.createElement(
+	                    'a',
+	                    { 'data-toggle': 'collapse', href: "#" + this.uid("moreInfo") },
+	                    'More Details',
+	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'collapse moreInfo', id: this.uid("moreInfo") },
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", 'description') },
+	                    React.createElement(
+	                        'label',
+	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
+	                        'Description'
+	                    ),
+	                    React.createElement('input', {
+	                        value: this.state.description,
+	                        'data-statepath': 'description',
+	                        onChange: this._changed,
+	                        className: 'description form-control',
+	                        type: 'text',
+	                        id: this.uid("description") }),
+	                    this.errMsg('description')
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", "address") },
+	                    React.createElement(
+	                        'label',
+	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
+	                        'Address'
+	                    ),
+	                    React.createElement('input', {
+	                        value: this.state.address,
+	                        'data-statepath': 'address',
+	                        onChange: this._changed,
+	                        className: 'address form-control',
+	                        type: 'text',
+	                        id: this.uid("address") }),
+	                    this.errMsg('address')
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { className: this.addErr("form-group", "deviceId") },
+	                    React.createElement(
+	                        'label',
+	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("deviceId") }),
+	                        'Device*'
+	                    ),
+	                    React.createElement(DevicePicker, {
+	                        disabled: this.isReadOnly("deviceId"),
+	                        defaultId: this.props.deviceId,
+	                        devices: this.props.devices,
+	                        changed: this.devicePickerChanged }),
+	                    this.errMsg('deviceId')
+	                )
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                saveBtn
+	            ),
+	            React.createElement('div', { style: { clear: 'both' } })
+	        );
+	    }
+	});
+	module.exports = ZoneInfo;
+
+/***/ },
+/* 225 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var React = __webpack_require__(1);
+
+	var DevicePicker = React.createClass({
+	    displayName: "DevicePicker",
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            devices: []
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.defaultId
+	        };
+	    },
+
+	    //TODO: If only one item in the list, select by default on load
+	    //TODO: if output or type is unknown need to update zone control to be
+	    //able to handle those values
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.devices.forEach(function (device) {
+	            var id = device.id;
+	            options.push(React.createElement(
+	                "option",
+	                { key: id, value: id },
+	                device.name
+	            ));
+	        });
+	        return React.createElement(
+	            "div",
+	            { className: "cmp-DevicePicker" },
+	            React.createElement(
+	                "select",
+	                {
+	                    disabled: this.props.disabled,
+	                    className: "form-control",
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    "option",
+	                    { value: "" },
+	                    "Select a device..."
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = DevicePicker;
+
+/***/ },
+/* 226 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ZoneOutputPicker = React.createClass({
+	    displayName: 'ZoneOutputPicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.output || 'continuous'
+	        };
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        // If a value wasn't passed in, raise a changed notification so callers
+	        // can set their value accordingly since we default to unknown
+	        if (this.state.value === 'continuous') {
+	            this.props.changed && this.props.changed(this.state.value);
+	        }
+	    },
+
+	    selected: function selected(evt) {
+	        this.setOutput(evt.target.value);
+	    },
+
+	    setOutput: function setOutput(output) {
+	        this.setState({ value: output });
+	        this.props.changed && this.props.changed(output);
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZoneOutputPicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: 'unknown' },
+	                    'Unknown'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'continuous' },
+	                    'Continuous'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'binary' },
+	                    'Binary'
+	                ),
+	                React.createElement(
+	                    'option',
+	                    { value: 'rgb' },
+	                    'RGB'
+	                )
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneOutputPicker;
+
+/***/ },
+/* 227 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ZoneTypePicker = React.createClass({
+	    displayName: 'ZoneTypePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.type || 'unknown'
+	        };
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        // If a value wasn't passed in, raise a changed notification so callers
+	        // can set their value accordingly since we default to unknown
+	        if (this.state.value === 'unknown') {
+	            this.props.changed && this.props.changed(this.state.value);
+	        }
+	    },
+
+	    selected: function selected(evt) {
+	        this.setType(evt.target.value);
+	    },
+
+	    setType: function setType(type) {
+	        this.setState({ value: type });
+	        this.props.changed && this.props.changed(type);
+	    },
+
+	    render: function render() {
+	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Switch", val: "switch" }, { str: "Shade", val: "shade" }];
+	        var nodes = types.map(function (type) {
+	            return React.createElement(
+	                'option',
+	                { value: type.val, key: type.val },
+	                type.str
+	            );
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ZoneTypePicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                nodes
+	            )
+	        );
+	    }
+	});
+	module.exports = ZoneTypePicker;
+
+/***/ },
+/* 228 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(229);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(216)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 229 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(215)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-ZoneInfo {\n  margin-bottom: 0;\n}\n.b-ZoneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-ZoneInfo__save {\n  padding-left: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 230 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var React = __webpack_require__(1);
+	var UniqueIdMixin = __webpack_require__(221);
+	var InputValidationMixin = __webpack_require__(222);
+	var DevicePicker = __webpack_require__(225);
+	var BEMHelper = __webpack_require__(211);
+	var SaveBtn = __webpack_require__(223);
+	var Api = __webpack_require__(204);
+
+	var classes = new BEMHelper({
+	    name: 'SensorInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(231);
+
+	var SensorInfo = React.createClass({
+	    displayName: 'SensorInfo',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            showSaveBtn: false
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            name: this.props.name,
+	            description: this.props.description,
+	            address: this.props.address,
+	            deviceId: this.props.deviceId,
+	            errors: this.props.errors,
+	            saveButtonStatus: ''
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        var s = this.state;
+	        return {
+	            name: s.name,
+	            description: s.description,
+	            address: s.address,
+	            deviceId: s.deviceId,
+	            id: this.props.id,
+	            attr: this.props.attr
+	        };
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    _changed: function _changed(evt) {
+	        this.setState({ saveButtonStatus: '' });
+	        this.changed(evt, function () {
+	            this.props.changed && this.props.changed(this);
+	        }.bind(this));
+	    },
+
+	    devicePickerChanged: function devicePickerChanged(deviceId) {
+	        this.setState({
+	            deviceId: deviceId,
+	            saveButtonStatus: ''
+	        }, function () {
+	            this.props.changed && this.props.changed(this);
+	        }.bind(this));
+	    },
+
+	    save: function save() {
+	        this.setState({ errors: null });
+	        Api.sensorUpdate(this.toJson(), function (err, sensorData) {
+	            if (err && !err.validation) {
+	                //TODO: Dispatch general error
+	                this.setState({ saveButtonStatus: 'error' });
+	                return;
+	            } else if (err && err.validation) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validation.errors[this.props.id]
+	                });
+	                return;
+	            }
+
+	            this.setState({ saveButtonStatus: 'success' });
+	            this.props.updatedSensor(sensorData);
+	        }.bind(this));
+	    },
+
+	    render: function render() {
+	        var saveBtn;
+	        if (this.props.showSaveBtn && this.state.dirty) {
+	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
+	                clicked: this.save,
+	                text: 'Save',
+	                status: this.state.saveButtonStatus }));
+	        }
+
+	        return React.createElement(
+	            'div',
+	            classes('', '', 'well well-sm'),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr('form-group', 'name') },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
+	                    'Name*'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this._changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid('name') }),
+	                this.errMsg('name')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", 'description') },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
+	                    'Description'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.description,
+	                    'data-statepath': 'description',
+	                    onChange: this._changed,
+	                    className: 'description form-control',
+	                    type: 'text',
+	                    id: this.uid("description") }),
+	                this.errMsg('description')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "address") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
+	                    'Address'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this._changed,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
+	                this.errMsg('address')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "deviceId") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("deviceId") }),
+	                    'Device*'
+	                ),
+	                React.createElement(DevicePicker, {
+	                    disabled: this.isReadOnly("deviceId"),
+	                    defaultId: this.props.deviceId,
+	                    devices: this.props.devices,
+	                    changed: this.devicePickerChanged }),
+	                this.errMsg('deviceId')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                saveBtn
+	            ),
+	            React.createElement('div', { style: { clear: 'both' } })
+	        );
+	    }
+	});
+	module.exports = SensorInfo;
+
+/***/ },
+/* 231 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(232);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(216)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 232 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(215)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-SensorInfo {\n  margin-bottom: 0;\n}\n.b-SensorInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 233 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var DeviceTypePicker = React.createClass({
+	    displayName: 'DeviceTypePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.type || 'unknown'
+	        };
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        // If a value wasn't passed in, raise a changed notification so callers
+	        // can set their value accordingly since we default to unknown
+	        if (this.state.value === 'unknown') {
+	            this.props.changed && this.props.changed(this.state.value);
+	        }
+	    },
+
+	    selected: function selected(evt) {
+	        this.setType(evt.target.value);
+	    },
+
+	    setType: function setType(type) {
+	        this.setState({ value: type });
+	        this.props.changed && this.props.changed(type);
+	    },
+
+	    render: function render() {
+	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Dimmer", val: "dimmer" }, { str: "Shade", val: "shade" }, { str: "Switch", val: "switch" }, { str: "Hub", val: "hub" }, { str: "Remote", val: "remote" }];
+	        var nodes = types.map(function (type) {
+	            return React.createElement(
+	                'option',
+	                { value: type.val, key: type.val },
+	                type.str
+	            );
+	        });
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-DeviceTypePicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                nodes
+	            )
+	        );
+	    }
+	});
+	module.exports = DeviceTypePicker;
+
+/***/ },
+/* 234 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = [];
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+
+			return classes.join(' ');
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
+
+
+/***/ },
+/* 235 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(236);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(216)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./DeviceInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 236 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(215)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-DeviceInfo {\n  margin-bottom: 0;\n}\n.b-DeviceInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-DeviceInfo__delete {\n  padding: 0;\n}\n.b-DeviceInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n  margin-bottom: 20px;\n}\n", ""]);
 
 	// exports
 
@@ -27305,8 +27305,8 @@
 	var React = __webpack_require__(1);
 	var ReactTransitionGroup = __webpack_require__(238);
 	var ReactDOM = __webpack_require__(34);
-	var ClassNames = __webpack_require__(226);
-	var BEMHelper = __webpack_require__(215);
+	var ClassNames = __webpack_require__(234);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'Grid',
@@ -27948,7 +27948,7 @@
 	var content = __webpack_require__(242);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -27968,7 +27968,7 @@
 /* 242 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -27988,7 +27988,7 @@
 	var content = __webpack_require__(244);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28008,7 +28008,7 @@
 /* 244 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -28028,7 +28028,7 @@
 	var content = __webpack_require__(246);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28048,7 +28048,7 @@
 /* 246 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -28068,7 +28068,7 @@
 	var content = __webpack_require__(248);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28088,7 +28088,7 @@
 /* 248 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -28108,11 +28108,11 @@
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var DeviceInfo = __webpack_require__(204);
-	var SystemActions = __webpack_require__(229);
+	var DeviceInfo = __webpack_require__(220);
+	var SystemActions = __webpack_require__(205);
 	var Grid = __webpack_require__(237);
-	var DeviceCell = __webpack_require__(231);
-	var BEMHelper = __webpack_require__(215);
+	var DeviceCell = __webpack_require__(212);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'DeviceList',
@@ -28296,7 +28296,7 @@
 	var content = __webpack_require__(251);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28316,7 +28316,7 @@
 /* 251 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -28336,7 +28336,7 @@
 	var content = __webpack_require__(253);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28356,7 +28356,7 @@
 /* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -28379,10 +28379,10 @@
 	var SceneListGridCell = __webpack_require__(255);
 	var SceneControl = __webpack_require__(258);
 	var SceneInfo = __webpack_require__(261);
-	var UniqueIdMixin = __webpack_require__(205);
+	var UniqueIdMixin = __webpack_require__(221);
 	var SceneActions = __webpack_require__(272);
 	var Grid = __webpack_require__(237);
-	var BEMHelper = __webpack_require__(215);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'SceneList',
@@ -28532,7 +28532,7 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(215);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'SceneListGridCell',
@@ -28572,7 +28572,7 @@
 	var content = __webpack_require__(257);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28592,7 +28592,7 @@
 /* 257 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -28611,8 +28611,8 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(215);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'SceneControl',
@@ -28661,7 +28661,7 @@
 	var content = __webpack_require__(260);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28681,7 +28681,7 @@
 /* 260 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -28701,13 +28701,13 @@
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var SaveBtn = __webpack_require__(207);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
+	var SaveBtn = __webpack_require__(223);
+	var InputValidationMixin = __webpack_require__(222);
+	var UniqueIdMixin = __webpack_require__(221);
 	var CommandInfo = __webpack_require__(262);
 	var CommandTypePicker = __webpack_require__(273);
 	var SceneActions = __webpack_require__(272);
-	var BEMHelper = __webpack_require__(215);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'SceneInfo',
@@ -28947,11 +28947,11 @@
 	var ReactRedux = __webpack_require__(173);
 	var ZoneSetLevelCommand = __webpack_require__(263);
 	var SceneSetCommand = __webpack_require__(267);
-	var SaveBtn = __webpack_require__(207);
+	var SaveBtn = __webpack_require__(223);
 	var ButtonPressCommand = __webpack_require__(269);
 	var ButtonReleaseCommand = __webpack_require__(271);
-	var Api = __webpack_require__(208);
-	var Constants = __webpack_require__(209);
+	var Api = __webpack_require__(204);
+	var Constants = __webpack_require__(206);
 	var SceneActions = __webpack_require__(272);
 
 	var CommandInfo = React.createClass({
@@ -29063,11 +29063,11 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
+	var InputValidationMixin = __webpack_require__(222);
+	var UniqueIdMixin = __webpack_require__(221);
 	var ZonePicker = __webpack_require__(264);
-	var Api = __webpack_require__(208);
-	var ClassNames = __webpack_require__(226);
+	var Api = __webpack_require__(204);
+	var ClassNames = __webpack_require__(234);
 	var uuid = __webpack_require__(265);
 
 	var ZoneSetLevelCommand = module.exports = React.createClass({
@@ -29560,8 +29560,8 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
+	var InputValidationMixin = __webpack_require__(222);
+	var UniqueIdMixin = __webpack_require__(221);
 	var ScenePicker = __webpack_require__(268);
 	var uuid = __webpack_require__(265);
 
@@ -29703,8 +29703,8 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
+	var InputValidationMixin = __webpack_require__(222);
+	var UniqueIdMixin = __webpack_require__(221);
 	var ButtonPicker = __webpack_require__(270);
 	var uuid = __webpack_require__(265);
 
@@ -29834,8 +29834,8 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(206);
-	var UniqueIdMixin = __webpack_require__(205);
+	var InputValidationMixin = __webpack_require__(222);
+	var UniqueIdMixin = __webpack_require__(221);
 	var ButtonPicker = __webpack_require__(270);
 	var uuid = __webpack_require__(265);
 
@@ -29910,8 +29910,8 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
-	var Api = __webpack_require__(208);
+	var Constants = __webpack_require__(206);
+	var Api = __webpack_require__(204);
 
 	var SceneActions = {
 
@@ -30093,7 +30093,7 @@
 	var content = __webpack_require__(275);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -30113,7 +30113,7 @@
 /* 275 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -30133,7 +30133,7 @@
 	var content = __webpack_require__(277);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -30153,7 +30153,7 @@
 /* 277 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -30177,15 +30177,15 @@
 	var ReactRedux = __webpack_require__(173);
 	var ZoneControl = __webpack_require__(279);
 	var SensorMonitor = __webpack_require__(283);
-	var ZoneActions = __webpack_require__(223);
-	var SensorActions = __webpack_require__(224);
+	var ZoneActions = __webpack_require__(208);
+	var SensorActions = __webpack_require__(209);
 	var Grid = __webpack_require__(237);
 	var SensorMonitor = __webpack_require__(283);
-	var ZoneInfo = __webpack_require__(211);
-	var SensorInfo = __webpack_require__(220);
-	var ZoneSensorCell = __webpack_require__(234);
-	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(215);
+	var ZoneInfo = __webpack_require__(224);
+	var SensorInfo = __webpack_require__(230);
+	var ZoneSensorCell = __webpack_require__(217);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'ZoneSensorList',
@@ -30617,8 +30617,8 @@
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
 	var CssMixin = __webpack_require__(280);
-	var Api = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(215);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'ZoneControl',
@@ -30893,7 +30893,7 @@
 	var content = __webpack_require__(282);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -30913,7 +30913,7 @@
 /* 282 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -30931,7 +30931,7 @@
 
 	var React = __webpack_require__(1);
 	var CssMixin = __webpack_require__(280);
-	var BEMHelper = __webpack_require__(215);
+	var BEMHelper = __webpack_require__(211);
 
 	var classes = new BEMHelper({
 	    name: 'SensorMonitor',
@@ -31009,7 +31009,7 @@
 	var content = __webpack_require__(285);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -31029,7 +31029,7 @@
 /* 285 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -31049,7 +31049,7 @@
 	var content = __webpack_require__(287);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -31069,7 +31069,7 @@
 /* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -31684,7 +31684,7 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var UniqueIdMixin = __webpack_require__(205);
+	var UniqueIdMixin = __webpack_require__(221);
 
 	var Ingredient = React.createClass({
 	    displayName: 'Ingredient',
@@ -32171,7 +32171,7 @@
 	var content = __webpack_require__(304);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(216)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -32191,7 +32191,7 @@
 /* 304 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(215)();
 	// imports
 
 
@@ -32313,7 +32313,7 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 	var initialState = __webpack_require__(307);
 
 	module.exports = function (state, action) {
@@ -32344,7 +32344,7 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 	var initialState = __webpack_require__(307);
 	var uuid = __webpack_require__(265);
 
@@ -32438,7 +32438,7 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 	var initialState = __webpack_require__(307);
 	var CommandsReducer = __webpack_require__(311);
 	var uuid = __webpack_require__(265);
@@ -32568,7 +32568,7 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -32606,7 +32606,7 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 	var initialState = __webpack_require__(307);
 
 	module.exports = function (state, action) {
@@ -32660,7 +32660,7 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 	var initialState = __webpack_require__(307);
 
 	module.exports = function (state, action) {
@@ -32722,7 +32722,7 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 
 	module.exports = function (state, action) {
 	    var newState = Object.assign({}, state);
@@ -32754,7 +32754,7 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(209);
+	var Constants = __webpack_require__(206);
 	var initialState = __webpack_require__(307);
 
 	module.exports = function (state, action) {
