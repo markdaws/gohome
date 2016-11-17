@@ -56,8 +56,6 @@ module.exports = function(state, action) {
     case Constants.DEVICE_IMPORT_RAW:
         newState.devices = [action.data].concat(newState.devices);
         break;
-
-        break;
     case Constants.DEVICE_IMPORT_FAIL:
         break;
         

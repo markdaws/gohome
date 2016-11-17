@@ -1,6 +1,5 @@
 var React = require('react');
 var ReactRedux = require('react-redux');
-var DeviceInfo = require('./DeviceInfo.jsx');
 var Api = require('../utils/API.js');
 var SystemActions = require('../actions/SystemActions.js');
 var ZoneActions = require('../actions/ZoneActions.js');
@@ -68,7 +67,6 @@ var DiscoverDevices = React.createClass({
     },
     
     render: function() {
-        var importBody;
         var deviceCount = 0;
         if (this.state.devices) {
             deviceCount = this.state.devices.length;

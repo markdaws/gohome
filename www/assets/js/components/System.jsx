@@ -1,5 +1,4 @@
 var React = require('react');
-var ReactRedux = require('react-redux');
 var Import = require('./Import.jsx');
 var DeviceList = require('./DeviceList.jsx');
 var BEMHelper = require('react-bem-helper');

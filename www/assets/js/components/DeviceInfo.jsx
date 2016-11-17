@@ -73,7 +73,6 @@ var DeviceInfo = React.createClass({
 
     componentWillReceiveProps: function(nextProps) {
         //TODO: Needed?
-        var device = this.state.device;
         if (nextProps.name != "") {
             this.setState({ name: nextProps.name });
         }
@@ -223,8 +222,6 @@ var DeviceInfo = React.createClass({
     },
 
     render: function() {
-        var device = this.state.device;
-
         var token
         if (this.props.showToken) {
             token = (

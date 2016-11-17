@@ -1,9 +1,5 @@
 var React = require('react');
-var ReactDOM = require('react-dom');
-var Classnames = require('classnames');
 var BEMHelper = require('react-bem-helper');
-
-//TODO: Rename this class, used outside the list
 
 var classes = new BEMHelper({
     name: 'ZoneSensorCell',
@@ -54,6 +50,7 @@ var ZoneSensorCell = React.createClass({
     shouldComponentUpdate: function(nextProps, nextState) {
         //TODO: Fix
         return true;
+        /*
         if (nextProps.zone && this.props.zone && (this.props.zone.name !== nextProps.zone.name)) {
             return true;
         }
@@ -68,8 +65,7 @@ var ZoneSensorCell = React.createClass({
             //TODO: RGB
             return true;
         }
-
-        return false;
+        return false;*/
     },
 
     checkboxClicked: function(evt) {

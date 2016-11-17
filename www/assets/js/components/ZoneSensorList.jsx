@@ -1,4 +1,3 @@
-var ClassNames = require('classnames');
 var React = require('react');
 var ReactRedux = require('react-redux');
 var ZoneControl = require('./ZoneControl.jsx');

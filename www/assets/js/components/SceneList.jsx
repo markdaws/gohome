@@ -1,6 +1,4 @@
 var React = require('react');
-var ReactDOM = require('react-dom');
-var Redux = require('redux');
 var ReactRedux = require('react-redux');
 var SceneListGridCell = require('./SceneListGridCell.jsx');
 var SceneControl = require('./SceneControl.jsx');

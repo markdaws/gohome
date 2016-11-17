@@ -31,7 +31,6 @@ var ZoneTypePicker = React.createClass({
             { str: "Switch", val:"switch" },
             { str: "Shade", val:"shade" }
         ];
-        var self = this;
         var nodes = types.map(function(type) {
             return <option value={type.val} key={type.val}>{type.str}</option>
         });

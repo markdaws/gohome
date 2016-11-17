@@ -1,7 +1,6 @@
 //Test file - delete
 
 var React = require('react');
-var ReactRedux = require('react-redux');
 
 var C1 = React.createClass({
     getInitialState: function() {

@@ -51,6 +51,7 @@ var Grid = React.createClass({
     shouldComponentUpdate: function(nextProps, nextState) {
         //TODO: Fix
         return true;
+        /*
         if (nextProps.cells && (nextProps.cells != this.props.cells)) {
             return true;
         }
@@ -63,7 +64,7 @@ var Grid = React.createClass({
         if (nextState.expanderIndex != undefined && (nextState.expanderIndex !== this.state.expanderIndex)) {
             return true;
         }
-        return false;
+        return false;*/
     },
     
     calcCellDimensions: function() {

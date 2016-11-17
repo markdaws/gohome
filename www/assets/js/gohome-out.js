@@ -52,10 +52,10 @@
 	var Provider = __webpack_require__(173).Provider;
 	var store = __webpack_require__(305);
 
-	var C1 = __webpack_require__(316);
+	/*
+	var C1 = require('./components/Testr.jsx');
 
 	//TODO: Remove - testing
-	/*
 	ReactDOM.render(
 	    <Provider store={store}>
 	        <C1 />
@@ -21444,14 +21444,12 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
 	var ReactRedux = __webpack_require__(173);
 	var System = __webpack_require__(201);
 	var SceneList = __webpack_require__(254);
 	var ZoneSensorList = __webpack_require__(278);
 	var Logging = __webpack_require__(288);
 	var RecipeApp = __webpack_require__(290);
-	var Constants = __webpack_require__(209);
 	var SceneActions = __webpack_require__(272);
 	var SensorActions = __webpack_require__(224);
 	var SystemActions = __webpack_require__(229);
@@ -23389,7 +23387,6 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(173);
 	var Import = __webpack_require__(202);
 	var DeviceList = __webpack_require__(249);
 	var BEMHelper = __webpack_require__(215);
@@ -23560,7 +23557,6 @@
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var DeviceInfo = __webpack_require__(204);
 	var Api = __webpack_require__(208);
 	var SystemActions = __webpack_require__(229);
 	var ZoneActions = __webpack_require__(223);
@@ -23627,7 +23623,6 @@
 	    },
 
 	    render: function render() {
-	        var importBody;
 	        var deviceCount = 0;
 	        if (this.state.devices) {
 	            deviceCount = this.state.devices.length;
@@ -23805,7 +23800,6 @@
 
 	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
 	        //TODO: Needed?
-	        var device = this.state.device;
 	        if (nextProps.name != "") {
 	            this.setState({ name: nextProps.name });
 	        }
@@ -23954,8 +23948,6 @@
 	    },
 
 	    render: function render() {
-	        var device = this.state.device;
-
 	        var token;
 	        if (this.props.showToken) {
 	            token = React.createElement(
@@ -24368,11 +24360,9 @@
 
 /***/ },
 /* 208 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	'use strict';
-
-	var Constants = __webpack_require__(209);
 
 	var BASE = '//' + window.location.hostname + ':5000';
 
@@ -25040,7 +25030,6 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(173);
 	var UniqueIdMixin = __webpack_require__(205);
 	var InputValidationMixin = __webpack_require__(206);
 	var DevicePicker = __webpack_require__(212);
@@ -25456,7 +25445,6 @@
 
 	    render: function render() {
 	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Switch", val: "switch" }, { str: "Shade", val: "shade" }];
-	        var self = this;
 	        var nodes = types.map(function (type) {
 	            return React.createElement(
 	                'option',
@@ -26271,7 +26259,6 @@
 
 	    render: function render() {
 	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Dimmer", val: "dimmer" }, { str: "Shade", val: "shade" }, { str: "Switch", val: "switch" }, { str: "Hub", val: "hub" }, { str: "Remote", val: "remote" }];
-	        var self = this;
 	        var nodes = types.map(function (type) {
 	            return React.createElement(
 	                'option',
@@ -26617,7 +26604,6 @@
 	            } else {
 	                return -1;
 	            }
-	            return x.hubId > y.hubId;
 	        });
 
 	        function saveDevice(devIndex) {
@@ -27034,11 +27020,7 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
-	var Classnames = __webpack_require__(226);
 	var BEMHelper = __webpack_require__(215);
-
-	//TODO: Rename this class, used outside the list
 
 	var classes = new BEMHelper({
 	    name: 'ZoneSensorCell',
@@ -27091,22 +27073,22 @@
 	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
 	        //TODO: Fix
 	        return true;
-	        if (nextProps.zone && this.props.zone && this.props.zone.name !== nextProps.zone.name) {
+	        /*
+	        if (nextProps.zone && this.props.zone && (this.props.zone.name !== nextProps.zone.name)) {
 	            return true;
 	        }
-	        if (nextProps.sensor && this.props.sensor && this.props.sensor.name !== nextProps.sensor.name) {
+	        if (nextProps.sensor && this.props.sensor && (this.props.sensor.name !== nextProps.sensor.name)) {
 	            return true;
 	        }
-	        if (nextState.level && this.state.level && nextState.level.value !== this.state.level.value) {
+	        if (nextState.level && this.state.level && (nextState.level.value !== this.state.level.value)) {
 	            //TODO: RGB
 	            return true;
 	        }
-	        if (nextState.attr && this.state.attr && nextState.attr.value !== this.state.attr.value) {
+	        if (nextState.attr && this.state.attr && (nextState.attr.value !== this.state.attr.value)) {
 	            //TODO: RGB
 	            return true;
 	        }
-
-	        return false;
+	        return false;*/
 	    },
 
 	    checkboxClicked: function checkboxClicked(evt) {
@@ -27375,19 +27357,20 @@
 	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
 	        //TODO: Fix
 	        return true;
-	        if (nextProps.cells && nextProps.cells != this.props.cells) {
+	        /*
+	        if (nextProps.cells && (nextProps.cells != this.props.cells)) {
 	            return true;
 	        }
-	        if (nextState.cellWidth && nextState.cellWidth !== this.state.cellWidth) {
+	        if (nextState.cellWidth && (nextState.cellWidth !== this.state.cellWidth)) {
 	            return true;
 	        }
-	        if (nextState.cellHeight && nextState.cellHeight !== this.state.cellHeight) {
+	        if (nextState.cellHeight && (nextState.cellHeight !== this.state.cellHeight)) {
 	            return true;
 	        }
-	        if (nextState.expanderIndex != undefined && nextState.expanderIndex !== this.state.expanderIndex) {
+	        if (nextState.expanderIndex != undefined && (nextState.expanderIndex !== this.state.expanderIndex)) {
 	            return true;
 	        }
-	        return false;
+	        return false;*/
 	    },
 
 	    calcCellDimensions: function calcCellDimensions() {
@@ -28392,8 +28375,6 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
-	var Redux = __webpack_require__(180);
 	var ReactRedux = __webpack_require__(173);
 	var SceneListGridCell = __webpack_require__(255);
 	var SceneControl = __webpack_require__(258);
@@ -28771,7 +28752,6 @@
 	    },
 
 	    toJson: function toJson() {
-	        var s = this.state;
 	        return {
 	            id: this.state.id,
 	            name: this.state.name,
@@ -30193,7 +30173,6 @@
 
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-	var ClassNames = __webpack_require__(226);
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var ZoneControl = __webpack_require__(279);
@@ -30635,12 +30614,10 @@
 
 	'use strict';
 
-	var ClassNames = __webpack_require__(226);
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
 	var CssMixin = __webpack_require__(280);
 	var Api = __webpack_require__(208);
-	var ClassNames = __webpack_require__(226);
 	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
@@ -30952,11 +30929,8 @@
 
 	'use strict';
 
-	var ClassNames = __webpack_require__(226);
 	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
 	var CssMixin = __webpack_require__(280);
-	var Api = __webpack_require__(208);
 	var BEMHelper = __webpack_require__(215);
 
 	var classes = new BEMHelper({
@@ -32428,8 +32402,6 @@
 	        case Constants.DEVICE_IMPORT_RAW:
 	            newState.devices = [action.data].concat(newState.devices);
 	            break;
-
-	            break;
 	        case Constants.DEVICE_IMPORT_FAIL:
 	            break;
 
@@ -32799,207 +32771,6 @@
 
 	    return newState;
 	};
-
-/***/ },
-/* 316 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	//Test file - delete
-
-	var React = __webpack_require__(1);
-	var ReactRedux = __webpack_require__(173);
-
-	var C1 = React.createClass({
-	    displayName: 'C1',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            count: 0
-	        };
-	    },
-
-	    click: function click() {
-	        this.setState({ count: this.state.count + 1 });
-	    },
-
-	    render: function render() {
-	        console.log('c1 - render');
-
-	        var a;
-	        //        if (this.state.count %2 == 0) {
-	        var x = React.createElement(C3, { count: this.state.count });
-	        a = React.createElement(
-	            C2,
-	            { count: this.state.count },
-	            x
-	        );
-	        //        }
-	        /*var b;
-	        if (this.state.count %2 != 0) {
-	            b = <C2 count={this.state.count}/>
-	        }*/
-
-	        return React.createElement(
-	            'div',
-	            null,
-	            a,
-	            React.createElement(
-	                'a',
-	                { onClick: this.click },
-	                'Click Me'
-	            )
-	        );
-	    }
-	});
-
-	var C2 = React.createClass({
-	    displayName: 'C2',
-
-	    componentWillMount: function componentWillMount() {
-	        console.log('c2 - componentWillMount');
-	    },
-	    componentWillUnmount: function componentWillUnmount() {
-	        console.log('c2 - componentWillUnmount');
-	    },
-	    getInitialState: function getInitialState() {
-	        console.log('c2 - getInitialState');
-	        return null;
-	    },
-	    render: function render() {
-	        console.log('c2 - render');
-	        return React.createElement(
-	            'div',
-	            null,
-	            this.props.count,
-	            this.props.children
-	        );
-	    }
-	});
-
-	var C3 = React.createClass({
-	    displayName: 'C3',
-
-	    componentWillMount: function componentWillMount() {
-	        console.log('c3 - componentWillMount');
-	    },
-	    render: function render() {
-	        console.log('c3 - render');
-	        return React.createElement(
-	            'div',
-	            null,
-	            'C3 - ',
-	            this.props.count
-	        );
-	    }
-	});
-
-	/*
-	var Testr = React.createClass({
-	    getInitialState: function() {
-	        
-	        return null;
-	    },
-
-	    componentWillMount: function() {
-	        console.log('cmpWillMount');
-
-	        setTimeout(function() {
-	            var items = this.state.items;
-	            items.push({ id: 3, name: 'three' });
-
-	            console.log('\n\n\n\n\n');
-	            this.setState({ items: items });
-
-	            setTimeout(function() {
-	                items[items.length-1] = { id: 10, name: 'ten' };
-
-	                console.log('\n\n\n\n\n');
-	                this.setState({ items: items });
-	            }.bind(this), 1000);
-	        }.bind(this), 1000);
-	    },
-
-	    componentDidMount: function() {
-	        console.log('cmpDidMount');
-	    },
-
-	    componentWillUnmount: function() {
-	        console.log('cmpWillUnmount');
-	    },
-
-	    componentWillUpdate: function() {
-	        console.log('cmpWillUpdate');
-	    },
-
-	    shouldComponentUpdate: function() {
-	        console.log('shouldCmpUpdate');
-	        return true;
-	    },
-
-	    componentWillReceiveProps: function(newProps) {
-	        console.log('cmpWillReceiveProps');
-	    },
-
-	    render: function() {
-	        console.log('cmpRender');
-
-	        var nodes = this.state.items.map(function(item) {
-	            return <TestrChild key={item.id} item={item}/>
-	        });
-	        return (
-	            <div>
-	              <div>hi there</div>
-	              {nodes}
-	            </div>
-	        );
-	    }
-	});
-
-	var TestrChild = React.createClass({
-	    getDefaultProps: function() {
-	        return {
-	            item: {}
-	        }
-	    },
-
-	    shouldComponentUpdate: function() {
-	        console.log('shouldCmpUpdate' + this.props.item.id);
-	        return true;
-	    },
-
-	    componentWillMount: function() {
-	        console.log('c-cmpWillMount:' + this.props.item.id);
-	    },
-
-	    componentDidMount: function() {
-	        console.log('c-cmpDidMount' + this.props.item.id);
-	    },
-
-	    componentWillUnmount: function() {
-	        console.log('c-cmpWillUnmount' + this.props.item.id);
-	    },
-
-	    componentWillUpdate: function() {
-	        console.log('c-cmpWillUpdate' + this.props.item.id);
-	    },
-
-	    componentWillReceiveProps: function(newProps) {
-	        console.log('c-cmpWillReceiveProps' + this.props.item.id);
-	    },
-
-	    render: function() {
-	        console.log('c-cmpRender' + this.props.item.id);
-	        return (
-	            <div>
-	                { this.props.item.name }
-	            </div>
-	        );
-	    }
-	});
-	module.exports = Testr;*/
-	module.exports = C1;
 
 /***/ }
 /******/ ]);

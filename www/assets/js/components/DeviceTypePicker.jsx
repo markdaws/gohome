@@ -33,7 +33,6 @@ var DeviceTypePicker = React.createClass({
             { str: "Hub", val:"hub" },
             { str: "Remote", val:"remote" }
         ];
-        var self = this;
         var nodes = types.map(function(type) {
             return <option value={type.val} key={type.val}>{type.str}</option>
         });

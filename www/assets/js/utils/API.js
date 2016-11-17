@@ -1,5 +1,3 @@
-var Constants = require('../constants.js');
-
 var BASE = '//' + window.location.hostname + ':5000';
 
 /*

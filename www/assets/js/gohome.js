@@ -4,10 +4,10 @@ var ControlApp = require('./components/ControlApp.jsx');
 var Provider = require('react-redux').Provider;
 var store = require('./store');
 
+/*
 var C1 = require('./components/Testr.jsx');
 
 //TODO: Remove - testing
-/*
 ReactDOM.render(
     <Provider store={store}>
         <C1 />

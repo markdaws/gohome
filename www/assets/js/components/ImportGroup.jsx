@@ -134,7 +134,6 @@ var ImportGroup = React.createClass({
             } else {
                 return -1;
             }
-            return x.hubId > y.hubId;
         })
 
         function saveDevice(devIndex) {

@@ -49,7 +49,6 @@ var SceneInfo = React.createClass({
     },
 
     toJson: function() {
-        var s = this.state;
         return {
             id: this.state.id,
             name: this.state.name,

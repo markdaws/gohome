@@ -1,5 +1,4 @@
 var React = require('react');
-var ReactRedux = require('react-redux');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 var InputValidationMixin = require('./InputValidationMixin.jsx')
 var DevicePicker = require('./DevicePicker.jsx');

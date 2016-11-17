@@ -1,9 +1,7 @@
-var ClassNames = require('classnames');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var CssMixin = require('./CssMixin.jsx');
 var Api = require('../utils/API.js');
-var ClassNames = require('classnames');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
