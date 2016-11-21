@@ -6,7 +6,8 @@ import (
 	"github.com/go-home-iot/event-bus"
 	lutronExt "github.com/go-home-iot/lutron"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -21,48 +22,41 @@ func (c *eventConsumer) ConsumerName() string {
 }
 func (c *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 	go func() {
+		dev, err := lutronExt.DeviceFromModelNumber(c.Device.ModelNumber)
+		if err != nil {
+			log.V("%s - error, unsupported device %s inside consumer", c.ConsumerName(), c.Device.ModelNumber)
+			return
+		}
+
 		for e := range ch {
+			switch evt := e.(type) {
+			case *gohome.FeaturesReportEvt:
+				log.V("%s - %s", c.ConsumerName(), evt)
 
-			// If we have a backlog, merge all of the requests in to one
-			zoneRpt := &gohome.ZonesReportEvt{ZoneIDs: make(map[string]bool)}
-			for {
-				switch evt := e.(type) {
-				case *gohome.ZonesReportEvt:
-					zoneRpt.Merge(evt)
-				}
+				for _, f := range c.Device.OwnedFeatures(evt.FeatureIDs) {
+					switch f.Type {
+					case feature.FTLightZone:
+					case feature.FTWindowTreatment:
+					default:
+						// Only support lights + window treatments, ignore all other features,
+						// which are buttons
+						continue
+					}
 
-				if len(ch) > 0 {
-					e = <-ch
-				} else {
-					break
-				}
-			}
+					conn, err := c.Device.Connections.Get(time.Second*10, true)
+					if err != nil {
+						log.V("%s - unable to get connection to device: %s, %s", c.ConsumerName(), c.Device, err)
+						continue
+					}
 
-			if len(zoneRpt.ZoneIDs) == 0 {
-				continue
-			}
-
-			// The system wants zones to report their current status, check if
-			// we own any of these zones, if so report them
-			dev, err := lutronExt.DeviceFromModelNumber(c.Device.ModelNumber)
-			if err != nil {
-				log.V("%s - error, unsupported device %s inside consumer", c.ConsumerName(), c.Device.ModelNumber)
-				continue
-			}
-
-			log.V("%s - %s", c.ConsumerName(), zoneRpt)
-
-			for _, zone := range c.Device.OwnedZones(zoneRpt.ZoneIDs) {
-				conn, err := c.Device.Connections.Get(time.Second*10, true)
-				if err != nil {
-					log.V("%s - unable to get connection to device: %s, timeout", c.ConsumerName(), c.Device)
-					continue
-				}
-
-				err = dev.RequestLevel(zone.Address, conn)
-				c.Device.Connections.Release(conn, err)
-				if err != nil {
-					log.V("%s - Failed to request level for lutron, zoneID:%s, %s", c.ConsumerName(), zone.ID, err)
+					// Here we simply ask the for levels, the Lutron gateway will then stream back
+					// the results at some point in time, which we will process in the producer loop
+					// below, since this is all async
+					err = dev.RequestLevel(f.Address, conn)
+					c.Device.Connections.Release(conn, err)
+					if err != nil {
+						log.V("%s - Failed to request level for lutron, featureID:%s, %s", c.ConsumerName(), f.ID, err)
+					}
 				}
 			}
 		}
@@ -120,49 +114,91 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 
 				switch e := evt.(type) {
 				case *lutronExt.ZoneLevelEvt:
-					z, ok := p.Device.Zones[e.Address]
-					if !ok {
-						return
+					// Zones can be either lights or window treatment, can't distinguish from the
+					// lutron data, so have to try both
+					f := p.Device.FeatureTypeByAddress(feature.FTLightZone, e.Address)
+					if f == nil {
+
+						f = p.Device.FeatureTypeByAddress(feature.FTWindowTreatment, e.Address)
+						if f == nil {
+							return
+						}
 					}
-					p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-						ZoneName: z.Name,
-						ZoneID:   z.ID,
-						Level:    cmd.Level{Value: e.Level},
-					})
+
+					switch f.Type {
+					case feature.FTLightZone:
+						onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+
+						// Check f the light zone is dimmable, if so it will have a brightness attribute
+						if brightness != nil {
+							brightness.Value = e.Level
+						}
+
+						if e.Level > 0 {
+							onoff.Value = attr.OnOffOn
+						} else {
+							onoff.Value = attr.OnOffOff
+						}
+
+						p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+							FeatureID: f.ID,
+							Attrs:     feature.NewAttrs(onoff, brightness),
+						})
+
+					case feature.FTWindowTreatment:
+						openClose, offset := feature.WindowTreatmentCloneAttrs(f)
+						offset.Value = e.Level
+						if e.Level > 0 {
+							openClose.Value = attr.OpenCloseOpen
+						} else {
+							openClose.Value = attr.OpenCloseClosed
+						}
+
+						p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+							FeatureID: f.ID,
+							Attrs:     feature.NewAttrs(openClose, offset),
+						})
+					}
 
 				case *lutronExt.BtnPressEvt:
 					sourceDevice, ok := p.Device.Devices[e.DeviceAddress]
 					if !ok {
 						return
 					}
+					_ = sourceDevice
 
-					if btn := sourceDevice.Buttons[e.Address]; btn != nil {
-						p.System.Services.EvtBus.Enqueue(&gohome.ButtonPressEvt{
-							BtnAddress:    btn.Address,
-							BtnID:         btn.ID,
-							BtnName:       btn.Name,
-							DeviceName:    sourceDevice.Name,
-							DeviceAddress: sourceDevice.Address,
-							DeviceID:      sourceDevice.ID,
-						})
-					}
+					//TODO: Fix
+					/*
+						if btn := sourceDevice.ButtonByAddress(e.Address); btn != nil {
+							p.System.Services.EvtBus.Enqueue(&gohome.ButtonPressEvt{
+								BtnAddress:    btn.Address,
+								BtnID:         btn.ID,
+								BtnName:       btn.Name,
+								DeviceName:    sourceDevice.Name,
+								DeviceAddress: sourceDevice.Address,
+								DeviceID:      sourceDevice.ID,
+							})
+						}*/
 
 				case *lutronExt.BtnReleaseEvt:
 					sourceDevice, ok := p.Device.Devices[e.DeviceAddress]
 					if !ok {
 						return
 					}
+					_ = sourceDevice
 
-					if btn := sourceDevice.Buttons[e.Address]; btn != nil {
-						p.System.Services.EvtBus.Enqueue(&gohome.ButtonReleaseEvt{
-							BtnAddress:    btn.Address,
-							BtnID:         btn.ID,
-							BtnName:       btn.Name,
-							DeviceName:    sourceDevice.Name,
-							DeviceAddress: sourceDevice.Address,
-							DeviceID:      sourceDevice.ID,
-						})
-					}
+					//TODO: Fix
+					/*
+						if btn := sourceDevice.ButtonByAddress(e.Address); btn != nil {
+							p.System.Services.EvtBus.Enqueue(&gohome.ButtonReleaseEvt{
+								BtnAddress:    btn.Address,
+								BtnID:         btn.ID,
+								BtnName:       btn.Name,
+								DeviceName:    sourceDevice.Name,
+								DeviceAddress: sourceDevice.Address,
+								DeviceID:      sourceDevice.ID,
+							})
+						}*/
 
 				case *lutronExt.UnknownEvt:
 					// Don't care, ignore

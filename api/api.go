@@ -17,8 +17,6 @@ import (
 type apiServer struct {
 	systemSavePath string
 	system         *gohome.System
-	recipeManager  *gohome.RecipeManager
-	eventLogger    gohome.WSEventLogger
 	sessions       *gohome.Sessions
 }
 
@@ -28,15 +26,11 @@ func ListenAndServe(
 	systemSavePath string,
 	addr string,
 	system *gohome.System,
-	recipeManager *gohome.RecipeManager,
-	sessions *gohome.Sessions,
-	eventLogger gohome.WSEventLogger) error {
+	sessions *gohome.Sessions) error {
 	server := &apiServer{
 		systemSavePath: systemSavePath,
 		system:         system,
-		recipeManager:  recipeManager,
 		sessions:       sessions,
-		eventLogger:    eventLogger,
 	}
 	return server.listenAndServe(addr)
 }
@@ -45,17 +39,9 @@ func (s *apiServer) listenAndServe(addr string) error {
 
 	r := mux.NewRouter()
 
-	//TODO: re-enable
-	//r.HandleFunc("/api/v1/events/ws", s.eventLogger.HTTPHandler())
-
 	RegisterSceneHandlers(r, s)
-	RegisterButtonHandlers(r, s)
-	RegisterZoneHandlers(r, s)
 	RegisterDeviceHandlers(r, s)
-	RegisterSensorHandlers(r, s)
 	RegisterDiscoveryHandlers(r, s)
-	RegisterCookBookHandlers(r, s)
-	RegisterRecipeHandlers(r, s)
 	RegisterMonitorHandlers(r, s)
 	RegisterUserHandlers(r, s)
 

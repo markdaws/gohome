@@ -7,7 +7,8 @@ import (
 	"github.com/go-home-iot/event-bus"
 	fluxwifiExt "github.com/go-home-iot/fluxwifi"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -25,13 +26,15 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 	go func() {
 		for e := range ch {
 
-			var evt *gohome.ZonesReportEvt
+			var evt *gohome.FeaturesReportEvt
 			var ok bool
-			if evt, ok = e.(*gohome.ZonesReportEvt); !ok {
+			if evt, ok = e.(*gohome.FeaturesReportEvt); !ok {
 				continue
 			}
 
-			for _, zone := range c.Device.OwnedZones(evt.ZoneIDs) {
+			for _, f := range c.Device.OwnedFeatures(evt.FeatureIDs) {
+				// All features are LightZone type, no need to filter between different types
+
 				log.V("%s - %s", c.ConsumerName(), evt)
 
 				conn, err := c.Device.Connections.Get(time.Second*5, true)
@@ -44,22 +47,33 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 				c.Device.Connections.Release(conn, err)
 				if err != nil {
 					log.V("%s - failed to get state: %s", c.ConsumerName(), err)
-				} else {
-					if state.Power < 2 {
-						// 2 -> unknown, so only process if it is 0 or 1
-						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-							ZoneName: zone.Name,
-							ZoneID:   zone.ID,
-							Level: cmd.Level{
-								Value: float32(state.Power),
-								R:     state.R,
-								G:     state.G,
-								B:     state.B,
-							},
-						})
-					}
+					continue
 				}
 
+				if state.Power < 2 {
+					// Get the cloned attributes
+					onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+
+					var onoffVal int32
+					if state.Power > 0 {
+						onoffVal = attr.OnOffOn
+					} else {
+						onoffVal = attr.OnOffOff
+					}
+					onoff.Value = onoffVal
+
+					brightness.Value = float32(state.Power)
+
+					//TODO: Hue, convert RGB to hue
+					//R:     state.R,
+					//G:     state.G,
+					//B:     state.B,
+
+					c.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+						FeatureID: f.ID,
+						Attrs:     feature.NewAttrs(brightness, onoff),
+					})
+				}
 			}
 		}
 	}()
@@ -87,7 +101,9 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 		for p.producing {
 			time.Sleep(time.Second * 10)
 
-			for _, zone := range p.Device.Zones {
+			for _, f := range p.Device.Features {
+				// We only support FTLightZone features, so no need to type check
+
 				conn, err := p.Device.Connections.Get(time.Second*10, false)
 				if err != nil {
 					log.V("%s - failed to get connection to check status: %s", p.ProducerName(), err)
@@ -98,22 +114,30 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 				p.Device.Connections.Release(conn, err)
 				if err != nil {
 					log.V("%s - failed to get bulb state: %s", p.ProducerName(), err)
-				} else {
-					if state.Power < 2 {
-						// 2 -> unknown, so only process if it is 0 or 1
-						p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-							ZoneName: zone.Name,
-							ZoneID:   zone.ID,
-							Level: cmd.Level{
-								Value: float32(state.Power),
-								R:     state.R,
-								G:     state.G,
-								B:     state.B,
-							},
-						})
-					}
+					continue
 				}
 
+				// 2 is unknown so ignore
+				if state.Power < 2 {
+					onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+
+					brightness.Value = float32(state.Power)
+					if state.Power > 0 {
+						onoff.Value = attr.OnOffOn
+					} else {
+						onoff.Value = attr.OnOffOff
+					}
+
+					//TODO: Hue, convert RGB to hue
+					//R:     state.R,
+					//G:     state.G,
+					//B:     state.B,
+
+					p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+						FeatureID: f.ID,
+						Attrs:     feature.NewAttrs(onoff, brightness),
+					})
+				}
 			}
 		}
 	}()

@@ -6,10 +6,10 @@ var DevicePicker = React.createClass({
             devices: []
         };
     },
-    
+
     getInitialState: function() {
         return {
-            value: this.props.defaultId
+            value: this.props.defaultId || ''
         };
     },
 
@@ -20,15 +20,20 @@ var DevicePicker = React.createClass({
         this.setState({ value: evt.target.value });
         this.props.changed && this.props.changed(evt.target.value);
     },
-    
+
     render: function() {
         var options = [];
         this.props.devices.forEach(function(device) {
             var id = device.id;
             options.push(<option key={id} value={id}>{device.name}</option>);
         });
-        return (
-            <div className="cmp-DevicePicker">
+
+        var noDevices;
+        var picker;
+        if (this.props.devices.length === 0) {
+            noDevices = <div>No devices found.</div>
+        } else {
+            picker = (
                 <select
                     disabled={this.props.disabled}
                     className="form-control"
@@ -37,6 +42,12 @@ var DevicePicker = React.createClass({
                     <option value="">Select a device...</option>
                     {options}
                 </select>
+            );
+        }
+        return (
+            <div className="b-DevicePicker">
+                {picker}
+                {noDevices}
             </div>
         );
     }

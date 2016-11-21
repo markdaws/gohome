@@ -9,17 +9,19 @@ import (
 
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/attr"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
-	"github.com/markdaws/gohome/zone"
+
+	errExt "github.com/pkg/errors"
 )
 
 // ErrFileNotFound is returned when the specified path cannot be found
 var ErrFileNotFound = errors.New("file not found")
 
 // LoadSystem loads a gohome data file from the specified path
-func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.System, error) {
+func LoadSystem(path string) (*gohome.System, error) {
 
 	log.V("loading system from %s", path)
 
@@ -37,7 +39,6 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 
 	sys := gohome.NewSystem(s.Name, s.Description)
 	intg.RegisterExtensions(sys)
-	recipeManager.System = sys
 
 	// Load all devices into global device list
 	for _, d := range s.Devices {
@@ -110,59 +111,15 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 			dev.Hub = hub
 		}
 
-		for _, btn := range d.Buttons {
-			b := &gohome.Button{
-				Address:     btn.Address,
-				ID:          btn.ID,
-				Name:        btn.Name,
-				Description: btn.Description,
-				Device:      dev,
-			}
+		dev.Features = d.Features
+		for _, f := range d.Features {
+			// When deserializing from JSON, the int32 and float32 types are converted
+			// to float64 so need to massage them back
+			attr.FixJSON(f.Attrs)
 
-			dev.AddButton(b)
-			sys.AddButton(b)
-		}
-
-		for _, zn := range d.Zones {
-			z := &zone.Zone{
-				Address:     zn.Address,
-				ID:          zn.ID,
-				Name:        zn.Name,
-				Description: zn.Description,
-				DeviceID:    dev.ID,
-				Type:        zone.TypeFromString(zn.Type),
-				Output:      zone.OutputFromString(zn.Output),
-			}
-			err := dev.AddZone(z)
-			if err != nil {
-				log.V("failed to add zone to device: %s", err)
-			}
-			sys.AddZone(z)
-			log.V("loaded Zone: ID:%s, Name:%s, Address:%s, Type:%s, Output:%s",
-				zn.ID, zn.Name, zn.Address, zn.Type, zn.Output,
-			)
-		}
-
-		for _, sen := range d.Sensors {
-			sensor := &gohome.Sensor{
-				Address:     sen.Address,
-				ID:          sen.ID,
-				Name:        sen.Name,
-				Description: sen.Description,
-				DeviceID:    sen.DeviceID,
-				Attr: gohome.SensorAttr{
-					Name:     sen.Attr.Name,
-					Value:    sen.Attr.Value,
-					DataType: gohome.SensorDataType(sen.Attr.DataType),
-					States:   sen.Attr.States,
-				},
-			}
-
-			dev.AddSensor(sensor)
-			sys.AddSensor(sensor)
-			log.V("loaded Sensor: ID:%s, Name:%s, Address:%s, DeviceID:%s",
-				sensor.ID, sensor.Name, sensor.Address, sensor.DeviceID,
-			)
+			log.V("loaded feature: ID:%s, Name:%s, Address: %s, Type:%s",
+				f.ID, f.Name, f.Address, f.Type)
+			sys.AddFeature(f)
 		}
 	}
 
@@ -179,47 +136,48 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 		for i, command := range scn.Commands {
 			var finalCmd cmd.Command
 			switch command.Type {
-			case "zoneSetLevel":
-				z := sys.Zones[command.Attributes["ZoneID"].(string)]
-				finalCmd = &cmd.ZoneSetLevel{
+			//TODO: Fix
+			/*
+				case "sceneSet":
+					scn := sys.Scenes[command.Attributes["SceneID"].(string)]
+					finalCmd = &cmd.SceneSet{
+						ID:        command.ID,
+						SceneID:   scn.ID,
+						SceneName: scn.Name,
+					}*/
+
+			case "featureSetAttrs":
+				interfaceAttrs := command.Attributes["attrs"].(map[string]interface{})
+
+				// Need to convert these to map[string]*attr.Attribute, don't see an easy way to
+				// do that, so just marshal then unmarshal back to the type we want since commands
+				// are generic
+				b, err := json.Marshal(interfaceAttrs)
+				if err != nil {
+					return nil, errExt.Wrap(err, "failed to retrieve attrs field")
+				}
+
+				attrs := make(map[string]*attr.Attribute)
+				err = json.Unmarshal(b, &attrs)
+				if err != nil {
+					return nil, errExt.Wrap(err, "failed to unmarshal attrs")
+				}
+				attr.FixJSON(attrs)
+
+				featureID := command.Attributes["featureId"].(string)
+				f, ok := sys.Features[featureID]
+				if !ok {
+					return nil, fmt.Errorf("invalid feature ID: %s", featureID)
+				}
+
+				finalCmd = &cmd.FeatureSetAttrs{
 					ID:          command.ID,
-					ZoneAddress: z.Address,
-					ZoneID:      z.ID,
-					ZoneName:    z.Name,
-					Level: cmd.Level{
-						Value: float32(command.Attributes["Level"].(float64)),
-						R:     byte(command.Attributes["R"].(float64)),
-						G:     byte(command.Attributes["G"].(float64)),
-						B:     byte(command.Attributes["B"].(float64)),
-					},
+					FeatureID:   f.ID,
+					FeatureName: f.Name,
+					FeatureType: f.Type,
+					Attrs:       attrs,
 				}
-			case "buttonPress":
-				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
-				finalCmd = &cmd.ButtonPress{
-					ID:            command.ID,
-					ButtonAddress: btn.Address,
-					ButtonID:      btn.ID,
-					DeviceName:    btn.Device.Name,
-					DeviceAddress: btn.Device.Address,
-					DeviceID:      btn.Device.ID,
-				}
-			case "buttonRelease":
-				btn := sys.Buttons[command.Attributes["ButtonID"].(string)]
-				finalCmd = &cmd.ButtonRelease{
-					ID:            command.ID,
-					ButtonAddress: btn.Address,
-					ButtonID:      btn.ID,
-					DeviceName:    btn.Device.Name,
-					DeviceAddress: btn.Device.Address,
-					DeviceID:      btn.Device.ID,
-				}
-			case "sceneSet":
-				scn := sys.Scenes[command.Attributes["SceneID"].(string)]
-				finalCmd = &cmd.SceneSet{
-					ID:        command.ID,
-					SceneID:   scn.ID,
-					SceneName: scn.Name,
-				}
+
 			default:
 				return nil, fmt.Errorf("unknown command type %s", command.Type)
 			}
@@ -241,18 +199,11 @@ func LoadSystem(path string, recipeManager *gohome.RecipeManager) (*gohome.Syste
 		sys.AddUser(user)
 	}
 
-	for _, r := range s.Recipes {
-		rec, err := recipeManager.FromJSON(r)
-		if err != nil {
-			return nil, err
-		}
-		sys.AddRecipe(rec)
-	}
 	return sys, nil
 }
 
 // SaveSystem saves the specified system to disk
-func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeManager) error {
+func SaveSystem(savePath string, s *gohome.System) error {
 	out := systemJSON{
 		Version:     "0.1.0",
 		Name:        s.Name,
@@ -270,43 +221,26 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 		}
 
 		cmds := make([]commandJSON, len(scene.Commands))
-		//TODO: Put this somewhere common? also in www
 		for j, sCmd := range scene.Commands {
 			switch xCmd := sCmd.(type) {
-			case *cmd.ZoneSetLevel:
+			//TODO: Fix
+			/*
+				case *cmd.SceneSet:
+					cmds[j] = commandJSON{
+						ID:   xCmd.ID,
+						Type: "sceneSet",
+						Attributes: map[string]interface{}{
+							"SceneID": xCmd.SceneID,
+						},
+					}*/
+
+			case *cmd.FeatureSetAttrs:
 				cmds[j] = commandJSON{
 					ID:   xCmd.ID,
-					Type: "zoneSetLevel",
+					Type: "featureSetAttrs",
 					Attributes: map[string]interface{}{
-						"ZoneID": xCmd.ZoneID,
-						"Level":  xCmd.Level.Value,
-						"R":      xCmd.Level.R,
-						"G":      xCmd.Level.G,
-						"B":      xCmd.Level.B,
-					},
-				}
-			case *cmd.ButtonPress:
-				cmds[j] = commandJSON{
-					ID:   xCmd.ID,
-					Type: "buttonPress",
-					Attributes: map[string]interface{}{
-						"ButtonID": xCmd.ButtonID,
-					},
-				}
-			case *cmd.ButtonRelease:
-				cmds[j] = commandJSON{
-					ID:   xCmd.ID,
-					Type: "buttonRelease",
-					Attributes: map[string]interface{}{
-						"ButtonID": xCmd.ButtonID,
-					},
-				}
-			case *cmd.SceneSet:
-				cmds[j] = commandJSON{
-					ID:   xCmd.ID,
-					Type: "sceneSet",
-					Attributes: map[string]interface{}{
-						"SceneID": xCmd.SceneID,
+						"featureId": xCmd.FeatureID,
+						"attrs":     xCmd.Attrs,
 					},
 				}
 			default:
@@ -356,51 +290,7 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 			}
 		}
 
-		d.Buttons = make([]buttonJSON, len(device.Buttons))
-		bi := 0
-		for _, btn := range device.Buttons {
-			d.Buttons[bi] = buttonJSON{
-				Address:     btn.Address,
-				ID:          btn.ID,
-				Name:        btn.Name,
-				Description: btn.Description,
-			}
-			bi++
-		}
-
-		d.Zones = make([]zoneJSON, len(device.Zones))
-		zi := 0
-		for _, z := range device.Zones {
-			d.Zones[zi] = zoneJSON{
-				Address:     z.Address,
-				ID:          z.ID,
-				Name:        z.Name,
-				Description: z.Description,
-				DeviceID:    device.ID,
-				Type:        z.Type.ToString(),
-				Output:      z.Output.ToString(),
-			}
-			zi++
-		}
-
-		d.Sensors = make([]sensorJSON, len(device.Sensors))
-		si := 0
-		for _, sen := range device.Sensors {
-			d.Sensors[si] = sensorJSON{
-				Address:     sen.Address,
-				ID:          sen.ID,
-				Name:        sen.Name,
-				Description: sen.Description,
-				DeviceID:    sen.DeviceID,
-				Attr: sensorAttrJSON{
-					Name:     sen.Attr.Name,
-					Value:    sen.Attr.Value,
-					DataType: string(sen.Attr.DataType),
-					States:   sen.Attr.States,
-				},
-			}
-			si++
-		}
+		d.Features = device.Features
 
 		d.DeviceIDs = make([]string, len(device.Devices))
 		di := 0
@@ -409,14 +299,6 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 			di++
 		}
 		out.Devices[i] = d
-		i++
-	}
-
-	i = 0
-	out.Recipes = make([]gohome.RecipeJSON, len(s.Recipes))
-	for _, r := range s.Recipes {
-		rec := recipeManager.ToJSON(r)
-		out.Recipes[i] = rec
 		i++
 	}
 
@@ -432,7 +314,7 @@ func SaveSystem(savePath string, s *gohome.System, recipeManager *gohome.RecipeM
 		i++
 	}
 
-	b, err := json.Marshal(out)
+	b, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {
 		return err
 	}

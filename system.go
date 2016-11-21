@@ -3,8 +3,8 @@ package gohome
 import (
 	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
-	"github.com/markdaws/gohome/zone"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -24,10 +24,7 @@ type System struct {
 	Description string
 	Devices     map[string]*Device
 	Scenes      map[string]*Scene
-	Zones       map[string]*zone.Zone
-	Buttons     map[string]*Button
-	Sensors     map[string]*Sensor
-	Recipes     map[string]*Recipe
+	Features    map[string]*feature.Feature
 	Users       map[string]*User
 	Extensions  *Extensions
 	Services    SystemServices
@@ -41,10 +38,7 @@ func NewSystem(name, desc string) *System {
 		Description: desc,
 		Devices:     make(map[string]*Device),
 		Scenes:      make(map[string]*Scene),
-		Zones:       make(map[string]*zone.Zone),
-		Sensors:     make(map[string]*Sensor),
-		Buttons:     make(map[string]*Button),
-		Recipes:     make(map[string]*Recipe),
+		Features:    make(map[string]*feature.Feature),
 		Users:       make(map[string]*User),
 	}
 
@@ -52,15 +46,15 @@ func NewSystem(name, desc string) *System {
 	return s
 }
 
-// NextGlobalID returns the next unique global ID that can be used as an identifier
+// NewGlobalID returns the next unique global ID that can be used as an identifier
 // for an item in the system.
-func (s *System) NextGlobalID() string {
-	u5, err := uuid.NewV4()
+func (s *System) NewGlobalID() string {
+	ID, err := uuid.NewV4()
 	if err != nil {
 		//TODO: Fail gracefully from this, keep looping?
 		panic("failed to generate unique id in call to NextGlobalID:" + err.Error())
 	}
-	return u5.String()
+	return ID.String()
 }
 
 // InitDevices loops through all of the devices in the system and initializes them.
@@ -123,25 +117,26 @@ func (s *System) StopDevice(d *Device) {
 	}
 }
 
-// AddButton adds the button to the system and gives it a unique
-// ID if it already doesn't have one
-func (s *System) AddButton(b *Button) {
-	s.Buttons[b.ID] = b
+func (s *System) AddFeature(f *feature.Feature) {
+	s.Features[f.ID] = f
 }
 
-// AddSensor adds a sensor to the system
-func (s *System) AddSensor(sen *Sensor) {
-	s.Sensors[sen.ID] = sen
+// ButtonGeatures returns a slice containing all of the button features in the system
+func (s *System) ButtonFeatures() map[string]*feature.Feature {
+	//TODO: Worth caching?
+
+	features := make(map[string]*feature.Feature)
+	for _, f := range s.Features {
+		if f.Type == feature.FTButton {
+			features[f.ID] = f
+		}
+	}
+	return features
 }
 
 // AddDevice adds a device to the system
 func (s *System) AddDevice(d *Device) {
 	s.Devices[d.ID] = d
-}
-
-// AddZone adds a zone to the system
-func (s *System) AddZone(z *zone.Zone) {
-	s.Zones[z.ID] = z
 }
 
 // AddScene adds a scene to the system
@@ -165,15 +160,6 @@ func (s *System) DeleteDevice(d *Device) {
 	delete(s.Devices, d.ID)
 	//TODO: Remove all associated zones + buttons
 	//TODO: Need to stop all services, recipes, networking etc to this device
-}
-
-// AddRecipe adds a recipe to the system
-func (s *System) AddRecipe(r *Recipe) {
-
-	if r.ID == "" {
-		r.ID = s.NextGlobalID()
-	}
-	s.Recipes[r.ID] = r
 }
 
 // IsDupeDevice returns true if the device is a dupe of one the system

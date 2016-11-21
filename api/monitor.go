@@ -13,6 +13,8 @@ import (
 
 // RegisterMonitorHandlers registers all of the monitor specific REST API routes
 func RegisterMonitorHandlers(r *mux.Router, s *apiServer) {
+	//TODO: Need a way to check the SID used for the user against the current valid
+	//SIDs and make sure it has not expired, otherwise someone can listen forever
 	wsHelper := NewWSHelper(s.system.Services.Monitor, s.system.Services.EvtBus)
 
 	// Clients call to subscribe to items, api returns a monitorID that can then be used
@@ -70,16 +72,12 @@ func apiSubscribeHandler(system *gohome.System, wsHelper *WSHelper) func(http.Re
 		}
 
 		group := &gohome.MonitorGroup{
-			Timeout: time.Duration(groupJSON.TimeoutInSeconds) * time.Second,
-			Sensors: make(map[string]bool),
-			Zones:   make(map[string]bool),
-			Handler: wsHelper,
+			Timeout:  time.Duration(groupJSON.TimeoutInSeconds) * time.Second,
+			Features: make(map[string]bool),
+			Handler:  wsHelper,
 		}
-		for _, sensorID := range groupJSON.SensorIDs {
-			group.Sensors[sensorID] = true
-		}
-		for _, zoneID := range groupJSON.ZoneIDs {
-			group.Zones[zoneID] = true
+		for _, featureID := range groupJSON.FeatureIDs {
+			group.Features[featureID] = true
 		}
 
 		mID, err := system.Services.Monitor.Subscribe(group, false)

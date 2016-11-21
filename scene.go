@@ -24,12 +24,19 @@ type Scene struct {
 }
 
 // DeleteCommand deletes a command from the scene
-func (s *Scene) DeleteCommand(i int) error {
-	if i < 0 || i >= len(s.Commands) {
-		return fmt.Errorf("invalid command index")
+func (s *Scene) DeleteCommand(cmdID string) error {
+	index := -1
+	for i, c := range s.Commands {
+		if c.GetID() == cmdID {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return fmt.Errorf("invalid command ID")
 	}
 
-	s.Commands, s.Commands[len(s.Commands)-1] = append(s.Commands[:i], s.Commands[i+1:]...), nil
+	s.Commands, s.Commands[len(s.Commands)-1] = append(s.Commands[:index], s.Commands[index+1:]...), nil
 	return nil
 }
 

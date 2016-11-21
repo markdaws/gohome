@@ -60,8 +60,8 @@ var Login = React.createClass({
                             type="text"
                             className="form-control"
                             id="login"
-                            autocapitalize="none"
-                            autocorrect="off"
+                            autoCapitalize="none"
+                            autoCorrect="off"
                             placeholder="Login"></input>
                     </div>
 

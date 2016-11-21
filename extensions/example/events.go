@@ -7,7 +7,8 @@ import (
 
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -50,23 +51,51 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 			// Pretend we are getting events from hardware, just sleep for a small time
 			time.Sleep(time.Second * 10)
 
-			// For other events you can react and produce, see gohome/events.go
+			// For other events you can react and produce, see gohome/events.go.
 
-			// Pretend this was a zone level change event, report it
-			for _, zone := range p.Device.Zones {
-				lvl := float32(rand.Intn(101))
+			// Loop through all of the features that the device exports, such as button,
+			// light zone, sensor etc. enqueuing some random value for the value to
+			// simulate things are changing
+			for _, f := range p.Device.Features {
 
-				p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-					ZoneName: zone.Name,
-					ZoneID:   zone.ID,
-					Level: cmd.Level{
-						// Just send back some random number between 0-100
-						Value: lvl,
-						R:     0.0,
-						G:     0.0,
-						B:     0.0,
-					},
-				})
+				// In discovery.go we gave the light feature address 1 and the
+				// sensor feature address 2, that lets us distinguish them here,
+				// we could also use feature.Type to choose between them
+				switch f.Address {
+				case "1":
+					// A feature, such as a light zone, can have one or more attributes. An attribute is
+					// just a value, so a light zone has brightness, onoff and hue attributes. The Features
+					// field is a map of the attributes keyed by the attributes LocalID field. LocalID is just
+					// a name that identifies the attribute in the feature.
+
+					// When we want to update an attribute value, we access it by localID first, in the feature.go
+					// file there are a bunch of consts defined that map to the names. Then you need to Clone() the
+					// attribute before you update it
+
+					onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+
+					// Send back some random values
+					brightness.Value = float32(rand.Intn(101))
+					onoff.Value = int32(1 + rand.Intn(2))
+
+					// Finally we send an event to the event bus so the system knows that this feature has been
+					// updated.  We include only the attributes that have changed.
+					p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+						FeatureID: f.ID,
+						Attrs:     feature.NewAttrs(onoff, brightness),
+					})
+
+				case "2":
+					// A sensor only has one attribute, so we can use attr.Only() to pick it out from the
+					// map returned in f.Attrs. Only just picks the first item in the map.n
+					openclose := attr.Only(f.Attrs).Clone()
+					openclose.Value = int32(1 + rand.Intn(2))
+
+					p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+						FeatureID: f.ID,
+						Attrs:     feature.NewAttrs(openclose),
+					})
+				}
 			}
 		}
 	}()
@@ -114,30 +143,31 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 
 			// For other events you can handle, look at gohome/events.go
 
-			var evt *gohome.ZonesReportEvt
+			var evt *gohome.FeaturesReportEvt
 			var ok bool
-			if evt, ok = e.(*gohome.ZonesReportEvt); !ok {
-				// Not an event we care about, ignore
+			if evt, ok = e.(*gohome.FeaturesReportEvt); !ok {
 				continue
 			}
 
-			// Look at all the zones which the system is requesting values for, if we own
-			// any of them we need to get their latest values
-			for _, zone := range c.Device.OwnedZones(evt.ZoneIDs) {
-				log.V("%s - %s", c.ConsumerName(), evt)
+			log.V("%s - %s", c.ConsumerName(), evt)
 
-				// Get the latest value for this device, we will just return a random
-				// value for the purpose of this example
-				c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-					ZoneName: zone.Name,
-					ZoneID:   zone.ID,
-					Level: cmd.Level{
-						Value: float32(rand.Intn(101)),
-						R:     0.0,
-						G:     0.0,
-						B:     0.0,
-					},
-				})
+			for _, f := range c.Device.OwnedFeatures(evt.FeatureIDs) {
+				// We gave the features different addresses in the discovery.go file, so we can
+				// use it to distinguish them here, between the light and the sensor
+				switch f.Address {
+				case "1":
+				case "2":
+					// Get the latest value for this device, we will just return a random
+					// value for the purpose of this example. We create the attribute with
+					// a new value and set that in the event
+					openclose := attr.Only(f.Attrs)
+					openclose.Value = int32(1 + rand.Intn(2))
+
+					c.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+						FeatureID: f.ID,
+						Attrs:     feature.NewAttrs(openclose),
+					})
+				}
 			}
 		}
 	}()

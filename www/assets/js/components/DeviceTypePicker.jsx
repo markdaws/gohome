@@ -1,4 +1,10 @@
- var React = require('react');
+var React = require('react');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'DeviceTypePicker',
+    prefix: 'b-'
+});
 
 var DeviceTypePicker = React.createClass({
     getInitialState: function() {
@@ -14,7 +20,7 @@ var DeviceTypePicker = React.createClass({
             this.props.changed && this.props.changed(this.state.value);
         }
     },
-    
+
     selected: function(evt) {
         this.setType(evt.target.value);
     },
@@ -23,7 +29,7 @@ var DeviceTypePicker = React.createClass({
         this.setState({ value: type });
         this.props.changed && this.props.changed(type);
     },
-    
+
     render: function() {
         var types = [
             { str: "Unknown", val:"unknown" },
@@ -34,10 +40,10 @@ var DeviceTypePicker = React.createClass({
             { str: "Remote", val:"remote" }
         ];
         var nodes = types.map(function(type) {
-            return <option value={type.val} key={type.val}>{type.str}</option>
+            return <option value={type.val} key={type.val}>{type.str}</option>;
         });
         return (
-            <div className="cmp-DeviceTypePicker">
+            <div {...classes()}>
                 <select
                     className="form-control"
                     onChange={this.selected}

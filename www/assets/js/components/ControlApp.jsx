@@ -2,13 +2,10 @@ var React = require('react');
 var ReactRedux = require('react-redux');
 var System = require('./System.jsx');
 var SceneList = require('./SceneList.jsx');
-var ZoneSensorList = require('./ZoneSensorList.jsx');
+var FeatureList = require('./FeatureList.jsx');
 var Logging = require('./Logging.jsx');
-var RecipeApp = require('./RecipeApp.jsx');
 var SceneActions = require('../actions/SceneActions.js');
-var SensorActions = require('../actions/SensorActions.js');
 var SystemActions = require('../actions/SystemActions.js');
-var ZoneActions = require('../actions/ZoneActions.js');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
@@ -20,11 +17,7 @@ require('../../css/components/ControlApp.less')
 var ControlApp = React.createClass({
     getDefaultProps: function() {
         return {
-            buttons: [],
             devices: [],
-            zones: [],
-            sensors: [],
-
             //TODO: Change to array
             scenes: { items: [] }
         };
@@ -33,26 +26,18 @@ var ControlApp = React.createClass({
     componentDidMount: function() {
         //TODO: Have a loading screen until all of these have loaded
         this.props.loadAllDevices();
-        this.props.loadAllZones();
         this.props.loadAllScenes();
-        this.props.loadAllButtons();
-        this.props.loadAllSensors();
     },
 
     render: function() {
-
-        var zoneBody;
-        if (this.props.zones.length === 0 && this.props.sensors.length === 0) {
-            zoneBody = (
-                <h5 {...classes('empty-message-zones')}>You don't have any lights or sensors. Go to the devices tab to get started.</h5>
+        var featureBody;
+        if (this.props.devices.length === 0) {
+            featureBody = (
+                <h5 {...classes('empty-message-zones')}>You don't have any devices or feature. Go to the devices tab to get started.</h5>
             );
         } else {
-            zoneBody = (
-                <ZoneSensorList
-                    sensors={this.props.sensors}
-                    zones={this.props.zones}
-                    devices={this.props.devices}
-                />
+            featureBody = (
+                <FeatureList devices={this.props.devices} />
             );
         }
 
@@ -65,9 +50,8 @@ var ControlApp = React.createClass({
 
         if (this.props.errors && this.props.errors.length > 0) {
             console.error(this.props.errors)
-            
         }
-        
+
         return (
             <div {...classes()}>
                 <ul className="nav nav-tabs" role="tablist">
@@ -77,7 +61,7 @@ var ControlApp = React.createClass({
                         </a>
                     </li>
                     <li role="presentation" className="active">
-                        <a href="#zones" role="tab" aria-controls="zones" data-toggle="tab">
+                        <a href="#features" role="tab" aria-controls="features" data-toggle="tab">
                             <i className="fa fa-code-fork"></i>
                         </a>
                     </li>
@@ -86,32 +70,23 @@ var ControlApp = React.createClass({
                             <i className="fa fa-tablet"></i>
                         </a>
                     </li>
-                    {/*
-                    //TODO: re-enable after v1.0
-                    <li role="presentation">
-                    <a href="#logging" role="tab" aria-controls="logging" data-toggle="tab">Logging</a>
-                    </li>
-                    <li role="presentation">
-                    <a href="#recipes" role="tab" aria-controls="recipes" data-toggle="tab">Recipes</a>
-                    </li>
-                    */}
                 </ul>
                 <div className="tab-content">
                     <div role="tabpanel" className="tab-pane fade" id="scenes">
                         <div className={(this.props.appLoadStatus.scenesLoaded ? "" : "hideTabContent")}>
-                            <SceneList scenes={this.props.scenes} buttons={this.props.buttons} zones={this.props.zones} />
+                            <SceneList scenes={this.props.scenes} devices={this.props.devices} />
                             {emptySceneBody}
                         </div>
                         <div {...classes('spinner')}>
                             <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
                         </div>
                     </div>
-                    <div role="tabpanel" className="tab-pane active" id="zones">
-                        <div className={(this.props.appLoadStatus.zonesLoaded ? "" : "hideTabContent")}>
-                            {zoneBody}
+                    <div role="tabpanel" className="tab-pane active" id="features">
+                        <div className={(this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent")}>
+                            {featureBody}
                         </div>
                         <div {...classes('spinner')}>
-                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.zonesLoaded ? "hidden" : "")}></i>
+                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.devicesLoaded ? "hidden" : "")}></i>
                         </div>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="system">
@@ -122,14 +97,6 @@ var ControlApp = React.createClass({
                             <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
                         </div>
                     </div>
-            {/*
-            <div role="tabpanel" className="tab-pane fade" id="logging">
-            <Logging />
-            </div>
-            <div role="tabpanel" className="tab-pane fade" id="recipes">
-                    <RecipeApp />
-                    </div>
-                    */}
                 </div>
             </div>
         );
@@ -139,10 +106,7 @@ var ControlApp = React.createClass({
 function mapStateToProps(state) {
     return {
         devices: state.system.devices,
-        zones: state.zones,
         scenes: state.scenes,
-        buttons: state.buttons,
-        sensors: state.sensors,
         appLoadStatus: state.appLoadStatus,
         errors: state.errors
     };
@@ -150,24 +114,12 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        loadAllButtons: function() {
-            dispatch(SystemActions.loadAllButtons());
-        },
         loadAllDevices: function() {
             dispatch(SystemActions.loadAllDevices());
         },
         loadAllScenes: function() {
             dispatch(SceneActions.loadAll());
         },
-        loadAllZones: function() {
-            dispatch(ZoneActions.loadAll());
-        },
-        loadAllSensors: function() {
-            dispatch(SensorActions.loadAll());
-        },
-        clearErrors: function() {
-            //TODO:
-        }
     }
 }
 

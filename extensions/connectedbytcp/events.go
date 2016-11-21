@@ -8,7 +8,8 @@ import (
 	connectedExt "github.com/go-home-iot/connectedbytcp"
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
 	errExt "github.com/pkg/errors"
 )
@@ -27,39 +28,48 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 	go func() {
 		for e := range ch {
 
-			var evt *gohome.ZonesReportEvt
+			var evt *gohome.FeaturesReportEvt
 			var ok bool
-			if evt, ok = e.(*gohome.ZonesReportEvt); !ok {
+			if evt, ok = e.(*gohome.FeaturesReportEvt); !ok {
 				continue
 			}
 
 			// Find all of the zones in the report that we own, if non we can skip
-			zones := c.Device.OwnedZones(evt.ZoneIDs)
-			if len(zones) == 0 {
+			features := c.Device.OwnedFeatures(evt.FeatureIDs)
+			if len(features) == 0 {
 				continue
 			}
 
-			// For each zone the device owns, get the current address
-			zoneValueByAddress, err := getZoneValuesByAddress(c.Device)
+			// For each light zone the device owns, get the current value indexed by address
+			zoneValueByAddress, err := getLightZoneValuesByAddress(c.Device)
 			if err != nil {
 				log.V(err.Error())
 				continue
 			}
 
-			for _, zone := range zones {
+			for _, f := range features {
 				log.V("%s - %s", c.ConsumerName(), evt)
 
-				value, ok := zoneValueByAddress[zone.Address]
+				// All the features should be FTLightZone since that is the only type we support for
+				// connected by tcp, we can just update the onoff/brightness values
+				value, ok := zoneValueByAddress[f.Address]
 				if !ok {
 					continue
 				}
 
-				c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-					ZoneName: zone.Name,
-					ZoneID:   zone.ID,
-					Level: cmd.Level{
-						Value: value,
-					},
+				// All the features should be FTLightZone since that is the only type we support for
+				// connected by tcp, we can just update the onoff/brightness values
+				onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+				brightness.Value = value
+				if value > 0 {
+					onoff.Value = attr.OnOffOn
+				} else {
+					onoff.Value = attr.OnOffOff
+				}
+
+				c.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+					FeatureID: f.ID,
+					Attrs:     feature.NewAttrs(onoff, brightness),
 				})
 			}
 		}
@@ -89,24 +99,30 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 		for p.producing {
 			time.Sleep(time.Second * 10)
 
-			zoneValueByAddress, err := getZoneValuesByAddress(p.Device)
+			zoneValueByAddress, err := getLightZoneValuesByAddress(p.Device)
 			if err != nil {
 				log.V(err.Error())
 				continue
 			}
 
-			for _, zone := range p.Device.Zones {
-				value, ok := zoneValueByAddress[zone.Address]
+			for _, f := range p.Device.Features {
+				value, ok := zoneValueByAddress[f.Address]
 				if !ok {
 					continue
 				}
 
-				p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-					ZoneName: zone.Name,
-					ZoneID:   zone.ID,
-					Level: cmd.Level{
-						Value: value,
-					},
+				onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+				brightness.Value = value
+
+				if value > 0 {
+					onoff.Value = attr.OnOffOn
+				} else {
+					onoff.Value = attr.OnOffOff
+				}
+
+				p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+					FeatureID: f.ID,
+					Attrs:     feature.NewAttrs(onoff, brightness),
 				})
 			}
 		}
@@ -116,7 +132,7 @@ func (p *producer) StopProducing() {
 	p.producing = false
 }
 
-func getZoneValuesByAddress(d *gohome.Device) (map[string]float32, error) {
+func getLightZoneValuesByAddress(d *gohome.Device) (map[string]float32, error) {
 	// Have to get the room report, this gets the state of all zones we own
 	ctx := context.TODO()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
@@ -130,7 +146,6 @@ func getZoneValuesByAddress(d *gohome.Device) (map[string]float32, error) {
 	var zoneValueByAddress = make(map[string]float32)
 	for _, room := range resp.Rooms {
 		for _, device := range room.Devices {
-			//fmt.Println(device.DID, " state:", device.State, ", lvl:", device.Level)
 			if device.State == 0 {
 				zoneValueByAddress[device.DID] = 0
 				continue

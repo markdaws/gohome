@@ -9,7 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/zone"
 	errExt "github.com/pkg/errors"
 )
 
@@ -126,33 +125,25 @@ func writeDiscoveryResults(sys *gohome.System, result *gohome.DiscoveryResults, 
 		jsonDupeDevice := DevicesToJSON(map[string]*gohome.Device{existingDevice.ID: existingDevice})[0]
 		jsonDupeDevice.IsDupe = true
 
-		// Have to mark zones/sensors as dupes
-		for i, _ := range jsonDupeDevice.Zones {
-			jsonDupeDevice.Zones[i].IsDupe = true
-		}
-		for i, _ := range jsonDupeDevice.Sensors {
-			jsonDupeDevice.Sensors[i].IsDupe = true
-		}
+		_ = dupeDevice
+		//TODO:
+		/*
+			for i, _ := range jsonDupeDevice.Feature {
+				jsonDupeDevice.Features[i].IsDupe = true
+			}*/
 
-		// Now if we discovered any new zones/sensors we need to add those to the JSON
-		// and send those back
-		for _, zn := range dupeDevice.Zones {
-			if _, isDupe := existingDevice.IsDupeZone(zn); !isDupe {
-				jsonZone := ZonesToJSON(map[string]*zone.Zone{zn.ID: zn})[0]
-				jsonZone.IsDupe = false
-				jsonZone.DeviceID = existingDevice.ID
-				jsonDupeDevice.Zones = append(jsonDupeDevice.Zones, jsonZone)
-			}
-		}
-
-		for _, sen := range dupeDevice.Sensors {
-			if _, isDupe := existingDevice.IsDupeSensor(sen); !isDupe {
-				jsonSensor := SensorsToJSON(map[string]*gohome.Sensor{sen.ID: sen})[0]
-				jsonSensor.IsDupe = false
-				jsonSensor.DeviceID = existingDevice.ID
-				jsonDupeDevice.Sensors = append(jsonDupeDevice.Sensors, jsonSensor)
-			}
-		}
+		//TODO:
+		/*
+			for _, feature := range dupeDevice.Features {
+				if _, isDupe := existingDevice.IsDupeFeature(feature); !isDupe {
+					//TODO: Need to clone things here...
+					jsonSensor := SensorsToJSON(map[string]*gohome.Sensor{sen.ID: sen})[0]
+					feature.IsDupe = false
+					feature.DeviceID = existingDevice.ID
+					//Already in lthe list
+					jsonDupeDevice.Sensors = append(jsonDupeDevice.Sensors, jsonSensor)
+				}
+			}*/
 
 		jsonDevices = append(jsonDevices, jsonDupeDevice)
 	}

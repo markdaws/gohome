@@ -7,30 +7,35 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sort"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/attr"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/validation"
-	"github.com/markdaws/gohome/zone"
+	errExt "github.com/pkg/errors"
 )
 
 // RegisterSceneHandlers registers all of the scene specific API REST routes
 func RegisterSceneHandlers(r *mux.Router, s *apiServer) {
+	r.HandleFunc("/api/v1/scenes", apiScenesHandler(s.system)).Methods("GET")
+
+	r.HandleFunc("/api/v1/scenes/{ID}",
+		apiSceneHandlerUpdate(s.systemSavePath, s.system)).Methods("PUT")
+
 	r.HandleFunc("/api/v1/scenes",
-		apiScenesHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/scenes/{id}",
-		apiSceneHandlerUpdate(s.systemSavePath, s.system, s.recipeManager)).Methods("PUT")
-	r.HandleFunc("/api/v1/scenes",
-		apiSceneHandlerCreate(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
-	r.HandleFunc("/api/v1/scenes/{sceneId}/commands/{index}",
-		apiSceneHandlerCommandDelete(s.systemSavePath, s.system, s.recipeManager)).Methods("DELETE")
-	r.HandleFunc("/api/v1/scenes/{sceneId}/commands",
-		apiSceneHandlerCommandAdd(s.systemSavePath, s.system, s.recipeManager)).Methods("POST")
-	r.HandleFunc("/api/v1/scenes/{id}",
-		apiSceneHandlerDelete(s.systemSavePath, s.system, s.recipeManager)).Methods("DELETE")
+		apiSceneHandlerCreate(s.systemSavePath, s.system)).Methods("POST")
+
+	r.HandleFunc("/api/v1/scenes/{sceneID}/commands/{commandID}",
+		apiSceneHandlerCommandDelete(s.systemSavePath, s.system)).Methods("DELETE")
+
+	r.HandleFunc("/api/v1/scenes/{sceneID}/commands",
+		apiSceneHandlerCommandAdd(s.systemSavePath, s.system)).Methods("POST")
+
+	r.HandleFunc("/api/v1/scenes/{ID}",
+		apiSceneHandlerDelete(s.systemSavePath, s.system)).Methods("DELETE")
+
 	r.HandleFunc("/api/v1/scenes/active",
 		apiActiveScenesHandler(s.system)).Methods("POST")
 }
@@ -50,37 +55,24 @@ func ScenesToJSON(inputScenes map[string]*gohome.Scene) scenes {
 		cmds := make([]jsonCommand, len(scene.Commands))
 		for j, sCmd := range scene.Commands {
 			switch xCmd := sCmd.(type) {
-			case *cmd.ZoneSetLevel:
-				cmds[j] = jsonCommand{
-					ID:   xCmd.ID,
-					Type: "zoneSetLevel",
-					Attributes: map[string]interface{}{
-						"ZoneID": xCmd.ZoneID,
-						"Level":  xCmd.Level.Value,
-					},
-				}
-			case *cmd.ButtonPress:
-				cmds[j] = jsonCommand{
-					ID:   xCmd.ID,
-					Type: "buttonPress",
-					Attributes: map[string]interface{}{
-						"ButtonID": xCmd.ButtonID,
-					},
-				}
-			case *cmd.ButtonRelease:
-				cmds[j] = jsonCommand{
-					ID:   xCmd.ID,
-					Type: "buttonRelease",
-					Attributes: map[string]interface{}{
-						"ButtonID": xCmd.ButtonID,
-					},
-				}
 			case *cmd.SceneSet:
 				cmds[j] = jsonCommand{
 					ID:   xCmd.ID,
 					Type: "sceneSet",
 					Attributes: map[string]interface{}{
+						"id":      xCmd.ID,
 						"SceneID": xCmd.SceneID,
+					},
+				}
+
+			case *cmd.FeatureSetAttrs:
+				cmds[j] = jsonCommand{
+					ID:   xCmd.ID,
+					Type: "featureSetAttrs",
+					Attributes: map[string]interface{}{
+						"id":    xCmd.FeatureID,
+						"type":  xCmd.FeatureType,
+						"attrs": xCmd.Attrs,
 					},
 				}
 			default:
@@ -145,20 +137,17 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 	}
 }
 
-func apiSceneHandlerDelete(
-	savePath string,
-	system *gohome.System,
-	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerDelete(savePath string, system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		sceneID := mux.Vars(r)["id"]
+		sceneID := mux.Vars(r)["ID"]
 		scene, ok := system.Scenes[sceneID]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		system.DeleteScene(scene)
-		err := store.SaveSystem(savePath, system, recipeManager)
+		err := store.SaveSystem(savePath, system)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -169,34 +158,38 @@ func apiSceneHandlerDelete(
 	}
 }
 
-func apiSceneHandlerCommandDelete(
-	savePath string,
-	system *gohome.System,
-	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerCommandDelete(savePath string, system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		sceneID := mux.Vars(r)["sceneId"]
+		sceneID := mux.Vars(r)["sceneID"]
 		scene, ok := system.Scenes[sceneID]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid scene ID: %s", sceneID), w)
 			return
 		}
 
-		commandIndex, err := strconv.Atoi(mux.Vars(r)["index"])
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+		commandID := mux.Vars(r)["commandID"]
+		var command cmd.Command
+		for _, c := range scene.Commands {
+			if c.GetID() == commandID {
+				command = c
+				break
+			}
+		}
+		if command == nil {
+			respBadRequest(fmt.Sprintf("invalid command ID: %s", commandID), w)
 			return
 		}
 
-		err = scene.DeleteCommand(commandIndex)
+		err := scene.DeleteCommand(commandID)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("scene: %s does not contain command: %s", sceneID, commandID), w)
 			return
 		}
 
-		err = store.SaveSystem(savePath, system, recipeManager)
+		err = store.SaveSystem(savePath, system)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "error writing changes to disk"), w)
 			return
 		}
 
@@ -205,246 +198,103 @@ func apiSceneHandlerCommandDelete(
 	}
 }
 
-func apiSceneHandlerCommandAdd(
-	savePath string,
-	system *gohome.System,
-	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-		sceneID := mux.Vars(r)["sceneId"]
+		var cmdID string
+		sceneID := mux.Vars(r)["sceneID"]
 		scene, ok := system.Scenes[sceneID]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid scene ID: %s", sceneID), w)
 			return
 		}
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("unable to read request body", w)
 			return
 		}
 
-		var command jsonCommand
+		var command map[string]*json.RawMessage
 		if err = json.Unmarshal(body, &command); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(errExt.Wrap(err, "unable to parse JSON in request body").Error(), w)
 			return
 		}
 
-		var finalCmd cmd.Command
-		switch command.Type {
-		case "zoneSetLevel":
-			if _, ok := command.Attributes["ZoneID"]; !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attribute_ZoneID", "required field", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
+		var cmdType string
+		if err = json.Unmarshal(*command["type"], &cmdType); err != nil {
+			respBadRequest("invalid JSON body, missing type field", w)
+			return
+		}
+
+		var cmdAttrs map[string]*json.RawMessage
+		if err = json.Unmarshal(*command["attributes"], &cmdAttrs); err != nil {
+			respBadRequest("invalid JSON body, missing attributes key", w)
+			return
+		}
+
+		switch cmdType {
+		case "featureSetAttrs":
+			var featureID string
+			if err = json.Unmarshal(*cmdAttrs["id"], &featureID); err != nil {
+				respBadRequest("invalid JSON body, missing ID key", w)
 				return
 			}
 
-			if _, ok = command.Attributes["ZoneID"].(string); !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attributes_ZoneID", "must be a string data type", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-				return
-			}
-
-			z, ok := system.Zones[command.Attributes["ZoneID"].(string)]
+			f, ok := system.Features[featureID]
 			if !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				var valErrs *validation.Errors
-				if command.Attributes["ZoneID"].(string) == "" {
-					valErrs = validation.NewErrors("attributes_ZoneID", "required field", true)
-				} else {
-					valErrs = validation.NewErrors("attributes_ZoneID", "invalid zone ID", true)
-				}
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
+				respBadRequest(fmt.Sprintf("invalid feature ID: %s", featureID), w)
 				return
 			}
 
-			_, ok = command.Attributes["Level"]
-			if !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attributes_Level", "required field", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
+			attrs := make(map[string]*attr.Attribute)
+			if err = json.Unmarshal(*cmdAttrs["attrs"], &attrs); err != nil {
+				respBadRequest("invalid JSON body, missing attrs key", w)
 				return
 			}
-			if _, ok = command.Attributes["Level"].(float64); !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attributes_Level", "must be a float data type", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
+			attr.FixJSON(attrs)
+
+			finalCmd := &cmd.FeatureSetAttrs{
+				ID:          system.NewGlobalID(),
+				FeatureID:   featureID,
+				FeatureName: f.Name,
+				FeatureType: f.Type,
+				Attrs:       attrs,
+			}
+			cmdID = finalCmd.ID
+			err = scene.AddCommand(finalCmd)
+			if err != nil {
+				respBadRequest(errExt.Wrap(err, "failed to add command to scene").Error(), w)
 				return
-			}
-
-			var r, g, b byte
-			if z.Output == zone.OTRGB {
-				_, ok = command.Attributes["R"]
-				if !ok {
-					w.WriteHeader(http.StatusBadRequest)
-					valErrs := validation.NewErrors("attributes_R", "required field", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-					return
-				}
-				if _, ok = command.Attributes["R"].(float64); !ok {
-					w.WriteHeader(http.StatusBadRequest)
-					valErrs := validation.NewErrors("attributes_R", "must be an integer data type", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-					return
-				}
-
-				_, ok = command.Attributes["G"]
-				if !ok {
-					w.WriteHeader(http.StatusBadRequest)
-					valErrs := validation.NewErrors("attributes_G", "required field", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-					return
-				}
-				if _, ok = command.Attributes["G"].(float64); !ok {
-					w.WriteHeader(http.StatusBadRequest)
-					valErrs := validation.NewErrors("attributes_G", "must be an integer data type", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-					return
-				}
-
-				_, ok = command.Attributes["B"]
-				if !ok {
-					w.WriteHeader(http.StatusBadRequest)
-					valErrs := validation.NewErrors("attributes_B", "required field", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-					return
-				}
-				if _, ok = command.Attributes["B"].(float64); !ok {
-					w.WriteHeader(http.StatusBadRequest)
-					valErrs := validation.NewErrors("attributes_B", "must be an integer data type", true)
-					json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-					return
-				}
-
-				r = byte(command.Attributes["R"].(float64))
-				g = byte(command.Attributes["G"].(float64))
-				b = byte(command.Attributes["B"].(float64))
-			}
-
-			finalCmd = &cmd.ZoneSetLevel{
-				ID:          command.ID,
-				ZoneAddress: z.Address,
-				ZoneID:      z.ID,
-				ZoneName:    z.Name,
-				Level: cmd.Level{
-					Value: float32(command.Attributes["Level"].(float64)),
-					R:     r,
-					G:     g,
-					B:     b,
-				},
-			}
-		case "buttonPress", "buttonRelease":
-			if _, ok := command.Attributes["ButtonID"]; !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attribute_ButtonID", "required field", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-				return
-			}
-
-			if _, ok = command.Attributes["ButtonID"].(string); !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attributes_ButtonID", "must be a string data type", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-				return
-			}
-
-			button, ok := system.Buttons[command.Attributes["ButtonID"].(string)]
-			if !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				var valErrs *validation.Errors
-				if command.Attributes["ButtonID"].(string) == "" {
-					valErrs = validation.NewErrors("attributes_ButtonID", "required field", true)
-				} else {
-					valErrs = validation.NewErrors("attributes_ButtonID", "invalid Button ID", true)
-				}
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-				return
-			}
-
-			if command.Type == "buttonPress" {
-				finalCmd = &cmd.ButtonPress{
-					ID:            command.ID,
-					ButtonAddress: button.Address,
-					ButtonID:      button.ID,
-					DeviceName:    button.Device.Name,
-					DeviceAddress: button.Device.Address,
-					DeviceID:      button.Device.ID,
-				}
-			} else {
-				finalCmd = &cmd.ButtonRelease{
-					ID:            command.ID,
-					ButtonAddress: button.Address,
-					ButtonID:      button.ID,
-					DeviceName:    button.Device.Name,
-					DeviceAddress: button.Device.Address,
-					DeviceID:      button.Device.ID,
-				}
-			}
-
-		case "sceneSet":
-			if _, ok := command.Attributes["SceneID"]; !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attribute_SceneID", "required field", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-				return
-			}
-
-			if _, ok = command.Attributes["SceneID"].(string); !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				valErrs := validation.NewErrors("attributes_SceneID", "must be a string data type", true)
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-				return
-			}
-
-			scene, ok := system.Scenes[command.Attributes["SceneID"].(string)]
-			if !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				var valErrs *validation.Errors
-				if command.Attributes["SceneID"].(string) == "" {
-					valErrs = validation.NewErrors("attributes_SceneID", "required field", true)
-				} else {
-					valErrs = validation.NewErrors("attributes_SceneID", "invalid Scene ID", true)
-				}
-				json.NewEncoder(w).Encode(validation.NewErrorJSON(&command, command.ID, valErrs))
-				return
-			}
-			finalCmd = &cmd.SceneSet{
-				ID:        command.ID,
-				SceneID:   scene.ID,
-				SceneName: scene.Name,
 			}
 
 		default:
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid command in type field: %s", cmdType), w)
 			return
 		}
 
-		err = scene.AddCommand(finalCmd)
+		err = store.SaveSystem(savePath, system)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respErr(errExt.Wrap(err, "error writing changes to disk"), w)
 			return
 		}
 
-		err = store.SaveSystem(savePath, system, recipeManager)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+		// Need to send back the command with its new ID
+		var updatedCmd jsonCommand
+		if err = json.Unmarshal(body, &updatedCmd); err != nil {
+			respBadRequest(errExt.Wrap(err, "unable to parse JSON in request body").Error(), w)
 			return
 		}
-
-		json.NewEncoder(w).Encode(struct{}{})
+		updatedCmd.ID = cmdID
+		json.NewEncoder(w).Encode(updatedCmd)
 	}
 }
 
-func apiSceneHandlerUpdate(
-	savePath string,
-	system *gohome.System,
-	recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerUpdate(savePath string, system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sceneID := mux.Vars(r)["id"]
+		sceneID := mux.Vars(r)["ID"]
 		scene, ok := system.Scenes[sceneID]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
@@ -488,7 +338,7 @@ func apiSceneHandlerUpdate(
 
 		system.Scenes[sceneID] = &updatedScene
 
-		err = store.SaveSystem(savePath, system, recipeManager)
+		err = store.SaveSystem(savePath, system)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -499,7 +349,7 @@ func apiSceneHandlerUpdate(
 	}
 }
 
-func apiSceneHandlerCreate(savePath string, system *gohome.System, recipeManager *gohome.RecipeManager) func(http.ResponseWriter, *http.Request) {
+func apiSceneHandlerCreate(savePath string, system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
 		if err != nil {
@@ -514,7 +364,7 @@ func apiSceneHandlerCreate(savePath string, system *gohome.System, recipeManager
 		}
 
 		newScene := &gohome.Scene{
-			ID:          scene.ID,
+			ID:          system.NewGlobalID(),
 			Address:     scene.Address,
 			Name:        scene.Name,
 			Description: scene.Description,
@@ -522,12 +372,13 @@ func apiSceneHandlerCreate(savePath string, system *gohome.System, recipeManager
 		}
 		system.AddScene(newScene)
 
-		err = store.SaveSystem(savePath, system, recipeManager)
+		err = store.SaveSystem(savePath, system)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
+		scene.ID = newScene.ID
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(scene)
 	}

@@ -1,0 +1,37 @@
+.b-TempAttr {
+    position: relative;
+    height: 90px;
+
+    &__slider {
+        max-width: 400px;
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin-left: 30px;
+        margin-right: 30px;
+        bottom: 10px;
+
+        &--read-only {
+            visibility: hidden;
+        }
+    }
+
+    &__name {
+        float: left;
+        font-size: 15px;
+        margin-left: 31px;
+        margin-top: 19px;
+    }
+
+    &__value {
+        float: right;
+        display: inline-block;
+        margin-right: 31px;
+        font-size: 40px;
+
+        &--hidden {
+            display: none;
+        }
+    }
+
+}

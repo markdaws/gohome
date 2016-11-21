@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/attr"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -155,24 +156,10 @@ func (h *WSHelper) processUpdates() {
 			h.mutex.RUnlock()
 
 			evt := jsonMonitorGroupResponse{
-				Sensors: make(map[string]jsonSensorAttr),
-				Zones:   make(map[string]jsonZoneLevel),
+				Features: make(map[string]map[string]*attr.Attribute),
 			}
-			for sensorID, attr := range update.Sensors {
-				evt.Sensors[sensorID] = jsonSensorAttr{
-					Name:     attr.Name,
-					Value:    attr.Value,
-					DataType: string(attr.DataType),
-					States:   attr.States,
-				}
-			}
-			for zoneID, level := range update.Zones {
-				evt.Zones[zoneID] = jsonZoneLevel{
-					Value: level.Value,
-					R:     level.R,
-					G:     level.G,
-					B:     level.B,
-				}
+			for featureID, attrs := range update.Features {
+				evt.Features[featureID] = attrs
 			}
 
 			bytes, err := json.Marshal(evt)

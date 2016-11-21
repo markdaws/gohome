@@ -9,6 +9,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserPrefs contains all of the user specific preferences
+type UserPrefs struct {
+	// UI are user UI preference settings
+	UI UIPrefs
+}
+
+// UIPrefs contains preferences for the UI
+type UIPrefs struct {
+	// HiddenZones is a map keyed by zone IDs for zones that should
+	// not be displayed in the UI.
+	HiddenZones map[string]bool
+}
+
 // User represents a user of the system
 type User struct {
 	ID        string
@@ -16,10 +29,6 @@ type User struct {
 	Prefs     UserPrefs
 	HashedPwd string
 	Salt      string
-
-	// TODO: right now users are hidden but here so that the
-	// app architecture supports them, once they are exposed
-	// we will need to add hashed password values, salts etc
 }
 
 // Validate verifies the user object is in a good state
@@ -77,17 +86,4 @@ func (u *User) generateSalt() (string, error) {
 	}
 
 	return base64.URLEncoding.EncodeToString(b), nil
-}
-
-// UserPrefs contains all of the user specific preferences
-type UserPrefs struct {
-	// UI are user UI preference settings
-	UI UIPrefs
-}
-
-// UIPrefs contains preferences for the UI
-type UIPrefs struct {
-	// HiddenZones is a map keyed by zone IDs for zones that should
-	// not be displayed in the UI.
-	HiddenZones map[string]bool
 }

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/go-home-iot/event-bus"
-	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/attr"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -18,11 +18,10 @@ type MonitorDelegate interface {
 	Expired(monitorID string)
 }
 
-// MonitorGroup represents a group of zones and sensors that a client wishes to
-// receive updates for.
+// MonitorGroup represents a group of features a client wished to receive updates for.
 type MonitorGroup struct {
-	Zones           map[string]bool
-	Sensors         map[string]bool
+	//TODO: change name to FeatureIDs
+	Features        map[string]bool
 	Handler         MonitorDelegate
 	Timeout         time.Duration
 	timeoutAbsolute time.Time
@@ -30,59 +29,41 @@ type MonitorGroup struct {
 }
 
 func (mg *MonitorGroup) String() string {
-	return fmt.Sprintf("MonitorGroup[ID:%s, %d zones, %d sensors]", mg.id, len(mg.Zones), len(mg.Sensors))
+	return fmt.Sprintf("MonitorGroup[ID:%s, %d features]", mg.id, len(mg.Features))
 }
 
-// ChangeBatch contains a list of sensors and zones whos values have changed
+// ChangeBatch contains a list of features whos values have changed
 type ChangeBatch struct {
 	MonitorID string
-	Sensors   map[string]SensorAttr
-	Zones     map[string]cmd.Level
+	Features  map[string]map[string]*attr.Attribute
 }
 
 func (cb *ChangeBatch) String() string {
-	return fmt.Sprintf("ChangeBatch[monitorID: %s, #zones:%d, #sensors:%d", cb.MonitorID, len(cb.Zones), len(cb.Sensors))
+	return fmt.Sprintf("ChangeBatch[monitorID: %s, #features:%d]", cb.MonitorID, len(cb.Features))
 }
 
-// Monitor keeps track of the current zone and sensor values in the system and reports
+// Monitor keeps track of the current feature attribute values in the system and reports
 // updates to clients
 type Monitor struct {
-	groups         map[string]*MonitorGroup
-	system         *System
-	nextID         int64
-	evtBus         *evtbus.Bus
-	sensorToGroups map[string]map[string]bool
-	zoneToGroups   map[string]map[string]bool
-	sensorValues   map[string]SensorAttr
-	zoneValues     map[string]cmd.Level
-	mutex          sync.RWMutex
+	groups          map[string]*MonitorGroup
+	system          *System
+	nextID          int64
+	evtBus          *evtbus.Bus
+	featureToGroups map[string]map[string]bool
+	featureValues   map[string]map[string]*attr.Attribute
+	mutex           sync.RWMutex
 }
 
 // NewMonitor returns an initialzed Monitor instance
-func NewMonitor(
-	sys *System,
-	evtBus *evtbus.Bus,
-	sensorValues map[string]SensorAttr,
-	zoneValues map[string]cmd.Level,
-) *Monitor {
+func NewMonitor(sys *System, evtBus *evtbus.Bus) *Monitor {
 
-	// Callers can pass in initial values if they know what they are
-	// at the time of creating the monitor
-	if sensorValues == nil {
-		sensorValues = make(map[string]SensorAttr)
-	}
-	if zoneValues == nil {
-		zoneValues = make(map[string]cmd.Level)
-	}
 	m := &Monitor{
-		system:         sys,
-		nextID:         time.Now().UnixNano(),
-		groups:         make(map[string]*MonitorGroup),
-		sensorToGroups: make(map[string]map[string]bool),
-		zoneToGroups:   make(map[string]map[string]bool),
-		sensorValues:   sensorValues,
-		zoneValues:     zoneValues,
-		evtBus:         evtBus,
+		system:          sys,
+		nextID:          time.Now().UnixNano(),
+		groups:          make(map[string]*MonitorGroup),
+		featureToGroups: make(map[string]map[string]bool),
+		featureValues:   make(map[string]map[string]*attr.Attribute),
+		evtBus:          evtBus,
 	}
 
 	m.handleTimeouts()
@@ -106,53 +87,37 @@ func (m *Monitor) Refresh(monitorID string, force bool) {
 
 	var changeBatch = &ChangeBatch{
 		MonitorID: monitorID,
-		Sensors:   make(map[string]SensorAttr),
-		Zones:     make(map[string]cmd.Level),
+		Features:  make(map[string]map[string]*attr.Attribute),
 	}
 
-	// Build a list of sensors that need to report their values. If we
+	// Build a list of features that need to report their values. If we
 	// already have a value for a sensor we can just return that
-	var sensorReport = &SensorsReportEvt{}
-	for sensorID := range group.Sensors {
-		val, ok := m.sensorValues[sensorID]
+	var featuresReport = &FeaturesReportEvt{}
+	for featureID := range group.Features {
+		val, ok := m.featureValues[featureID]
 		if ok && !force {
-			changeBatch.Sensors[sensorID] = val
+			changeBatch.Features[featureID] = val
 		} else {
-			sensorReport.Add(sensorID)
-		}
-	}
-
-	var zoneReport = &ZonesReportEvt{}
-	for zoneID := range group.Zones {
-		val, ok := m.zoneValues[zoneID]
-		if ok && !force {
-			changeBatch.Zones[zoneID] = val
-		} else {
-			zoneReport.Add(zoneID)
+			featuresReport.Add(featureID)
 		}
 	}
 
 	log.V("Monitor - refreshing: %s, force:%t", group, force)
-	log.V("Monitor - refreshing: cached values: [%s], uncached zones: %s, uncached sensors: %s",
-		changeBatch, zoneReport, sensorReport)
+	log.V("Monitor - refreshing: cached values: [%s], uncached features: %s", changeBatch, featuresReport)
 
 	m.mutex.RUnlock()
 
-	if len(changeBatch.Sensors) > 0 || len(changeBatch.Zones) > 0 {
+	if len(changeBatch.Features) > 0 {
 		// We have some values already cached for certain items, return
 		group.Handler.Update(changeBatch)
 	}
-	if len(sensorReport.SensorIDs) > 0 {
-		// Need to request these sensor values
-		m.evtBus.Enqueue(sensorReport)
-	}
-	if len(zoneReport.ZoneIDs) > 0 {
-		// Need to request these zone values
-		m.evtBus.Enqueue(zoneReport)
+	if len(featuresReport.FeatureIDs) > 0 {
+		// Send event to request features report their current values
+		m.evtBus.Enqueue(featuresReport)
 	}
 }
 
-// InvalidateValues removes any cached values, for zones and sensors listed
+// InvalidateValues removes any cached values, for any features listed
 // in the monitor group
 func (m *Monitor) InvalidateValues(monitorID string) {
 	m.mutex.RLock()
@@ -165,11 +130,8 @@ func (m *Monitor) InvalidateValues(monitorID string) {
 
 	log.V("Monitor - invalidate values: monitorID: %s", monitorID)
 	m.mutex.Lock()
-	for sensorID := range group.Sensors {
-		delete(m.sensorValues, sensorID)
-	}
-	for zoneID := range group.Zones {
-		delete(m.zoneValues, zoneID)
+	for featureID := range group.Features {
+		delete(m.featureValues, featureID)
 	}
 	m.mutex.Unlock()
 }
@@ -201,15 +163,15 @@ func (m *Monitor) SubscribeRenew(monitorID string) error {
 	return nil
 }
 
-// Subscribe requests that the monitor keep track of updates for all of the zones
-// and sensors listed in the MonitorGroup parameter. If refresh == true, the monitor
+// Subscribe requests that the monitor keep track of updates for all of the features
+// listed in the MonitorGroup parameter. If refresh == true, the monitor
 // will go and request values for all items in the monitor group, if false it won't
 // until the caller calls the Subscribe method.  The function returns a monitorID value
 // that can be passed into other functions, such as Unsubscribe and Refresh.
 func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) (string, error) {
 
-	if len(g.Sensors) == 0 && len(g.Zones) == 0 {
-		return "", errors.New("no zones or sensors listed in the monitor group")
+	if len(g.Features) == 0 {
+		return "", errors.New("no features listed in the monitor group")
 	}
 
 	m.mutex.Lock()
@@ -221,23 +183,15 @@ func (m *Monitor) Subscribe(g *MonitorGroup, refresh bool) (string, error) {
 	// store the time that this will expire
 	m.setTimeoutOnGroup(g)
 
-	// Make sure we map from the zone and sensor ids back to this new group,
-	// so that if any zones/snesor change in the future we know that we
+	// Make sure we map from the feature ids back to this new group,
+	// so that if any features change in the future we know that we
 	// need to alert this group
-	for sensorID := range g.Sensors {
-		// Get the monitor groups that are listening to this sensor
-		groups, ok := m.sensorToGroups[sensorID]
+	for featureID := range g.Features {
+		// Get the monitor groups that are listening to this feature
+		groups, ok := m.featureToGroups[featureID]
 		if !ok {
 			groups = make(map[string]bool)
-			m.sensorToGroups[sensorID] = groups
-		}
-		groups[monitorID] = true
-	}
-	for zoneID := range g.Zones {
-		groups, ok := m.zoneToGroups[zoneID]
-		if !ok {
-			groups = make(map[string]bool)
-			m.zoneToGroups[zoneID] = groups
+			m.featureToGroups[featureID] = groups
 		}
 		groups[monitorID] = true
 	}
@@ -258,68 +212,73 @@ func (m *Monitor) Unsubscribe(monitorID string) {
 		return
 	}
 
-	emptySensorToGroupCount := 0
-	emptyZoneToGroupCount := 0
+	emptyFeatureToGroupCount := 0
 
 	m.mutex.Lock()
 	delete(m.groups, monitorID)
-	for sensorID, groups := range m.sensorToGroups {
+	for featureID, groups := range m.featureToGroups {
 		if _, ok := groups[monitorID]; ok {
 			delete(groups, monitorID)
 			if len(groups) == 0 {
-				emptySensorToGroupCount++
-				delete(m.sensorToGroups, sensorID)
-				delete(m.sensorValues, sensorID)
-			}
-		}
-	}
-	for zoneID, groups := range m.zoneToGroups {
-		if _, ok := groups[monitorID]; ok {
-			delete(groups, monitorID)
-
-			// If there are no groups pointed to by the zone, clean up
-			// any refs to it
-			if len(groups) == 0 {
-				emptyZoneToGroupCount++
-				delete(m.zoneToGroups, zoneID)
-				delete(m.zoneValues, zoneID)
+				emptyFeatureToGroupCount++
+				delete(m.featureToGroups, featureID)
+				delete(m.featureValues, featureID)
 			}
 		}
 	}
 	m.mutex.Unlock()
 
-	log.V("Monitor - unsubscribe: monitorID: %s, emptyZoneToGroups: %d, emptySensorToGroups:%d",
-		monitorID, emptyZoneToGroupCount, emptySensorToGroupCount)
+	log.V("Monitor - unsubscribe: monitorID: %s, emptyFeatureToGroups: %d",
+		monitorID, emptyFeatureToGroupCount)
 }
 
-func (m *Monitor) sensorAttrReporting(sensorID string, attr SensorAttr) {
+func (m *Monitor) featureReporting(featureID string, attrs map[string]*attr.Attribute) {
 	m.mutex.RLock()
-	groups, ok := m.sensorToGroups[sensorID]
+	groups, ok := m.featureToGroups[featureID]
 	m.mutex.RUnlock()
 
 	if !ok {
-		// Not a sensor we are monitoring, ignore
+		// Not a feature we are monitoring, ignore
 		return
 	}
 
-	// Is this value different to what we already know?
+	// If not a valid featureID in the system, ignore
+	_, ok = m.system.Features[featureID]
+	if !ok {
+		return
+	}
+
+	// Is this value different to what we already know, features can have multiple attributes, so we
+	// need to check each one and see if it is different, if any are different then we need to report
+	// otherwise we can short circuit
 	m.mutex.RLock()
-	currentVal, ok := m.sensorValues[sensorID]
+	currentAttrs, ok := m.featureValues[featureID]
 	m.mutex.RUnlock()
+
+	// Already have some values, check to see if there are any new ones
 	if ok {
-		// No change, don't refresh clients
-		if currentVal.Value == attr.Value {
-			return
-		}
-	}
+		for localID, attr := range attrs {
+			currentVal, ok := currentAttrs[localID]
+			if !ok {
+				// We dont have this attribute value, can't short circuit
+				break
+			}
 
-	s, ok := m.system.Sensors[sensorID]
-	if !ok {
-		return
+			if currentVal != attr.Value {
+				// Value is different to what we have, can't short circuit
+				break
+			}
+		}
+	} else {
+		currentAttrs = make(map[string]*attr.Attribute)
 	}
 
 	m.mutex.Lock()
-	m.sensorValues[sensorID] = attr
+	// Merge new attribute values with the ones we already know about
+	for localID, attr := range attrs {
+		currentAttrs[localID] = attr
+	}
+	m.featureValues[featureID] = currentAttrs
 	m.mutex.Unlock()
 
 	for groupID := range groups {
@@ -327,68 +286,18 @@ func (m *Monitor) sensorAttrReporting(sensorID string, attr SensorAttr) {
 		group := m.groups[groupID]
 		cb := &ChangeBatch{
 			MonitorID: groupID,
-			Sensors:   make(map[string]SensorAttr),
+			Features:  make(map[string]map[string]*attr.Attribute),
 		}
-		cb.Sensors[sensorID] = attr
+		cb.Features[featureID] = currentAttrs
 		m.mutex.RUnlock()
 		group.Handler.Update(cb)
 	}
 
-	m.system.Services.EvtBus.Enqueue(&SensorAttrChangedEvt{
-		SensorID:   sensorID,
-		SensorName: s.Name,
-		Attr:       attr,
+	m.system.Services.EvtBus.Enqueue(&FeatureAttrsChangedEvt{
+		FeatureID: featureID,
+		Attrs:     currentAttrs,
 	})
 
-}
-
-func (m *Monitor) zoneLevelReporting(zoneID string, val cmd.Level) bool {
-	m.mutex.RLock()
-	groups, ok := m.zoneToGroups[zoneID]
-	m.mutex.RUnlock()
-	if !ok {
-		return false
-	}
-
-	// Is this value different to what we already know?
-	m.mutex.RLock()
-	currentVal, ok := m.zoneValues[zoneID]
-	m.mutex.RUnlock()
-	if ok {
-		// No change, don't refresh clients
-		if currentVal == val {
-			return false
-		}
-	}
-
-	z, ok := m.system.Zones[zoneID]
-	if !ok {
-		return false
-	}
-
-	m.mutex.Lock()
-	m.zoneValues[zoneID] = val
-	m.mutex.Unlock()
-
-	for groupID := range groups {
-		m.mutex.RLock()
-		group := m.groups[groupID]
-		cb := &ChangeBatch{
-			MonitorID: groupID,
-			Zones:     make(map[string]cmd.Level),
-		}
-		cb.Zones[zoneID] = val
-		m.mutex.RUnlock()
-		group.Handler.Update(cb)
-	}
-
-	m.system.Services.EvtBus.Enqueue(&ZoneLevelChangedEvt{
-		ZoneName: z.Name,
-		ZoneID:   z.ID,
-		Level:    val,
-	})
-
-	return true
 }
 
 // deviceProducing is called when a device start producing events, in the case of
@@ -398,16 +307,8 @@ func (m *Monitor) deviceProducing(evt *DeviceProducingEvt) {
 	groups := make(map[string]bool)
 
 	m.mutex.RLock()
-	for _, zone := range evt.Device.Zones {
-		grp, ok := m.zoneToGroups[zone.ID]
-		if ok {
-			for monitorID := range grp {
-				groups[monitorID] = true
-			}
-		}
-	}
-	for _, sensor := range evt.Device.Sensors {
-		grp, ok := m.sensorToGroups[sensor.ID]
+	for _, feature := range evt.Device.Features {
+		grp, ok := m.featureToGroups[feature.ID]
 		if ok {
 			for monitorID := range grp {
 				groups[monitorID] = true
@@ -468,37 +369,12 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 
 	go func() {
 		for e := range c {
-			showHandled := true
-
 			switch evt := e.(type) {
-			case *SensorAttrReportingEvt:
-				m.sensorAttrReporting(evt.SensorID, evt.Attr)
-
-			case *SensorsReportingEvt:
-				for sensorID, attr := range evt.Sensors {
-					m.sensorAttrReporting(sensorID, attr)
-				}
-
-			case *ZonesReportingEvt:
-				for zoneID, val := range evt.Zones {
-					m.zoneLevelReporting(zoneID, val)
-				}
-
-			case *ZoneLevelReportingEvt:
-				m.zoneLevelReporting(evt.ZoneID, evt.Level)
-				showHandled = false
+			case *FeatureReportingEvt:
+				m.featureReporting(evt.FeatureID, evt.Attrs)
 
 			case *DeviceProducingEvt:
 				m.deviceProducing(evt)
-				// Have dedicated logging for this, don't show generic message
-				showHandled = false
-
-			default:
-				showHandled = false
-			}
-
-			if showHandled {
-				log.V("Monitor - handled event: %s", e)
 			}
 		}
 

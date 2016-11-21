@@ -42,9 +42,9 @@ func (e *extension) BuilderForDevice(sys *gohome.System, d *gohome.Device) cmd.B
 	// two different pieces of hardware
 	switch d.ModelNumber {
 	case "example.hardware.1":
-		return &cmdBuilder{ModelNumber: d.ModelNumber, Device: d}
+		return &cmdBuilder{ModelNumber: d.ModelNumber, Device: d, System: sys}
 	case "example.hardware.2":
-		return &cmdBuilder{ModelNumber: d.ModelNumber, Device: d}
+		return &cmdBuilder{ModelNumber: d.ModelNumber, Device: d, System: sys}
 	default:
 		// This device is not one that we know how to control, return nil
 		return nil

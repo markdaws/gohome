@@ -15,11 +15,9 @@ import (
 )
 
 type wwwServer struct {
-	rootPath      string
-	system        *gohome.System
-	recipeManager *gohome.RecipeManager
-	sessions      *gohome.Sessions
-	eventLogger   gohome.WSEventLogger
+	rootPath string
+	system   *gohome.System
+	sessions *gohome.Sessions
 }
 
 // ListenAndServe creates a new WWW server, that handles API calls and also
@@ -28,15 +26,11 @@ func ListenAndServe(
 	rootPath string,
 	addr string,
 	system *gohome.System,
-	recipeManager *gohome.RecipeManager,
-	sessions *gohome.Sessions,
-	eventLogger gohome.WSEventLogger) error {
+	sessions *gohome.Sessions) error {
 	server := &wwwServer{
-		rootPath:      rootPath,
-		system:        system,
-		recipeManager: recipeManager,
-		sessions:      sessions,
-		eventLogger:   eventLogger,
+		rootPath: rootPath,
+		system:   system,
+		sessions: sessions,
 	}
 	return server.listenAndServe(addr)
 }

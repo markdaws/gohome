@@ -6,8 +6,9 @@ import (
 
 	belkinExt "github.com/go-home-iot/belkin"
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
-	"github.com/markdaws/gohome/zone"
 )
 
 var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
@@ -69,7 +70,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 
 		dev := gohome.NewDevice(
-			sys.NextGlobalID(),
+			sys.NewGlobalID(),
 			devInfo.FriendlyName,
 			devInfo.ModelDescription,
 			devInfo.ModelNumber,
@@ -82,35 +83,34 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			nil,
 		)
 
-		z := &zone.Zone{
-			ID:          sys.NextGlobalID(),
-			Address:     "1",
-			Name:        devInfo.FriendlyName,
-			Description: devInfo.ModelDescription,
-			DeviceID:    dev.ID,
-			Type:        zone.ZTSwitch,
-			Output:      zone.OTBinary,
-		}
-		dev.AddZone(z)
+		if d.scanType == belkinExt.DTInsight {
+			out := feature.NewOutlet(sys.NewGlobalID())
+			out.Address = "1"
+			out.Name = devInfo.FriendlyName
+			out.Description = devInfo.ModelDescription
+			out.DeviceID = dev.ID
+			dev.AddFeature(out)
 
-		if d.scanType == belkinExt.DTMaker {
-			sensor := &gohome.Sensor{
-				ID:          sys.NextGlobalID(),
-				Address:     "1",
-				Name:        devInfo.FriendlyName + " - sensor",
-				Description: "",
-				DeviceID:    dev.ID,
-				Attr: gohome.SensorAttr{
-					Name:     "sensor",
-					Value:    "-1",
-					DataType: gohome.SDTInt,
-					States: map[string]string{
-						"0": "Closed",
-						"1": "Open",
-					},
-				},
-			}
-			dev.AddSensor(sensor)
+			// TODO: Power monitoring sensor
+
+		} else if d.scanType == belkinExt.DTMaker {
+
+			// The WeMo Maker has a switch and a open/close sensorn
+			sw := feature.NewSwitch(sys.NewGlobalID())
+			sw.Address = "1"
+			sw.Name = devInfo.FriendlyName
+			sw.Description = devInfo.ModelDescription
+			sw.DeviceID = dev.ID
+			dev.AddFeature(sw)
+
+			sensor := feature.NewSensor(
+				sys.NewGlobalID(),
+				attr.NewOpenClose("openclose", nil),
+			)
+			sensor.Address = "2"
+			sensor.Name = devInfo.FriendlyName + " - sensor"
+			sensor.DeviceID = dev.ID
+			dev.AddFeature(sensor)
 		}
 		devices[i] = dev
 	}
@@ -118,5 +118,4 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	return &gohome.DiscoveryResults{
 		Devices: devices,
 	}, nil
-
 }

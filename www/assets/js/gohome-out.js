@@ -50,8 +50,8 @@
 	var ReactDOM = __webpack_require__(34);
 	var ControlApp = __webpack_require__(172);
 	var Provider = __webpack_require__(173).Provider;
-	var store = __webpack_require__(305);
-	var Login = __webpack_require__(316);
+	var store = __webpack_require__(300);
+	var Login = __webpack_require__(308);
 	var Api = __webpack_require__(204);
 
 	/*
@@ -21475,32 +21475,25 @@
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
 	var System = __webpack_require__(201);
-	var SceneList = __webpack_require__(254);
-	var ZoneSensorList = __webpack_require__(278);
-	var Logging = __webpack_require__(288);
-	var RecipeApp = __webpack_require__(290);
-	var SceneActions = __webpack_require__(272);
-	var SensorActions = __webpack_require__(209);
+	var SceneList = __webpack_require__(249);
+	var FeatureList = __webpack_require__(293);
+	var Logging = __webpack_require__(296);
+	var SceneActions = __webpack_require__(284);
 	var SystemActions = __webpack_require__(205);
-	var ZoneActions = __webpack_require__(208);
-	var BEMHelper = __webpack_require__(211);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'ControlApp',
 	    prefix: 'b-'
 	});
-	__webpack_require__(303);
+	__webpack_require__(298);
 
 	var ControlApp = React.createClass({
 	    displayName: 'ControlApp',
 
 	    getDefaultProps: function getDefaultProps() {
 	        return {
-	            buttons: [],
 	            devices: [],
-	            zones: [],
-	            sensors: [],
-
 	            //TODO: Change to array
 	            scenes: { items: [] }
 	        };
@@ -21509,27 +21502,19 @@
 	    componentDidMount: function componentDidMount() {
 	        //TODO: Have a loading screen until all of these have loaded
 	        this.props.loadAllDevices();
-	        this.props.loadAllZones();
 	        this.props.loadAllScenes();
-	        this.props.loadAllButtons();
-	        this.props.loadAllSensors();
 	    },
 
 	    render: function render() {
-
-	        var zoneBody;
-	        if (this.props.zones.length === 0 && this.props.sensors.length === 0) {
-	            zoneBody = React.createElement(
+	        var featureBody;
+	        if (this.props.devices.length === 0) {
+	            featureBody = React.createElement(
 	                'h5',
 	                classes('empty-message-zones'),
-	                'You don\'t have any lights or sensors. Go to the devices tab to get started.'
+	                'You don\'t have any devices or feature. Go to the devices tab to get started.'
 	            );
 	        } else {
-	            zoneBody = React.createElement(ZoneSensorList, {
-	                sensors: this.props.sensors,
-	                zones: this.props.zones,
-	                devices: this.props.devices
-	            });
+	            featureBody = React.createElement(FeatureList, { devices: this.props.devices });
 	        }
 
 	        var emptySceneBody;
@@ -21565,7 +21550,7 @@
 	                    { role: 'presentation', className: 'active' },
 	                    React.createElement(
 	                        'a',
-	                        { href: '#zones', role: 'tab', 'aria-controls': 'zones', 'data-toggle': 'tab' },
+	                        { href: '#features', role: 'tab', 'aria-controls': 'features', 'data-toggle': 'tab' },
 	                        React.createElement('i', { className: 'fa fa-code-fork' })
 	                    )
 	                ),
@@ -21588,7 +21573,7 @@
 	                    React.createElement(
 	                        'div',
 	                        { className: this.props.appLoadStatus.scenesLoaded ? "" : "hideTabContent" },
-	                        React.createElement(SceneList, { scenes: this.props.scenes, buttons: this.props.buttons, zones: this.props.zones }),
+	                        React.createElement(SceneList, { scenes: this.props.scenes, devices: this.props.devices }),
 	                        emptySceneBody
 	                    ),
 	                    React.createElement(
@@ -21599,16 +21584,16 @@
 	                ),
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane active', id: 'zones' },
+	                    { role: 'tabpanel', className: 'tab-pane active', id: 'features' },
 	                    React.createElement(
 	                        'div',
-	                        { className: this.props.appLoadStatus.zonesLoaded ? "" : "hideTabContent" },
-	                        zoneBody
+	                        { className: this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent" },
+	                        featureBody
 	                    ),
 	                    React.createElement(
 	                        'div',
 	                        classes('spinner'),
-	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.zonesLoaded ? "hidden" : "") })
+	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.devicesLoaded ? "hidden" : "") })
 	                    )
 	                ),
 	                React.createElement(
@@ -21633,10 +21618,7 @@
 	function mapStateToProps(state) {
 	    return {
 	        devices: state.system.devices,
-	        zones: state.zones,
 	        scenes: state.scenes,
-	        buttons: state.buttons,
-	        sensors: state.sensors,
 	        appLoadStatus: state.appLoadStatus,
 	        errors: state.errors
 	    };
@@ -21644,23 +21626,11 @@
 
 	function mapDispatchToProps(dispatch) {
 	    return {
-	        loadAllButtons: function loadAllButtons() {
-	            dispatch(SystemActions.loadAllButtons());
-	        },
 	        loadAllDevices: function loadAllDevices() {
 	            dispatch(SystemActions.loadAllDevices());
 	        },
 	        loadAllScenes: function loadAllScenes() {
 	            dispatch(SceneActions.loadAll());
-	        },
-	        loadAllZones: function loadAllZones() {
-	            dispatch(ZoneActions.loadAll());
-	        },
-	        loadAllSensors: function loadAllSensors() {
-	            dispatch(SensorActions.loadAll());
-	        },
-	        clearErrors: function clearErrors() {
-	            //TODO:
 	        }
 	    };
 	}
@@ -23417,14 +23387,14 @@
 
 	var React = __webpack_require__(1);
 	var Import = __webpack_require__(202);
-	var DeviceList = __webpack_require__(249);
-	var BEMHelper = __webpack_require__(211);
+	var DeviceList = __webpack_require__(244);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'System',
 	    prefix: 'b-'
 	});
-	__webpack_require__(252);
+	__webpack_require__(247);
 
 	var System = React.createClass({
 	    displayName: 'System',
@@ -23492,13 +23462,13 @@
 	var React = __webpack_require__(1);
 	var DiscoverDevices = __webpack_require__(203);
 	var Api = __webpack_require__(204);
-	var BEMHelper = __webpack_require__(211);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'Import',
 	    prefix: 'b-'
 	});
-	__webpack_require__(247);
+	__webpack_require__(242);
 
 	var Import = React.createClass({
 	    displayName: 'Import',
@@ -23588,16 +23558,14 @@
 	var ReactRedux = __webpack_require__(173);
 	var Api = __webpack_require__(204);
 	var SystemActions = __webpack_require__(205);
-	var ZoneActions = __webpack_require__(208);
-	var SensorActions = __webpack_require__(209);
-	var ImportGroup = __webpack_require__(210);
-	var BEMHelper = __webpack_require__(211);
+	var ImportGroup = __webpack_require__(208);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'DiscoverDevices',
 	    prefix: 'b-'
 	});
-	__webpack_require__(245);
+	__webpack_require__(240);
 
 	var DiscoverDevices = React.createClass({
 	    displayName: 'DiscoverDevices',
@@ -23732,12 +23700,6 @@
 	    return {
 	        importedDevice: function importedDevice(deviceJson) {
 	            dispatch(SystemActions.importedDevice(deviceJson));
-	        },
-	        importedZones: function importedZones(zones) {
-	            dispatch(ZoneActions.importedZones(zones));
-	        },
-	        importedSensors: function importedSensors(sensors) {
-	            dispatch(SensorActions.importedSensors(sensors));
 	        }
 	    };
 	}
@@ -23778,6 +23740,11 @@
 	    // url builds a valid url to call an API
 	    url: function url(_url) {
 	        return BASE + _url + '?sid=' + this.SID;
+	    },
+
+	    monitorGroups: function monitorGroups(monitorId) {
+	        var conn = new WebSocket('ws:' + this.url('/api/v1/monitor/groups/' + monitorId));
+	        return conn;
 	    },
 
 	    deviceLoadAll: function deviceLoadAll(callback) {
@@ -23861,6 +23828,26 @@
 	                    status: status,
 	                    xhr: xhr
 	                });
+	            }.bind(this)
+	        });
+	    },
+
+	    deviceSetFeatureAttrs: function deviceSetFeatureAttrs(deviceId, featureId, attrs, callback) {
+	        $.ajax({
+	            url: this.url('/api/v1/devices/' + deviceId + '/features/' + featureId + '/apply'),
+	            type: 'PUT',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify(attrs),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
+	                callback(xhr.responseJSON.err);
 	            }.bind(this)
 	        });
 	    },
@@ -24003,13 +23990,7 @@
 	                    return;
 	                }
 
-	                alert('//TODO: This needs to be changed');
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    validationErrors: errors
-	                });
+	                callback(xhr.responseJSON.err);
 	            }.bind(this)
 	        });
 	    },
@@ -24111,171 +24092,19 @@
 	        });
 	    },
 
-	    // sensorLoadAll loads all of the sensors from the backing store
-	    sensorLoadAll: function sensorLoadAll(callback) {
+	    // featureUpdate updates a feature on the server with the new values
+	    featureUpdate: function featureUpdate(deviceId, featureId, featureJson, callback) {
 	        $.ajax({
-	            url: this.url('/api/v1/sensors'),
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function (xhr, status, err) {
-	                if (this.checkErr(xhr)) {
-	                    return;
-	                }
-
-	                callback({
-	                    err: err,
-	                    status: status,
-	                    xhr: xhr
-	                });
-	            }.bind(this)
-	        });
-	    },
-
-	    // sensorCreate creates a new sensor on the server
-	    sensorCreate: function sensorCreate(sensorJson, callback) {
-	        $.ajax({
-	            url: this.url('/api/v1/sensors'),
-	            type: 'POST',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify(sensorJson),
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function (xhr, status, err) {
-	                callback(xhr.responseJSON.err);
-	            }.bind(this)
-	        });
-	    },
-
-	    // sensorUpdate updates a sensor on the server with the new values
-	    sensorUpdate: function sensorUpdate(sensorJson, callback) {
-	        $.ajax({
-	            url: this.url('/api/v1/sensors/' + sensorJson.id),
+	            url: this.url('/api/v1/devices/' + deviceId + '/features/' + featureId),
 	            type: 'PUT',
 	            dataType: 'json',
 	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify(sensorJson),
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function (xhr, status, err) {
-	                if (this.checkErr(xhr)) {
-	                    return;
-	                }
-
-	                callback(xhr.responseJSON.err);
-	            }.bind(this)
-	        });
-	    },
-
-	    // zoneLoadAll loads all of the zones from the backing store
-	    zoneLoadAll: function zoneLoadAll(callback) {
-	        $.ajax({
-	            url: this.url('/api/v1/zones'),
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function (xhr, status, err) {
-	                callback({
-	                    err: err,
-	                    status: status,
-	                    xhr: xhr
-	                });
-	            }.bind(this)
-	        });
-	    },
-
-	    // zoneCreate creates a new zone on the server
-	    zoneCreate: function zoneCreate(zoneJson, callback) {
-	        $.ajax({
-	            url: this.url('/api/v1/zones'),
-	            type: 'POST',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify(zoneJson),
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function (xhr, status, err) {
-	                if (this.checkErr(xhr)) {
-	                    return;
-	                }
-
-	                callback(xhr.responseJSON.err);
-	            }.bind(this)
-	        });
-	    },
-
-	    // zoneUpdate updates a zone on the server with the new values
-	    zoneUpdate: function zoneUpdate(zoneJson, callback) {
-	        $.ajax({
-	            url: this.url('/api/v1/zones/' + zoneJson.id),
-	            type: 'PUT',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify(zoneJson),
+	            data: JSON.stringify(featureJson),
 	            success: function success(data) {
 	                callback(null, data);
 	            },
 	            error: function (xhr, status, err) {
 	                callback(xhr.responseJSON.err);
-	            }.bind(this)
-	        });
-	    },
-
-	    // zoneSetLevel sets the level of a zone.
-	    // cmd -> 'turnOn | turnOff | setLevel
-	    zoneSetLevel: function zoneSetLevel(zoneId, cmd, value, r, g, b, callback) {
-	        $.ajax({
-	            url: this.url('/api/v1/zones/' + zoneId + '/level'),
-	            type: 'PUT',
-	            dataType: 'json',
-	            contentType: 'application/json; charset=utf-8',
-	            data: JSON.stringify({
-	                cmd: cmd,
-	                value: value,
-	                r: r,
-	                g: g,
-	                b: b
-	            }),
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function (xhr, status, err) {
-	                if (this.checkErr(xhr)) {
-	                    return;
-	                }
-
-	                callback(err);
-	            }.bind(this)
-	        });
-	    },
-
-	    // buttonLoadAll loads all of the buttons in the system
-	    buttonLoadAll: function buttonLoadAll(callback) {
-	        $.ajax({
-	            url: this.url('/api/v1/buttons'),
-	            dataType: 'json',
-	            cache: false,
-	            success: function (data) {
-	                callback(null, data);
-	            }.bind(this),
-	            error: function (xhr, status, err) {
-	                if (this.checkErr(xhr)) {
-	                    return;
-	                }
-
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    status: status
-	                });
 	            }.bind(this)
 	        });
 	    },
@@ -24324,7 +24153,7 @@
 
 	    sessionCreate: function sessionCreate(login, password, callback) {
 	        // NOTE: This api lives on the WWW server, so we get a session cookie set on the
-	        // WWW domain
+	        // WWW domain, vs. this being on the API domain
 	        $.ajax({
 	            url: '//' + window.location.host + '/api/v1/users/' + login + '/sessions',
 	            type: 'POST',
@@ -24343,7 +24172,6 @@
 	            }.bind(this)
 	        });
 	    }
-
 	};
 	module.exports = API;
 
@@ -24390,6 +24218,12 @@
 	    updatedDevice: function updatedDevice(deviceJson) {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.DEVICE_UPDATE_RAW, data: deviceJson });
+	        };
+	    },
+
+	    updatedFeature: function updatedFeature(featureJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.FEATURE_UPDATE_RAW, data: featureJson });
 	        };
 	    },
 
@@ -24481,10 +24315,10 @@
 	    // Clears all of the global errors
 	    ERROR_CLEAR: null,
 
-	    // Load all of the buttons from the server
-	    BUTTON_LOAD_ALL: null,
-	    BUTTON_LOAD_ALL_RAW: null,
-	    BUTTON_LOAD_ALL_FAIL: null,
+	    // Updated a feature
+	    FEATURE_UPDATE: null,
+	    FEATURE_UPDATE_RAW: null,
+	    FEATURE_UPDATE_FAIL: null,
 
 	    // Load all of the scenes from the server
 	    SCENE_LOAD_ALL: null,
@@ -24519,42 +24353,7 @@
 	    // Remove a command from a scene
 	    SCENE_COMMAND_DELETE: null,
 	    SCENE_COMMAND_DELETE_RAW: null,
-	    SCENE_COMMAND_DELETE_FAIL: null,
-
-	    // Load all of the sensors from the server
-	    SENSOR_LOAD_ALL: null,
-	    SENSOR_LOAD_ALL_RAW: null,
-	    SENSOR_LOAD_ALL_FAIL: null,
-
-	    // When a sensor is being imported
-	    SENSOR_IMPORT: null,
-	    SENSOR_IMPORT_RAW: null,
-	    SENSOR_IMPORT_FAIL: null,
-
-	    // When a sensor is updated
-	    SENSOR_UPDATE: null,
-	    SENSOR_UPDATE_RAW: null,
-	    SENSOR_UPDATE_FAIL: null,
-
-	    // Load all of the zones from the server
-	    ZONE_LOAD_ALL: null,
-	    ZONE_LOAD_ALL_RAW: null,
-	    ZONE_LOAD_ALL_FAIL: null,
-
-	    // Saves a zone on the server
-	    ZONE_CREATE: null,
-	    ZONE_CREATE_RAW: null,
-	    ZONE_CREATE_FAIL: null,
-
-	    // When a zone is being impored
-	    ZONE_IMPORT: null,
-	    ZONE_IMPORT_RAW: null,
-	    ZONE_IMPORT_FAIL: null,
-
-	    // When a zone is being updated
-	    ZONE_UPDATE: null,
-	    ZONE_UPDATE_RAW: null,
-	    ZONE_UPDATE_FAIL: null
+	    SCENE_COMMAND_DELETE_FAIL: null
 	});
 
 /***/ },
@@ -24622,107 +24421,23 @@
 
 	'use strict';
 
-	var Constants = __webpack_require__(206);
-	var Api = __webpack_require__(204);
-
-	var ZoneActions = {
-	    loadAll: function loadAll() {
-	        return function (dispatch) {
-	            dispatch({
-	                type: Constants.ZONE_LOAD_ALL
-	            });
-
-	            Api.zoneLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.ZONE_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-
-	                dispatch({ type: Constants.ZONE_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    },
-
-	    importedZones: function importedZones(zones) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.ZONE_IMPORT_RAW, data: zones });
-	        };
-	    },
-
-	    updated: function updated(zoneJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.ZONE_UPDATE_RAW, data: zoneJson });
-	        };
-	    }
-	};
-	module.exports = ZoneActions;
-
-/***/ },
-/* 209 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(206);
-	var Api = __webpack_require__(204);
-
-	var SensorActions = {
-	    loadAll: function loadAll() {
-	        return function (dispatch) {
-	            dispatch({
-	                type: Constants.SENSOR_LOAD_ALL
-	            });
-
-	            Api.sensorLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SENSOR_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-
-	                dispatch({ type: Constants.SENSOR_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    },
-
-	    importedSensors: function importedSensors(sensors) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SENSOR_IMPORT_RAW, data: sensors });
-	        };
-	    },
-
-	    updated: function updated(sensorJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SENSOR_UPDATE_RAW, data: sensorJson });
-	        };
-	    }
-
-	};
-	module.exports = SensorActions;
-
-/***/ },
-/* 210 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
 	var Api = __webpack_require__(204);
-	var BEMHelper = __webpack_require__(211);
-	var DeviceCell = __webpack_require__(212);
-	var ZoneSensorCell = __webpack_require__(217);
+	var BEMHelper = __webpack_require__(209);
+	var DeviceCell = __webpack_require__(210);
+	var FeatureCell = __webpack_require__(215);
 	var DeviceInfo = __webpack_require__(220);
-	var Grid = __webpack_require__(237);
-	var ZoneInfo = __webpack_require__(224);
-	var SensorInfo = __webpack_require__(230);
+	var Grid = __webpack_require__(227);
+	var FeatureInfo = __webpack_require__(234);
 	var SaveBtn = __webpack_require__(223);
 
 	var classes = new BEMHelper({
 	    name: 'ImportGroup',
 	    prefix: 'b-'
 	});
-	__webpack_require__(243);
+	__webpack_require__(238);
 
 	var ImportGroup = React.createClass({
 	    displayName: 'ImportGroup',
@@ -24730,26 +24445,18 @@
 	    getInitialState: function getInitialState() {
 	        this._unselected = {};
 	        this._savedDevices = {};
-	        this._savedZones = {};
-	        this._savedSensors = {};
+	        this._savedFeatures = {};
 
-	        // We render all devices/zones/sensors together
-	        var zones = [];
-	        var sensors = [];
+	        var features = [];
 	        (this.props.devices || []).forEach(function (device) {
-	            device.zones.forEach(function (zone) {
-	                zones.push(zone);
-	            });
-	            device.sensors.forEach(function (sensor) {
-	                sensors.push(sensor);
+	            (device.features || []).forEach(function (feature) {
+	                features.push(feature);
 	            });
 	        });
 	        return {
 	            devices: this.props.devices,
-	            zones: zones,
-	            sensors: sensors,
-	            zoneErrors: {},
-	            sensorErrors: {},
+	            features: features,
+	            featureErrors: {},
 	            deviceErrors: {},
 	            saveButtonStatus: ''
 	        };
@@ -24767,12 +24474,8 @@
 	        this.updateUnselected(deviceId, checked);
 	    },
 
-	    zoneChkBxChanged: function zoneChkBxChanged(zoneId, checked) {
-	        this.updateUnselected(zoneId, checked);
-	    },
-
-	    sensorChkBxChanged: function sensorChkBxChanged(sensorId, checked) {
-	        this.updateUnselected(sensorId, checked);
+	    featureChkBxChanged: function featureChkBxChanged(featureId, checked) {
+	        this.updateUnselected(featureId, checked);
 	    },
 
 	    _deviceChanged: function _deviceChanged(cmp) {
@@ -24789,47 +24492,29 @@
 	        });
 	    },
 
-	    _zoneChanged: function _zoneChanged(cmp) {
-	        var zone = cmp.toJson();
-	        var zones = this.state.zones.map(function (zn) {
-	            if (zn.id === zone.id) {
-	                return zone;
+	    _featureChanged: function _featureChanged(cmp) {
+	        var feature = cmp.toJson();
+	        var features = this.state.features.map(function (f) {
+	            if (f.id === feature.id) {
+	                return feature;
 	            }
-	            return zn;
+	            return f;
 	        });
 	        this.setState({
-	            zones: zones,
-	            saveButtonStatus: ''
-	        });
-	    },
-
-	    _sensorChanged: function _sensorChanged(cmp) {
-	        var sensor = cmp.toJson();
-
-	        // Update our list of sensors, with the newly updated sensor replacing the old version,
-	        // this will cause a re-render
-	        var sensors = this.state.sensors.map(function (sen) {
-	            if (sen.id === sensor.id) {
-	                return sensor;
-	            }
-	            return sen;
-	        });
-	        this.setState({
-	            sensors: sensors,
+	            features: features,
 	            saveButtonStatus: ''
 	        });
 	    },
 
 	    importClicked: function importClicked() {
 	        this.refs["devicegrid"].closeExpander();
-	        this.refs["zonegrid"].closeExpander();
-	        this.refs["sensorgrid"].closeExpander();
+	        this.refs["featuregrid"].closeExpander();
 	        this.setState({
 	            deviceErrors: {},
-	            zoneErrors: {},
-	            sensorErrors: {}
+	            featureErrors: {}
 	        });
 
+	        // TODO: Remove, do on server
 	        // When we are saving devices, we need to sort the devices so that
 	        // we save devices that don't have a hub before devices that do have
 	        // a hub, because we can't save a device that points to a hub that we
@@ -24857,22 +24542,23 @@
 
 	            var device = sortedDevices[devIndex];
 
-	            // We grouped all of the zones/sensors together, now we need to break them
+	            //TODO: Object.assign
+
+	            // We grouped all of the features together, now we need to break them
 	            // up in to their respective devices so they can be saved
-	            device.zones = this.state.zones.filter(function (zone) {
-	                return zone.deviceId === device.id && !zone.isDupe && !this._unselected[zone.id] && !this._savedZones[zone.id];
-	            }.bind(this));
-	            device.sensors = this.state.sensors.filter(function (sensor) {
-	                return sensor.deviceId === device.id && !sensor.isDupe && !this._unselected[sensor.id] && !this._savedSensors[sensor.id];
+	            device.features = this.state.features.filter(function (feature) {
+	                return feature.deviceId === device.id && !feature.isDupe && !this._unselected[feature.id] && !this._savedFeatures[feature.id];
 	            }.bind(this));
 
 	            if (device.isDupe || this._savedDevices[device.id]) {
 	                (function () {
-	                    // Don't save the device, save any new zones + sensors we found that aren't dupes
+	                    //TODO:
+	                    // Don't save the device, save any new features
 	                    var saveZone = function saveZone(index) {
 	                        if (index >= device.zones.length) {
 	                            // saved all of the zones, move on to the sensors
-	                            saveSensor.bind(this)(0);
+	                            //TODO:saveSensor.bind(this)(0);
+	                            saveDevice.bind(this)(devIndex + 1);
 	                            return;
 	                        }
 
@@ -24893,52 +24579,20 @@
 	                        }.bind(this));
 	                    };
 
-	                    var saveSensor = function saveSensor(index) {
-	                        if (index >= device.sensors.length) {
-	                            // Move on to the next device
-	                            saveDevice.bind(this)(devIndex + 1);
-	                            return;
-	                        }
-
-	                        var sensor = device.sensors[index];
-	                        Api.sensorCreate(sensor, function (err, sensorData) {
-	                            if (err) {
-	                                var sensorErrs = {};
-	                                sensorErrs[sensor.id] = err.validation.errors[sensor.id];
-	                                this.setState({
-	                                    saveButtonStatus: 'error',
-	                                    sensorErrors: sensorErrs
-	                                });
-	                                return;
-	                            }
-	                            this.props.createdSensors([sensor]);
-	                            this._savedSensors[sensor.id] = true;
-	                            saveSensor.bind(this)(index + 1);
-	                        }.bind(this));
-	                    };
-
 	                    saveZone.bind(_this)(0);
 	                })();
 	            } else {
 	                Api.deviceCreate(device, function (err, deviceData) {
 	                    if (err) {
-	                        var zoneErrs = {};
-	                        var sensorErrs = {};
-	                        this.state.zones.forEach(function (zone) {
-	                            if (err.validation.errors[zone.id]) {
-	                                zoneErrs[zone.id] = err.validation.errors[zone.id];
+	                        var featureErrs = {};
+	                        (device.features || []).forEach(function (feature) {
+	                            if (err.validation.errors[feature.id]) {
+	                                featureErrs[feature.id] = err.validation.errors[feature.id];
 	                            }
 	                        });
-	                        this.state.sensors.forEach(function (sensor) {
-	                            if (err.validation.errors[sensor.id]) {
-	                                sensorErrs[sensor.id] = err.validation.errors[sensor.id];
-	                            }
-	                        });
-
 	                        this.setState({
 	                            saveButtonStatus: 'error',
-	                            zoneErrors: zoneErrs,
-	                            sensorErrors: sensorErrs,
+	                            featureErrors: featureErrs,
 	                            deviceErrors: err.validation.errors[device.id] || {}
 	                        });
 	                        return;
@@ -24946,15 +24600,11 @@
 
 	                    // Let callers know the device has been saved
 	                    this.props.createdDevice(deviceData);
-	                    this.props.createdZones(device.zones);
-	                    this.props.createdSensors(device.sensors);
+	                    //TODO: Feature
 
 	                    this._savedDevices[device.id] = true;
-	                    device.zones.forEach(function (zone) {
-	                        this._savedZones[zone.id] = true;
-	                    }.bind(this));
-	                    device.sensors.forEach(function (sensor) {
-	                        this._savedSensors[sensor.id] = true;
+	                    (device.features || []).forEach(function (feature) {
+	                        this._savedFeatures[feature.id] = true;
 	                    }.bind(this));
 
 	                    // Move on to the next device
@@ -24977,8 +24627,7 @@
 
 	    render: function render() {
 	        var devices = [];
-	        var zones = [];
-	        var sensors = [];
+	        var features = [];
 
 	        (this.state.devices || []).forEach(function (device) {
 	            if (device.isDupe) {
@@ -25006,68 +24655,39 @@
 	            devices.push(cell);
 	        }.bind(this));
 
-	        (this.state.zones || []).forEach(function (zone) {
-	            if (zone.isDupe) {
+	        (this.state.features || []).forEach(function (feature) {
+	            if (feature.isDupe) {
 	                return;
 	            }
 
-	            var err = this.state.zoneErrors[zone.id];
-	            var device = this.getDeviceById(zone.deviceId);
-	            var cmpZone = {
-	                key: 'zones_' + zone.id,
-	                cell: React.createElement(ZoneSensorCell, {
-	                    id: zone.id,
+	            var err = this.state.featureErrors[feature.id];
+	            var device = this.getDeviceById(feature.deviceId);
+	            var cmpFeature = {
+	                key: 'feature_' + feature.id,
+	                cell: React.createElement(FeatureCell, {
+	                    id: feature.id,
 	                    showCheckbox: true,
 	                    showLevel: false,
+	                    chkBxChanged: this.featureChkBxChanged,
 	                    hasError: err != null,
-	                    hasSuccess: this._savedZones[zone.id],
-	                    chkBxChanged: this.zoneChkBxChanged,
-	                    key: "zonecell-" + zone.id,
-	                    ref: "cell_zone_" + zone.id,
-	                    zone: zone }),
-	                content: React.createElement(ZoneInfo, _extends({}, zone, {
-	                    readOnlyFields: 'deviceId',
-	                    key: "zoneinfo-" + zone.id,
-	                    ref: "zoneinfo-" + zone.id,
+	                    hasSuccess: this._savedFeatures[feature.id],
+	                    key: feature.id,
+	                    ref: "cell_feature_" + feature.id,
+	                    feature: feature }),
+	                content: React.createElement(FeatureInfo, {
+	                    feature: feature,
+	                    readOnlyFields: 'id, deviceId',
+	                    key: feature.id,
 	                    errors: err,
 	                    deviceId: device.id,
 	                    devices: [device],
-	                    changed: this._zoneChanged }))
-	            };
-	            zones.push(cmpZone);
-	        }.bind(this));
-
-	        (this.state.sensors || []).forEach(function (sensor) {
-	            if (sensor.isDupe) {
-	                return;
-	            }
-
-	            var err = this.state.sensorErrors[sensor.id];
-	            var device = this.getDeviceById(sensor.deviceId);
-	            var cmpSensor = {
-	                key: 'sensor_' + sensor.id,
-	                cell: React.createElement(ZoneSensorCell, {
-	                    id: sensor.id,
-	                    showCheckbox: true,
-	                    chkBxChanged: this.sensorChkBxChanged,
-	                    hasError: err != null,
-	                    hasSuccess: this._savedSensors[sensor.id],
-	                    key: sensor.id,
-	                    ref: "cell_sensor_" + sensor.id,
-	                    sensor: sensor }),
-	                content: React.createElement(SensorInfo, _extends({}, sensor, {
-	                    readOnlyFields: 'deviceId',
-	                    key: sensor.id,
-	                    errors: err,
-	                    deviceId: device.id,
-	                    devices: [device],
-	                    changed: this._sensorChanged }))
+	                    changed: this._featureChanged })
 
 	            };
-	            sensors.push(cmpSensor);
+	            features.push(cmpFeature);
 	        }.bind(this));
 
-	        var hasNonDupes = devices.length > 0 || zones.length > 0 || sensors.length > 0;
+	        var hasNonDupes = devices.length > 0 || features.length > 0;
 	        var body;
 	        if (hasNonDupes) {
 	            body = React.createElement(
@@ -25092,23 +24712,13 @@
 	                ),
 	                React.createElement(
 	                    'div',
-	                    _extends({ key: 'aa' }, classes('zones', zones.length === 0 ? 'hidden' : '')),
+	                    classes('features', features.length === 0 ? 'hidden' : ''),
 	                    React.createElement(
 	                        'h2',
 	                        classes('header'),
-	                        'Zones'
+	                        'Features'
 	                    ),
-	                    React.createElement(Grid, { ref: 'zonegrid', key: 'zonegrid', cells: zones })
-	                ),
-	                React.createElement(
-	                    'div',
-	                    classes('sensors', sensors.length === 0 ? 'hidden' : ''),
-	                    React.createElement(
-	                        'h2',
-	                        classes('header'),
-	                        'Sensors'
-	                    ),
-	                    React.createElement(Grid, { ref: 'sensorgrid', key: 'sensorgrid', cells: sensors })
+	                    React.createElement(Grid, { ref: 'featuregrid', key: 'featuregrid', cells: features })
 	                ),
 	                React.createElement('div', { style: { clear: 'both' } })
 	            );
@@ -25116,7 +24726,7 @@
 	            body = React.createElement(
 	                'div',
 	                classes('no-new'),
-	                'No new devices/zones/sensors were found. Items previously imported will not be shown again unless you delete them from the system.'
+	                'No new devices or features were found. Items previously imported will not be shown again unless you delete them from the system.'
 	            );
 	        }
 	        return React.createElement(
@@ -25129,7 +24739,7 @@
 	module.exports = ImportGroup;
 
 /***/ },
-/* 211 */
+/* 209 */
 /***/ function(module, exports) {
 
 	function isObject(obj) {
@@ -25228,7 +24838,7 @@
 
 
 /***/ },
-/* 212 */
+/* 210 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25236,13 +24846,13 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(211);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'DeviceCell',
 	    prefix: 'b-'
 	});
-	__webpack_require__(213);
+	__webpack_require__(211);
 
 	var DeviceCell = React.createClass({
 	    displayName: 'DeviceCell',
@@ -25312,16 +24922,16 @@
 	module.exports = DeviceCell;
 
 /***/ },
-/* 213 */
+/* 211 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(214);
+	var content = __webpack_require__(212);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -25338,10 +24948,10 @@
 	}
 
 /***/ },
-/* 214 */
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -25352,7 +24962,7 @@
 
 
 /***/ },
-/* 215 */
+/* 213 */
 /***/ function(module, exports) {
 
 	/*
@@ -25408,7 +25018,7 @@
 
 
 /***/ },
-/* 216 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -25660,7 +25270,7 @@
 
 
 /***/ },
-/* 217 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25668,22 +25278,25 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(211);
+	var Feature = __webpack_require__(216);
+	var Attribute = __webpack_require__(217);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
-	    name: 'ZoneSensorCell',
+	    name: 'FeatureCell',
 	    prefix: 'b-'
 	});
 	__webpack_require__(218);
 
-	var ZoneSensorCell = React.createClass({
-	    displayName: 'ZoneSensorCell',
+	var FeatureCell = React.createClass({
+	    displayName: 'FeatureCell',
 
 	    getDefaultProps: function getDefaultProps() {
 	        return {
 	            hasError: false,
 	            hasSuccess: false,
 	            showCheckbox: false,
+	            //TODO: Rename
 	            showLevel: true,
 	            checkboxChecked: true
 	        };
@@ -25691,52 +25304,13 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            level: this.props.level || { value: 0, r: 0, g: 0, b: 0 },
-	            attr: null,
+	            attrs: this.props.feature.attrs,
 	            checkboxChecked: this.props.checkboxChecked
 	        };
 	    },
 
 	    isChecked: function isChecked() {
 	        return this.state.checkboxChecked;
-	    },
-
-	    setLevel: function setLevel(level) {
-	        this.setState({ level: level });
-
-	        /*
-	        var $this = $(ReactDOM.findDOMNode(this));
-	        //TODO: Clip rect is not updating on ios safari, so just change the
-	        //opacity of the bulb for now
-	        //var y = parseInt(30 + (55 * ((100-val)/100)));
-	        //$this.find('.clipRect').attr('y', y);
-	        */
-	        //$this.find('.light').css('opacity', val/100);
-	    },
-
-	    setAttr: function setAttr(attr) {
-	        this.setState({ attr: attr });
-	    },
-
-	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
-	        //TODO: Fix
-	        return true;
-	        /*
-	        if (nextProps.zone && this.props.zone && (this.props.zone.name !== nextProps.zone.name)) {
-	            return true;
-	        }
-	        if (nextProps.sensor && this.props.sensor && (this.props.sensor.name !== nextProps.sensor.name)) {
-	            return true;
-	        }
-	        if (nextState.level && this.state.level && (nextState.level.value !== this.state.level.value)) {
-	            //TODO: RGB
-	            return true;
-	        }
-	        if (nextState.attr && this.state.attr && (nextState.attr.value !== this.state.attr.value)) {
-	            //TODO: RGB
-	            return true;
-	        }
-	        return false;*/
 	    },
 
 	    checkboxClicked: function checkboxClicked(evt) {
@@ -25748,72 +25322,122 @@
 	        this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
 	    },
 
+	    setAttrs: function setAttrs(attrs) {
+	        this.setState({ attrs: attrs });
+	    },
+
+	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        //TODO: Fix
+	        return true;
+	    },
+
 	    render: function render() {
-	        var icon1, icon2, name;
-	        var type;
+	        var icon1, icon2;
+
+	        var name = this.props.feature.name;
+	        var attrs = this.state.attrs;
 	        var val = '';
 	        var opacity = 0;
 	        var color = 'yellow';
+	        switch (this.props.feature.type) {
+	            case Feature.Type.LightZone:
+	                icon1 = 'icon ion-ios-lightbulb-outline';
 
-	        if (this.props.zone) {
-	            switch (this.props.zone.type) {
-	                case 'light':
-	                    type = 'light';
-	                    icon1 = 'icon ion-ios-lightbulb-outline';
-	                    break;
-	                case 'shade':
-	                    type = 'shade';
-	                    icon1 = 'icon ion-ios-arrow-thin-up';
-	                    icon2 = 'icon ion-ios-arrow-thin-down';
-	                    break;
-	                case 'switch':
-	                    type = 'switch';
-	                    icon1 = 'icon ion-ios-bolt-outline';
-	                    break;
-	                default:
-	                    icon1 = 'icon ion-ios-help-empty';
-	                    break;
-	            }
-	            name = this.props.zone.name;
-
-	            if (this.state.level) {
-	                if (this.props.zone.output === 'binary') {
-	                    opacity = this.state.level.value === 0 ? 0 : 1;
-	                    val = this.state.level.value === 0 ? 'off' : 'on';
-	                } else if (this.props.zone.output === 'rgb') {
-	                    opacity = 1;
-
-	                    var lev = this.state.level;
-	                    val = this.state.level.value === 0 ? 'off' : 'on';
-	                    color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
-	                } else {
-	                    opacity = this.state.level.value / 100;
-	                    val = parseInt(this.state.level.value, 10) + '%';
-	                }
-
-	                if (this.props.zone && this.props.zone.type === 'switch') {
-	                    if (this.state.level.value === 0) {
-	                        val = 'off';
+	                //TODO: Hue
+	                //color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
+	                if (attrs[Feature.LightZone.AttrIDs.Brightness]) {
+	                    // The light zone supports brightness, show the current intensity
+	                    val = attrs[Feature.LightZone.AttrIDs.Brightness].value;
+	                    if (val == null) {
+	                        val = '';
 	                    } else {
-	                        val = 'on';
+	                        opacity = val / 100;
+	                        val = parseInt(val, 10) + '%';
+	                    }
+	                } else {
+	                    // The light zone is only on/off, show that state
+	                    var onOffVal = attrs[Feature.LightZone.AttrIDs.OnOff].value;
+	                    if (!onOffVal) {
+	                        val = '';
+	                    } else {
+	                        if (onOffVal === 2) {
+	                            opacity = 1;
+	                        }
+	                        val = Attribute.OnOff.States[onOffVal];
 	                    }
 	                }
-	            }
-	        } else {
-	            icon1 = 'icon ion-ios-pulse';
-	            type = 'sensor';
-	            name = this.props.sensor.name;
+	                break;
 
-	            if (this.state.attr) {
-	                val = this.state.attr.value;
-
-	                // If there is a states map, which gives value -> ui string then
-	                // use that string instead of the raw value
-	                var uiVal = this.state.attr.states && this.state.attr.states[val];
-	                if (uiVal) {
-	                    val = uiVal;
+	            case Feature.Type.Switch:
+	                icon1 = 'icon ion-ios-bolt-outline';
+	                var onOffVal = attrs[Feature.Switch.AttrIDs.OnOff].value;
+	                if (!onOffVal) {
+	                    val = '';
+	                } else {
+	                    if (onOffVal === 2) {
+	                        opacity = 1;
+	                    }
+	                    val = Attribute.OnOff.States[onOffVal];
 	                }
-	            }
+	                break;
+
+	            case Feature.Type.Outlet:
+	                icon1 = 'icon ion-outlet';
+	                var onOffVal = attrs[Feature.Outlet.AttrIDs.OnOff].value;
+	                if (!onOffVal) {
+	                    val = '';
+	                } else {
+	                    if (onOffVal === 2) {
+	                        opacity = 1;
+	                    }
+	                    val = Attribute.OnOff.States[onOffVal];
+	                }
+	                break;
+
+	            case Feature.Type.WindowTreatment:
+	                icon1 = 'icon ion-ios-arrow-thin-up';
+	                icon2 = 'icon ion-ios-arrow-thin-down';
+	                val = attrs[Feature.WindowTreatment.AttrIDs.Offset].value;
+	                if (val == null) {
+	                    val = '';
+	                } else if (val === 0) {
+	                    val = 'Closed';
+	                } else if (val === 100) {
+	                    val = 'Open';
+	                } else {
+	                    val = val + '%';
+	                }
+	                break;
+
+	            case Feature.Type.HeatZone:
+	                icon1 = 'icon ion-ios-flame-outline';
+	                //TODO: Units
+	                var current = attrs[Feature.HeatZone.AttrIDs.CurrentTemp].value;
+	                var target = attrs[Feature.HeatZone.AttrIDs.TargetTemp].value;
+
+	                if (current == null || target == null) {
+	                    val = '';
+	                } else if (current === target) {
+	                    val = current + '°F';
+	                } else {
+	                    val = current + '°F → ' + target + '°F';
+	                }
+	                break;
+
+	            case Feature.Type.Sensor:
+	                icon1 = 'icon ion-ios-pulse';
+
+	                // Each sensor has only one attribute, pick it out
+	                var attribute = attrs[Object.keys(attrs)[0]];
+	                if (!attribute.value) {
+	                    val = '';
+	                } else {
+	                    val = Attribute[attribute.type].States[attribute.value];
+	                }
+	                break;
+
+	            default:
+	                icon1 = 'icon ion-ios-help-empty';
 	        }
 
 	        var icon1Cmp, icon2Cmp;
@@ -25854,7 +25478,7 @@
 	            ),
 	            React.createElement(
 	                'svg',
-	                _extends({}, classes('switch-color', type), {
+	                _extends({}, classes('switch-color', this.props.feature.type), {
 	                    viewBox: '0 0 200 200',
 	                    xmlns: 'http://www.w3.org/2000/svg',
 	                    xlinkHref: 'http://www.w3.org/1999/xlink' }),
@@ -25866,7 +25490,7 @@
 	            ),
 	            React.createElement(
 	                'svg',
-	                _extends({}, classes('light-color', type), {
+	                _extends({}, classes('light-color', this.props.feature.type), {
 	                    viewBox: '0 0 200 200',
 	                    xmlns: 'http://www.w3.org/2000/svg',
 	                    xlinkHref: 'http://www.w3.org/1999/xlink' }),
@@ -25900,7 +25524,124 @@
 	        );
 	    }
 	});
-	module.exports = ZoneSensorCell;
+	module.exports = FeatureCell;
+
+/***/ },
+/* 216 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	function Feature() {}
+	var Type = {
+	    Button: 'Button',
+	    CoolZone: 'CoolZone',
+	    HeatZone: 'HeatZone',
+	    LightZone: 'LightZone',
+	    Sensor: 'Sensor',
+	    Switch: 'Switch',
+	    Outlet: 'Outlet',
+	    WindowTreatment: 'WindowTreatment'
+	};
+
+	function LightZone() {}
+	LightZone.AttrIDs = {
+	    OnOff: 'onoff',
+	    Brightness: 'brightness',
+	    Hue: 'hue'
+	};
+
+	function HeatZone() {}
+	HeatZone.AttrIDs = {
+	    CurrentTemp: 'currenttemp',
+	    TargetTemp: 'targettemp'
+	};
+
+	function Switch() {}
+	Switch.AttrIDs = {
+	    OnOff: 'onoff'
+	};
+
+	function Outlet() {}
+	Outlet.AttrIDs = {
+	    OnOff: 'onoff'
+	};
+
+	function WindowTreatment() {}
+	WindowTreatment.AttrIDs = {
+	    Offset: 'offset',
+	    OpenClose: 'openclose'
+	};
+
+	function cloneAttrs(sourceAttrs) {
+	    if (sourceAttrs == null) {
+	        return null;
+	    }
+
+	    var attrs = {};
+	    Object.keys(sourceAttrs).forEach(function (localId) {
+	        attrs[localId] = Object.assign({}, sourceAttrs[localId]);
+	    });
+	    return attrs;
+	}
+
+	module.exports = {
+	    Type: Type,
+	    Feature: Feature,
+	    LightZone: LightZone,
+	    HeatZone: HeatZone,
+	    Switch: Switch,
+	    Outlet: Outlet,
+	    WindowTreatment: WindowTreatment,
+	    cloneAttrs: cloneAttrs
+	};
+
+/***/ },
+/* 217 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	// These values match the attribute.go file, if you update that file you will
+	// need to update the values here too
+
+	function Attribute() {}
+
+	var Type = {
+	    OpenClose: 'OpenClose',
+	    OnOff: 'OnOff',
+	    Brightness: 'Brightness',
+	    Hue: 'Hue',
+	    Offset: 'Offset',
+	    Temperature: 'Temperature'
+	};
+
+	var Perms = {
+	    ReadOnly: 'r',
+	    ReadWrite: 'rw'
+	};
+
+	function OnOff() {}
+	OnOff.States = {
+	    0: 'Unknown',
+	    1: 'Off',
+	    2: 'On'
+	};
+
+	function OpenClose() {}
+	OpenClose.States = {
+	    0: 'Unknown',
+	    1: 'Closed',
+	    2: 'Open'
+	};
+
+	module.exports = {
+	    Type: Type,
+	    Attribute: Attribute,
+	    OnOff: OnOff,
+	    OpenClose: OpenClose,
+	    Perms: Perms
+	};
 
 /***/ },
 /* 218 */
@@ -25912,14 +25653,14 @@
 	var content = __webpack_require__(219);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorCell.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorCell.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureCell.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -25932,12 +25673,12 @@
 /* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
 	// module
-	exports.push([module.id, ".b-ZoneSensorCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-ZoneSensorCell--error {\n  background-color: #ffdddd;\n}\n.b-ZoneSensorCell--success {\n  background-color: #ddffdd;\n}\n.b-ZoneSensorCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-ZoneSensorCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-ZoneSensorCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneSensorCell__switch-color {\n  display: none;\n}\n.b-ZoneSensorCell__switch-color--switch {\n  display: block;\n}\n.b-ZoneSensorCell__light-color {\n  display: none;\n}\n.b-ZoneSensorCell__light-color--light {\n  display: block;\n}\n", ""]);
+	exports.push([module.id, ".b-FeatureCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-transform: uppercase;\n  text-align: center;\n  /* Need to set this to stop spacing between the cells */\n  font-size: 0px;\n  /* provides color to the switch icon, should only show for switches */\n  /* provides color to the light icon, should only show for lights */\n}\n.b-FeatureCell--error {\n  background-color: #ffdddd;\n}\n.b-FeatureCell--success {\n  background-color: #ddffdd;\n}\n.b-FeatureCell__checkbox {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  pointer-events: all;\n}\n.b-FeatureCell__icon {\n  font-size: 57px;\n  color: #555;\n  position: absolute;\n  left: 0;\n  right: 0;\n}\n.b-FeatureCell__name {\n  font-size: 12px;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* ellipsis - use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-FeatureCell__level {\n  font-size: 10px;\n  position: absolute;\n  bottom: 30px;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  /* ellipsis use mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-FeatureCell__switch-color {\n  display: none;\n}\n.b-FeatureCell__switch-color--Switch {\n  display: block;\n}\n.b-FeatureCell__light-color {\n  display: none;\n}\n.b-FeatureCell__light-color--LightZone {\n  display: block;\n}\n", ""]);
 
 	// exports
 
@@ -25956,19 +25697,14 @@
 	var InputValidationMixin = __webpack_require__(222);
 	var SaveBtn = __webpack_require__(223);
 	var Api = __webpack_require__(204);
-	var ZoneInfo = __webpack_require__(224);
-	var SensorInfo = __webpack_require__(230);
-	var ZoneActions = __webpack_require__(208);
-	var SensorActions = __webpack_require__(209);
-	var DeviceTypePicker = __webpack_require__(233);
-	var Classnames = __webpack_require__(234);
-	var BEMHelper = __webpack_require__(211);
+	var DeviceTypePicker = __webpack_require__(224);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'DeviceInfo',
 	    prefix: 'b-'
 	});
-	__webpack_require__(235);
+	__webpack_require__(225);
 
 	var DeviceInfo = React.createClass({
 	    displayName: 'DeviceInfo',
@@ -25998,11 +25734,7 @@
 
 	    getDefaultProps: function getDefaultProps() {
 	        return {
-	            zones: [],
-	            sensors: [],
-	            showSaveBtn: false,
-	            showZones: false,
-	            showSensors: false
+	            showSaveBtn: false
 	        };
 	    },
 
@@ -26048,8 +25780,9 @@
 	    },
 
 	    createDevice: function createDevice() {
+	        /*
 	        //TODO: Revisit now ew have one API to save everything at once
-	        Api.deviceCreate(this.toJson(), function (err, deviceData) {
+	        Api.deviceCreate(this.toJson(), function(err, deviceData) {
 	            if (err) {
 	                this.setState({
 	                    saveButtonStatus: 'error',
@@ -26057,19 +25790,16 @@
 	                });
 	                return;
 	            }
-
-	            // Let callers know the device has been saved
+	             // Let callers know the device has been saved
 	            this.props.createdDevice(this.state.id, deviceData);
-
-	            // Now we need to loop through each of the zones and save them
+	             // Now we need to loop through each of the zones and save them
 	            function saveZone(index) {
 	                if (index >= this.props.zones.length) {
-	                    saveSensor.bind(this)(0);
+	                    saveSensor.bind(this)(0)
 	                    return;
 	                }
-
-	                var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
-	                Api.zoneCreate(zone, function (err, zoneData) {
+	                 var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
+	                Api.zoneCreate(zone, function(err, zoneData) {
 	                    if (err) {
 	                        zoneInfo.setErrors(err.validation.errors);
 	                        this.setState({
@@ -26077,22 +25807,19 @@
 	                        });
 	                        return;
 	                    }
-
-	                    this.props.savedZone(zoneData);
-	                    saveZone.bind(this)(index + 1);
+	                     this.props.savedZone(zoneData);
+	                    saveZone.bind(this)(index+1);
 	                }.bind(this));
 	            }
 	            saveZone.bind(this)(0);
-
-	            // Loop through sensors saving
+	             // Loop through sensors saving
 	            function saveSensor(index) {
 	                if (index >= this.props.sensors.length) {
 	                    this.setState({ saveButtonStatus: 'success' });
 	                    return;
 	                }
-
-	                var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
-	                Api.sensorCreate(sensor, function (err, sensorData) {
+	                 var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
+	                Api.sensorCreate(sensor, function(err, sensorData) {
 	                    if (err) {
 	                        sensorInfo.setErrors(err.validation.errors);
 	                        this.setState({
@@ -26100,12 +25827,12 @@
 	                        });
 	                        return;
 	                    }
-
-	                    this.props.savedSensor(sensorData);
-	                    saveSensor.bind(this)(index + 1);
+	                     this.props.savedSensor(sensorData);
+	                    saveSensor.bind(this)(index+1);
 	                }.bind(this));
 	            }
-	        }.bind(this));
+	         }.bind(this));
+	        */
 	    },
 
 	    updateDevice: function updateDevice() {
@@ -26213,53 +25940,6 @@
 	            );
 	        }
 
-	        var zones;
-	        if (this.props.zones.length === 0) {
-	            zones = React.createElement(
-	                'h4',
-	                null,
-	                '0 zones found'
-	            );
-	        } else {
-	            zones = this.props.zones.map(function (zone) {
-	                return React.createElement(ZoneInfo, {
-	                    ref: "zoneInfo_" + zone.id,
-	                    readOnlyFields: 'deviceId',
-	                    key: zone.id,
-	                    name: zone.name,
-	                    description: zone.description,
-	                    address: zone.address,
-	                    type: zone.type,
-	                    output: zone.output,
-	                    deviceId: this.state.id,
-	                    devices: [this.toJson()],
-	                    changed: this._zoneChanged });
-	            }.bind(this));
-	        }
-
-	        var sensors;
-	        if (this.props.sensors.length === 0) {
-	            sensors = React.createElement(
-	                'h4',
-	                null,
-	                '0 sensors found'
-	            );
-	        } else {
-	            sensors = this.props.sensors.map(function (sensor) {
-	                return React.createElement(SensorInfo, {
-	                    ref: "sensorInfo_" + sensor.id,
-	                    readOnlyFields: 'deviceId',
-	                    key: sensor.id,
-	                    name: sensor.name,
-	                    description: sensor.description,
-	                    address: sensor.address,
-	                    attr: sensor.attr,
-	                    deviceId: this.state.id,
-	                    devices: [this.toJson()],
-	                    changed: this._sensorChanged });
-	            }.bind(this));
-	        }
-
 	        return React.createElement(
 	            'div',
 	            classes('', '', 'well well-sm'),
@@ -26362,36 +26042,6 @@
 	                    id: this.uid("address") }),
 	                this.errMsg("address")
 	            ),
-	            React.createElement(
-	                'div',
-	                { className: Classnames({ clearfix: true, hidden: !this.props.showZones }) },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("zones") },
-	                    'Zones',
-	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse zones', id: this.uid("zones") },
-	                zones
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: Classnames({ clearfix: true, hidden: !this.props.showSensors }) },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("sensors") },
-	                    'Sensors',
-	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse sensors', id: this.uid("sensors") },
-	                sensors
-	            ),
 	            token,
 	            React.createElement(
 	                'div',
@@ -26404,17 +26054,7 @@
 	});
 
 	function mapDispatchToProps(dispatch) {
-	    return {
-	        savedZone: function savedZone(zoneJson) {
-	            dispatch(ZoneActions.importedZone(zoneJson));
-	        },
-	        savedSensor: function savedSensor(sensorJson) {
-	            dispatch(SensorActions.importedSensor(sensorJson));
-	        },
-	        raiseError: function raiseError(error) {
-	            //TODO:
-	        }
-	    };
+	    return {};
 	}
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceInfo);
 
@@ -26591,719 +26231,13 @@
 
 	'use strict';
 
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 	var React = __webpack_require__(1);
-	var UniqueIdMixin = __webpack_require__(221);
-	var InputValidationMixin = __webpack_require__(222);
-	var DevicePicker = __webpack_require__(225);
-	var ZoneOutputPicker = __webpack_require__(226);
-	var ZoneTypePicker = __webpack_require__(227);
-	var SaveBtn = __webpack_require__(223);
-	var Api = __webpack_require__(204);
-	var BEMHelper = __webpack_require__(211);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
-	    name: 'ZoneInfo',
+	    name: 'DeviceTypePicker',
 	    prefix: 'b-'
 	});
-	__webpack_require__(228);
-
-	//TODO: Remove individual props from this cmp, just pass in zone
-
-	var ZoneInfo = React.createClass({
-	    displayName: 'ZoneInfo',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            showSaveBtn: false
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            name: this.props.name,
-	            description: this.props.description,
-	            address: this.props.address,
-	            deviceId: this.props.deviceId,
-	            type: this.props.type,
-	            output: this.props.output,
-	            errors: this.props.errors,
-	            id: this.props.id,
-	            dirty: false,
-	            saveButtonStatus: ''
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        var s = this.state;
-	        return {
-	            id: this.props.id,
-	            name: s.name,
-	            description: s.description,
-	            address: s.address,
-	            deviceId: s.deviceId,
-	            type: s.type,
-	            output: s.output
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    _changed: function _changed(evt) {
-	        this.setState({ saveButtonStatus: '' }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	        this.changed(evt);
-	    },
-
-	    devicePickerChanged: function devicePickerChanged(deviceId) {
-	        this.setState({ deviceId: deviceId }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    typeChanged: function typeChanged(type) {
-	        if (this.state.type === type) {
-	            return;
-	        }
-
-	        this.setState({
-	            saveButtonStatus: '',
-	            type: type,
-	            dirty: true
-	        }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    outputChanged: function outputChanged(output) {
-	        if (this.state.output === output) {
-	            return;
-	        }
-
-	        this.setState({
-	            saveButtonStatus: '',
-	            output: output,
-	            dirty: true
-	        }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    save: function save() {
-	        this.setState({ errors: null });
-	        Api.zoneUpdate(this.toJson(), function (err, zoneData) {
-	            if (err && !err.validation) {
-	                //TODO: Dispatch general error
-	                this.setState({ saveButtonStatus: 'error' });
-	                return;
-	            } else if (err && err.validation) {
-	                this.setState({
-	                    saveButtonStatus: 'error',
-	                    errors: err.validation.errors[this.state.id]
-	                });
-	                return;
-	            }
-
-	            this.setState({ saveButtonStatus: 'success' });
-	            this.props.updatedZone(zoneData);
-	        }.bind(this));
-	    },
-
-	    render: function render() {
-	        var saveBtn;
-	        if (this.props.showSaveBtn && this.state.dirty) {
-	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
-	                clicked: this.save,
-	                text: 'Save',
-	                status: this.state.saveButtonStatus }));
-	        }
-
-	        return React.createElement(
-	            'div',
-	            classes('', '', 'well well-sm'),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr('form-group', 'name') },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
-	                    'Name*'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.name,
-	                    'data-statepath': 'name',
-	                    onChange: this._changed,
-	                    className: 'name form-control',
-	                    type: 'text',
-	                    id: this.uid('name') }),
-	                this.errMsg('name')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "type") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("type") }),
-	                    'Type*'
-	                ),
-	                React.createElement(ZoneTypePicker, { type: this.props.type, changed: this.typeChanged }),
-	                this.errMsg('type')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "output") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("output") }),
-	                    'Output*'
-	                ),
-	                React.createElement(ZoneOutputPicker, { output: this.props.output, changed: this.outputChanged }),
-	                this.errMsg('output')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: '' },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("moreInfo") },
-	                    'More Details',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse moreInfo', id: this.uid("moreInfo") },
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", 'description') },
-	                    React.createElement(
-	                        'label',
-	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
-	                        'Description'
-	                    ),
-	                    React.createElement('input', {
-	                        value: this.state.description,
-	                        'data-statepath': 'description',
-	                        onChange: this._changed,
-	                        className: 'description form-control',
-	                        type: 'text',
-	                        id: this.uid("description") }),
-	                    this.errMsg('description')
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "address") },
-	                    React.createElement(
-	                        'label',
-	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
-	                        'Address'
-	                    ),
-	                    React.createElement('input', {
-	                        value: this.state.address,
-	                        'data-statepath': 'address',
-	                        onChange: this._changed,
-	                        className: 'address form-control',
-	                        type: 'text',
-	                        id: this.uid("address") }),
-	                    this.errMsg('address')
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "deviceId") },
-	                    React.createElement(
-	                        'label',
-	                        _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("deviceId") }),
-	                        'Device*'
-	                    ),
-	                    React.createElement(DevicePicker, {
-	                        disabled: this.isReadOnly("deviceId"),
-	                        defaultId: this.props.deviceId,
-	                        devices: this.props.devices,
-	                        changed: this.devicePickerChanged }),
-	                    this.errMsg('deviceId')
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'pull-right' },
-	                saveBtn
-	            ),
-	            React.createElement('div', { style: { clear: 'both' } })
-	        );
-	    }
-	});
-	module.exports = ZoneInfo;
-
-/***/ },
-/* 225 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var React = __webpack_require__(1);
-
-	var DevicePicker = React.createClass({
-	    displayName: "DevicePicker",
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            devices: []
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.defaultId
-	        };
-	    },
-
-	    //TODO: If only one item in the list, select by default on load
-	    //TODO: if output or type is unknown need to update zone control to be
-	    //able to handle those values
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.devices.forEach(function (device) {
-	            var id = device.id;
-	            options.push(React.createElement(
-	                "option",
-	                { key: id, value: id },
-	                device.name
-	            ));
-	        });
-	        return React.createElement(
-	            "div",
-	            { className: "cmp-DevicePicker" },
-	            React.createElement(
-	                "select",
-	                {
-	                    disabled: this.props.disabled,
-	                    className: "form-control",
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    "option",
-	                    { value: "" },
-	                    "Select a device..."
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = DevicePicker;
-
-/***/ },
-/* 226 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ZoneOutputPicker = React.createClass({
-	    displayName: 'ZoneOutputPicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.output || 'continuous'
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        // If a value wasn't passed in, raise a changed notification so callers
-	        // can set their value accordingly since we default to unknown
-	        if (this.state.value === 'continuous') {
-	            this.props.changed && this.props.changed(this.state.value);
-	        }
-	    },
-
-	    selected: function selected(evt) {
-	        this.setOutput(evt.target.value);
-	    },
-
-	    setOutput: function setOutput(output) {
-	        this.setState({ value: output });
-	        this.props.changed && this.props.changed(output);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneOutputPicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: 'unknown' },
-	                    'Unknown'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'continuous' },
-	                    'Continuous'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'binary' },
-	                    'Binary'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'rgb' },
-	                    'RGB'
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneOutputPicker;
-
-/***/ },
-/* 227 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ZoneTypePicker = React.createClass({
-	    displayName: 'ZoneTypePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.type || 'unknown'
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        // If a value wasn't passed in, raise a changed notification so callers
-	        // can set their value accordingly since we default to unknown
-	        if (this.state.value === 'unknown') {
-	            this.props.changed && this.props.changed(this.state.value);
-	        }
-	    },
-
-	    selected: function selected(evt) {
-	        this.setType(evt.target.value);
-	    },
-
-	    setType: function setType(type) {
-	        this.setState({ value: type });
-	        this.props.changed && this.props.changed(type);
-	    },
-
-	    render: function render() {
-	        var types = [{ str: "Unknown", val: "unknown" }, { str: "Light", val: "light" }, { str: "Switch", val: "switch" }, { str: "Shade", val: "shade" }];
-	        var nodes = types.map(function (type) {
-	            return React.createElement(
-	                'option',
-	                { value: type.val, key: type.val },
-	                type.str
-	            );
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZoneTypePicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                nodes
-	            )
-	        );
-	    }
-	});
-	module.exports = ZoneTypePicker;
-
-/***/ },
-/* 228 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(229);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneInfo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneInfo.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 229 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(215)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-ZoneInfo {\n  margin-bottom: 0;\n}\n.b-ZoneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-ZoneInfo__save {\n  padding-left: 12px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 230 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var React = __webpack_require__(1);
-	var UniqueIdMixin = __webpack_require__(221);
-	var InputValidationMixin = __webpack_require__(222);
-	var DevicePicker = __webpack_require__(225);
-	var BEMHelper = __webpack_require__(211);
-	var SaveBtn = __webpack_require__(223);
-	var Api = __webpack_require__(204);
-
-	var classes = new BEMHelper({
-	    name: 'SensorInfo',
-	    prefix: 'b-'
-	});
-	__webpack_require__(231);
-
-	var SensorInfo = React.createClass({
-	    displayName: 'SensorInfo',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            showSaveBtn: false
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            name: this.props.name,
-	            description: this.props.description,
-	            address: this.props.address,
-	            deviceId: this.props.deviceId,
-	            errors: this.props.errors,
-	            saveButtonStatus: ''
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        var s = this.state;
-	        return {
-	            name: s.name,
-	            description: s.description,
-	            address: s.address,
-	            deviceId: s.deviceId,
-	            id: this.props.id,
-	            attr: this.props.attr
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    _changed: function _changed(evt) {
-	        this.setState({ saveButtonStatus: '' });
-	        this.changed(evt, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    devicePickerChanged: function devicePickerChanged(deviceId) {
-	        this.setState({
-	            deviceId: deviceId,
-	            saveButtonStatus: ''
-	        }, function () {
-	            this.props.changed && this.props.changed(this);
-	        }.bind(this));
-	    },
-
-	    save: function save() {
-	        this.setState({ errors: null });
-	        Api.sensorUpdate(this.toJson(), function (err, sensorData) {
-	            if (err && !err.validation) {
-	                //TODO: Dispatch general error
-	                this.setState({ saveButtonStatus: 'error' });
-	                return;
-	            } else if (err && err.validation) {
-	                this.setState({
-	                    saveButtonStatus: 'error',
-	                    errors: err.validation.errors[this.props.id]
-	                });
-	                return;
-	            }
-
-	            this.setState({ saveButtonStatus: 'success' });
-	            this.props.updatedSensor(sensorData);
-	        }.bind(this));
-	    },
-
-	    render: function render() {
-	        var saveBtn;
-	        if (this.props.showSaveBtn && this.state.dirty) {
-	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
-	                clicked: this.save,
-	                text: 'Save',
-	                status: this.state.saveButtonStatus }));
-	        }
-
-	        return React.createElement(
-	            'div',
-	            classes('', '', 'well well-sm'),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr('form-group', 'name') },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
-	                    'Name*'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.name,
-	                    'data-statepath': 'name',
-	                    onChange: this._changed,
-	                    className: 'name form-control',
-	                    type: 'text',
-	                    id: this.uid('name') }),
-	                this.errMsg('name')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", 'description') },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
-	                    'Description'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.description,
-	                    'data-statepath': 'description',
-	                    onChange: this._changed,
-	                    className: 'description form-control',
-	                    type: 'text',
-	                    id: this.uid("description") }),
-	                this.errMsg('description')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "address") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
-	                    'Address'
-	                ),
-	                React.createElement('input', {
-	                    value: this.state.address,
-	                    'data-statepath': 'address',
-	                    onChange: this._changed,
-	                    className: 'address form-control',
-	                    type: 'text',
-	                    id: this.uid("address") }),
-	                this.errMsg('address')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "deviceId") },
-	                React.createElement(
-	                    'label',
-	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("deviceId") }),
-	                    'Device*'
-	                ),
-	                React.createElement(DevicePicker, {
-	                    disabled: this.isReadOnly("deviceId"),
-	                    defaultId: this.props.deviceId,
-	                    devices: this.props.devices,
-	                    changed: this.devicePickerChanged }),
-	                this.errMsg('deviceId')
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'pull-right' },
-	                saveBtn
-	            ),
-	            React.createElement('div', { style: { clear: 'both' } })
-	        );
-	    }
-	});
-	module.exports = SensorInfo;
-
-/***/ },
-/* 231 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(232);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorInfo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorInfo.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 232 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(215)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SensorInfo {\n  margin-bottom: 0;\n}\n.b-SensorInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 233 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
 
 	var DeviceTypePicker = React.createClass({
 	    displayName: 'DeviceTypePicker',
@@ -27342,7 +26276,7 @@
 	        });
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-DeviceTypePicker' },
+	            classes(),
 	            React.createElement(
 	                'select',
 	                {
@@ -27357,70 +26291,16 @@
 	module.exports = DeviceTypePicker;
 
 /***/ },
-/* 234 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-	  Copyright (c) 2016 Jed Watson.
-	  Licensed under the MIT License (MIT), see
-	  http://jedwatson.github.io/classnames
-	*/
-	/* global define */
-
-	(function () {
-		'use strict';
-
-		var hasOwn = {}.hasOwnProperty;
-
-		function classNames () {
-			var classes = [];
-
-			for (var i = 0; i < arguments.length; i++) {
-				var arg = arguments[i];
-				if (!arg) continue;
-
-				var argType = typeof arg;
-
-				if (argType === 'string' || argType === 'number') {
-					classes.push(arg);
-				} else if (Array.isArray(arg)) {
-					classes.push(classNames.apply(null, arg));
-				} else if (argType === 'object') {
-					for (var key in arg) {
-						if (hasOwn.call(arg, key) && arg[key]) {
-							classes.push(key);
-						}
-					}
-				}
-			}
-
-			return classes.join(' ');
-		}
-
-		if (typeof module !== 'undefined' && module.exports) {
-			module.exports = classNames;
-		} else if (true) {
-			// register as 'classnames', consistent with npm package name
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
-				return classNames;
-			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-		} else {
-			window.classNames = classNames;
-		}
-	}());
-
-
-/***/ },
-/* 235 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(236);
+	var content = __webpack_require__(226);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -27437,10 +26317,10 @@
 	}
 
 /***/ },
-/* 236 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -27451,7 +26331,7 @@
 
 
 /***/ },
-/* 237 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27459,16 +26339,16 @@
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var React = __webpack_require__(1);
-	var ReactTransitionGroup = __webpack_require__(238);
+	var ReactTransitionGroup = __webpack_require__(228);
 	var ReactDOM = __webpack_require__(34);
-	var ClassNames = __webpack_require__(234);
-	var BEMHelper = __webpack_require__(211);
+	var ClassNames = __webpack_require__(231);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'Grid',
 	    prefix: 'b-'
 	});
-	__webpack_require__(241);
+	__webpack_require__(232);
 
 	var Grid = React.createClass({
 	    displayName: 'Grid',
@@ -27728,13 +26608,13 @@
 	module.exports = Grid;
 
 /***/ },
-/* 238 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(239);
+	module.exports = __webpack_require__(229);
 
 /***/ },
-/* 239 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
@@ -27754,7 +26634,7 @@
 
 	var React = __webpack_require__(2);
 	var ReactInstanceMap = __webpack_require__(119);
-	var ReactTransitionChildMapping = __webpack_require__(240);
+	var ReactTransitionChildMapping = __webpack_require__(230);
 
 	var emptyFunction = __webpack_require__(12);
 
@@ -27986,7 +26866,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 240 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
@@ -28095,16 +26975,70 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 241 */
+/* 231 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = [];
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+
+			return classes.join(' ');
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
+
+
+/***/ },
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(242);
+	var content = __webpack_require__(233);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28121,10 +27055,10 @@
 	}
 
 /***/ },
-/* 242 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -28135,16 +27069,369 @@
 
 
 /***/ },
-/* 243 */
+/* 234 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	var React = __webpack_require__(1);
+	var UniqueIdMixin = __webpack_require__(221);
+	var InputValidationMixin = __webpack_require__(222);
+	var FeatureTypePicker = __webpack_require__(235);
+	var SaveBtn = __webpack_require__(223);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'FeatureInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(236);
+
+	//TODO: Remove zoneTypePicker
+	//TODO: Remove zoneOutputPicker
+	//TODO: Remove sensor specific cmps
+
+	var FeatureInfo = React.createClass({
+	    displayName: 'FeatureInfo',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            showSaveBtn: false
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        var f = this.props.feature;
+	        return {
+	            id: f.id,
+	            name: f.name,
+	            description: f.description,
+	            address: f.address,
+	            attrs: f.attrs,
+	            type: f.type,
+	            errors: this.props.errors,
+	            dirty: false,
+	            saveButtonStatus: ''
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        var _ref;
+
+	        var s = this.state;
+	        var f = this.props.feature;
+	        return _ref = {
+	            id: f.id,
+	            name: s.name,
+	            description: s.description,
+	            address: s.address,
+	            type: s.type,
+	            deviceId: f.deviceId
+	        }, _defineProperty(_ref, 'type', s.type), _defineProperty(_ref, 'attrs', s.attrs), _ref;
+	    },
+
+	    setErrors: function setErrors(errors) {
+	        this.setState({ errors: errors });
+	    },
+
+	    _changed: function _changed(evt) {
+	        this.setState({ saveButtonStatus: '' }, function () {
+	            this.props.changed && this.props.changed(this);
+	        }.bind(this));
+	        this.changed(evt);
+	    },
+
+	    typeChanged: function typeChanged(type) {
+	        this.changed({
+	            target: {
+	                getAttribute: function getAttribute() {
+	                    return 'type';
+	                },
+	                value: type
+	            }
+	        }, function () {
+	            this.props.changed && this.props.changed(this);
+	        });
+	    },
+
+	    save: function save() {
+	        this.setState({ errors: null });
+	        Api.featureUpdate(this.props.feature.deviceId, this.props.feature.id, this.toJson(), function (err, featureData) {
+	            if (err && !err.validation) {
+	                //TODO: Dispatch general error
+	                this.setState({ saveButtonStatus: 'error' });
+	                return;
+	            } else if (err && err.validation) {
+	                this.setState({
+	                    saveButtonStatus: 'error',
+	                    errors: err.validation.errors[this.state.id]
+	                });
+	                return;
+	            }
+
+	            this.setState({ saveButtonStatus: 'success' });
+	            this.props.updatedFeature(featureData);
+	        }.bind(this));
+	    },
+
+	    render: function render() {
+	        var saveBtn;
+	        if (this.props.showSaveBtn && this.state.dirty) {
+	            saveBtn = React.createElement(SaveBtn, _extends({}, classes('save'), {
+	                clicked: this.save,
+	                text: 'Save',
+	                status: this.state.saveButtonStatus }));
+	        }
+
+	        //TODO: Attrs
+	        return React.createElement(
+	            'div',
+	            classes('', '', 'well well-sm'),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr('form-group', 'name') },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid('name') }),
+	                    'Name*'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.name,
+	                    'data-statepath': 'name',
+	                    onChange: this._changed,
+	                    className: 'name form-control',
+	                    type: 'text',
+	                    id: this.uid('name') }),
+	                this.errMsg('name')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "type") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("type") }),
+	                    'Type'
+	                ),
+	                React.createElement(FeatureTypePicker, { type: this.state.type, changed: this.typeChanged }),
+	                this.errMsg('type')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "id") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("id") }),
+	                    'ID'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.id,
+	                    readOnly: this.isReadOnly("id"),
+	                    'data-statepath': 'id',
+	                    onChange: this._changed,
+	                    className: 'id form-control',
+	                    type: 'text',
+	                    id: this.uid("id") }),
+	                this.errMsg("id")
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", 'description') },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("description") }),
+	                    'Description'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.description,
+	                    'data-statepath': 'description',
+	                    onChange: this._changed,
+	                    className: 'description form-control',
+	                    type: 'text',
+	                    id: this.uid("description") }),
+	                this.errMsg('description')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "address") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("address") }),
+	                    'Address'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.address,
+	                    'data-statepath': 'address',
+	                    onChange: this._changed,
+	                    className: 'address form-control',
+	                    type: 'text',
+	                    id: this.uid("address") }),
+	                this.errMsg('address')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: 'pull-right' },
+	                saveBtn
+	            ),
+	            React.createElement('div', { style: { clear: 'both' } })
+	        );
+	    }
+	});
+	module.exports = FeatureInfo;
+
+/***/ },
+/* 235 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var Feature = __webpack_require__(216);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'FeatureTypePicker',
+	    prefix: 'b-'
+	});
+
+	var FeatureTypePicker = React.createClass({
+	    displayName: 'FeatureTypePicker',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            excluded: {}
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.type || 'unknown'
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setType(evt.target.value);
+	    },
+
+	    setType: function setType(type) {
+	        if (type === 'unknown') {
+	            return;
+	        }
+
+	        // Set back to unknown since we render a new command when this is selected
+	        this.setState({ value: 'unknown' });
+	        this.props.changed && this.props.changed(type);
+	    },
+
+	    render: function render() {
+	        var types = [{ str: "Add new action...", val: 'unknown' }];
+
+	        var excluded = this.props.excluded;
+	        if (!excluded[Feature.Type.Button]) {
+	            types.push({ str: "Button", val: Feature.Type.Button });
+	        }
+	        if (!excluded[Feature.Type.CoolZone]) {
+	            types.push({ str: "Cool Zone", val: Feature.Type.CoolZone });
+	        }
+	        if (!excluded[Feature.Type.HeatZone]) {
+	            types.push({ str: "Heat Zone", val: Feature.Type.HeatZone });
+	        }
+	        if (!excluded[Feature.Type.LightZone]) {
+	            types.push({ str: "Light Zone", val: Feature.Type.LightZone });
+	        }
+	        if (!excluded[Feature.Type.Sensor]) {
+	            types.push({ str: "Sensor", val: Feature.Type.Sensor });
+	        }
+	        if (!excluded[Feature.Type.Switch]) {
+	            types.push({ str: "Switch", val: Feature.Type.Switch });
+	        }
+	        if (!excluded[Feature.Type.Outlet]) {
+	            types.push({ str: "Outlet", val: Feature.Type.Outlet });
+	        }
+	        if (!excluded[Feature.Type.WindowTreatment]) {
+	            types.push({ str: "Window Treatment", val: Feature.Type.WindowTreatment });
+	        }
+
+	        var nodes = types.map(function (type) {
+	            return React.createElement(
+	                'option',
+	                { value: type.val, key: type.val },
+	                type.str
+	            );
+	        });
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                nodes
+	            )
+	        );
+	    }
+	});
+	module.exports = FeatureTypePicker;
+
+/***/ },
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(244);
+	var content = __webpack_require__(237);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 237 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-FeatureInfo {\n  margin-bottom: 0;\n}\n.b-FeatureInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-FeatureInfo__save {\n  padding-left: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 238 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(239);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28161,30 +27448,30 @@
 	}
 
 /***/ },
-/* 244 */
+/* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
 	// module
-	exports.push([module.id, ".b-ImportGroup {\n  border: 1px solid #eee;\n  border-radius: 4px;\n  padding: 8px;\n}\n.b-ImportGroup__import {\n  margin-bottom: 12px;\n}\n.b-ImportGroup.b-ImportGroup__no-new {\n  font-weight: 200;\n}\n.b-ImportGroup__header {\n  margin-top: 0;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: left;\n}\n.b-ImportGroup__devices--hidden {\n  display: none;\n}\n.b-ImportGroup__zones--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n.b-ImportGroup__sensors--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-ImportGroup {\n  border: 1px solid #eee;\n  border-radius: 4px;\n  padding: 8px;\n}\n.b-ImportGroup__import {\n  margin-bottom: 12px;\n}\n.b-ImportGroup.b-ImportGroup__no-new {\n  font-weight: 200;\n}\n.b-ImportGroup__header {\n  margin-top: 0;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: left;\n}\n.b-ImportGroup__devices--hidden {\n  display: none;\n}\n.b-ImportGroup__features--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
 
 /***/ },
-/* 245 */
+/* 240 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(246);
+	var content = __webpack_require__(241);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28201,10 +27488,10 @@
 	}
 
 /***/ },
-/* 246 */
+/* 241 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -28215,16 +27502,16 @@
 
 
 /***/ },
-/* 247 */
+/* 242 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(248);
+	var content = __webpack_require__(243);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28241,10 +27528,10 @@
 	}
 
 /***/ },
-/* 248 */
+/* 243 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -28255,7 +27542,7 @@
 
 
 /***/ },
-/* 249 */
+/* 244 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28266,15 +27553,15 @@
 	var ReactRedux = __webpack_require__(173);
 	var DeviceInfo = __webpack_require__(220);
 	var SystemActions = __webpack_require__(205);
-	var Grid = __webpack_require__(237);
-	var DeviceCell = __webpack_require__(212);
-	var BEMHelper = __webpack_require__(211);
+	var Grid = __webpack_require__(227);
+	var DeviceCell = __webpack_require__(210);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'DeviceList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(250);
+	__webpack_require__(245);
 
 	var DeviceList = React.createClass({
 	    displayName: 'DeviceList',
@@ -28443,16 +27730,16 @@
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceList);
 
 /***/ },
-/* 250 */
+/* 245 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(251);
+	var content = __webpack_require__(246);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28469,10 +27756,10 @@
 	}
 
 /***/ },
-/* 251 */
+/* 246 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -28483,16 +27770,16 @@
 
 
 /***/ },
-/* 252 */
+/* 247 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(253);
+	var content = __webpack_require__(248);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28509,10 +27796,10 @@
 	}
 
 /***/ },
-/* 253 */
+/* 248 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -28523,7 +27810,7 @@
 
 
 /***/ },
-/* 254 */
+/* 249 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28532,31 +27819,34 @@
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var SceneListGridCell = __webpack_require__(255);
-	var SceneControl = __webpack_require__(258);
-	var SceneInfo = __webpack_require__(261);
+	var SceneListGridCell = __webpack_require__(250);
+	var SceneControl = __webpack_require__(253);
+	var SceneInfo = __webpack_require__(256);
 	var UniqueIdMixin = __webpack_require__(221);
-	var SceneActions = __webpack_require__(272);
-	var Grid = __webpack_require__(237);
-	var BEMHelper = __webpack_require__(211);
+	var SceneActions = __webpack_require__(284);
+	var Grid = __webpack_require__(227);
+	var BEMHelper = __webpack_require__(209);
+	var Feature = __webpack_require__(216);
 
 	var classes = new BEMHelper({
 	    name: 'SceneList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(276);
+	__webpack_require__(291);
 
 	var SceneList = React.createClass({
 	    displayName: 'SceneList',
 
 	    mixins: [UniqueIdMixin],
 
-	    getInitialState: function getInitialState() {
-	        return { editMode: false };
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            devices: []
+	        };
 	    },
 
-	    _onChange: function _onChange() {
-	        this.forceUpdate();
+	    getInitialState: function getInitialState() {
+	        return { editMode: false };
 	    },
 
 	    edit: function edit() {
@@ -28582,20 +27872,18 @@
 
 	                return React.createElement(
 	                    'div',
-	                    _extends({}, classes('scene-info'), { key: scene.id }),
+	                    _extends({}, classes('scene-info'), { key: scene.id || scene.clientId }),
 	                    React.createElement(SceneInfo, {
-	                        zones: this.props.zones,
-	                        buttons: this.props.buttons,
 	                        scenes: this.props.scenes.items,
+	                        devices: this.props.devices,
 	                        scene: scene,
 	                        readOnlyFields: 'id',
-	                        key: scene.id,
-	                        errors: (saveState.err || {}).validationErrors,
-	                        saveScene: this.props.saveScene,
+	                        key: scene.id || scene.clientId,
+	                        createdScene: this.props.createdScene,
+
 	                        updateScene: this.props.updateScene,
 	                        deleteScene: this.props.deleteScene,
-	                        addCommand: this.props.addCommand,
-	                        saveStatus: saveState.status })
+	                        addCommand: this.props.addCommand })
 	                );
 	            }.bind(this));
 	            btns = React.createElement(
@@ -28616,9 +27904,9 @@
 
 	            var gridCells = scenes.map(function (scene) {
 	                return {
-	                    key: scene.id,
+	                    key: scene.id || scene.clientId,
 	                    cell: React.createElement(SceneListGridCell, { scene: scene }),
-	                    content: React.createElement(SceneControl, { scene: scene, key: scene.id })
+	                    content: React.createElement(SceneControl, { scene: scene, key: scene.id || scene.clientId })
 	                };
 	            });
 	            btns = React.createElement(
@@ -28650,51 +27938,52 @@
 	    }
 	});
 
-	function mapStateToProps(state) {
-	    return {};
-	}
-
 	function mapDispatchToProps(dispatch) {
 	    return {
 	        newClientScene: function newClientScene() {
 	            dispatch(SceneActions.newClient());
 	        },
-	        saveScene: function saveScene(sceneJson) {
-	            dispatch(SceneActions.create(sceneJson));
-	        },
-	        updateScene: function updateScene(sceneJson) {
-	            dispatch(SceneActions.update(sceneJson));
-	        },
-	        deleteScene: function deleteScene(id) {
-	            alert('broken needs client id');
-	            if (id) {
-	                dispatch(SceneActions.destroyClient(id));
+
+	        deleteScene: function deleteScene(id, clientId) {
+	            if (clientId) {
+	                dispatch(SceneActions.destroyClient(clientId));
 	            } else {
 	                dispatch(SceneActions.destroy(id));
 	            }
 	        },
-	        addCommand: function addCommand(sceneId, cmdType) {
-	            dispatch(SceneActions.addCommand(sceneId, cmdType));
+
+	        addCommand: function addCommand(sceneId, cmd) {
+	            dispatch(SceneActions.addCommand(sceneId, cmd));
+	        },
+
+	        //TODO: Check
+	        createdScene: function createdScene(sceneJson, clientId) {
+	            dispatch(SceneActions.created(sceneJson, clientId));
+	        },
+
+	        //TODO: Check
+	        updateScene: function updateScene(sceneJson) {
+	            dispatch(SceneActions.update(sceneJson));
 	        }
 	    };
 	}
 
-	module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(SceneList);
 
 /***/ },
-/* 255 */
+/* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(211);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'SceneListGridCell',
 	    prefix: 'b-'
 	});
-	__webpack_require__(256);
+	__webpack_require__(251);
 
 	var SceneListGridCell = React.createClass({
 	    displayName: 'SceneListGridCell',
@@ -28719,16 +28008,16 @@
 	module.exports = SceneListGridCell;
 
 /***/ },
-/* 256 */
+/* 251 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(257);
+	var content = __webpack_require__(252);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28745,10 +28034,10 @@
 	}
 
 /***/ },
-/* 257 */
+/* 252 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -28759,7 +28048,7 @@
 
 
 /***/ },
-/* 258 */
+/* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28768,13 +28057,13 @@
 
 	var React = __webpack_require__(1);
 	var Api = __webpack_require__(204);
-	var BEMHelper = __webpack_require__(211);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'SceneControl',
 	    prefix: 'b-'
 	});
-	__webpack_require__(259);
+	__webpack_require__(254);
 
 	var SceneControl = React.createClass({
 	    displayName: 'SceneControl',
@@ -28808,16 +28097,16 @@
 	module.exports = SceneControl;
 
 /***/ },
-/* 259 */
+/* 254 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(260);
+	var content = __webpack_require__(255);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -28834,10 +28123,10 @@
 	}
 
 /***/ },
-/* 260 */
+/* 255 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -28848,7 +28137,7 @@
 
 
 /***/ },
-/* 261 */
+/* 256 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28860,28 +28149,24 @@
 	var SaveBtn = __webpack_require__(223);
 	var InputValidationMixin = __webpack_require__(222);
 	var UniqueIdMixin = __webpack_require__(221);
-	var CommandInfo = __webpack_require__(262);
-	var CommandTypePicker = __webpack_require__(273);
-	var SceneActions = __webpack_require__(272);
-	var BEMHelper = __webpack_require__(211);
+	var CommandInfo = __webpack_require__(257);
+	var FeatureTypePicker = __webpack_require__(235);
+	var Feature = __webpack_require__(216);
+	var SceneActions = __webpack_require__(284);
+	var BEMHelper = __webpack_require__(209);
+	var Api = __webpack_require__(204);
+	var Uuid = __webpack_require__(287);
 
 	var classes = new BEMHelper({
 	    name: 'SceneInfo',
 	    prefix: 'b-'
 	});
-	__webpack_require__(274);
+	__webpack_require__(289);
 
 	var SceneInfo = React.createClass({
 	    displayName: 'SceneInfo',
 
 	    mixins: [InputValidationMixin, UniqueIdMixin],
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            //TODO: remove
-	            buttons: []
-	        };
-	    },
 
 	    getInitialState: function getInitialState() {
 	        return {
@@ -28890,21 +28175,9 @@
 	            address: this.props.scene.address || '',
 	            managed: this.props.scene.managed == undefined ? true : this.props.scene.managed,
 	            errors: this.props.errors,
-
-	            // true if the object has been modified
-	            dirty: false,
-
-	            saveButtonStatus: this.saveStatus
+	            saveButtonStatus: '',
+	            dirty: false
 	        };
-	    },
-
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        if (nextProps.errors) {
-	            this.setState({ errors: nextProps.errors });
-	        }
-	        if (nextProps.saveStatus) {
-	            this.setState({ saveButtonStatus: nextProps.saveStatus });
-	        }
 	    },
 
 	    toJson: function toJson() {
@@ -28918,25 +28191,37 @@
 
 	    saveScene: function saveScene() {
 	        this.setState({ errors: null });
-	        var self = this;
 
-	        //TODO: Broken
-	        alert('this is broken, need to know if scene is new vs on server');
-	        if (this.state.id === '') {
-	            //TODO: Update state on save, not dirty, has id not clientId
-	            this.props.saveScene(this.toJson());
+	        if (this.state.clientId !== '') {
+	            Api.sceneCreate(this.toJson(), function (err, data) {
+	                if (err) {
+	                    this.setState({ saveButtonStatus: 'error' });
+	                    return;
+	                }
+	                this.props.createdScene(data, this.props.scene.clientId);
+	            }.bind(this));
 	        } else {
-	            //TODO: Verify state correct after successfully updated
+
+	            //TODO: Fix
 	            this.props.updateScene(this.toJson());
 	        }
 	    },
 
 	    deleteScene: function deleteScene() {
-	        this.props.deleteScene(this.state.id);
+	        this.props.deleteScene(this.state.id, this.props.scene.clientId);
 	    },
 
-	    commandTypeChanged: function commandTypeChanged(cmdType) {
-	        this.props.addCommand(this.state.id, cmdType);
+	    featurePickerChanged: function featurePickerChanged(featureType) {
+	        // Current the only command we need for a scene is a FeatureSetAttrs, so we create a
+	        // FeatureSetAttrs command and return that
+	        var cmd = {
+	            clientId: Uuid.v4(),
+	            type: 'featureSetAttrs',
+	            attributes: {
+	                type: featureType
+	            }
+	        };
+	        this.props.addCommand(this.state.id, cmd);
 	    },
 
 	    _inputChanged: function _inputChanged(evt) {
@@ -28959,7 +28244,7 @@
 	                commandNodes = React.createElement(
 	                    'p',
 	                    null,
-	                    'To add commands, first save the scene.'
+	                    'To add actions, first save the scene.'
 	                );
 	            } else {
 	                var commands = this.props.scene.commands || [];
@@ -28967,23 +28252,32 @@
 	                    //TODO: We need to give commands an ID on the server so we can have a proper index
 	                    var key = Math.random();
 	                    var info = React.createElement(CommandInfo, {
-	                        isNew: command.isNew,
 	                        scene: self.props.scene,
 	                        key: key,
 	                        index: cmdIndex,
+	                        devices: self.props.devices,
 	                        scenes: self.props.scenes,
-	                        zones: self.props.zones,
-	                        buttons: self.props.buttons,
 	                        command: command });
 	                    cmdIndex++;
 	                    return info;
 	                });
+
+	                var excluded = {};
+	                excluded[Feature.Type.Sensor] = true;
+
+	                //TODO: Add back once buttons are supported
+	                excluded[Feature.Type.Button] = true;
+	                excluded[Feature.Type.CoolZone] = true;
+
 	                commandNodes = React.createElement(
 	                    'div',
 	                    null,
 	                    commandNodes,
-	                    'Add Command: ',
-	                    React.createElement(CommandTypePicker, { changed: this.commandTypeChanged })
+	                    React.createElement(
+	                        'div',
+	                        classes('feature-picker'),
+	                        React.createElement(FeatureTypePicker, { excluded: excluded, changed: this.featurePickerChanged })
+	                    )
 	                );
 	            }
 	        } else {
@@ -29072,7 +28366,7 @@
 	                React.createElement(
 	                    'a',
 	                    { 'data-toggle': 'collapse', href: "#" + this.uid("commands") },
-	                    'Edit Commands',
+	                    'Edit Actions',
 	                    React.createElement('i', classes('down-arrow', '', 'glyphicon glyphicon-menu-down'))
 	                ),
 	                saveBtn
@@ -29083,386 +28377,408 @@
 	                React.createElement(
 	                    'h3',
 	                    classes('command-header'),
-	                    'Commands'
+	                    'Actions'
 	                ),
 	                commandNodes
 	            )
 	        );
 	    }
 	});
-
 	module.exports = SceneInfo;
 
 /***/ },
-/* 262 */
+/* 257 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var ZoneSetLevelCommand = __webpack_require__(263);
-	var SceneSetCommand = __webpack_require__(267);
+	//var SceneSetCommand = require('./SceneSetCommand.jsx');
 	var SaveBtn = __webpack_require__(223);
-	var ButtonPressCommand = __webpack_require__(269);
-	var ButtonReleaseCommand = __webpack_require__(271);
+	var Feature = __webpack_require__(216);
+	var FeatureSetAttrsCommand = __webpack_require__(258);
 	var Api = __webpack_require__(204);
 	var Constants = __webpack_require__(206);
-	var SceneActions = __webpack_require__(272);
+	var SceneActions = __webpack_require__(284);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'CommandInfo',
+	    prefix: 'b-'
+	});
+	__webpack_require__(285);
 
 	var CommandInfo = React.createClass({
 	    displayName: 'CommandInfo',
 
+	    getInitialState: function getInitialState() {
+	        return {
+	            saveButtonStatus: '',
+	            commandModified: false
+	        };
+	    },
+
 	    deleteCommand: function deleteCommand() {
-	        //TODO: Show error in UI
-	        //TODO: Normalize middleware to handle showing error from API, standardize responses
-	        this.props.deleteCommand(this.props.scene.id, this.props.index, this.props.command.isNew);
+	        this.props.deleteCommand(this.props.scene.id, this.props.command.id, this.props.command.clientId);
 	    },
 
 	    saveCommand: function saveCommand() {
 	        var cmd = this.refs.cmd;
 	        this.setState({ errors: [] });
 
-	        var cmdJson = cmd.toJson();
-	        Api.sceneSaveCommand(this.props.scene.id, cmdJson, function (err, data) {
+	        var featureCmp = this.refs.featureCmp;
+	        var settings = featureCmp.getSettings();
+
+	        Api.sceneSaveCommand(this.props.scene.id, {
+	            type: 'featureSetAttrs',
+	            attributes: {
+	                id: settings.feature.id,
+	                type: settings.feature.type,
+	                attrs: settings.modifiedAttrs
+	            }
+	        }, function (err, data) {
 	            if (err) {
-	                cmd.setErrors(err.validationErrors);
+	                this.setState({
+	                    saveButtonStatus: 'error'
+	                });
 	                return;
 	            }
 
-	            this.props.savedCommand(cmdJson, this.props.scene.id, this.props.index);
+	            this.setState({ saveButtonStatus: 'success' });
+	            this.props.savedCommand(this.props.scene.id, this.props.command.clientId, data);
 	        }.bind(this));
+	    },
+
+	    commandChanged: function commandChanged() {
+	        this.setState({ commandModified: true });
 	    },
 
 	    render: function render() {
 	        var command = this.props.command;
 	        var saveBtn;
-	        if (this.props.command.isNew) {
+	        if (this.props.command.clientId && this.state.commandModified) {
 	            saveBtn = React.createElement(SaveBtn, {
 	                text: 'Save',
-	                status: '',
+	                status: this.state.saveButtonStatus,
 	                clicked: this.saveCommand });
 	        }
 
 	        var uiCmd;
 	        switch (command.type) {
-	            case 'buttonPress':
-	                uiCmd = React.createElement(ButtonPressCommand, {
-	                    ref: 'cmd',
-	                    disabled: !this.props.command.isNew,
-	                    errors: (command.errors || {}).validationErrors,
-	                    buttons: this.props.buttons,
-	                    command: command });
+	            case 'featureSetAttrs':
+	                uiCmd = React.createElement(FeatureSetAttrsCommand, {
+	                    ref: 'featureCmp',
+	                    command: command,
+	                    onAttrChanged: this.commandChanged,
+	                    devices: this.props.devices });
 	                break;
-	            case 'buttonRelease':
-	                uiCmd = React.createElement(ButtonReleaseCommand, {
-	                    ref: 'cmd',
-	                    disabled: !this.props.command.isNew,
-	                    errors: (command.errors || {}).validationErrors,
-	                    buttons: this.props.buttons,
-	                    command: command });
+	            default:
+	                console.error('unknown command type: ' + command.type);
 	                break;
-	            case 'zoneSetLevel':
-	                uiCmd = React.createElement(ZoneSetLevelCommand, {
-	                    ref: 'cmd',
-	                    disabled: !this.props.command.isNew,
-	                    errors: (command.errors || {}).validationErrors,
-	                    zones: this.props.zones,
-	                    command: command });
-	                break;
+	        }
+
+	        /*
+	        //TODO: Delete
+	        var uiCmd;
+	        switch (command.type) {
 	            case 'sceneSet':
-	                uiCmd = React.createElement(SceneSetCommand, {
-	                    ref: 'cmd',
-	                    disabled: !this.props.command.isNew,
-	                    parentSceneId: this.props.scene.id,
-	                    errors: (command.errors || {}).validationErrors,
-	                    scenes: this.props.scenes,
-	                    command: command });
+	                uiCmd = (<SceneSetCommand
+	                    ref="cmd"
+	                    disabled={!this.props.command.isNew}
+	                    parentSceneId={this.props.scene.id}
+	                    errors={(command.errors || {}).validationErrors}
+	                    scenes={this.props.scenes}
+	                    command={command} />
+	                )
 	                break;
 	            default:
 	                console.error('unknown command type: ' + command.type);
 	        }
+	        */
+
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-CommandInfo well well-sm clearfix' },
+	            classes('', '', 'well well-sm clearfix'),
 	            React.createElement(
 	                'button',
-	                { className: 'btn btn-link btnDelete pull-right', onClick: this.deleteCommand },
+	                _extends({}, classes('btn-delete', '', 'btn btn-link pull-right'), { onClick: this.deleteCommand }),
 	                React.createElement('i', { className: 'glyphicon glyphicon-trash' })
 	            ),
 	            uiCmd,
-	            saveBtn
+	            React.createElement(
+	                'div',
+	                classes('save-btn', '', 'pull-right'),
+	                saveBtn,
+	                React.createElement('div', { style: { clear: "both" } })
+	            )
 	        );
 	    }
 	});
 
 	function mapDispatchToProps(dispatch) {
 	    return {
-	        savedCommand: function savedCommand(cmdData, sceneId, cmdIndex) {
-	            dispatch({
-	                type: Constants.SCENE_COMMAND_SAVE_RAW,
-	                data: cmdData,
-	                sceneId: sceneId,
-	                cmdIndex: cmdIndex });
+	        savedCommand: function savedCommand(sceneId, cmdClientId, cmdData) {
+	            dispatch(SceneActions.savedCommand(sceneId, cmdClientId, cmdData));
 	        },
-	        deleteCommand: function deleteCommand(sceneId, cmdIndex, isNew) {
-	            dispatch(SceneActions.deleteCommand(sceneId, cmdIndex, isNew));
+	        deleteCommand: function deleteCommand(sceneId, cmdId, cmdClientId) {
+	            dispatch(SceneActions.deleteCommand(sceneId, cmdId, cmdClientId));
 	        }
 	    };
 	}
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(CommandInfo);
 
 /***/ },
-/* 263 */
+/* 258 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(222);
-	var UniqueIdMixin = __webpack_require__(221);
-	var ZonePicker = __webpack_require__(264);
-	var Api = __webpack_require__(204);
-	var ClassNames = __webpack_require__(234);
-	var uuid = __webpack_require__(265);
+	var Feature = __webpack_require__(216);
+	var BEMHelper = __webpack_require__(209);
+	var DevicePicker = __webpack_require__(259);
+	var FeaturePicker = __webpack_require__(260);
+	var FeatureControl = __webpack_require__(261);
 
-	var ZoneSetLevelCommand = module.exports = React.createClass({
-	    displayName: 'exports',
+	var classes = new BEMHelper({
+	    name: 'FeatureSetAttrsCommand',
+	    prefix: 'b-'
+	});
+	__webpack_require__(282);
 
-	    mixins: [UniqueIdMixin, InputValidationMixin],
+	var FeatureSetAttrsCommand = React.createClass({
+	    displayName: 'FeatureSetAttrsCommand',
+
 	    getInitialState: function getInitialState() {
-	        var attr = this.props.command.attributes;
-	        return {
-	            id: uuid.v4(),
-	            level: attr.Level || 0,
-	            r: attr.R || 0,
-	            g: attr.G || 0,
-	            b: attr.B || 0,
-	            zoneId: this.props.command.attributes.ZoneID || '',
-	            zoneOutput: '',
-	            errors: null
-	        };
-	    },
+	        var deviceId = null;
+	        var features = [];
+	        var feature = null;
 
-	    toJson: function toJson() {
-	        return {
-	            type: 'zoneSetLevel',
-	            id: this.state.id,
-	            attributes: {
-	                Level: parseFloat(this.state.level),
-	                R: parseInt(this.state.r, 10),
-	                G: parseInt(this.state.g, 10),
-	                B: parseInt(this.state.b, 10),
-	                ZoneID: this.state.zoneId
+	        var selectedFeatureId = this.props.command.attributes && this.props.command.attributes.id;
+	        if (selectedFeatureId) {
+	            // We have a feature ID, so we need to load the original values
+	            // the user saved, vs this being a new command the user hasn't
+	            // chosen any values for yet
+
+	            // Find the device the feature belongs to
+	            // TODO: Augment on server side
+	            for (var i = 0; i < this.props.devices.length; ++i) {
+	                var device = this.props.devices[i];
+	                for (var j = 0; j < device.features.length; ++j) {
+	                    if (device.features[j].id === selectedFeatureId) {
+	                        deviceId = device.id;
+	                        feature = device.features[j];
+	                        features = device.features;
+	                        break;
+	                    }
+	                }
+	                if (feature) {
+	                    break;
+	                }
 	            }
-	        };
-	    },
+	        } else {
+	            // If we only have one device, select it by default
+	            if (this.props.devices.length === 1) {
+	                var device = this.props.devices[0];
+	                deviceId = device.id;
 
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    zonePickerChanged: function zonePickerChanged(zone) {
-	        this.setState({
-	            zoneId: zone.id,
-	            zoneOutput: zone.output });
-	    },
-
-	    testLevel: function testLevel() {
-	        if (!this.state.zoneId) {
-	            return;
+	                // If we only have one feature that matches, we can just
+	                // select that automatically
+	                features = this.filterFeatures(device.id);
+	                if (features.length === 1) {
+	                    feature = features[0];
+	                }
+	            }
 	        }
 
-	        Api.zoneSetLevel(this.state.zoneId, 'setLevel', parseFloat(this.state.level), parseInt(this.state.r, 10), parseInt(this.state.g, 10), parseInt(this.state.b, 10), function (err, data) {
-	            //TODO: error
+	        return {
+	            deviceId: deviceId,
+	            features: features,
+	            feature: feature
+	        };
+	    },
+
+	    filterFeatures: function filterFeatures(deviceId) {
+	        var features = [];
+	        var featureType = this.props.command.attributes.type;
+	        for (var i = 0; i < this.props.devices.length; ++i) {
+	            var device = this.props.devices[i];
+
+	            if (device.id === deviceId) {
+	                (device.features || []).forEach(function (feature) {
+	                    if (feature.type === featureType) {
+	                        features.push(feature);
+	                    }
+	                });
+	                break;
+	            }
+	        }
+	        return features;
+	    },
+
+	    devicePickerChanged: function devicePickerChanged(deviceId) {
+	        var features = this.filterFeatures(deviceId);
+	        this.setState({
+	            deviceId: deviceId,
+	            features: features
 	        });
 	    },
 
+	    featurePickerChanged: function featurePickerChanged(featureId) {
+	        var feature;
+	        var features = this.state.features;
+	        for (var i = 0; i < features.length; ++i) {
+	            if (features[i].id === featureId) {
+	                feature = features[i];
+	                break;
+	            }
+	        }
+
+	        this.setState({ feature: feature });
+	    },
+
+	    attrChanged: function attrChanged(feature, attr) {
+	        this.props.onAttrChanged && this.props.onAttrChanged(feature, attr);
+	    },
+
+	    getSettings: function getSettings() {
+	        var featureControl = this.refs.featureControl;
+
+	        return {
+	            feature: this.state.feature,
+	            modifiedAttrs: featureControl.modifiedAttrs()
+	        };
+	    },
+
 	    render: function render() {
-	        //TODO: Only show RGB if this is an OTRGB
-	        //TODO: Insert RGB Picker in UI as well
-	        //TODO: For binary outputs should have a picker on/off not 0-100
+	        var command = this.props.command;
+	        var body, header;
+
+	        var featurePicker;
+	        var noFeatures;
+	        if (this.state.features.length > 0) {
+	            featurePicker = React.createElement(
+	                'div',
+	                classes('feature-picker'),
+	                React.createElement(
+	                    'label',
+	                    null,
+	                    'Feature:'
+	                ),
+	                React.createElement(FeaturePicker, {
+	                    disabled: this.props.command.id,
+	                    features: this.state.features,
+	                    defaultId: (this.state.feature || {}).id,
+	                    changed: this.featurePickerChanged })
+	            );
+	        } else if (this.state.deviceId) {
+	            // User has chosen a device, but it doesn't have any features that
+	            // match the feature type
+	            noFeatures = React.createElement(
+	                'div',
+	                null,
+	                'No matching feature found on this device'
+	            );
+	        }
+
+	        var featureControl;
+	        if (this.state.feature) {
+	            featureControl = React.createElement(FeatureControl, {
+	                hideReadOnlyAttrs: true,
+	                ref: 'featureControl',
+	                key: this.state.feature.id,
+	                feature: this.state.feature,
+	                onAttrChanged: this.attrChanged,
+	                attrs: Feature.cloneAttrs(command.attributes.attrs)
+	            });
+	        }
+
+	        body = React.createElement(
+	            'div',
+	            null,
+	            React.createElement(
+	                'div',
+	                classes('device-picker'),
+	                React.createElement(
+	                    'label',
+	                    null,
+	                    'Device:'
+	                ),
+	                React.createElement(DevicePicker, {
+	                    disabled: this.props.command.id,
+	                    devices: this.props.devices,
+	                    defaultId: this.state.deviceId,
+	                    changed: this.devicePickerChanged })
+	            ),
+	            featurePicker,
+	            noFeatures,
+	            featureControl
+	        );
+
 	        return React.createElement(
 	            'div',
-	            { className: 'cmp-ZoneSetLevelCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Zone Set Level'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_ZoneID") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_ZoneID") },
-	                    'Zone*'
-	                ),
-	                React.createElement(ZonePicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.zonePickerChanged,
-	                    zones: this.props.zones,
-	                    zoneId: this.state.zoneId }),
-	                this.errMsg("attributes_ZoneID")
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_Level") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_Level") },
-	                    'Level [0-100]'
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: 'input-group' },
-	                    React.createElement('input', {
-	                        disabled: this.props.disabled,
-	                        value: this.state.level,
-	                        'data-statepath': 'level',
-	                        onChange: this.changed,
-	                        className: 'level form-control',
-	                        type: 'number',
-	                        id: this.uid("attributes_Level") }),
-	                    React.createElement(
-	                        'span',
-	                        { className: 'input-group-btn' },
-	                        React.createElement(
-	                            'button',
-	                            { className: 'btn btn-primary', onClick: this.testLevel },
-	                            'Test Level'
-	                        )
-	                    ),
-	                    this.errMsg("attributes_Level")
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: ClassNames({
-	                        clearfix: true,
-	                        rgbExpander: true,
-	                        hidden: this.state.zoneOutput !== 'rgb' }) },
-	                React.createElement(
-	                    'a',
-	                    { 'data-toggle': 'collapse', href: "#" + this.uid("rgbExpand") },
-	                    'RGB',
-	                    React.createElement('i', { className: 'glyphicon glyphicon-menu-down' })
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'collapse rbgExpand', id: this.uid("rgbExpand") },
-	                React.createElement(
-	                    'p',
-	                    null,
-	                    React.createElement(
-	                        'strong',
-	                        null,
-	                        'NOTE:'
-	                    ),
-	                    ' To set R/G/B values, leave the "Value" field set to 0. If "Value" is non-zero then the R/G/B values are ignored and instead R/G/B will all be set to 255 * (Value/100)'
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "attributes_R") },
-	                    React.createElement(
-	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("attributes_R") },
-	                        'Level - Red [0-255]'
-	                    ),
-	                    React.createElement('input', {
-	                        disabled: this.props.disabled,
-	                        value: this.state.r,
-	                        'data-statepath': 'r',
-	                        onChange: this.changed,
-	                        className: 'r form-control',
-	                        type: 'number',
-	                        id: this.uid("attributes_R") }),
-	                    this.errMsg("attributes_R")
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "attributes_G") },
-	                    React.createElement(
-	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("attributes_G") },
-	                        'Level - Green [0-255]'
-	                    ),
-	                    React.createElement('input', {
-	                        disabled: this.props.disabled,
-	                        value: this.state.g,
-	                        'data-statepath': 'g',
-	                        onChange: this.changed,
-	                        className: 'g form-control',
-	                        type: 'number',
-	                        id: this.uid("attributes_G") }),
-	                    this.errMsg("attributes_G")
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { className: this.addErr("form-group", "attributes_B") },
-	                    React.createElement(
-	                        'label',
-	                        { className: 'control-label', htmlFor: this.uid("attributes_B") },
-	                        'Level - Blue [0-255]'
-	                    ),
-	                    React.createElement('input', {
-	                        disabled: this.props.disabled,
-	                        value: this.state.b,
-	                        'data-statepath': 'b',
-	                        onChange: this.changed,
-	                        className: 'b form-control',
-	                        type: 'number',
-	                        id: this.uid("attributes_B") }),
-	                    this.errMsg("attributes_B")
-	                )
-	            )
+	            classes(),
+	            body
 	        );
 	    }
 	});
-	module.exports = ZoneSetLevelCommand;
+	module.exports = FeatureSetAttrsCommand;
 
 /***/ },
-/* 264 */
+/* 259 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 
-	var ZonePicker = React.createClass({
-	    displayName: 'ZonePicker',
+	var DevicePicker = React.createClass({
+	    displayName: 'DevicePicker',
 
-	    getInitialState: function getInitialState() {
+	    getDefaultProps: function getDefaultProps() {
 	        return {
-	            value: this.props.zoneId || ''
+	            devices: []
 	        };
 	    },
 
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.defaultId || ''
+	        };
+	    },
+
+	    //TODO: If only one item in the list, select by default on load
+	    //TODO: if output or type is unknown need to update zone control to be
+	    //able to handle those values
 	    selected: function selected(evt) {
 	        this.setState({ value: evt.target.value });
-
-	        for (var i = 0; i < this.props.zones.length; ++i) {
-	            if (this.props.zones[i].id === evt.target.value) {
-	                this.props.changed && this.props.changed(this.props.zones[i]);
-	                return;
-	            }
-	        }
+	        this.props.changed && this.props.changed(evt.target.value);
 	    },
 
 	    render: function render() {
 	        var options = [];
-	        this.props.zones.forEach(function (zone) {
+	        this.props.devices.forEach(function (device) {
+	            var id = device.id;
 	            options.push(React.createElement(
 	                'option',
-	                { key: zone.id, value: zone.id },
-	                zone.name
+	                { key: id, value: id },
+	                device.name
 	            ));
 	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ZonePicker' },
-	            React.createElement(
+
+	        var noDevices;
+	        var picker;
+	        if (this.props.devices.length === 0) {
+	            noDevices = React.createElement(
+	                'div',
+	                null,
+	                'No devices found.'
+	            );
+	        } else {
+	            picker = React.createElement(
 	                'select',
 	                {
 	                    disabled: this.props.disabled,
@@ -29472,17 +28788,1323 @@
 	                React.createElement(
 	                    'option',
 	                    { value: '' },
-	                    'Select a Zone...'
+	                    'Select a device...'
 	                ),
 	                options
+	            );
+	        }
+	        return React.createElement(
+	            'div',
+	            { className: 'b-DevicePicker' },
+	            picker,
+	            noDevices
+	        );
+	    }
+	});
+	module.exports = DevicePicker;
+
+/***/ },
+/* 260 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var React = __webpack_require__(1);
+
+	var FeaturePicker = React.createClass({
+	    displayName: "FeaturePicker",
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            features: []
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.defaultId
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.features.forEach(function (feature) {
+	            options.push(React.createElement(
+	                "option",
+	                { key: feature.id, value: feature.id },
+	                feature.name
+	            ));
+	        });
+
+	        var noFeatures;
+	        var picker;
+	        if (this.props.features.length === 0) {
+	            noFeatures = React.createElement(
+	                "div",
+	                null,
+	                "No features found."
+	            );
+	        } else {
+	            picker = React.createElement(
+	                "select",
+	                {
+	                    disabled: this.props.disabled,
+	                    className: "form-control",
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    "option",
+	                    { value: "" },
+	                    "Select a feature..."
+	                ),
+	                options
+	            );
+	        }
+	        return React.createElement(
+	            "div",
+	            { className: "b-FeaturePicker" },
+	            picker,
+	            noFeatures
+	        );
+	    }
+	});
+	module.exports = FeaturePicker;
+
+/***/ },
+/* 261 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Attribute = __webpack_require__(217);
+	var BrightnessAttr = __webpack_require__(262);
+	var OnOffAttr = __webpack_require__(265);
+	var TempAttr = __webpack_require__(268);
+	var HueAttr = __webpack_require__(271);
+	var OffsetAttr = __webpack_require__(274);
+	var OpenClosedAttr = __webpack_require__(277);
+	var Feature = __webpack_require__(216);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'FeatureControl',
+	    prefix: 'b-'
+	});
+	__webpack_require__(280);
+
+	var FeatureControl = React.createClass({
+	    displayName: 'FeatureControl',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            hideReadOnlyAttrs: false
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        this._modifiedAttrs = {};
+
+	        // Need to make sure we clone the attributes so we don't affect other
+	        // instances of the feature control that are using this feature
+	        return {
+	            attrs: this.props.attrs || Feature.cloneAttrs(this.props.feature.attrs)
+	        };
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this.props.didMount && this.props.didMount(this);
+	    },
+
+	    componentWillUnmount: function componentWillUnmount() {
+	        this.props.willUnmount && this.props.willUnmount(this);
+	    },
+
+	    monitorData: function monitorData(data) {
+	        if (!data || !data.features) {
+	            return;
+	        }
+	        var attrs = data.features[this.props.id];
+	        if (attrs == undefined) {
+	            return;
+	        }
+	        this.setState({ attrs: attrs });
+	    },
+
+	    setAttrs: function setAttrs(attr, value) {
+	        //TODO: This should just keep track of the attributes, how to have an unset
+	        //state for all UI elements, including slider?
+	        var newAttr = Object.assign({}, attr);
+	        newAttr.value = value;
+
+	        // Keep track of all the changes
+	        this._modifiedAttrs[newAttr.localId] = newAttr;
+
+	        this.props.onAttrChanged && this.props.onAttrChanged(this.props.feature, newAttr);
+	    },
+
+	    modifiedAttrs: function modifiedAttrs() {
+	        return this._modifiedAttrs;
+	    },
+
+	    render: function render() {
+	        var attributes = [];
+	        var onOff, openClosed;
+
+	        // Features can have multiple attributes. For example a lightzone feature can have
+	        // onoff, brightness, hue attributes, each one has a LocalID so that we can distinguish
+	        // between the various attributes
+	        var localIDs = Object.keys(this.state.attrs);
+
+	        localIDs.forEach(function (localID) {
+	            var attribute = this.state.attrs[localID];
+
+	            // Check to see if we should skip read only attributes
+	            if (this.props.hideReadOnlyAttrs && attribute.perms === Attribute.Perms.ReadOnly) {
+	                return;
+	            }
+
+	            // For each type of attribute we have a component that can render
+	            // the specific type of data e.g. a slider for brightness, rgb
+	            // picker for the hue
+	            switch (attribute.type) {
+	                case Attribute.Type.OnOff:
+	                    onOff = React.createElement(
+	                        'div',
+	                        classes('on-off', '', 'pull-right'),
+	                        React.createElement(OnOffAttr, {
+	                            onToggle: this.setAttrs,
+	                            key: localID,
+	                            attr: attribute })
+	                    );
+	                    break;
+	                case Attribute.Type.OpenClose:
+	                    openClosed = React.createElement(
+	                        'div',
+	                        classes('open-closed', '', 'pull-right'),
+	                        React.createElement(OpenClosedAttr, {
+	                            onToggle: this.setAttrs,
+	                            key: localID,
+	                            attr: attribute })
+	                    );
+	                    break;
+	                case Attribute.Type.Brightness:
+	                    attributes.push(React.createElement(BrightnessAttr, {
+	                        onBrightnessChanged: this.setAttrs,
+	                        key: localID,
+	                        attr: attribute }));
+	                    break;
+
+	                case Attribute.Type.Hue:
+	                    attributes.push(React.createElement(HueAttr, {
+	                        onHueChanged: this.setAttrs,
+	                        key: localID,
+	                        attr: attribute }));
+	                    break;
+
+	                case Attribute.Type.Offset:
+	                    attributes.push(React.createElement(OffsetAttr, {
+	                        onOffsetChanged: this.setAttrs,
+	                        key: localID,
+	                        attr: attribute }));
+	                    break;
+
+	                case Attribute.Type.Temperature:
+	                    attributes.push(React.createElement(TempAttr, {
+	                        onTempChanged: this.setAttrs,
+	                        key: localID,
+	                        attr: attribute }));
+	                    break;
+
+	                default:
+	                    console.error('unknown attribute type: ' + attribute.type);
+	            }
+	        }.bind(this));
+
+	        return React.createElement(
+	            'div',
+	            classes(''),
+	            React.createElement(
+	                'div',
+	                { className: 'clearfix' },
+	                React.createElement(
+	                    'div',
+	                    classes('name', '', 'pull-left'),
+	                    this.props.feature.name
+	                ),
+	                onOff,
+	                openClosed
+	            ),
+	            attributes
+	        );
+	    }
+	});
+	module.exports = FeatureControl;
+
+/***/ },
+/* 262 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var Attribute = __webpack_require__(217);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'BrightnessAttr',
+	    prefix: 'b-'
+	});
+	__webpack_require__(263);
+
+	var BrightnessAttr = React.createClass({
+	    displayName: 'BrightnessAttr',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.attr.value
+	        };
+	    },
+
+	    initSlider: function initSlider(step, min, max) {
+	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-BrightnessAttr__slider');
+	        if (!sliders || sliders.length === 0) {
+	            return null;
+	        }
+
+	        var slider = sliders[0];
+	        noUiSlider.create(slider, {
+	            connect: [true, false],
+	            start: 0,
+	            animate: false,
+	            step: step,
+	            orientation: 'horizontal',
+	            range: {
+	                min: min,
+	                max: max
+	            }
+	        });
+	        slider.noUiSlider.set(this.state.value);
+	        slider.noUiSlider.on('slide', this.sliderChanged.bind(this, slider.noUiSlider));
+	        slider.noUiSlider.on('change', this.sliderEnd.bind(this, slider.noUiSlider));
+
+	        return slider.noUiSlider;
+	    },
+
+	    sliderChanged: function sliderChanged(slider) {
+	        this.setState({ value: parseInt(slider.get(), 10) });
+	    },
+
+	    sliderEnd: function sliderEnd(slider) {
+	        this.props.onBrightnessChanged && this.props.onBrightnessChanged(this.props.attr, parseInt(slider.get(), 10));
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this._slider = this.initSlider(this.props.attr.step, this.props.attr.min, this.props.attr.max);
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.attr && nextProps.attr != this.props.attr) {
+	            var newLevel = nextProps.attr.value;
+	            if (newLevel == null) {
+	                return;
+	            }
+	            this.setState({ value: newLevel });
+	            this._slider && this._slider.set(Math.round(newLevel));
+	        }
+	    },
+
+	    setAttrs: function setAttrs(attrs) {
+	        this.setState({ attrs: attrs });
+	    },
+
+	    render: function render() {
+	        var val = '-';
+	        if (this.state.value != null) {
+	            val = this.state.value + '%';
+	        }
+
+	        var readOnly = this.props.attr.perms == Attribute.Perms.ReadOnly;
+	        return React.createElement(
+	            'div',
+	            classes(''),
+	            React.createElement(
+	                'div',
+	                classes('name'),
+	                this.props.attr.name
+	            ),
+	            React.createElement('div', classes('slider', readOnly ? 'read-only' : '')),
+	            React.createElement(
+	                'span',
+	                classes('value'),
+	                val
 	            )
 	        );
 	    }
 	});
-	module.exports = ZonePicker;
+	module.exports = BrightnessAttr;
+
+/***/ },
+/* 263 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(264);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./BrightnessAttr.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./BrightnessAttr.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 264 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-BrightnessAttr {\n  position: relative;\n  height: 90px;\n}\n.b-BrightnessAttr__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 10px;\n}\n.b-BrightnessAttr__slider--read-only {\n  visibility: hidden;\n}\n.b-BrightnessAttr__name {\n  float: left;\n  font-size: 15px;\n  margin-left: 31px;\n  margin-top: 19px;\n}\n.b-BrightnessAttr__value {\n  float: right;\n  display: inline-block;\n  margin-right: 31px;\n  font-size: 40px;\n}\n.b-BrightnessAttr__value--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
 
 /***/ },
 /* 265 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'OnOffAttr',
+	    prefix: 'b-'
+	});
+	__webpack_require__(266);
+
+	var OnOffAttr = React.createClass({
+	    displayName: 'OnOffAttr',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.attr.value
+	        };
+	    },
+
+	    initSwitch: function initSwitch(slider) {
+	        var sw = $($(ReactDOM.findDOMNode(this)).find('.switch-indeterminate')[0]);
+
+	        var options = {
+	            onText: 'On',
+	            offText: 'Off'
+	        };
+	        if (this.state.value != null) {
+	            options.state = this.state.value === 2;
+	        }
+
+	        sw.bootstrapSwitch(options);
+	        sw.on('switchChange.bootstrapSwitch', function (event, state) {
+	            this.toggleOn(slider);
+	        }.bind(this));
+
+	        // For some reason have to set this explicitly, not working in options
+	        sw.bootstrapSwitch('state', options.state, true);
+	        return sw;
+	    },
+
+	    toggleOn: function toggleOn(slider) {
+	        var newValue;
+	        var off = 1;
+	        var on = 2;
+	        if (this.state.value == null) {
+	            newValue = off;
+	        } else if (this.state.value === on) {
+	            newValue = off;
+	        } else {
+	            newValue = on;
+	        }
+	        this.setState({ value: newValue });
+	        this.props.onToggle && this.props.onToggle(this.props.attr, newValue);
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this._switch = this.initSwitch(this._slider);
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.attr && nextProps.attr != this.props.attr) {
+	            var state = null;
+	            if (nextProps.attr.value != null) {
+	                state = nextProps.attr.value === 2;
+	            }
+	            this._switch && this._switch.bootstrapSwitch('state', state, true);
+	        }
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            classes(''),
+	            React.createElement('input', {
+	                className: 'switch-indeterminate',
+	                type: 'checkbox',
+	                defaultChecked: true,
+	                'data-indeterminate': 'true' })
+	        );
+	    }
+	});
+	module.exports = OnOffAttr;
+
+/***/ },
+/* 266 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(267);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./OnOffAttr.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./OnOffAttr.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 267 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, "", ""]);
+
+	// exports
+
+
+/***/ },
+/* 268 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var Attribute = __webpack_require__(217);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'TempAttr',
+	    prefix: 'b-'
+	});
+	__webpack_require__(269);
+
+	var TempAttr = React.createClass({
+	    displayName: 'TempAttr',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.attr.value
+	        };
+	    },
+
+	    initSlider: function initSlider(step, min, max) {
+	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-TempAttr__slider');
+	        if (!sliders || sliders.length === 0) {
+	            return null;
+	        }
+
+	        var slider = sliders[0];
+	        noUiSlider.create(slider, {
+	            connect: [true, false],
+	            start: 0,
+	            animate: false,
+	            step: step,
+	            orientation: 'horizontal',
+	            range: {
+	                min: min,
+	                max: max
+	            }
+	        });
+	        slider.noUiSlider.set(this.state.value);
+	        slider.noUiSlider.on('slide', this.sliderChanged.bind(this, slider.noUiSlider));
+	        slider.noUiSlider.on('change', this.sliderEnd.bind(this, slider.noUiSlider));
+
+	        return slider.noUiSlider;
+	    },
+
+	    sliderChanged: function sliderChanged(slider) {
+	        this.setState({ value: parseInt(slider.get(), 10) });
+	    },
+
+	    sliderEnd: function sliderEnd(slider) {
+	        this.props.onTempChanged && this.props.onTempChanged(this.props.attr, parseInt(slider.get(), 10));
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this._slider = this.initSlider(this.props.attr.step, this.props.attr.min, this.props.attr.max);
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.attr && nextProps.attr != this.props.attr) {
+	            var newLevel = nextProps.attr.value;
+	            if (newLevel == null) {
+	                return;
+	            }
+	            this.setState({ value: newLevel });
+	            this._slider && this._slider.set(Math.round(newLevel));
+	        }
+	    },
+
+	    setAttrs: function setAttrs(attrs) {
+	        this.setState({ attrs: attrs });
+	    },
+
+	    render: function render() {
+	        var val = '-';
+	        if (this.state.value != null) {
+	            val = this.state.value + '°F';
+	        }
+
+	        var readOnly = this.props.attr.perms == Attribute.Perms.ReadOnly;
+	        return React.createElement(
+	            'div',
+	            classes('', '', 'clearfix'),
+	            React.createElement(
+	                'div',
+	                classes('name'),
+	                this.props.attr.name
+	            ),
+	            React.createElement('div', classes('slider', readOnly ? 'read-only' : '')),
+	            React.createElement(
+	                'span',
+	                classes('value'),
+	                val
+	            )
+	        );
+	    }
+	});
+	module.exports = TempAttr;
+
+/***/ },
+/* 269 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(270);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./TempAttr.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./TempAttr.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 270 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-TempAttr {\n  position: relative;\n  height: 90px;\n}\n.b-TempAttr__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 10px;\n}\n.b-TempAttr__slider--read-only {\n  visibility: hidden;\n}\n.b-TempAttr__name {\n  float: left;\n  font-size: 15px;\n  margin-left: 31px;\n  margin-top: 19px;\n}\n.b-TempAttr__value {\n  float: right;\n  display: inline-block;\n  margin-right: 31px;\n  font-size: 40px;\n}\n.b-TempAttr__value--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 271 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var Attribute = __webpack_require__(217);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'HueAttr',
+	    prefix: 'b-'
+	});
+	__webpack_require__(272);
+
+	var HueAttr = React.createClass({
+	    displayName: 'HueAttr',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.attr.value
+	        };
+	    },
+
+	    initSlider: function initSlider() {
+	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-HueAttr__slider');
+	        sliders.ColorPickerSliders({
+	            color: "rgb(36, 170, 242)",
+	            flat: true,
+	            swatches: false,
+	            order: {
+	                hsl: 1
+	            }
+	        });
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this._slider = this.initSlider();
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.attr && nextProps.attr != this.props.attr) {
+	            var newLevel = nextProps.attr.value;
+	            if (newLevel == null) {
+	                return;
+	            }
+	            this.setState({ value: newLevel });
+	            //this._slider && this._slider.set(Math.round(newLevel));
+	        }
+	    },
+
+	    setAttrs: function setAttrs(attrs) {
+	        this.setState({ attrs: attrs });
+	    },
+
+	    render: function render() {
+	        var val = '-';
+	        if (this.state.value != null) {
+	            val = this.state.value + '%';
+	        }
+
+	        var readOnly = this.props.attr.perms == Attribute.Perms.ReadOnly;
+	        return React.createElement(
+	            'div',
+	            classes(''),
+	            React.createElement('div', classes('slider', readOnly ? 'read-only' : ''))
+	        );
+	    }
+	});
+	module.exports = HueAttr;
+
+/***/ },
+/* 272 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(273);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HueAttr.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HueAttr.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 273 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-HueAttr {\n  position: relative;\n  height: 130px;\n}\n.b-HueAttr__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 10px;\n}\n.b-HueAttr__slider--read-only {\n  visibility: hidden;\n}\n.b-HueAttr__name {\n  float: left;\n  font-size: 15px;\n  margin-left: 31px;\n  margin-top: 19px;\n}\n.b-HueAttr__value {\n  float: right;\n  display: inline-block;\n  margin-right: 31px;\n  font-size: 40px;\n}\n.b-HueAttr__value--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 274 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var Attribute = __webpack_require__(217);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'OffsetAttr',
+	    prefix: 'b-'
+	});
+	__webpack_require__(275);
+
+	var OffsetAttr = React.createClass({
+	    displayName: 'OffsetAttr',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.attr.value
+	        };
+	    },
+
+	    initSlider: function initSlider(step, min, max) {
+	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-OffsetAttr__slider');
+	        if (!sliders || sliders.length === 0) {
+	            return null;
+	        }
+
+	        var slider = sliders[0];
+	        noUiSlider.create(slider, {
+	            connect: [true, false],
+	            start: 0,
+	            animate: false,
+	            step: step,
+	            orientation: 'horizontal',
+	            range: {
+	                min: min,
+	                max: max
+	            }
+	        });
+	        slider.noUiSlider.set(this.state.value);
+	        slider.noUiSlider.on('slide', this.sliderChanged.bind(this, slider.noUiSlider));
+	        slider.noUiSlider.on('change', this.sliderEnd.bind(this, slider.noUiSlider));
+
+	        return slider.noUiSlider;
+	    },
+
+	    sliderChanged: function sliderChanged(slider) {
+	        this.setState({ value: parseInt(slider.get(), 10) });
+	    },
+
+	    sliderEnd: function sliderEnd(slider) {
+	        this.props.onOffsetChanged && this.props.onOffsetChanged(this.props.attr, parseInt(slider.get(), 10));
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this._slider = this.initSlider(this.props.attr.step, this.props.attr.min, this.props.attr.max);
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.attr && nextProps.attr != this.props.attr) {
+	            var newLevel = nextProps.attr.value;
+	            if (newLevel == null) {
+	                return;
+	            }
+	            this.setState({ value: newLevel });
+	            this._slider && this._slider.set(Math.round(newLevel));
+	        }
+	    },
+
+	    setAttrs: function setAttrs(attrs) {
+	        this.setState({ attrs: attrs });
+	    },
+
+	    render: function render() {
+	        var val = '-';
+	        if (this.state.value != null) {
+	            val = this.state.value + '%';
+	        }
+
+	        var readOnly = this.props.attr.perms == Attribute.Perms.ReadOnly;
+	        return React.createElement(
+	            'div',
+	            classes('', '', 'clearfix'),
+	            React.createElement(
+	                'div',
+	                classes('name'),
+	                this.props.attr.name
+	            ),
+	            React.createElement('div', classes('slider', readOnly ? 'read-only' : '')),
+	            React.createElement(
+	                'span',
+	                classes('value'),
+	                val
+	            )
+	        );
+	    }
+	});
+	module.exports = OffsetAttr;
+
+/***/ },
+/* 275 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(276);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./OffsetAttr.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./OffsetAttr.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 276 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-OffsetAttr {\n  position: relative;\n  height: 90px;\n}\n.b-OffsetAttr__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 10px;\n}\n.b-OffsetAttr__name {\n  float: left;\n  font-size: 15px;\n  margin-left: 31px;\n  margin-top: 19px;\n}\n.b-OffsetAttr__value {\n  float: right;\n  display: inline-block;\n  margin-right: 31px;\n  font-size: 40px;\n}\n.b-OffsetAttr__value--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 277 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'OpenClosedAttr',
+	    prefix: 'b-'
+	});
+	__webpack_require__(278);
+
+	var OpenClosedAttr = React.createClass({
+	    displayName: 'OpenClosedAttr',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.attr.value
+	        };
+	    },
+
+	    initSwitch: function initSwitch(slider) {
+	        var sw = $($(ReactDOM.findDOMNode(this)).find('.switch-indeterminate')[0]);
+
+	        var options = {
+	            onText: 'Open',
+	            offText: 'Closed'
+	        };
+	        if (this.state.value != null) {
+	            options.state = this.state.value === 2;
+	        }
+
+	        sw.bootstrapSwitch(options);
+	        sw.on('switchChange.bootstrapSwitch', function (event, state) {
+	            this.toggleOn(slider);
+	        }.bind(this));
+
+	        // For some reason have to set this explicitly, not working in options
+	        sw.bootstrapSwitch('state', options.state, true);
+
+	        return sw;
+	    },
+
+	    toggleOn: function toggleOn(slider) {
+	        var newValue;
+	        var closed = 1;
+	        var open = 2;
+	        if (this.state.value == null) {
+	            newValue = closed;
+	        } else if (this.state.value === open) {
+	            newValue = closed;
+	        } else {
+	            newValue = open;
+	        }
+	        this.setState({ value: newValue });
+	        this.props.onToggle && this.props.onToggle(this.props.attr, newValue);
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this._switch = this.initSwitch(this._slider);
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.attr && nextProps.attr != this.props.attr) {
+	            var state = null;
+	            if (nextProps.attr.value != null) {
+	                state = nextProps.attr.value === 2;
+	            }
+	            this._switch && this._switch.bootstrapSwitch('state', state, true);
+	        }
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            classes(''),
+	            React.createElement('input', {
+	                className: 'switch-indeterminate',
+	                type: 'checkbox',
+	                defaultChecked: true,
+	                'data-indeterminate': 'true' })
+	        );
+	    }
+	});
+	module.exports = OpenClosedAttr;
+
+/***/ },
+/* 278 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(279);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./OpenClosedAttr.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./OpenClosedAttr.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 279 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, "", ""]);
+
+	// exports
+
+
+/***/ },
+/* 280 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(281);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureControl.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureControl.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 281 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-FeatureControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-FeatureControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 242px;\n  margin-top: 3px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 282 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(283);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureSetAttrsCommand.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureSetAttrsCommand.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 283 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-FeatureSetAttrsCommand__device-picker {\n  margin-top: 12px;\n  margin-bottom: 12px;\n}\n.b-FeatureSetAttrsCommand__device-picker label {\n  font-weight: 200;\n}\n.b-FeatureSetAttrsCommand__feature-picker {\n  margin-bottom: 12px;\n}\n.b-FeatureSetAttrsCommand__feature-picker label {\n  font-weight: 200;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 284 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(206);
+	var Api = __webpack_require__(204);
+
+	var SceneActions = {
+
+	    loadAll: function loadAll() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_LOAD_ALL });
+
+	            Api.sceneLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+
+	                dispatch({ type: Constants.SCENE_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    },
+
+	    created: function created(sceneJson, clientId) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_CREATE_RAW, data: sceneJson, id: sceneJson.id, clientId: clientId });
+	        };
+	    },
+
+	    update: function update(sceneJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_UPDATE, id: sceneJson.id });
+
+	            Api.sceneUpdate(sceneJson, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err, id: sceneJson.id });
+	                    return;
+	                }
+	                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data, id: sceneJson.id, sceneJson: sceneJson });
+	            });
+	        };
+	    },
+
+	    destroyClient: function destroyClient(clientId) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_DESTROY, clientId: clientId });
+	            dispatch({ type: Constants.SCENE_DESTROY_RAW, clientId: clientId });
+	        };
+	    },
+
+	    destroy: function destroy(id) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_DESTROY, id: id });
+
+	            Api.sceneDestroy(id, function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.SCENE_DESTROY_FAIL, err: err, id: id });
+	                    return;
+	                }
+	                dispatch({ type: Constants.SCENE_DESTROY_RAW, data: data, id: id });
+	            });
+	        };
+	    },
+
+	    addCommand: function addCommand(sceneId, cmd) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.SCENE_COMMAND_ADD, sceneId: sceneId, cmd: cmd });
+	        };
+	    },
+
+	    savedCommand: function savedCommand(sceneId, cmdClientId, cmdJson) {
+	        return function (dispatch) {
+	            dispatch({
+	                type: Constants.SCENE_COMMAND_SAVE_RAW,
+	                sceneId: sceneId,
+	                cmdClientId: cmdClientId,
+	                cmdJson: cmdJson
+	            });
+	        };
+	    },
+
+	    deleteCommand: function deleteCommand(sceneId, cmdId, cmdClientId) {
+	        return function (dispatch) {
+	            dispatch({
+	                type: Constants.SCENE_COMMAND_DELETE,
+	                cmdId: cmdId,
+	                cmdClientId: cmdClientId,
+	                sceneId: sceneId });
+
+	            if (cmdClientId) {
+	                // Client only, not saved on the server
+	                dispatch({
+	                    type: Constants.SCENE_COMMAND_DELETE_RAW,
+	                    sceneId: sceneId,
+	                    cmdClientId: cmdClientId });
+	                return;
+	            }
+
+	            Api.sceneDeleteCommand(sceneId, cmdId, function (err, data) {
+	                if (err) {
+	                    dispatch({
+	                        type: Constants.SCENE_COMMAND_DELETE_FAIL,
+	                        sceneId: sceneId,
+	                        cmdId: cmdId,
+	                        err: err });
+	                    return;
+	                }
+	                dispatch({
+	                    type: Constants.SCENE_COMMAND_DELETE_RAW,
+	                    sceneId: sceneId,
+	                    cmdId: cmdId });
+	            });
+	        };
+	    },
+
+	    newClient: function newClient() {
+	        return {
+	            type: Constants.SCENE_NEW_CLIENT
+	        };
+	    }
+	};
+	module.exports = SceneActions;
+
+/***/ },
+/* 285 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(286);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./CommandInfo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./CommandInfo.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 286 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-CommandInfo__btn-delete {\n  padding-right: 0;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
 	//     uuid.js
@@ -29493,7 +30115,7 @@
 	// Unique ID creation requires a high quality random # generator.  We feature
 	// detect to determine the best RNG source, normalizing to a function that
 	// returns 128-bits of randomness, since that's what's usually required
-	var _rng = __webpack_require__(266);
+	var _rng = __webpack_require__(288);
 
 	// Maps for number <-> hex string conversion
 	var _byteToHex = [];
@@ -29671,7 +30293,7 @@
 
 
 /***/ },
-/* 266 */
+/* 288 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -29710,546 +30332,16 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 267 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(222);
-	var UniqueIdMixin = __webpack_require__(221);
-	var ScenePicker = __webpack_require__(268);
-	var uuid = __webpack_require__(265);
-
-	var SceneSetCommand = module.exports = React.createClass({
-	    displayName: 'exports',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        return {
-	            id: uuid.v4(),
-	            sceneId: this.props.command.attributes.SceneID || '',
-	            errors: null
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            scenes: []
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        return {
-	            type: 'sceneSet',
-	            id: this.state.id,
-	            attributes: {
-	                SceneID: this.state.sceneId
-	            }
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    scenePickerChanged: function scenePickerChanged(sceneId) {
-	        this.setState({ sceneId: sceneId });
-	    },
-
-	    render: function render() {
-	        //TODO: Filter out the parent scene from the scenes list so it can't call itself
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-SceneSetCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Scene Set'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_SceneID") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_SceneID") },
-	                    'Scene*'
-	                ),
-	                React.createElement(ScenePicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.scenePickerChanged,
-	                    scenes: this.props.scenes,
-	                    sceneId: this.state.sceneId,
-	                    parentSceneId: this.props.parentSceneId }),
-	                this.errMsg("attributes_SceneID")
-	            )
-	        );
-	    }
-	});
-	module.exports = SceneSetCommand;
-
-/***/ },
-/* 268 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ScenePicker = React.createClass({
-	    displayName: 'ScenePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.sceneId || ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.scenes.forEach(function (scene) {
-	            if (!scene.id) {
-	                // If this scene has not been saved it can't be used
-	                return;
-	            }
-
-	            // Can't set itself
-	            if (scene.id === this.props.parentSceneId) {
-	                return;
-	            }
-
-	            options.push(React.createElement(
-	                'option',
-	                { key: scene.id, value: scene.id },
-	                scene.name
-	            ));
-	        }.bind(this));
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ScenePicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    disabled: this.props.disabled,
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select a Scene...'
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = ScenePicker;
-
-/***/ },
-/* 269 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(222);
-	var UniqueIdMixin = __webpack_require__(221);
-	var ButtonPicker = __webpack_require__(270);
-	var uuid = __webpack_require__(265);
-
-	var ButtonPressCommand = module.exports = React.createClass({
-	    displayName: 'exports',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            id: uuid.v4(),
-	            buttonId: this.props.command.attributes.ButtonID || '',
-	            errors: null
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            buttons: []
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        return {
-	            type: 'buttonPress',
-	            id: this.state.id,
-	            attributes: {
-	                ButtonID: this.state.buttonId
-	            }
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    buttonPickerChanged: function buttonPickerChanged(buttonId) {
-	        this.setState({ buttonId: buttonId });
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ButtonPressCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Button Press'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_ButtonID") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
-	                    'Button*'
-	                ),
-	                React.createElement(ButtonPicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.buttonPickerChanged,
-	                    buttons: this.props.buttons,
-	                    buttonId: this.state.buttonId }),
-	                this.errMsg("attributes_ButtonID")
-	            )
-	        );
-	    }
-	});
-	module.exports = ButtonPressCommand;
-
-/***/ },
-/* 270 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ButtonPicker = React.createClass({
-	    displayName: 'ButtonPicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.buttonId || ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.buttons.forEach(function (button) {
-	            options.push(React.createElement(
-	                'option',
-	                { key: button.id, value: button.id },
-	                button.fullName
-	            ));
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ButtonPicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    disabled: this.props.disabled,
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select a Button...'
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = ButtonPicker;
-
-/***/ },
-/* 271 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(222);
-	var UniqueIdMixin = __webpack_require__(221);
-	var ButtonPicker = __webpack_require__(270);
-	var uuid = __webpack_require__(265);
-
-	var ButtonReleaseCommand = module.exports = React.createClass({
-	    displayName: 'exports',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        return {
-	            id: uuid.v4(),
-	            buttonId: this.props.command.attributes.ButtonID || '',
-	            errors: null
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            buttons: []
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        return {
-	            type: 'buttonRelease',
-	            id: this.state.id,
-	            attributes: {
-	                ButtonID: this.state.buttonId
-	            }
-	        };
-	    },
-
-	    setErrors: function setErrors(errors) {
-	        this.setState({ errors: errors });
-	    },
-
-	    buttonPickerChanged: function buttonPickerChanged(buttonId) {
-	        this.setState({ buttonId: buttonId });
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ButtonReleaseCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Button Release'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_ButtonID") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.uid("attributes_ButtonID") },
-	                    'Button*'
-	                ),
-	                React.createElement(ButtonPicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.buttonPickerChanged,
-	                    buttons: this.props.buttons,
-	                    buttonId: this.state.buttonId }),
-	                this.errMsg("attributes_ButtonID")
-	            )
-	        );
-	    }
-	});
-	module.exports = ButtonReleaseCommand;
-
-/***/ },
-/* 272 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(206);
-	var Api = __webpack_require__(204);
-
-	var SceneActions = {
-
-	    loadAll: function loadAll() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_LOAD_ALL });
-
-	            Api.sceneLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-
-	                dispatch({ type: Constants.SCENE_LOAD_ALL_RAW, data: data });
-	            });
-	        };
-	    },
-
-	    create: function create(sceneJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_CREATE, id: sceneJson.id });
-
-	            Api.sceneCreate(sceneJson, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, id: sceneJson.id });
-	                    return;
-	                }
-	                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, id: sceneJson.id });
-	            });
-	        };
-	    },
-
-	    update: function update(sceneJson) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_UPDATE, id: sceneJson.id });
-
-	            Api.sceneUpdate(sceneJson, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err, id: sceneJson.id });
-	                    return;
-	                }
-	                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data, id: sceneJson.id, sceneJson: sceneJson });
-	            });
-	        };
-	    },
-
-	    destroyClient: function destroyClient(id) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_DESTROY, id: id });
-	            dispatch({ type: Constants.SCENE_DESTROY_RAW, id: id });
-	        };
-	    },
-
-	    destroy: function destroy(id) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_DESTROY, id: id });
-
-	            Api.sceneDestroy(id, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_DESTROY_FAIL, err: err, id: id });
-	                    return;
-	                }
-	                dispatch({ type: Constants.SCENE_DESTROY_RAW, data: data, id: id });
-	            });
-	        };
-	    },
-
-	    addCommand: function addCommand(sceneId, cmdType) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_COMMAND_ADD, sceneId: sceneId, cmdType: cmdType });
-	        };
-	    },
-
-	    deleteCommand: function deleteCommand(sceneId, cmdIndex, isNew) {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_COMMAND_DELETE, cmdIndex: cmdIndex, sceneId: sceneId });
-
-	            if (isNew) {
-	                // Client only
-	                dispatch({
-	                    type: Constants.SCENE_COMMAND_DELETE_RAW,
-	                    sceneId: sceneId,
-	                    cmdIndex: cmdIndex });
-	                return;
-	            }
-
-	            Api.sceneDeleteCommand(sceneId, cmdIndex, function (err, data) {
-	                if (err) {
-	                    dispatch({
-	                        type: Constants.SCENE_COMMAND_DELETE_FAIL,
-	                        sceneId: sceneId,
-	                        cmdIndex: cmdIndex,
-	                        err: err });
-	                    return;
-	                }
-	                dispatch({
-	                    type: Constants.SCENE_COMMAND_DELETE_RAW,
-	                    sceneId: sceneId,
-	                    cmdIndex: cmdIndex });
-	            });
-	        };
-	    },
-
-	    newClient: function newClient() {
-	        return {
-	            type: Constants.SCENE_NEW_CLIENT
-	        };
-	    }
-	};
-	module.exports = SceneActions;
-
-/***/ },
-/* 273 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var CommandTypePicker = React.createClass({
-	    displayName: 'CommandTypePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: '' });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-CommandTypePicker' },
-	            React.createElement(
-	                'select',
-	                { className: 'form-control', onChange: this.selected, value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select...'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'buttonPress' },
-	                    'Button Press'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'buttonRelease' },
-	                    'Button Release'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'sceneSet' },
-	                    'Scene Set'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'zoneSetLevel' },
-	                    'Zone Set Level'
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = CommandTypePicker;
-
-/***/ },
-/* 274 */
+/* 289 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(275);
+	var content = __webpack_require__(290);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -30266,30 +30358,30 @@
 	}
 
 /***/ },
-/* 275 */
+/* 290 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
 	// module
-	exports.push([module.id, ".b-SceneInfo__delete {\n  padding: 0;\n}\n.b-SceneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-SceneInfo__commands {\n  margin-top: 14px;\n}\n.b-SceneInfo__command-header {\n  margin-top: 0px;\n}\n.b-SceneInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n}\n", ""]);
+	exports.push([module.id, ".b-SceneInfo__delete {\n  padding: 0;\n}\n.b-SceneInfo__label {\n  font-size: 12px;\n  font-weight: normal;\n}\n.b-SceneInfo__commands {\n  margin-top: 14px;\n}\n.b-SceneInfo__command-header {\n  margin-top: 0px;\n  font-weight: 200;\n}\n.b-SceneInfo__feature-picker {\n  margin-bottom: 12px;\n}\n.b-SceneInfo__down-arrow {\n  font-size: 11px;\n  margin-left: 2px;\n}\n", ""]);
 
 	// exports
 
 
 /***/ },
-/* 276 */
+/* 291 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(277);
+	var content = __webpack_require__(292);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -30306,10 +30398,10 @@
 	}
 
 /***/ },
-/* 277 */
+/* 292 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -30320,39 +30412,34 @@
 
 
 /***/ },
-/* 278 */
+/* 293 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var ZoneControl = __webpack_require__(279);
-	var SensorMonitor = __webpack_require__(283);
-	var ZoneActions = __webpack_require__(208);
-	var SensorActions = __webpack_require__(209);
-	var Grid = __webpack_require__(237);
-	var SensorMonitor = __webpack_require__(283);
-	var ZoneInfo = __webpack_require__(224);
-	var SensorInfo = __webpack_require__(230);
-	var ZoneSensorCell = __webpack_require__(217);
+	var Grid = __webpack_require__(227);
+	var Feature = __webpack_require__(216);
+	var FeatureCell = __webpack_require__(215);
+	var FeatureControl = __webpack_require__(261);
+	var FeatureInfo = __webpack_require__(234);
+	var SystemActions = __webpack_require__(205);
 	var Api = __webpack_require__(204);
-	var BEMHelper = __webpack_require__(211);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
-	    name: 'ZoneSensorList',
+	    name: 'FeatureList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(286);
+	__webpack_require__(294);
 
 	//TODO: Need to get the correct state when we come out of edit mode, currently lost
 
-	var ZoneSensorList = React.createClass({
-	    displayName: 'ZoneSensorList',
+	var FeatureList = React.createClass({
+	    displayName: 'FeatureList',
 
 	    getInitialState: function getInitialState() {
 	        this._monitorDataChanged = false;
@@ -30363,10 +30450,11 @@
 	        this._retryDuration = 5000;
 	        this._monitorTimeout = 600;
 	        this._refreshTimeoutId = -1;
+	        this._expandedItems = [];
 	        this._monitorData = {
-	            zones: {},
-	            sensors: {}
+	            features: {}
 	        };
+	        this.mergeFeatures(this.props.devices);
 	        return { editMode: false };
 	    },
 
@@ -30380,18 +30468,40 @@
 
 	    getDefaultProps: function getDefaultProps() {
 	        return {
-	            sensors: [],
-	            zones: []
+	            zones: [],
+	            devices: []
 	        };
+	    },
+
+	    mergeFeatures: function mergeFeatures(devices) {
+	        devices.forEach(function (device) {
+	            (device.features || []).forEach(function (feature) {
+	                // If we have got monitor data back for an attribute we leave that otherwise
+	                // we set the attribute from the feature, that is like the blank initial state
+	                // that can be used to render the control before monitor data comes back. We
+	                // don't want to modify the original feature attribute since it is like a template
+	                // that gets copies, so we clone the attrs first before we use them
+
+	                var attrs = Feature.cloneAttrs(feature.attrs);
+	                var monitorFeature = this._monitorData.features[feature.id];
+	                if (!monitorFeature) {
+	                    this._monitorData.features[feature.id] = attrs;
+	                } else {
+	                    Object.keys(attrs).forEach(function (localId) {
+	                        if (!monitorFeature[localId]) {
+	                            monitorFeature[localId] = attrs[localId];
+	                        }
+	                    });
+	                }
+	            }.bind(this));
+	        }.bind(this));
 	    },
 
 	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
 	        var shouldRefreshMonitor = false;
-	        if (nextProps.zones && this.props.zones !== nextProps.zones) {
+	        if (nextProps.devices && this.props.devices !== nextProps.devices) {
 	            shouldRefreshMonitor = true;
-	        }
-	        if (nextProps.sensors && this.props.sensors !== nextProps.sensors) {
-	            shouldRefreshMonitor = true;
+	            this.mergeFeatures(nextProps.devices);
 	        }
 	        if (shouldRefreshMonitor) {
 	            this._monitorDataChanged = true;
@@ -30399,10 +30509,12 @@
 	    },
 
 	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        //TODO:
+	        return true;
 	        if (nextProps && this.props.zones !== nextProps.zones) {
 	            return true;
 	        }
-	        if (nextProps && this.props.sensors !== nextProps.sensors) {
+	        if (nextProps && this.props.devices !== nextProps.devices) {
 	            return true;
 	        }
 	        if (nextState && nextState.editMode !== this.state.editMode) {
@@ -30412,7 +30524,7 @@
 	    },
 
 	    componentDidMount: function componentDidMount() {
-	        this.refreshMonitoring(this.props.zones, this.props.sensors);
+	        this.refreshMonitoring(this.props.devices);
 	    },
 
 	    componentWillUnmount: function componentWillUnmount() {
@@ -30427,14 +30539,14 @@
 
 	    componentDidUpdate: function componentDidUpdate() {
 	        if (this._monitorDataChanged) {
-	            this.refreshMonitoring(this.props.zones, this.props.sensors);
+	            this.refreshMonitoring(this.props.devices);
 	        }
 	    },
 
-	    refreshMonitoring: function refreshMonitoring(zones, sensors) {
+	    refreshMonitoring: function refreshMonitoring(devices) {
 	        this._monitorDataChanged = false;
 
-	        if (zones.length === 0 && sensors.length === 0) {
+	        if (devices.length === 0) {
 	            return;
 	        }
 
@@ -30448,23 +30560,21 @@
 	        // importing many devices, have a small delay before we actually fire a request
 	        clearTimeout(this._refreshTimeout);
 	        this._refreshTimeout = setTimeout(function () {
-	            this.refreshMonitoringInternal(zones, sensors);
+	            this.refreshMonitoringInternal(devices);
 	        }.bind(this), 1000);
 	    },
 
 	    // do not call directly, call refreshMonitoring
-	    refreshMonitoringInternal: function refreshMonitoringInternal(zones, sensors) {
+	    refreshMonitoringInternal: function refreshMonitoringInternal(devices) {
 	        var monitorGroup = {
 	            timeoutInSeconds: this._monitorTimeout,
-	            sensorIds: [],
-	            zoneIds: []
+	            featureIds: []
 	        };
 
-	        zones.forEach(function (zone) {
-	            monitorGroup.zoneIds.push(zone.id);
-	        });
-	        sensors.forEach(function (sensor) {
-	            monitorGroup.sensorIds.push(sensor.id);
+	        devices.forEach(function (device) {
+	            (device.features || []).forEach(function (feature) {
+	                monitorGroup.featureIds.push(feature.id);
+	            });
 	        });
 
 	        var subscribeId = ++this._lastSubscribeId;
@@ -30495,7 +30605,7 @@
 	            this._connection = null;
 	        }
 
-	        var conn = new WebSocket("ws://" + window.location.hostname + ":5000/api/v1/monitor/groups/" + monitorId);
+	        var conn = Api.monitorGroups(monitorId);
 	        conn.onopen = function (evt) {
 	            function renew() {
 	                this._refreshTimeoutId = setTimeout(function () {
@@ -30516,45 +30626,62 @@
 
 	            setTimeout(function () {
 	                if (this._keepRefreshingConnection) {
-	                    this.refreshMonitoring(this.props.zones, this.props.sensors);
+	                    this.refreshMonitoring(this.props.devices);
 	                }
 	            }.bind(this), 5000);
 	        }.bind(this);
 	        conn.onmessage = function (evt) {
 	            var resp = JSON.parse(evt.data);
-	            Object.keys(resp.zones || {}).forEach(function (zoneId) {
-	                // Need to update our local data, since we can get back updates at any time
-	                // for any zone, we have to merge all the values into our one source of truth
-	                this._monitorData.zones[zoneId] = resp.zones[zoneId];
+	            Object.keys(resp.features || {}).forEach(function (featureId) {
+	                // Each feature can have multiple attributes, might only be some that
+	                // have updated, so here we merge the new results with the old results
+	                var attrs = this._monitorData.features[featureId] || {};
+	                var newAttrs = resp.features[featureId];
+	                Object.keys(newAttrs).forEach(function (localId) {
+	                    attrs[localId] = newAttrs[localId];
+	                });
+	                this._monitorData.features[featureId] = attrs;
 
-	                var cmp = this.refs['cell_zone_' + zoneId];
+	                var cmp = this.refs['cell_feature_' + featureId];
 	                if (!cmp) {
 	                    return;
 	                }
-	                cmp.setLevel(this._monitorData.zones[zoneId]);
-	            }.bind(this));
-	            Object.keys(resp.sensors || {}).forEach(function (sensorId) {
-	                this._monitorData.sensors[sensorId] = resp.sensors[sensorId];
-
-	                var cmp = this.refs['cell_sensor_' + sensorId];
-	                if (!cmp) {
-	                    return;
-	                }
-	                cmp.setAttr(this._monitorData.sensors[sensorId]);
+	                cmp.setAttrs(this._monitorData.features[featureId]);
 	            }.bind(this));
 
-	            this._gridContent && this._gridContent.monitorData(this._monitorData);
+	            this.updateExpandedItems();
 	        }.bind(this);
 	        this._connection = conn;
 	    },
 
 	    expanderMounted: function expanderMounted(content) {
-	        this._gridContent = content;
-	        this._gridContent.monitorData(this._monitorData);
+	        this._expandedItems.push(content);
+	        this.updateExpandedItems();
 	    },
 
-	    expanderUnmounted: function expanderUnmounted() {
-	        this._gridContent = null;
+	    updateExpandedItems: function updateExpandedItems() {
+	        this._expandedItems.forEach(function (cmp) {
+	            cmp.monitorData(this._monitorData);
+	        }.bind(this));
+	    },
+
+	    expanderUnmounted: function expanderUnmounted(content) {
+	        this._expandedItems = this._expandedItems.filter(function (cmp) {
+	            return cmp !== content;
+	        });
+	    },
+
+	    attrChanged: function attrChanged(feature, attr) {
+	        var data = {};
+	        data[attr.localId] = attr;
+
+	        Api.deviceSetFeatureAttrs(feature.deviceId, feature.id, data, function (err, data) {
+	            if (err) {
+	                console.error(err);
+	                //TODO:
+	                return;
+	            }
+	        });
 	    },
 
 	    render: function render() {
@@ -30575,106 +30702,77 @@
 	                )
 	            );
 
-	            var zones = this.props.zones.map(function (zone) {
-	                return React.createElement(
-	                    'div',
-	                    _extends({}, classes('zone-info'), { key: zone.id }),
-	                    React.createElement(ZoneInfo, {
-	                        name: zone.name,
-	                        description: zone.description,
-	                        address: zone.address,
-	                        id: zone.id,
-	                        key: zone.id,
-	                        showSaveBtn: true,
-	                        readOnlyFields: 'deviceId, id',
-	                        deviceId: zone.deviceId,
-	                        type: zone.type,
-	                        devices: this.props.devices,
-	                        output: zone.output,
-	                        updatedZone: this.props.updatedZone })
-	                );
-	            }.bind(this));
+	            var features = [];
+	            this.props.devices.forEach(function (device) {
+	                (device.features || []).forEach(function (feature) {
+	                    // TODO:
+	                    // Don't support buttons right now
+	                    if (feature.type === Feature.Type.Button) {
+	                        return;
+	                    }
 
-	            var sensors = this.props.sensors.map(function (sensor) {
-	                return React.createElement(
-	                    'div',
-	                    _extends({}, classes('sensor-info'), { key: sensor.id }),
-	                    React.createElement(SensorInfo, {
-	                        readOnlyFields: 'deviceId',
-	                        key: sensor.id,
-	                        name: sensor.name,
-	                        description: sensor.description,
-	                        address: sensor.address,
-	                        id: sensor.id,
-	                        attr: sensor.attr,
-	                        showSaveBtn: true,
-	                        deviceId: sensor.deviceId,
-	                        devices: this.props.devices,
-	                        updatedSensor: this.props.updatedSensor })
-	                );
+	                    features.push(React.createElement(
+	                        'div',
+	                        _extends({}, classes('feature-info'), { key: feature.id }),
+	                        React.createElement(FeatureInfo, {
+	                            readOnlyFields: 'id, deviceId',
+	                            key: feature.id,
+	                            feature: feature,
+	                            showSaveBtn: true,
+	                            updatedFeature: this.props.updatedFeature })
+	                    ));
+	                }.bind(this));
 	            }.bind(this));
 
 	            body = React.createElement(
 	                'div',
 	                null,
-	                zones,
-	                sensors
+	                features
 	            );
 	        } else {
 	            var lightZones = [];
-	            var shadeZones = [];
-	            var switchZones = [];
-	            var otherZones = [];
+	            var windowTreatments = [];
+	            var other = [];
 	            var sensors = [];
 
-	            this.props.zones.forEach(function (zone) {
-	                var cmpZone = {
-	                    key: 'zones_' + zone.id,
-	                    cell: React.createElement(ZoneSensorCell, {
-	                        key: zone.id,
-	                        ref: "cell_zone_" + zone.id,
-	                        zone: zone }),
-	                    content: React.createElement(ZoneControl, _defineProperty({
-	                        key: zone.id,
-	                        id: zone.id,
-	                        didMount: this.expanderMounted,
-	                        willUnmount: this.expanderUnmounted,
-	                        name: zone.name,
-	                        type: zone.type,
-	                        output: zone.output
-	                    }, 'key', zone.id))
-	                };
-	                switch (zone.type) {
-	                    case 'light':
-	                        lightZones.push(cmpZone);
-	                        break;
-	                    case 'shade':
-	                        shadeZones.push(cmpZone);
-	                        break;
-	                    case 'switch':
-	                        switchZones.push(cmpZone);
-	                        break;
-	                    default:
-	                        otherZones.push(cmpZone);
-	                        break;
-	                }
-	            }.bind(this));
+	            this.props.devices.forEach(function (device) {
+	                (device.features || []).forEach(function (feature) {
 
-	            this.props.sensors.forEach(function (sensor) {
-	                var cmpSensor = {
-	                    key: 'sensor_' + sensor.id,
-	                    cell: React.createElement(ZoneSensorCell, {
-	                        key: sensor.id,
-	                        ref: "cell_sensor_" + sensor.id,
-	                        sensor: sensor }),
-	                    content: React.createElement(SensorMonitor, {
-	                        id: sensor.id,
-	                        didMount: this.expanderMounted,
-	                        willUnmount: this.expanderUnmounted,
-	                        key: sensor.id,
-	                        sensor: sensor })
-	                };
-	                sensors.push(cmpSensor);
+	                    var cmpFeature = {
+	                        key: 'feature_' + feature.id,
+	                        cell: React.createElement(FeatureCell, {
+	                            key: feature.id,
+	                            ref: "cell_feature_" + feature.id,
+	                            feature: feature }),
+	                        content: React.createElement(FeatureControl, {
+	                            key: feature.id,
+	                            id: feature.id,
+	                            onAttrChanged: this.attrChanged,
+	                            didMount: this.expanderMounted,
+	                            willUnmount: this.expanderUnmounted,
+	                            feature: feature })
+	                    };
+
+	                    // For UI purposes we will group some of the more
+	                    // common features together
+	                    switch (feature.type) {
+	                        case Feature.Type.LightZone:
+	                            lightZones.push(cmpFeature);
+	                            break;
+	                        case Feature.Type.WindowTreatment:
+	                            windowTreatments.push(cmpFeature);
+	                            break;
+	                        case Feature.Type.Sensor:
+	                            sensors.push(cmpFeature);
+	                            break;
+	                        case Feature.Type.Button:
+	                            break;
+	                        //TODO: re-enable
+	                        //right now can't do anything with a button in the UI so hiding
+	                        default:
+	                            other.push(cmpFeature);
+	                    }
+	                }.bind(this));
 	            }.bind(this));
 
 	            btns = React.createElement(
@@ -30698,37 +30796,17 @@
 	                        classes('grid-header'),
 	                        'Lights'
 	                    ),
-	                    React.createElement(Grid, { cells: lightZones, expanderWillMount: this.zoneExpanderWillMount })
+	                    React.createElement(Grid, { cells: lightZones })
 	                ),
 	                React.createElement(
 	                    'div',
-	                    classes('grid-section', shadeZones.length === 0 ? 'hidden' : ''),
+	                    classes('grid-section', windowTreatments.length === 0 ? 'hidden' : ''),
 	                    React.createElement(
 	                        'h2',
 	                        classes('grid-header'),
-	                        'Shades'
+	                        'Window Treatments'
 	                    ),
-	                    React.createElement(Grid, { cells: shadeZones, expanderWillMount: this.zoneExpanderWillMount })
-	                ),
-	                React.createElement(
-	                    'div',
-	                    classes('grid-section', switchZones.length === 0 ? 'hidden' : ''),
-	                    React.createElement(
-	                        'h2',
-	                        classes('grid-header'),
-	                        'Switches'
-	                    ),
-	                    React.createElement(Grid, { cells: switchZones, expanderWillMount: this.zoneExpanderWillMount })
-	                ),
-	                React.createElement(
-	                    'div',
-	                    classes('grid-section', otherZones.length === 0 ? 'hidden' : ''),
-	                    React.createElement(
-	                        'h2',
-	                        classes('grid-header'),
-	                        'Other Zones'
-	                    ),
-	                    React.createElement(Grid, { cells: otherZones, expanderWillMount: this.zoneExpanderWillMount })
+	                    React.createElement(Grid, { cells: windowTreatments })
 	                ),
 	                React.createElement(
 	                    'div',
@@ -30738,7 +30816,17 @@
 	                        classes('grid-header'),
 	                        'Sensors'
 	                    ),
-	                    React.createElement(Grid, { cells: sensors, expanderWillMount: this.sensorExpanderWillMount })
+	                    React.createElement(Grid, { cells: sensors })
+	                ),
+	                React.createElement(
+	                    'div',
+	                    classes('grid-section', other.length === 0 ? 'hidden' : ''),
+	                    React.createElement(
+	                        'h2',
+	                        classes('grid-header'),
+	                        'Other'
+	                    ),
+	                    React.createElement(Grid, { cells: other })
 	                )
 	            );
 	        }
@@ -30754,496 +30842,62 @@
 
 	function mapDispatchToProps(dispatch) {
 	    return {
-	        updatedZone: function updatedZone(data) {
-	            dispatch(ZoneActions.updated(data));
-	        },
-	        updatedSensor: function updatedSensor(data) {
-	            dispatch(SensorActions.updated(data));
+	        updatedFeature: function updatedFeature(featureJson) {
+	            dispatch(SystemActions.updatedFeature(featureJson));
 	        }
 	    };
 	}
-	module.exports = ReactRedux.connect(null, mapDispatchToProps)(ZoneSensorList);
+	module.exports = ReactRedux.connect(null, mapDispatchToProps)(FeatureList);
 
 /***/ },
-/* 279 */
+/* 294 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(295);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureList.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./FeatureList.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 295 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-FeatureList {\n  position: relative;\n  width: 100%;\n  background-color: #fff;\n}\n.b-FeatureList__feature-info {\n  margin-bottom: 50px;\n  margin-left: 12px;\n  margin-right: 12px;\n}\n.b-FeatureList__grid-section--hidden {\n  display: none;\n}\n.b-FeatureList__grid-header {\n  margin: 0;\n  padding: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n.b-FeatureList__grid-header--hidden {\n  display: none;\n}\n.b-FeatureList__buttons {\n  position: absolute;\n  top: 0px;\n  right: 0px;\n  padding: 12px;\n}\n.b-FeatureList__buttons--editing {\n  position: static;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 296 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var CssMixin = __webpack_require__(280);
-	var Api = __webpack_require__(204);
-	var BEMHelper = __webpack_require__(211);
-
-	var classes = new BEMHelper({
-	    name: 'ZoneControl',
-	    prefix: 'b-'
-	});
-	__webpack_require__(281);
-
-	var ZoneControl = React.createClass({
-	    displayName: 'ZoneControl',
-
-	    mixins: [CssMixin],
-	    getInitialState: function getInitialState() {
-	        var level = this.props.level;
-	        if (!level) {
-	            level = {
-	                value: -1,
-	                r: 0,
-	                g: 0,
-	                b: 0
-	            };
-	        }
-	        return {
-	            level: level
-	        };
-	    },
-
-	    initSlider: function initSlider() {
-	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-ZoneControl__slider');
-	        if (!sliders || sliders.length === 0) {
-	            return null;
-	        }
-
-	        var slider = sliders[0];
-	        noUiSlider.create(slider, {
-	            connect: [true, false],
-	            start: 0,
-	            animate: false,
-	            step: 1,
-	            orientation: 'horizontal',
-	            range: {
-	                min: 0,
-	                max: 100
-	            }
-	        });
-	        slider.noUiSlider.set(0);
-	        slider.noUiSlider.on('slide', this.sliderChanged.bind(this, slider.noUiSlider));
-	        slider.noUiSlider.on('change', this.sliderEnd.bind(this, slider.noUiSlider));
-
-	        return slider.noUiSlider;
-	    },
-
-	    initSwitch: function initSwitch(slider) {
-	        var sw = $($(ReactDOM.findDOMNode(this)).find('.switch-indeterminate')[0]);
-	        sw.bootstrapSwitch({
-	            onText: this.props.type === 'shade' ? 'open' : 'on',
-	            offText: this.props.type === 'shade' ? 'close' : 'off'
-	        });
-
-	        sw.on('switchChange.bootstrapSwitch', function (event, state) {
-	            this.toggleOn(slider);
-	        }.bind(this));
-
-	        return sw;
-	    },
-
-	    initRGB: function initRGB() {
-	        var wrapper = $(ReactDOM.findDOMNode(this)).find('.rgbWrapper');
-	        if (!wrapper || wrapper.length === 0) {
-	            return;
-	        }
-
-	        var c = new Colors({
-	            'color': 'rgba(255,0,0,1.0)'
-	        });
-	        wrapper.colorpicker({
-	            format: 'rgb',
-	            container: true,
-	            inline: true,
-	            color: c,
-	            buildCallback: function buildCallback($elm) {
-	                debugger;
-	            },
-	            renderCallback: function renderCallback() {
-	                debugger;
-	            }
-	        });
-
-	        var timeoutId;
-	        wrapper.colorpicker().on('changeColor', function (evt) {
-	            // Limit the number of events we send as the user is moving around
-	            // on the RGB UI, only send when they pause
-	            clearTimeout(timeoutId);
-	            timeoutId = setTimeout(function () {
-	                var rgb = evt.color.toRGB();
-	                this.setValue('setLevel', 0, parseInt(rgb.r), parseInt(rgb.g), parseInt(rgb.b), function (err) {
-	                    if (err) {
-	                        //TODO: err
-	                        console.error(err);
-	                    }
-	                });
-	            }.bind(this), 100);
-	        }.bind(this));
-
-	        return wrapper;
-	    },
-
-	    makeLevel: function makeLevel(val, r, g, b) {
-	        return {
-	            value: val,
-	            r: r,
-	            g: g,
-	            b: b
-	        };
-	    },
-
-	    sliderChanged: function sliderChanged(slider) {
-	        this.setState({ level: this.makeLevel(parseInt(slider.get(), 10), 0, 0, 0) });
-	    },
-
-	    sliderEnd: function sliderEnd(slider) {
-	        this.setValue('setLevel', parseInt(slider.get(), 10), 0, 0, 0, function (err) {
-	            if (err) {
-	                //TODO:
-	                console.error(err);
-	            }
-	        });
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        this._slider = this.initSlider();
-	        this._switch = this.initSwitch(this._slider);
-	        this._colorPicker = this.initRGB();
-
-	        this.props.didMount && this.props.didMount(this);
-	    },
-
-	    componentWillUnmount: function componentWillUnmount() {
-	        this.props.willUnmount && this.props.willUnmount();
-	    },
-
-	    setValue: function setValue(cmd, value, r, g, b, callback) {
-	        this.setState({ level: this.makeLevel(value, r, g, b) });
-	        this.send({
-	            cmd: cmd,
-	            value: parseFloat(value),
-	            r: r,
-	            g: g,
-	            b: b
-	        }, callback);
-	    },
-
-	    toggleOn: function toggleOn(slider) {
-	        var cmd, targetValue;
-
-	        if (this.state.level.value !== 0 || this.state.level.r !== 0 || this.state.level.g !== 0 || this.state.level.b !== 0) {
-	            cmd = 'turnOff';
-	            targetValue = 0;
-	        } else {
-	            cmd = 'turnOn';
-	            targetValue = 100;
-	        }
-
-	        slider && slider.set(targetValue);
-	        this.setValue(cmd, targetValue, 0, 0, 0, function (err) {
-	            if (err) {
-	                console.error(err);
-	            }
-	        });
-	    },
-
-	    send: function send(data, callback) {
-	        Api.zoneSetLevel(this.props.id, data.cmd, data.value, data.r, data.g, data.b, function (err, data) {
-	            callback(err, data);
-	        });
-	    },
-
-	    monitorData: function monitorData(data) {
-	        if (!data || !data.zones) {
-	            return;
-	        }
-	        var val = data.zones[this.props.id];
-	        if (val == undefined) {
-	            return;
-	        }
-
-	        this.setState({ level: this.makeLevel(Math.round(val.value), 0, 0, 0) });
-
-	        switch (this.props.output) {
-	            case 'continuous':
-	                this._slider && this._slider.set(Math.round(val.value));
-	                break;
-
-	            case 'rgb':
-	                //TODO: color picker not changing
-	                /*
-	                this._colorPicker.colorpicker({
-	                    color: new Colors({ color: 'rgba(' + val.r + ',' + val.g + ',' + val.b + ',1.0)' })
-	                });*/
-	                break;
-	        }
-	        this._switch && this._switch.bootstrapSwitch('state', val.value > 0, true);
-	    },
-
-	    render: function render() {
-	        var sliderCmp;
-	        if (this.props.output === 'continuous') {
-	            sliderCmp = React.createElement(
-	                'div',
-	                null,
-	                React.createElement('div', classes('slider')),
-	                React.createElement(
-	                    'span',
-	                    classes('value', this.state.level.value === -1 ? 'hidden' : ''),
-	                    this.state.level.value,
-	                    '%'
-	                )
-	            );
-	        }
-
-	        var rgbCmp;
-	        if (this.props.output === 'rgb') {
-	            rgbCmp = React.createElement('div', classes('rgb'));
-	        }
-
-	        return React.createElement(
-	            'div',
-	            classes('', this.props.output),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement(
-	                    'div',
-	                    classes('name', '', 'pull-left'),
-	                    this.props.name
-	                ),
-	                React.createElement(
-	                    'div',
-	                    classes('on-off', '', 'pull-right'),
-	                    React.createElement('input', {
-	                        className: 'switch-indeterminate',
-	                        type: 'checkbox',
-	                        defaultChecked: true,
-	                        'data-indeterminate': 'true' })
-	                )
-	            ),
-	            sliderCmp,
-	            rgbCmp
-	        );
-	    }
-	});
-	module.exports = ZoneControl;
-
-/***/ },
-/* 280 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = {
-	    cssSafeIdentifier: function cssSafeIdentifier(value) {
-	        return value.replace(/:/g, '_');
-	    }
-	};
-
-/***/ },
-/* 281 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(282);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneControl.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneControl.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 282 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(215)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-ZoneControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-ZoneControl--continuous {\n  height: 200px;\n}\n.b-ZoneControl--binary {\n  height: 86px;\n}\n.b-ZoneControl--rgb {\n  height: 222px;\n}\n.b-ZoneControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 242px;\n  margin-top: 3px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-ZoneControl__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 26px;\n}\n.b-ZoneControl__rgb {\n  margin-top: 22px;\n}\n.b-ZoneControl__value {\n  display: inline-block;\n  margin-top: 20px;\n  font-size: 50px;\n}\n.b-ZoneControl__value--hidden {\n  display: none;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 283 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var CssMixin = __webpack_require__(280);
-	var BEMHelper = __webpack_require__(211);
-
-	var classes = new BEMHelper({
-	    name: 'SensorMonitor',
-	    prefix: 'b-'
-	});
-	__webpack_require__(284);
-
-	var SensorMonitor = React.createClass({
-	    displayName: 'SensorMonitor',
-
-	    mixins: [CssMixin],
-	    getInitialState: function getInitialState() {
-	        return {
-	            attr: null
-	        };
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        this.props.didMount && this.props.didMount(this);
-	    },
-
-	    componentWillUnmount: function componentWillUnmount() {
-	        this.props.willUnmount && this.props.willUnmount();
-	    },
-
-	    monitorData: function monitorData(data) {
-	        if (!data || !data.sensors) {
-	            return;
-	        }
-	        var attr = data.sensors[this.props.id];
-	        if (attr == undefined) {
-	            return;
-	        }
-	        this.setState({ attr: attr });
-	    },
-
-	    render: function render() {
-	        var val = '';
-	        if (this.state.attr) {
-	            val = this.state.attr.value;
-
-	            // If there is a states map, which gives value -> ui string then
-	            // use that string instead of the raw value
-	            var uiVal = this.state.attr.states && this.state.attr.states[val];
-	            if (uiVal) {
-	                val = uiVal;
-	            }
-	        }
-
-	        return React.createElement(
-	            'div',
-	            classes(),
-	            React.createElement(
-	                'div',
-	                classes('name'),
-	                this.props.sensor.name
-	            ),
-	            React.createElement(
-	                'div',
-	                classes('value'),
-	                val
-	            )
-	        );
-	    }
-	});
-	module.exports = SensorMonitor;
-
-/***/ },
-/* 284 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(285);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorMonitor.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./SensorMonitor.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 285 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(215)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-SensorMonitor {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-SensorMonitor__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  max-width: 370px;\n  margin-top: 3px;\n}\n.b-SensorMonitor__value {\n  display: inline-block;\n  margin-top: 20px;\n  font-size: 40px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 286 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(287);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorList.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./ZoneSensorList.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 287 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(215)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-ZoneSensorList {\n  position: relative;\n  width: 100%;\n  background-color: #fff;\n}\n.b-ZoneSensorList__zone-info,\n.b-ZoneSensorList__sensor-info {\n  margin-bottom: 50px;\n  margin-left: 12px;\n  margin-right: 12px;\n}\n.b-ZoneSensorList__grid-section--hidden {\n  display: none;\n}\n.b-ZoneSensorList__grid-header {\n  margin: 0;\n  padding: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n.b-ZoneSensorList__grid-header--hidden {\n  display: none;\n}\n.b-ZoneSensorList__buttons {\n  position: absolute;\n  top: 0px;\n  right: 0px;\n  padding: 12px;\n}\n.b-ZoneSensorList__buttons--editing {\n  position: static;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 288 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
-	var LogLine = __webpack_require__(289);
+	var LogLine = __webpack_require__(297);
 
 	var Logging = React.createClass({
 	    displayName: 'Logging',
@@ -31379,7 +31033,7 @@
 	module.exports = Logging;
 
 /***/ },
-/* 289 */
+/* 297 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -31424,910 +31078,16 @@
 	module.exports = LogLine;
 
 /***/ },
-/* 290 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var NewRecipe = __webpack_require__(291);
-	var RecipeList = __webpack_require__(301);
-
-	var RecipeApp = React.createClass({
-	    displayName: 'RecipeApp',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            cookBooks: [],
-	            recipes: [],
-	            creatingRecipe: false
-	        };
-	    },
-
-	    recipeCreated: function recipeCreated(recipe) {
-	        this.setState({ creatingRecipe: false });
-	    },
-
-	    recipeCancel: function recipeCancel() {
-	        this.setState({ creatingRecipe: false });
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        $.ajax({
-	            url: '/api/v1/cookbooks',
-	            dataType: 'json',
-	            cache: false,
-	            success: function (data) {
-	                this.setState({ cookBooks: data });
-	            }.bind(this),
-	            error: function (xhr, status, err) {
-	                console.error(err.toString());
-	            }.bind(this)
-	        });
-	    },
-
-	    newClicked: function newClicked() {
-	        this.setState({ creatingRecipe: true });
-	    },
-
-	    render: function render() {
-	        var body, newButton;
-	        if (this.state.creatingRecipe) {
-	            body = React.createElement(NewRecipe, { cookBooks: this.state.cookBooks, onCancel: this.recipeCancel, onCreate: this.recipeCreated });
-	        } else {
-	            newButton = React.createElement(
-	                'button',
-	                { className: 'btn btn-primary pull-right', onClick: this.newClicked },
-	                'New'
-	            );
-	            body = React.createElement(RecipeList, null);
-	        }
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-RecipeApp' },
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix header' },
-	                newButton
-	            ),
-	            body
-	        );
-	    }
-	});
-	module.exports = RecipeApp;
-
-/***/ },
-/* 291 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var IngredientList = __webpack_require__(292);
-	var TriggerList = __webpack_require__(294);
-	var ActionList = __webpack_require__(296);
-	var CookBookList = __webpack_require__(298);
-
-	var NewRecipe = React.createClass({
-	    displayName: 'NewRecipe',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            triggerCookBookID: -1,
-	            actionCookBookID: -1,
-	            triggers: null,
-	            actions: null,
-	            trigger: null,
-	            action: null,
-	            name: '',
-	            description: '',
-	            saveError: null,
-	            saving: false
-	        };
-	    },
-
-	    triggerCookBookSelected: function triggerCookBookSelected(cookBookID) {
-	        this.setState({ triggerCookBookID: cookBookID });
-
-	        var self = this;
-	        this.loadCookBook(cookBookID, function (err, data) {
-	            if (err) {
-	                console.error(err.toString());
-	                return;
-	            }
-
-	            self.setState({ triggers: data.triggers });
-	        });
-	    },
-
-	    actionCookBookSelected: function actionCookBookSelected(cookBookID) {
-	        this.setState({ actionCookBookID: cookBookID });
-
-	        var self = this;
-	        this.loadCookBook(cookBookID, function (err, data) {
-	            if (err) {
-	                console.error(err.toString());
-	                return;
-	            }
-
-	            self.setState({ actions: data.actions });
-	        });
-	    },
-
-	    loadCookBook: function loadCookBook(cookBookID, callback) {
-	        $.ajax({
-	            url: '/api/v1/cookbooks/' + cookBookID,
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                callback(null, data);
-	            },
-	            error: function error(xhr, status, err) {
-	                callback({ err: err });
-	            }
-	        });
-	    },
-
-	    triggerSelected: function triggerSelected(trigger) {
-	        this.setState({ trigger: trigger });
-	    },
-
-	    actionSelected: function actionSelected(action) {
-	        this.setState({ action: action });
-	    },
-
-	    saveClicked: function saveClicked(evt) {
-	        this.setState({ saveError: null, saving: true });
-
-	        var recipe = this.toJSON();
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/recipes',
-	            type: 'POST',
-	            dataType: 'json',
-	            data: JSON.stringify(recipe),
-	            cache: false,
-	            success: function success(data) {
-	                self.setState({ saving: false });
-	                self.props.onCreate(recipe);
-	            },
-	            error: function error(xhr, status, err) {
-	                self.setState({ saving: false });
-	                if (xhr.status === 400) {
-	                    self.setState({ saveError: JSON.parse(xhr.responseText) });
-	                } else {
-	                    //Unknown error - todo
-	                }
-	            }
-	        });
-	    },
-
-	    handleNameChange: function handleNameChange(evt) {
-	        this.setState({ name: evt.target.value });
-	    },
-
-	    handleDescriptionChange: function handleDescriptionChange(evt) {
-	        this.setState({ description: evt.target.value });
-	    },
-
-	    toJSON: function toJSON() {
-	        var json = {};
-	        json.name = this.state.name;
-	        json.description = this.state.description;
-
-	        if (this.state.action) {
-	            json.action = {
-	                id: this.state.action.id,
-	                ingredients: this.refs.actionIngredients.toJSON()
-	            };
-	        }
-
-	        if (this.state.trigger) {
-	            json.trigger = {
-	                id: this.state.trigger.id,
-	                ingredients: this.refs.triggerIngredients.toJSON()
-	            };
-	        }
-	        return json;
-	    },
-
-	    cancelClicked: function cancelClicked(evt) {
-	        this.props.onCancel();
-	    },
-
-	    render: function render() {
-	        var nameErr = false;
-	        var descErr = false;
-	        var triggerErr = false;
-	        var actionErr = false;
-	        var triggerIngredientErr;
-	        var actionIngredientErr;
-	        var err = this.state.saveError;
-	        var errDesc = '';
-	        if (err) {
-	            switch (err.paramId) {
-	                case 'name':
-	                    nameErr = true;
-	                    errDesc = err.description;
-	                    break;
-	                case 'description':
-	                    descErr = true;
-	                    errDesc = err.description;
-	                    break;
-	                case 'trigger':
-	                    triggerErr = true;
-	                    errDesc = err.description;
-	                    break;
-	                case 'action':
-	                    actionErr = true;
-	                    errDesc = err.description;
-	                    break;
-	                default:
-	                    if (err.paramId.startsWith('trigger.')) {
-	                        triggerIngredientErr = err;
-	                        triggerIngredientErr.paramId = triggerIngredientErr.paramId.replace('trigger.', '');
-	                    } else if (err.paramId.startsWith('action.')) {
-	                        actionIngredientErr = err;
-	                        actionIngredientErr.paramId = actionIngredientErr.paramId.replace('action.', '');
-	                    }
-	            }
-	        }
-
-	        var triggerChild, actionChild;
-	        var spinner = React.createElement(
-	            'div',
-	            { className: 'text-center' },
-	            React.createElement('i', { className: 'fa fa-spinner fa-spin' })
-	        );
-	        if (this.state.trigger) {
-	            // Render the selected trigger
-	            triggerChild = React.createElement(IngredientList, { err: triggerIngredientErr, ref: 'triggerIngredients', ingredients: this.state.trigger.ingredients });
-	        } else if (this.state.triggers) {
-	            // Render the trigger list
-	            triggerChild = React.createElement(TriggerList, { triggers: this.state.triggers, selected: this.triggerSelected });
-	        } else if (this.state.triggerCookBookID !== -1) {
-	            // Got a cook book, must be loading triggers
-	            triggerChild = spinner;
-	        } else {
-	            //TODO: Only show cook books that have triggers
-	            triggerChild = React.createElement(CookBookList, { cookBooks: this.props.cookBooks, selected: this.triggerCookBookSelected });
-	        }
-
-	        if (this.state.action) {
-	            actionChild = React.createElement(IngredientList, { err: actionIngredientErr, ref: 'actionIngredients', ingredients: this.state.action.ingredients });
-	        } else if (this.state.actions) {
-	            actionChild = React.createElement(ActionList, { actions: this.state.actions, selected: this.actionSelected });
-	        } else if (this.state.actionCookBookID !== -1) {
-	            actionChild = spinner;
-	        } else {
-	            actionChild = React.createElement(CookBookList, { cookBooks: this.props.cookBooks, selected: this.actionCookBookSelected });
-	        }
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-NewRecipe' },
-	            React.createElement(
-	                'div',
-	                { className: "form-group" + (nameErr ? " has-error" : "") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: 'name' },
-	                    'Name'
-	                ),
-	                React.createElement('input', { value: this.state.name, onChange: this.handleNameChange, className: 'name form-control', type: 'text', id: 'name' }),
-	                React.createElement(
-	                    'span',
-	                    { className: "help-block" + (nameErr ? "" : " invisible") },
-	                    'Error - ',
-	                    errDesc
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: "form-group" + (descErr ? " has-error" : "") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: 'description' },
-	                    'Description'
-	                ),
-	                React.createElement('input', { value: this.state.description, onChange: this.handleDescriptionChange, className: 'description form-control', type: 'text', id: 'description' }),
-	                React.createElement(
-	                    'span',
-	                    { className: "help-block" + (descErr ? "" : " invisible") },
-	                    'Error - ',
-	                    errDesc
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: "trigger form-group" + (triggerErr ? " has-error" : "") },
-	                React.createElement(
-	                    'h3',
-	                    null,
-	                    'Trigger'
-	                ),
-	                triggerChild,
-	                React.createElement(
-	                    'span',
-	                    { className: "help-block" + (triggerErr ? "" : " invisible") },
-	                    'Error - ',
-	                    errDesc
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: "action form-group" + (actionErr ? " has-error" : "") },
-	                React.createElement(
-	                    'h3',
-	                    null,
-	                    'Action'
-	                ),
-	                actionChild,
-	                React.createElement(
-	                    'span',
-	                    { className: "help-block" + (actionErr ? "" : " invisible") },
-	                    'Error - ',
-	                    errDesc
-	                )
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix footer' },
-	                React.createElement(
-	                    'button',
-	                    { className: "btn btn-default pull-right" + (this.state.saving ? " disabled" : ""), onClick: this.cancelClicked },
-	                    'Cancel'
-	                ),
-	                React.createElement(
-	                    'button',
-	                    { className: "btn btn-primary pull-right" + (this.state.saving ? " disabled" : ""), onClick: this.saveClicked },
-	                    'Save'
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = NewRecipe;
-
-/***/ },
-/* 292 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var Ingredient = __webpack_require__(293);
-
-	var IngredientList = React.createClass({
-	    displayName: 'IngredientList',
-
-	    render: function render() {
-	        var self = this;
-	        var ingredientNodes = this.props.ingredients.map(function (ingredient) {
-	            var err;
-	            if (self.props.err && self.props.err.paramId === ingredient.id) {
-	                err = self.props.err;
-	            }
-	            return React.createElement(Ingredient, { err: err, data: ingredient, ref: ingredient.id, key: ingredient.id });
-	        });
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-IngredientList well' },
-	            ingredientNodes
-	        );
-	    },
-
-	    toJSON: function toJSON() {
-	        var json = {};
-	        var self = this;
-	        Object.keys(this.refs).map(function (key) {
-	            var val = self.refs[key].value();
-	            if (val != undefined) {
-	                json[key] = val;
-	            }
-	        });
-	        return json;
-	    }
-	});
-	module.exports = IngredientList;
-
-/***/ },
-/* 293 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var UniqueIdMixin = __webpack_require__(221);
-
-	var Ingredient = React.createClass({
-	    displayName: 'Ingredient',
-
-	    mixins: [UniqueIdMixin],
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: undefined
-	        };
-	    },
-
-	    changeHandler: function changeHandler(evt) {
-	        this.setState({ value: evt.target.value });
-	    },
-
-	    render: function render() {
-	        var input;
-	        switch (this.props.data.type) {
-	            case 'string':
-	            case 'duration':
-	            case 'integer':
-	            case 'float':
-	                input = React.createElement('input', { className: 'ingredientInput form-control', type: 'text', onChange: this.changeHandler, id: this.getNextIdAndIncrement() });
-	                break;
-	            case 'boolean':
-	                input = React.createElement('input', { className: 'ingredientInput form-control', type: 'checkbox', value: 'true', onChange: this.changeHandler, id: this.getNextIdAndIncrement() });
-	                break;
-	            case 'datetime':
-	                //TODO: show calendar
-	                break;
-	            default:
-	                throw 'unknown ingredient type: ' + this.props.data.type;
-	        }
-
-	        var err = this.props.err;
-	        var errDesc = err ? err.description : '';
-	        return React.createElement(
-	            'div',
-	            null,
-	            React.createElement(
-	                'div',
-	                { className: "form-group" + (err ? " has-error" : "") },
-	                React.createElement(
-	                    'label',
-	                    { className: 'control-label', htmlFor: this.getCurrentId() },
-	                    this.props.data.name
-	                ),
-	                React.createElement(
-	                    'p',
-	                    null,
-	                    this.props.data.description
-	                ),
-	                input,
-	                React.createElement(
-	                    'span',
-	                    { className: "help-block" + (err ? "" : " invisible") },
-	                    'Error - ',
-	                    errDesc
-	                )
-	            )
-	        );
-	    },
-
-	    value: function value() {
-	        if (this.state.value == undefined) {
-	            return undefined;
-	        }
-
-	        switch (this.props.data.type) {
-	            case 'string':
-	                return this.state.value;
-	            case 'integer':
-	            case 'duration':
-	                return parseInt(this.state.value, 10);
-	            case 'float':
-	                return parseFloat(this.state.value);
-	            case 'boolean':
-	                return this.state.value === true || this.state.value === 'true';
-	                break;
-	            case 'datetime':
-	                //TODO:
-	                break;
-	            default:
-	                throw 'Unknown data type: ' + this.props.data.type;
-	        }
-	    }
-	});
-	module.exports = Ingredient;
-
-/***/ },
-/* 294 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var Trigger = __webpack_require__(295);
-
-	var TriggerList = React.createClass({
-	    displayName: 'TriggerList',
-
-	    handleClick: function handleClick(trigger) {
-	        this.props.selected(trigger);
-	    },
-
-	    render: function render() {
-	        var self = this;
-	        var triggerNodes = this.props.triggers.map(function (trigger) {
-	            return React.createElement(Trigger, { data: trigger, selected: self.handleClick, key: trigger.name });
-	        });
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-TriggerList clearfix' },
-	            triggerNodes
-	        );
-	    }
-	});
-	module.exports = TriggerList;
-
-/***/ },
-/* 295 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var React = __webpack_require__(1);
-
-	var Trigger = React.createClass({
-	    displayName: "Trigger",
-
-	    handleClick: function handleClick(evt) {
-	        evt.preventDefault();
-	        evt.stopPropagation();
-	        this.props.selected(this.props.data);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            "div",
-	            { className: "cmp-Trigger pull-left" },
-	            React.createElement(
-	                "button",
-	                { className: "btn btn-primary", onClick: this.handleClick },
-	                React.createElement(
-	                    "h4",
-	                    null,
-	                    this.props.data.name
-	                ),
-	                React.createElement(
-	                    "p",
-	                    null,
-	                    this.props.data.description
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = Trigger;
-
-/***/ },
-/* 296 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var Action = __webpack_require__(297);
-
-	var ActionList = React.createClass({
-	    displayName: 'ActionList',
-
-	    handleClick: function handleClick(action) {
-	        this.props.selected(action);
-	    },
-
-	    render: function render() {
-	        var self = this;
-	        var actionNodes = this.props.actions.map(function (action) {
-	            return React.createElement(Action, { data: action, selected: self.handleClick, key: action.name });
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ActionList clearfix' },
-	            actionNodes
-	        );
-	    }
-	});
-	module.exports = ActionList;
-
-/***/ },
-/* 297 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var React = __webpack_require__(1);
-
-	var Action = React.createClass({
-	    displayName: "Action",
-
-	    handleClick: function handleClick(evt) {
-	        evt.preventDefault();
-	        evt.stopPropagation();
-	        this.props.selected(this.props.data);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            "div",
-	            { className: "cmp-Trigger pull-left" },
-	            React.createElement(
-	                "button",
-	                { className: "btn btn-primary", onClick: this.handleClick },
-	                React.createElement(
-	                    "h4",
-	                    null,
-	                    this.props.data.name
-	                ),
-	                React.createElement(
-	                    "p",
-	                    null,
-	                    this.props.data.description
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = Action;
-
-/***/ },
 /* 298 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var CookBook = __webpack_require__(299);
-
-	var CookBookList = React.createClass({
-	    displayName: 'CookBookList',
-
-	    handleClick: function handleClick(cookBookID) {
-	        this.props.selected(cookBookID);
-	    },
-
-	    render: function render() {
-	        var self = this;
-	        var cookBookNodes = this.props.cookBooks.map(function (cookBook) {
-	            return React.createElement(CookBook, { data: cookBook, selected: self.handleClick, key: cookBook.id });
-	        });
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-CookBookList clearfix' },
-	            cookBookNodes
-	        );
-	    }
-	});
-	module.exports = CookBookList;
-
-/***/ },
-/* 299 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var AssetsMixin = __webpack_require__(300);
-
-	var CookBook = React.createClass({
-	    displayName: 'CookBook',
-
-	    mixins: [AssetsMixin],
-	    handleClick: function handleClick(evt) {
-	        evt.preventDefault();
-	        evt.stopPropagation();
-	        this.props.selected(this.props.data.id);
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-CookBook' },
-	            React.createElement(
-	                'button',
-	                { className: 'btn btn-default', onClick: this.handleClick },
-	                React.createElement('img', { src: this.getImageUrl(this.props.data.logoUrl) }),
-	                this.props.data.name
-	            )
-	        );
-	    }
-	});
-	module.exports = CookBook;
-
-/***/ },
-/* 300 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = {
-	    getImageUrl: function getImageUrl(imageName) {
-	        return 'assets/images/' + imageName;
-	    }
-	};
-
-/***/ },
-/* 301 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	var React = __webpack_require__(1);
-	var RecipeInfo = __webpack_require__(302);
-
-	var RecipeList = React.createClass({
-	    displayName: 'RecipeList',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            recipes: [],
-	            loading: true
-	        };
-	    },
-
-	    addRecipe: function addRecipe(recipe) {
-	        this.state.recipes.push(recipe);
-	        this.setState({ recipes: this.state.recipes });
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        var self = this;
-
-	        $.ajax({
-	            url: '/api/v1/recipes',
-	            dataType: 'json',
-	            cache: false,
-	            success: function success(data) {
-	                setTimeout(function () {
-	                    self.setState({ recipes: data, loading: false });
-	                }, 250);
-	            },
-	            error: function error(xhr, status, err) {
-	                console.error(err.toString());
-	            }
-	        });
-	    },
-
-	    recipeDestroyed: function recipeDestroyed(recipeId) {
-	        var recipes = this.state.recipes;
-	        for (var i = 0; i < recipes.length; ++i) {
-	            if (recipes[i].id === recipeId) {
-	                recipes.splice(i, 1);
-	                this.setState(_defineProperty({ recipes: recipes }, 'recipes', recipes));
-	                break;
-	            }
-	        }
-	    },
-
-	    render: function render() {
-	        var self = this;
-	        var recipeNodes = this.state.recipes.map(function (recipe) {
-	            return React.createElement(RecipeInfo, { recipe: recipe, key: recipe.id, onDestroy: self.recipeDestroyed });
-	        });
-
-	        var body = this.state.loading ? React.createElement(
-	            'div',
-	            { className: 'text-center' },
-	            React.createElement('i', { className: 'fa fa-spinner fa-spin' })
-	        ) : recipeNodes;
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-RecipeList' },
-	            body
-	        );
-	    }
-	});
-	module.exports = RecipeList;
-
-/***/ },
-/* 302 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var RecipeInfo = React.createClass({
-	    displayName: 'RecipeInfo',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            enabled: this.props.recipe.enabled,
-	            checkboxDisabled: false
-	        };
-	    },
-
-	    deleteClicked: function deleteClicked(evt) {
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/recipes/' + this.props.recipe.id,
-	            type: 'DELETE',
-	            cache: false,
-	            success: function (data) {
-	                self.props.onDestroy(self.props.recipe.id);
-	            }.bind(this),
-	            error: function (xhr, status, err) {
-	                console.error(err);
-	            }.bind(this)
-	        });
-	    },
-
-	    checkboxChange: function checkboxChange(evt) {
-	        var checkedState = evt.target.checked;
-
-	        this.setState({
-	            enabled: checkedState,
-	            checkboxDisabled: true
-	        });
-
-	        var self = this;
-	        $.ajax({
-	            url: '/api/v1/recipes/' + this.props.recipe.id,
-	            type: 'POST',
-	            dataType: 'json',
-	            data: JSON.stringify({ enabled: checkedState }),
-	            cache: false,
-	            success: function (data) {
-	                self.setState({ checkboxDisabled: false });
-	            }.bind(this),
-	            error: function (xhr, status, err) {
-	                console.error(err);
-	                self.setState({
-	                    checkboxDisabled: false,
-	                    enabled: !checkedState
-	                });
-	            }.bind(this)
-	        });
-	    },
-
-	    render: function render() {
-	        var recipe = this.props.recipe;
-
-	        var inputTitle = this.state.enabled ? 'Click to disable' : 'Click to enabled';
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-RecipeInfo well' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                recipe.name
-	            ),
-	            React.createElement(
-	                'p',
-	                null,
-	                recipe.description
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: 'clearfix' },
-	                React.createElement('input', { type: 'checkbox', title: inputTitle, className: this.state.checkboxDisabled ? 'disabled' : 'checkbox', checked: this.state.enabled, onChange: this.checkboxChange }),
-	                React.createElement(
-	                    'button',
-	                    { className: 'btn btn-danger pull-right', onClick: this.deleteClicked },
-	                    'Delete'
-	                )
-	            )
-	        );
-	    }
-	});
-	module.exports = RecipeInfo;
-
-/***/ },
-/* 303 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(304);
+	var content = __webpack_require__(299);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -32344,42 +31104,36 @@
 	}
 
 /***/ },
-/* 304 */
+/* 299 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
 	// module
-	exports.push([module.id, ".b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 0px;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n  box-shadow: 0px 2px 4px #bbb;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
+	exports.push([module.id, ".b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n  box-shadow: 0px 2px 4px #bbb;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
 
 	// exports
 
 
 /***/ },
-/* 305 */
+/* 300 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Redux = __webpack_require__(180);
-	var thunk = __webpack_require__(306).default;
-	var initialState = __webpack_require__(307);
-	var buttonReducer = __webpack_require__(308);
-	var systemReducer = __webpack_require__(309);
-	var scenesReducer = __webpack_require__(310);
-	var sensorReducer = __webpack_require__(312);
-	var zonesReducer = __webpack_require__(313);
-	var loadStatusReducer = __webpack_require__(314);
-	var errorReducer = __webpack_require__(315);
+	var thunk = __webpack_require__(301).default;
+	var initialState = __webpack_require__(302);
+	var systemReducer = __webpack_require__(303);
+	var scenesReducer = __webpack_require__(304);
+	var loadStatusReducer = __webpack_require__(306);
+	var errorReducer = __webpack_require__(307);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
 	    scenes: scenesReducer,
-	    zones: zonesReducer,
-	    buttons: buttonReducer,
-	    sensors: sensorReducer,
 	    appLoadStatus: loadStatusReducer,
 	    errors: errorReducer
 	});
@@ -32387,7 +31141,7 @@
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
 
 /***/ },
-/* 306 */
+/* 301 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -32415,17 +31169,13 @@
 	exports['default'] = thunk;
 
 /***/ },
-/* 307 */
+/* 302 */
 /***/ function(module, exports) {
 
 	"use strict";
 
 	module.exports = function () {
 	    return {
-	        // TODO:
-	        // True if the app has loaded all the data on app load and is ready to use
-	        //dataLoaded: false,
-
 	        system: {
 	            // Array of devices in the system
 	            devices: []
@@ -32440,22 +31190,10 @@
 	            saveState: {}
 	        },
 
-	        // An array of the zone items
-	        zones: [],
-
-	        // An array of all the button items
-	        buttons: [],
-
-	        // An array of all the sensors in the system
-	        sensors: [],
-
 	        // Initial load of the app
 	        appLoadStatus: {
 	            devicesLoaded: false,
-	            zonesLoaded: false,
-	            scenesLoaded: false,
-	            buttonsLoaded: false,
-	            sensorsLoaded: false
+	            scenesLoaded: false
 	        },
 
 	        // An array of errors that should be displayed in the app
@@ -32464,47 +31202,17 @@
 	};
 
 /***/ },
-/* 308 */
+/* 303 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(307);
+	var initialState = __webpack_require__(302);
+	var uuid = __webpack_require__(287);
 
 	module.exports = function (state, action) {
-	    var newState = [];
-
-	    switch (action.type) {
-	        case Constants.BUTTON_LOAD_ALL:
-	            break;
-
-	        case Constants.BUTTON_LOAD_ALL_RAW:
-	            newState = action.data;
-	            break;
-
-	        case Constants.BUTTON_LOAD_ALL_FAIL:
-	            //TODO: Loading error
-	            break;
-
-	        default:
-	            newState = state || initialState().buttons;
-	    }
-
-	    return newState;
-	};
-
-/***/ },
-/* 309 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(307);
-	var uuid = __webpack_require__(265);
-
-	module.exports = function (state, action) {
+	    //TODO: Don't always mutate
 	    var newState = Object.assign({}, state);
 
 	    switch (action.type) {
@@ -32523,6 +31231,26 @@
 	            newState.devices = [{
 	                id: uuid.v4()
 	            }].concat(newState.devices);
+	            break;
+
+	        case Constants.FEATURE_UPDATE:
+	            break;
+	        case Constants.FEATURE_UPDATE_RAW:
+	            newState.devices = newState.devices.map(function (device) {
+	                if (device.id !== action.data.deviceId) {
+	                    return device;
+	                }
+	                var dev = Object.assign({}, device);
+	                dev.features = (dev.features || []).map(function (feature) {
+	                    if (feature.id !== action.data.id) {
+	                        return feature;
+	                    }
+	                    return action.data;
+	                });
+	                return dev;
+	            });
+	            break;
+	        case Constants.FEATURE_UPDATE_FAIL:
 	            break;
 
 	        case Constants.DEVICE_CREATE:
@@ -32589,18 +31317,18 @@
 	};
 
 /***/ },
-/* 310 */
+/* 304 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(307);
-	var CommandsReducer = __webpack_require__(311);
-	var uuid = __webpack_require__(265);
+	var initialState = __webpack_require__(302);
+	var CommandsReducer = __webpack_require__(305);
+	var uuid = __webpack_require__(287);
 
 	module.exports = function (state, action) {
-	    var newState = Object.assign({}, state);
+	    var newState = state;
 
 	    switch (action.type) {
 	        case Constants.SCENE_LOAD_ALL:
@@ -32611,53 +31339,31 @@
 	            break;
 
 	        case Constants.SCENE_LOAD_ALL_RAW:
+	            newState = Object.assign({}, newState);
 	            newState.items = action.data;
 	            break;
 
 	        case Constants.SCENE_NEW_CLIENT:
+	            newState = Object.assign({}, newState);
 	            newState.items = [{
-	                id: uuid.v4()
+	                clientId: uuid.v4()
 	            }].concat(newState.items);
 	            break;
 
-	        case Constants.SCENE_CREATE:
-	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.id] = {
-	                err: null,
-	                status: 'saving'
-	            };
-	            break;
-
 	        case Constants.SCENE_CREATE_RAW:
-	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.id].status = 'success';
-
+	            newState = Object.assign({}, newState);
 	            newState.items = newState.items.map(function (scene) {
 	                // Replace with actual scene from the server
-	                if (scene.id === action.id) {
+	                if (scene.clientId === action.clientId) {
+	                    delete action.data.clientId;
 	                    return action.data;
 	                }
 	                return scene;
 	            });
 	            break;
 
-	        case Constants.SCENE_CREATE_FAIL:
-	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.id] = {
-	                status: 'error',
-	                err: action.err
-	            };
-	            break;
-
-	        case Constants.SCENE_UPDATE:
-	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.id] = {
-	                status: 'saving',
-	                err: null
-	            };
-	            break;
-
 	        case Constants.SCENE_UPDATE_RAW:
+	            newState = Object.assign({}, newState);
 	            newState.saveState = Object.assign({}, newState.saveState);
 	            newState.saveState[action.id] = { status: 'success' };
 	            newState.items = newState.items.map(function (scene) {
@@ -32669,22 +31375,20 @@
 	            });
 	            break;
 
-	        case Constants.SCENE_UPDATE_FAIL:
-	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.id] = {
-	                status: 'error',
-	                err: action.err
-	            };
-	            break;
-
 	        case Constants.SCENE_DESTROY:
 	            break;
 
 	        case Constants.SCENE_DESTROY_RAW:
-	            // This is a client scene, before it was sent to the server
-	            for (var i = 0; i < newState.items.length; ++i) {
-	                var found = found = newState.items[i].id === action.id;
+	            newState = Object.assign({}, newState);
 
+	            for (var i = 0; i < newState.items.length; ++i) {
+	                var found = false;
+	                if (action.clientId && action.clientId === newState.items[i].clientId) {
+	                    found = true;
+	                }
+	                if (action.id && action.id === newState.items[i].id) {
+	                    found = true;
+	                }
 	                if (found) {
 	                    newState.items = newState.items.slice();
 	                    newState.items.splice(i, 1);
@@ -32701,6 +31405,7 @@
 	        case Constants.SCENE_COMMAND_SAVE_RAW:
 	        case Constants.SCENE_COMMAND_SAVE_FAIL:
 	        case Constants.SCENE_COMMAND_DELETE_RAW:
+	            newState = Object.assign({}, newState);
 	            var scenes = newState.items;
 	            for (var i = 0; i < scenes.length; ++i) {
 	                if (scenes[i].id === action.sceneId) {
@@ -32719,35 +31424,43 @@
 	};
 
 /***/ },
-/* 311 */
+/* 305 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
+	var Uuid = __webpack_require__(287);
 
 	module.exports = function (state, action) {
 	    var newState = state;
 
 	    switch (action.type) {
 	        case Constants.SCENE_COMMAND_ADD:
-	            newState = newState.concat([{
-	                isNew: true,
-	                type: action.cmdType,
-	                attributes: {}
-	            }]);
+	            newState = newState.concat([action.cmd]);
 	            break;
 
 	        case Constants.SCENE_COMMAND_SAVE:
 	            break;
 	        case Constants.SCENE_COMMAND_SAVE_RAW:
-	            newState = newState.slice();
-	            newState[action.cmdIndex] = Object.assign({}, action.data, { isNew: false });
+	            newState = newState.map(function (cmd) {
+	                if (action.cmdClientId && cmd.clientId === action.cmdClientId) {
+	                    return action.cmdJson;
+	                }
+	                return cmd;
+	            });
 	            break;
 
 	        case Constants.SCENE_COMMAND_DELETE_RAW:
-	            newState = newState.slice();
-	            newState.splice(action.cmdIndex, 1);
+	            newState = newState.filter(function (cmd) {
+	                if (action.cmdClientId && cmd.clientId === action.cmdClientId) {
+	                    return false;
+	                }
+	                if (action.cmdId && cmd.id === action.cmdId) {
+	                    return false;
+	                }
+	                return true;
+	            });
 	            break;
 	        default:
 	            newState = state || [];
@@ -32757,161 +31470,43 @@
 	};
 
 /***/ },
-/* 312 */
+/* 306 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(307);
+	var initialState = __webpack_require__(302);
 
 	module.exports = function (state, action) {
 	    var newState = state;
-
-	    switch (action.type) {
-	        case Constants.SENSOR_LOAD_ALL:
-	            break;
-
-	        case Constants.SENSOR_LOAD_ALL_RAW:
-	            newState = action.data;
-	            break;
-
-	        case Constants.SENSOR_LOAD_ALL_FAIL:
-	            //TODO: Loading error
-	            break;
-
-	        case Constants.SENSOR_UPDATE:
-	            break;
-
-	        case Constants.SENSOR_UPDATE_RAW:
-	            newState = newState.map(function (sensor) {
-	                if (action.data.id === sensor.id) {
-	                    return action.data;
-	                }
-	                return sensor;
-	            });
-	            break;
-
-	        case Constants.SENSOR_UPDATE_FAIL:
-	            break;
-
-	        case Constants.SENSOR_IMPORT:
-	            break;
-	        case Constants.SENSOR_IMPORT_RAW:
-	            newState = [].concat(action.data, newState);
-	            break;
-	        case Constants.SENSOR_IMPORT_FAIL:
-	            break;
-
-	        default:
-	            newState = state || initialState().sensors;
-	    }
-
-	    return newState;
-	};
-
-/***/ },
-/* 313 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(307);
-
-	module.exports = function (state, action) {
-	    var newState = state;
-
-	    switch (action.type) {
-	        case Constants.ZONE_LOAD_ALL:
-	            break;
-
-	        case Constants.ZONE_LOAD_ALL_FAIL:
-	            break;
-
-	        case Constants.ZONE_LOAD_ALL_RAW:
-	            newState = action.data;
-	            break;
-
-	        case Constants.ZONE_CREATE:
-	            break;
-	        case Constants.ZONE_CREATE_RAW:
-	            break;
-	        case Constants.ZONE_CREATE_FAIL:
-	            break;
-
-	        case Constants.ZONE_UPDATE:
-	            break;
-
-	        case Constants.ZONE_UPDATE_RAW:
-	            newState = newState.map(function (zone) {
-	                if (action.data.id === zone.id) {
-	                    return action.data;
-	                }
-	                return zone;
-	            });
-	            break;
-
-	        case Constants.ZONE_UPDATE_FAIL:
-	            break;
-
-	        case Constants.ZONE_IMPORT:
-	            break;
-	        case Constants.ZONE_IMPORT_RAW:
-	            newState = [].concat(action.data, newState);
-	            break;
-	        case Constants.ZONE_IMPORT_FAIL:
-	            break;
-
-	        default:
-	            //console.log(action.type);
-	            //console.log(state);
-	            newState = state || initialState().zones;
-	    }
-
-	    return newState;
-	};
-
-/***/ },
-/* 314 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(206);
-
-	module.exports = function (state, action) {
-	    var newState = Object.assign({}, state);
 
 	    switch (action.type) {
 	        case Constants.SCENE_LOAD_ALL_RAW:
+	            newState = Object.assign({}, state);
 	            newState.scenesLoaded = true;
 	            break;
 
-	        case Constants.ZONE_LOAD_ALL_RAW:
-	            newState.zonesLoaded = true;
-	            break;
-
 	        case Constants.DEVICE_LOAD_ALL_RAW:
+	            newState = Object.assign({}, state);
 	            newState.devicesLoaded = true;
 	            break;
 
-	        case Constants.BUTTON_LOAD_ALL:
-	            newState.buttonsLoaded = true;
-	            break;
+	        default:
+	            newState = state || initialState().appLoadStatus;
 	    }
 
 	    return newState;
 	};
 
 /***/ },
-/* 315 */
+/* 307 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(307);
+	var initialState = __webpack_require__(302);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -32929,7 +31524,7 @@
 	};
 
 /***/ },
-/* 316 */
+/* 308 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32939,13 +31534,13 @@
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
 	var Api = __webpack_require__(204);
-	var BEMHelper = __webpack_require__(211);
+	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'Login',
 	    prefix: 'b-'
 	});
-	__webpack_require__(317);
+	__webpack_require__(309);
 
 	var Login = React.createClass({
 	    displayName: 'Login',
@@ -33008,8 +31603,8 @@
 	                            type: 'text',
 	                            className: 'form-control',
 	                            id: 'login',
-	                            autocapitalize: 'none',
-	                            autocorrect: 'off',
+	                            autoCapitalize: 'none',
+	                            autoCorrect: 'off',
 	                            placeholder: 'Login' })
 	                    ),
 	                    React.createElement(
@@ -33047,16 +31642,16 @@
 	module.exports = Login;
 
 /***/ },
-/* 317 */
+/* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(318);
+	var content = __webpack_require__(310);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(216)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -33073,10 +31668,10 @@
 	}
 
 /***/ },
-/* 318 */
+/* 310 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(215)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 

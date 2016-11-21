@@ -40,17 +40,8 @@ func (c *EventLogger) StartConsuming(ch chan evtbus.Event) {
 			var data evtbus.Event
 
 			switch evt := e.(type) {
-			case *SensorAttrChangedEvt:
-				eventType = "SensorAttrChangedEvt"
-				data = evt
-			case *ZoneLevelChangedEvt:
-				eventType = "ZoneLevelChangedEvt"
-				data = evt
-			case *ButtonPressEvt:
-				eventType = "ButtonPressEvt"
-				data = evt
-			case *ButtonReleaseEvt:
-				eventType = "ButtonReleaseEvt"
+			case *FeatureAttrsChangedEvt:
+				eventType = "FeatureAttrsChangedEvt"
 				data = evt
 			case *ClientConnectedEvt:
 				eventType = "ClientConnectedEvt"
@@ -69,11 +60,8 @@ func (c *EventLogger) StartConsuming(ch chan evtbus.Event) {
 			// In verbose mode we log more information, useful for debugging
 			if c.Verbose {
 				switch evt := e.(type) {
-				case *ZoneLevelReportingEvt:
-					eventType = "ZoneLevelReportingEvt"
-					data = evt
-				case *SensorAttrReportingEvt:
-					eventType = "SensorAttrReportingEvt"
+				case *FeatureReportingEvt:
+					eventType = "FeatureReportingEvt"
 					data = evt
 				}
 			}

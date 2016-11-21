@@ -2,8 +2,9 @@ package example
 
 import (
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
-	"github.com/markdaws/gohome/zone"
 )
 
 type discovery struct{}
@@ -78,7 +79,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	log.V("scanning for example hardware")
 
 	dev := gohome.NewDevice(
-		"",
+		sys.NewGlobalID(), // Each device needs a unique ID
 		"fake hardware name",
 		"fake hardware description",
 		"example.hardware.1",
@@ -91,47 +92,39 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		nil,
 	)
 
-	// You must give each object an ID, which will be unique in the system before returning
-	// the data back to the clients
-	dev.ID = sys.NextGlobalID()
+	// For the example we will populate the example hardware with one light zone and
+	// one sensor.  Devices can have multiple features.  A feature is a piece of
+	// functionality e.g. Button/Sensor/LightZone/Switch.
 
-	// Add one zone to the device
-	z := &zone.Zone{
-		ID:          sys.NextGlobalID(),
-		Address:     "1",
-		Name:        "fake zone 1",
-		Description: "fake zone 1 desc",
-		DeviceID:    dev.ID,
+	// Add a new LightZone, we will make this dimmable and not have an rgb channel
+	light := feature.NewLightZone(
+		sys.NewGlobalID(),
+		true,
+		false)
+	light.Address = "1"
+	light.Name = "fake light"
+	light.DeviceID = dev.ID
+	dev.AddFeature(light)
 
-		// Make this a dimmable light zone, there are many other types
-		Type:   zone.ZTLight,
-		Output: zone.OTContinuous,
-	}
-	dev.AddZone(z)
+	// Add a new sensor, each sensor can have one attribute it is monitoring, we will
+	// make this a simple open/close sensor. The first parameter is a localID for the
+	// attribute, since a feature can have many attribute, the localID can be used
+	// to distinguish between multiple attributes in a feature.  Since we can only
+	// monitor the sensor value it is marked as read only
+	openClose := attr.NewOpenClose("openclose", nil)
+	openClose.Perms = attr.PermsReadOnly
 
-	// Add a fake sensor to the device, each sensor can have one attribute that
-	// determines the type of the data returned from the device
-	sensor := &gohome.Sensor{
-		ID:          sys.NextGlobalID(),
-		Address:     "1",
-		Name:        "fake sensor",
-		Description: "",
-		DeviceID:    dev.ID,
-		Attr: gohome.SensorAttr{
-			Name:     "sensor",
-			Value:    "-1",
-			DataType: gohome.SDTInt,
-			States: map[string]string{
-				"0": "Closed",
-				"1": "Open",
-			},
-		},
-	}
-	dev.AddSensor(sensor)
+	sensor := feature.NewSensor(
+		sys.NewGlobalID(),
+		openClose,
+	)
+	sensor.Address = "2"
+	sensor.Name = "fake sensor"
+	sensor.DeviceID = dev.ID
+	dev.AddFeature(sensor)
 
 	// Return these devices back to the UI, the user can then choose to import them or not
 	return &gohome.DiscoveryResults{
 		Devices: []*gohome.Device{dev},
 	}, nil
-
 }

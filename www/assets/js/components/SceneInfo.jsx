@@ -4,9 +4,12 @@ var SaveBtn = require('./SaveBtn.jsx');
 var InputValidationMixin = require('./InputValidationMixin.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var CommandInfo = require('./CommandInfo.jsx');
-var CommandTypePicker = require('./CommandTypePicker.jsx');
+var FeatureTypePicker = require('./FeatureTypePicker.jsx');
+var Feature = require('../feature.js');
 var SceneActions = require('../actions/SceneActions.js');
 var BEMHelper = require('react-bem-helper');
+var Api = require('../utils/API.js');
+var Uuid = require('uuid');
 
 var classes = new BEMHelper({
     name: 'SceneInfo',
@@ -17,13 +20,6 @@ require('../../css/components/SceneInfo.less')
 var SceneInfo = React.createClass({
     mixins: [InputValidationMixin, UniqueIdMixin],
 
-    getDefaultProps: function() {
-        return {
-            //TODO: remove
-            buttons: []
-        };
-    },
-
     getInitialState: function() {
         return {
             id: this.props.scene.id || '',
@@ -31,21 +27,9 @@ var SceneInfo = React.createClass({
             address: this.props.scene.address || '',
             managed: (this.props.scene.managed == undefined) ? true : this.props.scene.managed,
             errors: this.props.errors,
-
-            // true if the object has been modified
+            saveButtonStatus: '',
             dirty: false,
-
-            saveButtonStatus: this.saveStatus
         };
-    },
-
-    componentWillReceiveProps: function(nextProps) {
-        if (nextProps.errors) {
-            this.setState({ errors: nextProps.errors });
-        }
-        if (nextProps.saveStatus) {
-            this.setState({ saveButtonStatus: nextProps.saveStatus });
-        }
     },
 
     toJson: function() {
@@ -59,25 +43,37 @@ var SceneInfo = React.createClass({
 
     saveScene: function() {
         this.setState({ errors: null });
-        var self = this;
 
-        //TODO: Broken
-        alert('this is broken, need to know if scene is new vs on server');
-        if (this.state.id === '') {
-            //TODO: Update state on save, not dirty, has id not clientId
-            this.props.saveScene(this.toJson());
+        if (this.state.clientId !== '') {
+            Api.sceneCreate(this.toJson(), function(err, data) {
+                if (err) {
+                    this.setState({saveButtonStatus: 'error' });
+                    return;
+                }
+                this.props.createdScene(data, this.props.scene.clientId);
+            }.bind(this));
         } else {
-            //TODO: Verify state correct after successfully updated
+
+            //TODO: Fix
             this.props.updateScene(this.toJson());
         }
     },
 
     deleteScene: function() {
-        this.props.deleteScene(this.state.id);
+        this.props.deleteScene(this.state.id, this.props.scene.clientId);
     },
 
-    commandTypeChanged: function(cmdType) {
-        this.props.addCommand(this.state.id, cmdType);
+    featurePickerChanged: function(featureType) {
+        // Current the only command we need for a scene is a FeatureSetAttrs, so we create a
+        // FeatureSetAttrs command and return that
+        var cmd = {
+            clientId: Uuid.v4(),
+            type: 'featureSetAttrs',
+            attributes: {
+                type: featureType
+            }
+        }
+        this.props.addCommand(this.state.id, cmd);
     },
 
     _inputChanged: function(evt) {
@@ -97,7 +93,7 @@ var SceneInfo = React.createClass({
             var cmdIndex = 0;
 
             if (this.state.id === '') {
-                commandNodes = <p>To add commands, first save the scene.</p>
+                commandNodes = <p>To add actions, first save the scene.</p>
             } else {
                 var commands = this.props.scene.commands || [];
                 commandNodes = commands.map(function(command) {
@@ -105,22 +101,30 @@ var SceneInfo = React.createClass({
                     var key = Math.random();
                     var info = (
                         <CommandInfo
-                            isNew={command.isNew}
                             scene={self.props.scene}
                             key={key}
                             index={cmdIndex}
+                            devices={self.props.devices}
                             scenes={self.props.scenes}
-                            zones={self.props.zones}
-                            buttons={self.props.buttons}
                             command={command} />
                     );
                     cmdIndex++;
                     return info;
                 });
+
+                var excluded = {};
+                excluded[Feature.Type.Sensor] = true;
+
+                //TODO: Add back once buttons are supported
+                excluded[Feature.Type.Button] = true;
+                excluded[Feature.Type.CoolZone] = true;
+
                 commandNodes = (
                     <div>
                         {commandNodes}
-                        Add Command: <CommandTypePicker changed={this.commandTypeChanged}/>
+                        <div {...classes('feature-picker')}>
+                            <FeatureTypePicker excluded={excluded} changed={this.featurePickerChanged}/>
+                        </div>
                     </div>
                 );
             }
@@ -181,18 +185,17 @@ var SceneInfo = React.createClass({
                 </div>
                 <div className="clearfix">
                     <a data-toggle="collapse" href={"#" + this.uid("commands")}>
-                        Edit Commands
+                        Edit Actions
                         <i {...classes('down-arrow', '', 'glyphicon glyphicon-menu-down')}></i>
                     </a>
                     {saveBtn}
                 </div>
                 <div {...classes('commands', '', 'collapse')} id={this.uid("commands")}>
-                    <h3 {...classes('command-header')}>Commands</h3>
+                    <h3 {...classes('command-header')}>Actions</h3>
                     {commandNodes}
                 </div>
             </div>
         );
     }
 });
-
 module.exports = SceneInfo;

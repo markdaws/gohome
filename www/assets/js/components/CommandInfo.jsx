@@ -1,77 +1,103 @@
 var React = require('react');
 var ReactRedux = require('react-redux');
-var ZoneSetLevelCommand = require('./ZoneSetLevelCommand.jsx');
-var SceneSetCommand = require('./SceneSetCommand.jsx');
+//var SceneSetCommand = require('./SceneSetCommand.jsx');
 var SaveBtn = require('./SaveBtn.jsx');
-var ButtonPressCommand = require('./ButtonPressCommand.jsx');
-var ButtonReleaseCommand = require('./ButtonReleaseCommand.jsx');
+var Feature = require('../feature.js');
+var FeatureSetAttrsCommand = require('./FeatureSetAttrsCommand.jsx');
 var Api = require('../utils/API.js');
 var Constants = require('../constants.js');
 var SceneActions = require('../actions/SceneActions.js');
+var BEMHelper = require('react-bem-helper');
+
+var classes = new BEMHelper({
+    name: 'CommandInfo',
+    prefix: 'b-'
+});
+require('../../css/components/CommandInfo.less')
 
 var CommandInfo = React.createClass({
+    getInitialState: function() {
+        return {
+            saveButtonStatus: '',
+            commandModified: false
+        };
+    },
+
     deleteCommand: function() {
-        //TODO: Show error in UI
-        //TODO: Normalize middleware to handle showing error from API, standardize responses
-        this.props.deleteCommand(this.props.scene.id, this.props.index, this.props.command.isNew);
+        this.props.deleteCommand(
+            this.props.scene.id,
+            this.props.command.id,
+            this.props.command.clientId
+        );
     },
 
     saveCommand: function() {
         var cmd = this.refs.cmd;
         this.setState({ errors: [] });
 
-        var cmdJson = cmd.toJson();
-        Api.sceneSaveCommand(this.props.scene.id, cmdJson, function(err, data) {
-            if (err) {
-                cmd.setErrors(err.validationErrors);
-                return;
-            }
+        var featureCmp = this.refs.featureCmp;
+        var settings = featureCmp.getSettings();
 
-            this.props.savedCommand(cmdJson, this.props.scene.id, this.props.index);
-        }.bind(this));
+        Api.sceneSaveCommand(
+            this.props.scene.id,
+            {
+                type: 'featureSetAttrs',
+                attributes: {
+                    id: settings.feature.id,
+                    type: settings.feature.type,
+                    attrs: settings.modifiedAttrs
+                }
+            },
+            function(err, data) {
+                if (err) {
+                    this.setState({
+                        saveButtonStatus: 'error'
+                    });
+                    return;
+                }
+
+                this.setState({ saveButtonStatus: 'success' });
+                this.props.savedCommand(this.props.scene.id, this.props.command.clientId, data);
+            }.bind(this)
+        );
+    },
+
+    commandChanged: function() {
+        this.setState({ commandModified: true });
     },
 
     render: function() {
         var command = this.props.command;
         var saveBtn
-        if (this.props.command.isNew) {
+        if (this.props.command.clientId && this.state.commandModified) {
             saveBtn = (
                 <SaveBtn
                     text="Save"
-                    status=""
+                    status={this.state.saveButtonStatus}
                     clicked={this.saveCommand} />
             );
         }
 
         var uiCmd;
         switch (command.type) {
-            case 'buttonPress':
-                uiCmd = (<ButtonPressCommand
-                             ref="cmd"
-                             disabled={!this.props.command.isNew}
-                             errors={(command.errors || {}).validationErrors}
-                             buttons={this.props.buttons}
-                             command={command}/>
+            case 'featureSetAttrs':
+                uiCmd = (
+                    <FeatureSetAttrsCommand
+                        ref='featureCmp'
+                        command={command}
+                        onAttrChanged={this.commandChanged}
+                        devices={this.props.devices}/>
                 );
                 break;
-            case 'buttonRelease':
-                uiCmd = (<ButtonReleaseCommand
-                             ref="cmd"
-                             disabled={!this.props.command.isNew}
-                             errors={(command.errors || {}).validationErrors}
-                             buttons={this.props.buttons}
-                             command={command}/>
-                );
+            default:
+                console.error('unknown command type: ' + command.type);
                 break;
-            case 'zoneSetLevel':
-                uiCmd = (<ZoneSetLevelCommand
-                    ref="cmd"
-                    disabled={!this.props.command.isNew}
-                    errors={(command.errors || {}).validationErrors}
-                    zones={this.props.zones}
-                    command={command} />
-                )
-                break;
+        }
+
+        /*
+        //TODO: Delete
+        var uiCmd;
+        switch (command.type) {
             case 'sceneSet':
                 uiCmd = (<SceneSetCommand
                     ref="cmd"
@@ -85,13 +111,18 @@ var CommandInfo = React.createClass({
             default:
                 console.error('unknown command type: ' + command.type);
         }
+        */
+
         return (
-            <div className="cmp-CommandInfo well well-sm clearfix">
-                <button className="btn btn-link btnDelete pull-right" onClick={this.deleteCommand}>
+            <div {...classes('','', 'well well-sm clearfix')}>
+                <button {...classes('btn-delete', '', 'btn btn-link pull-right')} onClick={this.deleteCommand}>
                     <i className="glyphicon glyphicon-trash"></i>
                 </button>
                 {uiCmd}
-                {saveBtn}
+                <div {...classes('save-btn', '', 'pull-right')}>
+                    {saveBtn}
+                    <div style={{clear:"both"}}></div>
+                </div>
             </div>
         );
     }
@@ -99,15 +130,11 @@ var CommandInfo = React.createClass({
 
 function mapDispatchToProps(dispatch) {
     return {
-        savedCommand: function(cmdData, sceneId, cmdIndex) {
-            dispatch({
-                type: Constants.SCENE_COMMAND_SAVE_RAW,
-                data: cmdData,
-                sceneId: sceneId,
-                cmdIndex: cmdIndex });
+        savedCommand: function(sceneId, cmdClientId, cmdData) {
+            dispatch(SceneActions.savedCommand(sceneId, cmdClientId, cmdData));
         },
-        deleteCommand: function(sceneId, cmdIndex, isNew) {
-            dispatch(SceneActions.deleteCommand(sceneId, cmdIndex, isNew));
+        deleteCommand: function(sceneId, cmdId, cmdClientId) {
+            dispatch(SceneActions.deleteCommand(sceneId, cmdId, cmdClientId));
         }
     }
 }

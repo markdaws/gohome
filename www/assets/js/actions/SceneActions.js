@@ -18,17 +18,9 @@ var SceneActions = {
         };
     },
 
-    create: function(sceneJson) {
+    created: function(sceneJson, clientId) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_CREATE, id: sceneJson.id });
-
-            Api.sceneCreate(sceneJson, function(err, data) {
-                if (err) {
-                    dispatch({ type: Constants.SCENE_CREATE_FAIL, err: err, id: sceneJson.id });
-                    return;
-                }
-                dispatch({ type: Constants.SCENE_CREATE_RAW, data: data, id: sceneJson.id });
-            });
+            dispatch({ type: Constants.SCENE_CREATE_RAW, data: sceneJson, id: sceneJson.id, clientId: clientId });
         };
     },
 
@@ -46,10 +38,10 @@ var SceneActions = {
         };
     },
 
-    destroyClient: function(id) {
+    destroyClient: function(clientId) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_DESTROY, id: id });
-            dispatch({ type: Constants.SCENE_DESTROY_RAW, id: id });
+            dispatch({ type: Constants.SCENE_DESTROY, clientId: clientId });
+            dispatch({ type: Constants.SCENE_DESTROY_RAW, clientId: clientId });
         };
     },
 
@@ -67,38 +59,53 @@ var SceneActions = {
         };
     },
 
-    addCommand: function(sceneId, cmdType) {
+    addCommand: function(sceneId, cmd) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_COMMAND_ADD, sceneId: sceneId, cmdType: cmdType });
+            dispatch({ type: Constants.SCENE_COMMAND_ADD, sceneId: sceneId, cmd: cmd });
         };
     },
 
-    deleteCommand: function(sceneId, cmdIndex, isNew) {
+    savedCommand: function(sceneId, cmdClientId, cmdJson) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_COMMAND_DELETE, cmdIndex: cmdIndex, sceneId: sceneId });
+            dispatch({
+                type: Constants.SCENE_COMMAND_SAVE_RAW,
+                sceneId: sceneId,
+                cmdClientId: cmdClientId,
+                cmdJson: cmdJson
+            });
+        };
+    },
 
-            if (isNew) {
-                // Client only
+    deleteCommand: function(sceneId, cmdId, cmdClientId) {
+        return function(dispatch) {
+            dispatch({
+                type: Constants.SCENE_COMMAND_DELETE,
+                cmdId: cmdId,
+                cmdClientId: cmdClientId,
+                sceneId: sceneId });
+
+            if (cmdClientId) {
+                // Client only, not saved on the server
                 dispatch({
                     type: Constants.SCENE_COMMAND_DELETE_RAW,
                     sceneId: sceneId,
-                    cmdIndex: cmdIndex });
+                    cmdClientId: cmdClientId });
                 return;
             }
 
-            Api.sceneDeleteCommand(sceneId, cmdIndex, function(err, data) {
+            Api.sceneDeleteCommand(sceneId, cmdId, function(err, data) {
                 if (err) {
                     dispatch({
                         type: Constants.SCENE_COMMAND_DELETE_FAIL,
                         sceneId: sceneId,
-                        cmdIndex: cmdIndex,
+                        cmdId: cmdId,
                         err: err });
                     return;
                 }
                 dispatch({
                     type: Constants.SCENE_COMMAND_DELETE_RAW,
                     sceneId: sceneId,
-                    cmdIndex: cmdIndex });
+                    cmdId: cmdId });
             });
         };
     },

@@ -7,7 +7,7 @@ import (
 	connectedbytcpExt "github.com/go-home-iot/connectedbytcp"
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/zone"
+	"github.com/markdaws/gohome/feature"
 	errExt "github.com/pkg/errors"
 )
 
@@ -61,7 +61,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 
 		dev := gohome.NewDevice(
-			"",
+			sys.NewGlobalID(),
 			"ConnectedByTcp - ID: "+info.DeviceID,
 			"",
 			"tcp600gwb",
@@ -78,7 +78,6 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 				Token: token,
 			},
 		)
-		dev.ID = sys.NextGlobalID()
 
 		// Get all of the rooms and all the zones in each room
 		ctx = context.TODO()
@@ -90,17 +89,12 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 
 		for _, room := range resp.Rooms {
-			for _, d := range room.Devices {
-				z := &zone.Zone{
-					ID:          sys.NextGlobalID(),
-					Address:     d.DID,
-					Name:        d.Name,
-					Description: "",
-					DeviceID:    dev.ID,
-					Type:        zone.ZTLight,
-					Output:      zone.OTContinuous,
-				}
-				dev.AddZone(z)
+			for _, roomDev := range room.Devices {
+				light := feature.NewLightZone(sys.NewGlobalID(), true, false)
+				light.Name = roomDev.Name
+				light.Address = roomDev.DID
+				light.DeviceID = dev.ID
+				dev.AddFeature(light)
 			}
 		}
 		devices[i] = dev

@@ -2,11 +2,10 @@ var React = require('react');
 var Api = require('../utils/API.js');
 var BEMHelper = require('react-bem-helper');
 var DeviceCell = require('./DeviceCell.jsx');
-var ZoneSensorCell = require('./ZoneSensorCell.jsx');
+var FeatureCell = require('./FeatureCell.jsx');
 var DeviceInfo = require('./DeviceInfo.jsx');
 var Grid = require('./Grid.jsx');
-var ZoneInfo = require('./ZoneInfo.jsx');
-var SensorInfo = require('./SensorInfo.jsx');
+var FeatureInfo = require('./FeatureInfo.jsx');
 var SaveBtn = require('./SaveBtn.jsx');
 
 var classes = new BEMHelper({
@@ -19,26 +18,18 @@ var ImportGroup = React.createClass({
     getInitialState: function() {
         this._unselected = {};
         this._savedDevices = {};
-        this._savedZones = {};
-        this._savedSensors = {};
-        
-        // We render all devices/zones/sensors together
-        var zones = [];
-        var sensors = [];
+        this._savedFeatures = {};
+
+        var features = [];
         (this.props.devices || []).forEach(function(device) {
-            device.zones.forEach(function(zone) {
-                zones.push(zone);
-            });
-            device.sensors.forEach(function(sensor) {
-                sensors.push(sensor);
+            (device.features || []).forEach(function(feature) {
+                features.push(feature);
             });
         });
         return {
             devices: this.props.devices,
-            zones: zones,
-            sensors: sensors,
-            zoneErrors: {},
-            sensorErrors: {},
+            features: features,
+            featureErrors: {},
             deviceErrors: {},
             saveButtonStatus: ''
         };
@@ -51,17 +42,13 @@ var ImportGroup = React.createClass({
             this._unselected[id] = true;
         }
     },
-    
+
     deviceChkBxChanged: function(deviceId, checked) {
         this.updateUnselected(deviceId, checked);
     },
 
-    zoneChkBxChanged: function(zoneId, checked) {
-        this.updateUnselected(zoneId, checked);
-    },
-
-    sensorChkBxChanged: function(sensorId, checked) {
-        this.updateUnselected(sensorId, checked);
+    featureChkBxChanged: function(featureId, checked) {
+        this.updateUnselected(featureId, checked);
     },
 
     _deviceChanged: function(cmp) {
@@ -77,48 +64,30 @@ var ImportGroup = React.createClass({
             saveButtonStatus: ''
         });
     },
-    
-    _zoneChanged: function(cmp) {
-        var zone = cmp.toJson();
-        var zones = this.state.zones.map(function(zn) {
-            if (zn.id === zone.id) {
-                return zone;
+
+    _featureChanged: function(cmp) {
+        var feature = cmp.toJson();
+        var features = this.state.features.map(function(f) {
+            if (f.id === feature.id) {
+                return feature;
             }
-            return zn;
+            return f;
         });
         this.setState({
-            zones: zones,
-            saveButtonStatus: ''
-        });
-    },
-
-    _sensorChanged: function(cmp) {
-        var sensor = cmp.toJson();
-
-        // Update our list of sensors, with the newly updated sensor replacing the old version,
-        // this will cause a re-render
-        var sensors = this.state.sensors.map(function(sen) {
-            if (sen.id === sensor.id) {
-                return sensor;
-            }
-            return sen;
-        });
-        this.setState({
-            sensors: sensors,
+            features: features,
             saveButtonStatus: ''
         });
     },
 
     importClicked: function() {
         this.refs["devicegrid"].closeExpander();
-        this.refs["zonegrid"].closeExpander();
-        this.refs["sensorgrid"].closeExpander();
+        this.refs["featuregrid"].closeExpander();
         this.setState({
             deviceErrors: {},
-            zoneErrors: {},
-            sensorErrors: {},
+            featureErrors: {},
         });
 
+        // TODO: Remove, do on server
         // When we are saving devices, we need to sort the devices so that
         // we save devices that don't have a hub before devices that do have
         // a hub, because we can't save a device that points to a hub that we
@@ -144,27 +113,25 @@ var ImportGroup = React.createClass({
 
             var device = sortedDevices[devIndex];
 
-            // We grouped all of the zones/sensors together, now we need to break them
+            //TODO: Object.assign
+
+            // We grouped all of the features together, now we need to break them
             // up in to their respective devices so they can be saved
-            device.zones = this.state.zones.filter(function(zone) {
-                return zone.deviceId === device.id &&
-                       !zone.isDupe &&
-                       !this._unselected[zone.id] &&
-                       !this._savedZones[zone.id];
-            }.bind(this));
-            device.sensors = this.state.sensors.filter(function(sensor) {
-                return sensor.deviceId === device.id &&
-                       !sensor.isDupe &&
-                       !this._unselected[sensor.id] &&
-                       !this._savedSensors[sensor.id];
+            device.features = this.state.features.filter(function(feature) {
+                return feature.deviceId === device.id &&
+                       !feature.isDupe &&
+                       !this._unselected[feature.id] &&
+                       !this._savedFeatures[feature.id];
             }.bind(this));
 
             if (device.isDupe || this._savedDevices[device.id]) {
-                // Don't save the device, save any new zones + sensors we found that aren't dupes
+                //TODO:
+                // Don't save the device, save any new features
                 function saveZone(index) {
                     if (index >= device.zones.length) {
                         // saved all of the zones, move on to the sensors
-                        saveSensor.bind(this)(0);
+                        //TODO:saveSensor.bind(this)(0);
+                        saveDevice.bind(this)(devIndex + 1);
                         return;
                     }
 
@@ -184,50 +151,19 @@ var ImportGroup = React.createClass({
                         saveZone.bind(this)(index + 1);
                     }.bind(this));
                 }
-                function saveSensor(index) {
-                    if (index >= device.sensors.length) {
-                        // Move on to the next device
-                        saveDevice.bind(this)(devIndex + 1);
-                        return;
-                    }
-
-                    var sensor = device.sensors[index];
-                    Api.sensorCreate(sensor, function(err, sensorData) {
-                        if (err) {
-                            var sensorErrs = {};
-                            sensorErrs[sensor.id] = err.validation.errors[sensor.id];
-                            this.setState({
-                                saveButtonStatus: 'error',
-                                sensorErrors: sensorErrs
-                            });
-                            return
-                        }
-                        this.props.createdSensors([ sensor ]);
-                        this._savedSensors[sensor.id] = true;
-                        saveSensor.bind(this)(index + 1);
-                    }.bind(this));
-                }
                 saveZone.bind(this)(0);
             } else {
                 Api.deviceCreate(device, function(err, deviceData) {
                     if (err) {
-                        var zoneErrs = {};
-                        var sensorErrs = {};
-                        this.state.zones.forEach(function(zone) {
-                            if (err.validation.errors[zone.id]) {
-                                zoneErrs[zone.id] = err.validation.errors[zone.id];
+                        var featureErrs = {};
+                        (device.features || []).forEach(function(feature) {
+                            if (err.validation.errors[feature.id]) {
+                                featureErrs[feature.id] = err.validation.errors[feature.id];
                             }
                         });
-                        this.state.sensors.forEach(function(sensor) {
-                            if (err.validation.errors[sensor.id]) {
-                                sensorErrs[sensor.id] = err.validation.errors[sensor.id];
-                            }
-                        });
-
                         this.setState({
                             saveButtonStatus: 'error',
-                            zoneErrors: zoneErrs,
-                            sensorErrors: sensorErrs,
+                            featureErrors: featureErrs,
                             deviceErrors: err.validation.errors[device.id] || {}
                         });
                         return;
@@ -235,15 +171,11 @@ var ImportGroup = React.createClass({
 
                     // Let callers know the device has been saved
                     this.props.createdDevice(deviceData);
-                    this.props.createdZones(device.zones);
-                    this.props.createdSensors(device.sensors);
+                    //TODO: Feature
 
                     this._savedDevices[device.id] = true;
-                    device.zones.forEach(function(zone) {
-                        this._savedZones[zone.id] = true;
-                    }.bind(this));
-                    device.sensors.forEach(function(sensor) {
-                        this._savedSensors[sensor.id] = true;
+                    (device.features || []).forEach(function(feature) {
+                        this._savedFeatures[feature.id] = true;
                     }.bind(this));
 
                     // Move on to the next device
@@ -263,11 +195,10 @@ var ImportGroup = React.createClass({
         }
         return null;
     },
-    
+
     render: function() {
         var devices = [];
-        var zones = [];
-        var sensors = [];
+        var features = [];
 
         (this.state.devices || []).forEach(function(device) {
             if (device.isDupe) {
@@ -296,70 +227,39 @@ var ImportGroup = React.createClass({
             devices.push(cell);
         }.bind(this));
 
-        (this.state.zones || []).forEach(function(zone) {
-            if (zone.isDupe) {
+        (this.state.features || []).forEach(function(feature) {
+            if (feature.isDupe) {
                 return;
             }
-            
-            var err = this.state.zoneErrors[zone.id];
-            var device = this.getDeviceById(zone.deviceId);
-            var cmpZone = {
-                key: 'zones_' + zone.id,
-                cell: <ZoneSensorCell
-                          id={zone.id}
+
+            var err = this.state.featureErrors[feature.id];
+            var device = this.getDeviceById(feature.deviceId);
+            var cmpFeature = {
+                key: 'feature_' + feature.id,
+                cell: <FeatureCell
+                          id={feature.id}
                           showCheckbox={true}
                           showLevel={false}
+                          chkBxChanged={this.featureChkBxChanged}
                           hasError={err != null}
-                          hasSuccess={this._savedZones[zone.id]}
-                          chkBxChanged={this.zoneChkBxChanged}
-                          key={"zonecell-" + zone.id}
-                          ref={"cell_zone_" + zone.id}
-                          zone={zone} />,
-                content: <ZoneInfo
-                             {...zone}
-                             readOnlyFields="deviceId"
-                             key={"zoneinfo-" + zone.id}
-                             ref={"zoneinfo-" + zone.id}
+                          hasSuccess={this._savedFeatures[feature.id]}
+                          key={feature.id}
+                          ref={"cell_feature_" + feature.id}
+                          feature={feature} />,
+                content: <FeatureInfo
+                             feature={feature}
+                             readOnlyFields="id, deviceId"
+                             key={feature.id}
                              errors={err}
                              deviceId={device.id}
                              devices={[ device ]}
-                             changed={this._zoneChanged} />
-            };
-            zones.push(cmpZone);
-        }.bind(this));
-
-        (this.state.sensors || []).forEach(function(sensor) {
-            if (sensor.isDupe) {
-                return;
-            }
-            
-            var err = this.state.sensorErrors[sensor.id];
-            var device = this.getDeviceById(sensor.deviceId);
-            var cmpSensor = {
-                key: 'sensor_' + sensor.id,
-                cell: <ZoneSensorCell
-                          id={sensor.id}
-                          showCheckbox={true}
-                          chkBxChanged={this.sensorChkBxChanged}
-                          hasError={err != null}
-                          hasSuccess={this._savedSensors[sensor.id]}
-                          key={sensor.id}
-                          ref={"cell_sensor_" + sensor.id}
-                          sensor={sensor} />,
-                content: <SensorInfo
-                             {...sensor}
-                             readOnlyFields="deviceId"
-                             key={sensor.id}
-                             errors={err}
-                             deviceId={device.id}
-                             devices={[ device ]}
-                             changed={this._sensorChanged} />
+                             changed={this._featureChanged} />
 
             };
-            sensors.push(cmpSensor);
+            features.push(cmpFeature);
         }.bind(this));
 
-        var hasNonDupes = devices.length > 0 || zones.length > 0 || sensors.length > 0;
+        var hasNonDupes = devices.length > 0 || features.length > 0;
         var body;
         if (hasNonDupes) {
             body = (
@@ -373,13 +273,9 @@ var ImportGroup = React.createClass({
                         <h2 {...classes('header')}>Devices</h2>
                         <Grid ref="devicegrid" key="devicegrid" cells={devices} />
                     </div>
-                    <div key="aa" {...classes('zones', zones.length === 0 ? 'hidden' : '')}>
-                        <h2 {...classes('header')}>Zones</h2>
-                        <Grid ref="zonegrid" key="zonegrid" cells={zones} />
-                    </div>
-                    <div {...classes('sensors', sensors.length === 0 ? 'hidden' : '')}>
-                        <h2 {...classes('header')}>Sensors</h2>
-                        <Grid ref="sensorgrid" key="sensorgrid" cells={sensors} />
+                    <div {...classes('features', features.length === 0 ? 'hidden' : '')}>
+                        <h2 {...classes('header')}>Features</h2>
+                        <Grid ref="featuregrid" key="featuregrid" cells={features} />
                     </div>
                     <div style={{ clear: 'both' }}></div>
                 </div>
@@ -387,7 +283,7 @@ var ImportGroup = React.createClass({
         } else {
             body = (
                 <div {...classes('no-new')}>
-                    No new devices/zones/sensors were found. Items previously imported will not be shown again
+                    No new devices or features were found. Items previously imported will not be shown again
                     unless you delete them from the system.
                 </div>
             );

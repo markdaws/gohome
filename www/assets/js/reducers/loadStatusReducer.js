@@ -1,24 +1,22 @@
 var Constants = require('../constants.js');
+var initialState = require('../initialState.js');
 
 module.exports = function(state, action) {
-    var newState = Object.assign({}, state);
+    var newState = state;
 
     switch(action.type) {
     case Constants.SCENE_LOAD_ALL_RAW:
+        newState = Object.assign({}, state);
         newState.scenesLoaded = true;
         break;
 
-    case Constants.ZONE_LOAD_ALL_RAW:
-        newState.zonesLoaded = true;
-        break;
-
     case Constants.DEVICE_LOAD_ALL_RAW:
+        newState = Object.assign({}, state);
         newState.devicesLoaded = true;
         break;
 
-    case Constants.BUTTON_LOAD_ALL:
-        newState.buttonsLoaded = true;
-        break;
+    default:
+        newState = state || initialState().appLoadStatus;
     }
 
     return newState;

@@ -4,7 +4,7 @@ import (
 	"github.com/go-home-iot/connection-pool"
 	fluxwifiExt "github.com/go-home-iot/fluxwifi"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/zone"
+	"github.com/markdaws/gohome/feature"
 )
 
 var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
@@ -57,7 +57,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		modelNumber := "fluxwifi"
 
 		dev := gohome.NewDevice(
-			"",
+			sys.NewGlobalID(),
 			name,
 			"",
 			modelNumber,
@@ -72,18 +72,12 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			}),
 			nil,
 		)
-		dev.ID = sys.NextGlobalID()
 
-		z := &zone.Zone{
-			ID:          sys.NextGlobalID(),
-			Address:     "1",
-			Name:        dev.Name,
-			Description: "",
-			DeviceID:    dev.ID,
-			Type:        zone.ZTLight,
-			Output:      zone.OTRGB,
-		}
-		dev.AddZone(z)
+		light := feature.NewLightZone(sys.NewGlobalID(), true, true)
+		light.Name = dev.Name
+		light.Address = "1"
+		light.DeviceID = dev.ID
+		dev.AddFeature(light)
 		devices[i] = dev
 	}
 

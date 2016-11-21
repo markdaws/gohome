@@ -3,6 +3,7 @@ var initialState = require('../initialState.js');
 var uuid = require('uuid');
 
 module.exports = function(state, action) {
+    //TODO: Don't always mutate
     var newState = Object.assign({}, state);
 
     switch(action.type) {
@@ -21,6 +22,26 @@ module.exports = function(state, action) {
         newState.devices = [{
             id: uuid.v4()
         }].concat(newState.devices);
+        break;
+
+    case Constants.FEATURE_UPDATE:
+        break;
+    case Constants.FEATURE_UPDATE_RAW:
+        newState.devices = newState.devices.map(function(device) {
+            if (device.id !== action.data.deviceId) {
+                return device;
+            }
+            var dev = Object.assign({}, device);
+            dev.features = (dev.features || []).map(function(feature) {
+                if (feature.id !== action.data.id) {
+                    return feature;
+                }
+                return action.data;
+            });
+            return dev;
+        });
+        break;
+    case Constants.FEATURE_UPDATE_FAIL:
         break;
 
     case Constants.DEVICE_CREATE:
@@ -58,7 +79,7 @@ module.exports = function(state, action) {
         break;
     case Constants.DEVICE_IMPORT_FAIL:
         break;
-        
+
     case Constants.DEVICE_DESTROY:
         break;
 
@@ -74,7 +95,7 @@ module.exports = function(state, action) {
             }
         }
         break;
-        
+
     case Constants.DEVICE_DESTROY_FAIL:
         //TODO:
         break;

@@ -32,7 +32,7 @@ module.exports = keyMirror({
     DEVICE_IMPORT: null,
     DEVICE_IMPORT_RAW: null,
     DEVICE_IMPORT_FAIL: null,
-    
+
     // Deletes a device
     DEVICE_DESTROY: null,
     DEVICE_DESTROY_RAW: null,
@@ -44,10 +44,10 @@ module.exports = keyMirror({
     // Clears all of the global errors
     ERROR_CLEAR: null,
 
-    // Load all of the buttons from the server
-    BUTTON_LOAD_ALL: null,
-    BUTTON_LOAD_ALL_RAW: null,
-    BUTTON_LOAD_ALL_FAIL: null,
+    // Updated a feature
+    FEATURE_UPDATE: null,
+    FEATURE_UPDATE_RAW: null,
+    FEATURE_UPDATE_FAIL: null,
 
     // Load all of the scenes from the server
     SCENE_LOAD_ALL: null,
@@ -83,39 +83,4 @@ module.exports = keyMirror({
     SCENE_COMMAND_DELETE: null,
     SCENE_COMMAND_DELETE_RAW: null,
     SCENE_COMMAND_DELETE_FAIL: null,
-
-    // Load all of the sensors from the server
-    SENSOR_LOAD_ALL: null,
-    SENSOR_LOAD_ALL_RAW: null,
-    SENSOR_LOAD_ALL_FAIL: null,
-
-    // When a sensor is being imported
-    SENSOR_IMPORT: null,
-    SENSOR_IMPORT_RAW: null,
-    SENSOR_IMPORT_FAIL: null,
-
-    // When a sensor is updated
-    SENSOR_UPDATE: null,
-    SENSOR_UPDATE_RAW: null,
-    SENSOR_UPDATE_FAIL: null,
-    
-    // Load all of the zones from the server
-    ZONE_LOAD_ALL: null,
-    ZONE_LOAD_ALL_RAW: null,
-    ZONE_LOAD_ALL_FAIL: null,
-
-    // Saves a zone on the server
-    ZONE_CREATE: null,
-    ZONE_CREATE_RAW: null,
-    ZONE_CREATE_FAIL: null,
-
-    // When a zone is being impored
-    ZONE_IMPORT: null,
-    ZONE_IMPORT_RAW: null,
-    ZONE_IMPORT_FAIL: null,
-
-    // When a zone is being updated
-    ZONE_UPDATE: null,
-    ZONE_UPDATE_RAW: null,
-    ZONE_UPDATE_FAIL: null,
 });

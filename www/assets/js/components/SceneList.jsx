@@ -7,6 +7,7 @@ var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var SceneActions = require('../actions/SceneActions.js');
 var Grid = require('./Grid.jsx');
 var BEMHelper = require('react-bem-helper');
+var Feature = require('../feature.js');
 
 var classes = new BEMHelper({
     name: 'SceneList',
@@ -17,12 +18,14 @@ require('../../css/components/SceneList.less')
 var SceneList = React.createClass({
     mixins: [UniqueIdMixin],
 
-    getInitialState: function() {
-        return { editMode: false };
+    getDefaultProps: function() {
+        return {
+            devices: []
+        };
     },
 
-    _onChange: function() {
-        this.forceUpdate();
+    getInitialState: function() {
+        return { editMode: false };
     },
 
     edit: function() {
@@ -47,20 +50,18 @@ var SceneList = React.createClass({
                 saveState = (this.props.scenes.saveState[scene.id] || {});
 
                 return (
-                    <div {...classes('scene-info')} key={scene.id}>
+                    <div {...classes('scene-info')} key={scene.id || scene.clientId}>
                         <SceneInfo
-                            zones={this.props.zones}
-                            buttons={this.props.buttons}
                             scenes={this.props.scenes.items}
+                            devices={this.props.devices}
                             scene={scene}
                             readOnlyFields="id"
-                            key={scene.id}
-                            errors={(saveState.err || {}).validationErrors}
-                            saveScene={this.props.saveScene}
+                            key={scene.id || scene.clientId}
+                            createdScene={this.props.createdScene}
+
                             updateScene={this.props.updateScene}
                             deleteScene={this.props.deleteScene}
-                            addCommand={this.props.addCommand}
-                            saveStatus={saveState.status} />
+                            addCommand={this.props.addCommand} />
                     </div>
                 );
             }.bind(this));
@@ -78,9 +79,9 @@ var SceneList = React.createClass({
 
             var gridCells = scenes.map(function(scene) {
                 return {
-                    key: scene.id,
+                    key: scene.id || scene.clientId,
                     cell: <SceneListGridCell scene={scene} />,
-                    content: <SceneControl scene={scene} key={scene.id}/>
+                    content: <SceneControl scene={scene} key={scene.id || scene.clientId}/>
                 };
             });
             btns = (
@@ -106,33 +107,34 @@ var SceneList = React.createClass({
     }
 });
 
-function mapStateToProps(state) {
-    return { }
-}
-
 function mapDispatchToProps(dispatch) {
     return {
         newClientScene: function() {
             dispatch(SceneActions.newClient());
         },
-        saveScene: function(sceneJson) {
-            dispatch(SceneActions.create(sceneJson));
-        },
-        updateScene: function(sceneJson) {
-            dispatch(SceneActions.update(sceneJson));
-        },
-        deleteScene: function(id) {
-            alert('broken needs client id');
-            if (id) {
-                dispatch(SceneActions.destroyClient(id));
+
+        deleteScene: function(id, clientId) {
+            if (clientId) {
+                dispatch(SceneActions.destroyClient(clientId));
             } else {
                 dispatch(SceneActions.destroy(id));
             }
         },
-        addCommand: function(sceneId, cmdType) {
-            dispatch(SceneActions.addCommand(sceneId, cmdType));
-        }
+
+        addCommand: function(sceneId, cmd) {
+            dispatch(SceneActions.addCommand(sceneId, cmd));
+        },
+
+        //TODO: Check
+        createdScene: function(sceneJson, clientId) {
+            dispatch(SceneActions.created(sceneJson, clientId));
+        },
+
+        //TODO: Check
+        updateScene: function(sceneJson) {
+            dispatch(SceneActions.update(sceneJson));
+        },
     }
 }
 
-module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SceneList);
+module.exports = ReactRedux.connect(null, mapDispatchToProps)(SceneList);

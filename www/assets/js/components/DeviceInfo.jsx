@@ -4,12 +4,7 @@ var UniqueIdMixin = require('./UniqueIdMixin.jsx')
 var InputValidationMixin = require('./InputValidationMixin.jsx')
 var SaveBtn = require('./SaveBtn.jsx');
 var Api = require('../utils/API.js');
-var ZoneInfo = require('./ZoneInfo.jsx')
-var SensorInfo = require('./SensorInfo.jsx')
-var ZoneActions = require('../actions/ZoneActions.js');
-var SensorActions = require('../actions/SensorActions.js');
 var DeviceTypePicker = require('./DeviceTypePicker.jsx');
-var Classnames = require('classnames');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
@@ -44,11 +39,7 @@ var DeviceInfo = React.createClass({
 
     getDefaultProps: function() {
         return {
-            zones: [],
-            sensors: [],
             showSaveBtn: false,
-            showZones: false,
-            showSensors: false,
         };
     },
 
@@ -94,6 +85,7 @@ var DeviceInfo = React.createClass({
     },
 
     createDevice: function() {
+        /*
         //TODO: Revisit now ew have one API to save everything at once
         Api.deviceCreate(this.toJson(), function(err, deviceData) {
             if (err) {
@@ -106,7 +98,7 @@ var DeviceInfo = React.createClass({
 
             // Let callers know the device has been saved
             this.props.createdDevice(this.state.id, deviceData);
-            
+
             // Now we need to loop through each of the zones and save them
             function saveZone(index) {
                 if (index >= this.props.zones.length) {
@@ -153,6 +145,7 @@ var DeviceInfo = React.createClass({
             }
 
         }.bind(this));
+        */
     },
 
     updateDevice: function() {
@@ -175,7 +168,7 @@ var DeviceInfo = React.createClass({
             this.props.updatedDevice(deviceData);
         }.bind(this));
     },
-    
+
     save: function() {
         this.setState({ errors: null });
 
@@ -258,49 +251,6 @@ var DeviceInfo = React.createClass({
             );
         }
 
-        var zones;
-        if (this.props.zones.length === 0) {
-            zones = <h4>0 zones found</h4>
-        } else {
-            zones = this.props.zones.map(function(zone) {
-                return (
-                    <ZoneInfo
-                        ref={"zoneInfo_" + zone.id}
-                        readOnlyFields="deviceId"
-                        key={zone.id}
-                        name={zone.name}
-                        description={zone.description}
-                        address={zone.address}
-                        type={zone.type}
-                        output={zone.output}
-                        deviceId={this.state.id}
-                        devices={[ this.toJson() ]}
-                        changed={this._zoneChanged} />
-                );
-            }.bind(this));
-        }
-
-        var sensors;
-        if (this.props.sensors.length === 0) {
-            sensors = <h4>0 sensors found</h4>
-        } else {
-            sensors = this.props.sensors.map(function(sensor) {
-                return (
-                    <SensorInfo
-                        ref={"sensorInfo_" + sensor.id}
-                        readOnlyFields="deviceId"
-                        key={sensor.id}
-                        name={sensor.name}
-                        description={sensor.description}
-                        address={sensor.address}
-                        attr={sensor.attr}
-                        deviceId={this.state.id}
-                        devices={[ this.toJson() ]}
-                        changed={this._sensorChanged} />
-                );
-            }.bind(this));
-        }
-
         return (
             <div {...classes('', '', 'well well-sm')}>
                 {deleteBtn}
@@ -366,24 +316,6 @@ var DeviceInfo = React.createClass({
                         id={this.uid("address")} />
                     {this.errMsg("address")}
                 </div>
-                <div className={Classnames({clearfix: true, hidden: !this.props.showZones})}>
-                    <a data-toggle="collapse" href={"#" + this.uid("zones")}>
-                        Zones
-                        <i {...classes('down-arrow', '', 'glyphicon glyphicon-menu-down')}></i>
-                    </a>
-                </div>
-                <div className="collapse zones" id={this.uid("zones")}>
-                    {zones}
-                </div>
-                <div className={Classnames({clearfix: true, hidden: !this.props.showSensors})}>
-                    <a data-toggle="collapse" href={"#" + this.uid("sensors")}>
-                        Sensors
-                        <i {...classes('down-arrow', '', 'glyphicon glyphicon-menu-down')}></i>
-                    </a>
-                </div>
-                <div className="collapse sensors" id={this.uid("sensors")}>
-                    {sensors}
-                </div>
                 {token}
                 <div className="pull-right">
                     {saveBtn}
@@ -396,15 +328,6 @@ var DeviceInfo = React.createClass({
 
 function mapDispatchToProps(dispatch) {
     return {
-        savedZone: function(zoneJson) {
-            dispatch(ZoneActions.importedZone(zoneJson));
-        },
-        savedSensor: function(sensorJson) {
-            dispatch(SensorActions.importedSensor(sensorJson));
-        },
-        raiseError: function(error) {
-            //TODO:
-        }
     };
 }
 module.exports = ReactRedux.connect(null, mapDispatchToProps)(DeviceInfo);

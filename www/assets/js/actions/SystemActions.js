@@ -38,6 +38,12 @@ var SystemActions = {
         };
     },
 
+    updatedFeature: function(featureJson) {
+        return function(dispatch) {
+            dispatch({ type: Constants.FEATURE_UPDATE_RAW, data: featureJson });
+        };
+    },
+
     importedDevice: function(deviceJson) {
         return function(dispatch) {
             dispatch({ type: Constants.DEVICE_IMPORT_RAW, data: deviceJson });

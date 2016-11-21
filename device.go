@@ -5,13 +5,14 @@ import (
 
 	"github.com/go-home-iot/connection-pool"
 	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/validation"
-	"github.com/markdaws/gohome/zone"
 )
 
 // DeviceType explains the type of a device e.g. Dimmer or Shade
 type DeviceType string
 
+//TODO: Needed?
 const (
 	// DTDimmer - dimmer
 	DTDimmer DeviceType = "dimmer"
@@ -68,17 +69,11 @@ type Device struct {
 	// SoftwareVersion can store what version of software is installed on the device
 	SoftwareVersion string
 
-	// Buttons - keyed by button address not global ID
-	Buttons map[string]*Button
-
 	// Devices - keyed by device address not global ID
 	Devices map[string]*Device
 
-	// Zones - keyed by zone address not global ID
-	Zones map[string]*zone.Zone
-
-	// Sensor - keyed by sensor address not global ID
-	Sensors map[string]*Sensor
+	// Features is a slice of features the device owns and exports
+	Features []*feature.Feature
 
 	// CmdBuilder knows how to take an abstract command like ZoneSetLevel and turn
 	// it in to specific commands for this particular piece of hardware.
@@ -94,6 +89,7 @@ type Device struct {
 	// you may have a keypad device, you don't talk directly to that but to some hub which
 	// has a network address that then knows how to talk to the keypad.  Calling Hub will give
 	// you that device.
+	// TODO: Rename? Router/Gateway
 	Hub *Device
 }
 
@@ -120,10 +116,7 @@ func NewDevice(
 		Name:            name,
 		Description:     description,
 		Hub:             hub,
-		Buttons:         make(map[string]*Button),
 		Devices:         make(map[string]*Device),
-		Zones:           make(map[string]*zone.Zone),
-		Sensors:         make(map[string]*Sensor),
 		Auth:            auth,
 		CmdBuilder:      cmdBuilder,
 		Connections:     connPool,
@@ -143,10 +136,6 @@ func (d *Device) Validate() *validation.Errors {
 		errors.Add("required field", "Name")
 	}
 
-	if d.Address == "" {
-		errors.Add("required field", "Address")
-	}
-
 	if errors.Has() {
 		return errors
 	}
@@ -158,26 +147,8 @@ func (d *Device) String() string {
 	return fmt.Sprintf("Device[ID:%s, Address:%s, Name: %s]", d.ID, d.Address, d.Name)
 }
 
-// AddZone adds the zone to the device
-func (d *Device) AddZone(z *zone.Zone) error {
-	errs := &validation.Errors{}
-
-	// Make sure zone doesn't have same address as any other zone
-	if _, ok := d.Zones[z.Address]; ok {
-		errs.Add(fmt.Sprintf("device already has a zone with the same address [%s], must be unique", z.Address), "Address")
-		return errs
-	}
-
-	d.Zones[z.Address] = z
-	return nil
-}
-
-// AddButton adds a button as a child of this device
-func (d *Device) AddButton(b *Button) error {
-	if _, ok := d.Buttons[b.Address]; ok {
-		return fmt.Errorf("button with address: %s already added to parent device", b.Address)
-	}
-	d.Buttons[b.Address] = b
+func (d *Device) AddFeature(f *feature.Feature) error {
+	d.Features = append(d.Features, f)
 	return nil
 }
 
@@ -190,47 +161,35 @@ func (d *Device) AddDevice(cd *Device) error {
 	return nil
 }
 
-// AddSensor adds a sensor as a child of this device
-func (d *Device) AddSensor(s *Sensor) error {
-	if _, ok := d.Sensors[s.Address]; ok {
-		return fmt.Errorf("sensor with address: %s already added to device", s.Address)
+// OwnedFeature returns a slice of features that the device owns, where the
+// map is keyed by feature.ID
+func (d *Device) OwnedFeatures(featureIDs map[string]bool) []*feature.Feature {
+	if len(d.Features) == 0 {
+		return nil
 	}
-	d.Sensors[s.Address] = s
+
+	var features []*feature.Feature
+	for _, feature := range d.Features {
+		if _, ok := featureIDs[feature.ID]; ok {
+			features = append(features, feature)
+		}
+	}
+	return features
+}
+
+// ButtonByAddress returns the button feature which has the matching address, nil
+// if no matching button is found
+func (d *Device) ButtonByAddress(addr string) *feature.Feature {
+	for _, f := range d.Features {
+		if f.Type == feature.FTButton && f.Address == addr {
+			return f
+		}
+	}
 	return nil
 }
 
-// OwnedZones returns a slice of zones that the device controls, where the
-// map is keyed by zone.ID
-func (d *Device) OwnedZones(zoneIDs map[string]bool) []*zone.Zone {
-	if len(d.Zones) == 0 {
-		return nil
-	}
-
-	zones := []*zone.Zone{}
-	for _, zone := range d.Zones {
-		if _, ok := zoneIDs[zone.ID]; ok {
-			zones = append(zones, zone)
-		}
-	}
-	return zones
-}
-
-// OwnedSensors returns a slice of sensors that the device controls, where the
-// map is keyed by sensor.ID
-func (d *Device) OwnedSensors(sensorIDs map[string]bool) []*Sensor {
-	if len(d.Sensors) == 0 {
-		return nil
-	}
-
-	sensors := []*Sensor{}
-	for _, sensor := range d.Sensors {
-		if _, ok := sensorIDs[sensor.ID]; ok {
-			sensors = append(sensors, sensor)
-		}
-	}
-	return sensors
-}
-
+/*
+//TODO: Remove
 // IsDupeZone returns true if this zone is a dupe of one the device already owns. This check
 // is not based on ID equality, since users could try to import a zone and it is given a new
 // ID when it is scanned, but it might be a dupe of a zone we previously scanned, so we have
@@ -239,9 +198,18 @@ func (d *Device) IsDupeZone(z *zone.Zone) (*zone.Zone, bool) {
 	zone, ok := d.Zones[z.Address]
 	return zone, ok
 }
+*/
 
-// IsDupeSensor returns true if the sensor is a dupe of one the device already owns
-func (d *Device) IsDupeSensor(s *Sensor) (*Sensor, bool) {
-	sensor, ok := d.Sensors[s.Address]
-	return sensor, ok
+//TODO: Is Dupe Feature, remove code above
+//TODO: Address required?
+
+// FeatureByAddress returns the first feature that matches the specified address
+// nil if no match is found
+func (d *Device) FeatureTypeByAddress(t string, addr string) *feature.Feature {
+	for _, f := range d.Features {
+		if f.Type == t && f.Address == addr {
+			return f
+		}
+	}
+	return nil
 }

@@ -16,6 +16,7 @@
     "react": "^15.3.2",
     "react-addons-css-transition-group": "^15.3.2",
     "react-addons-transition-group": "^15.3.2",
+    "react-bem-helper": "^1.2.0",
     "react-dom": "^15.3.2",
     "react-redux": "^4.4.5",
     "redux": "^3.6.0",
@@ -24,6 +25,8 @@
   },
   "devDependencies": {
     "css-loader": "^0.25.0",
+    "jshint": "^2.9.4",
+    "jshint-loader": "^0.8.3",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
     "redux-devtools": "^3.3.1",

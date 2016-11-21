@@ -2,8 +2,6 @@ var React = require('react');
 var ReactRedux = require('react-redux');
 var Api = require('../utils/API.js');
 var SystemActions = require('../actions/SystemActions.js');
-var ZoneActions = require('../actions/ZoneActions.js');
-var SensorActions = require('../actions/SensorActions.js');
 var ImportGroup = require('./ImportGroup.jsx');
 var BEMHelper = require('react-bem-helper');
 
@@ -38,7 +36,7 @@ var DiscoverDevices = React.createClass({
             scenes: null,
             errors: null
         });
-        
+
         Api.discovererScanDevices(
             this.props.discoverer.id,
             this.state.uiFields,
@@ -65,7 +63,7 @@ var DiscoverDevices = React.createClass({
         fields[id] = evt.target.value;
         this.setState({uiFields: fields});
     },
-    
+
     render: function() {
         var deviceCount = 0;
         if (this.state.devices) {
@@ -130,12 +128,6 @@ function mapDispatchToProps(dispatch) {
         importedDevice: function(deviceJson) {
             dispatch(SystemActions.importedDevice(deviceJson));
         },
-        importedZones: function(zones) {
-            dispatch(ZoneActions.importedZones(zones));
-        },
-        importedSensors: function(sensors) {
-            dispatch(SensorActions.importedSensors(sensors));
-        }
     };
 }
 

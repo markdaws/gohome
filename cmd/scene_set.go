@@ -8,6 +8,9 @@ type SceneSet struct {
 	SceneName string
 }
 
+func (c *SceneSet) GetID() string {
+	return c.ID
+}
 func (c *SceneSet) FriendlyString() string {
 	return fmt.Sprintf("Set scene \"%s\" [%s]", c.SceneName, c.SceneID)
 }

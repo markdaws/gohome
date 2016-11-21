@@ -1,25 +1,11 @@
 package api
 
-import "strings"
+import (
+	"strings"
 
-type jsonButton struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	FullName    string `json:"fullName"`
-	Description string `json:"description"`
-	Address     string `json:"address"`
-}
-type buttons []jsonButton
-
-func (slice buttons) Len() int {
-	return len(slice)
-}
-func (slice buttons) Less(i, j int) bool {
-	return slice[i].FullName < slice[j].FullName
-}
-func (slice buttons) Swap(i, j int) {
-	slice[i], slice[j] = slice[j], slice[i]
-}
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
+)
 
 type jsonCommand struct {
 	ID         string                 `json:"id"`
@@ -39,22 +25,20 @@ type jsonAuth struct {
 }
 
 type jsonDevice struct {
-	ID              string        `json:"id"`
-	Address         string        `json:"address"`
-	Name            string        `json:"name"`
-	Description     string        `json:"description"`
-	ModelNumber     string        `json:"modelNumber"`
-	ModelName       string        `json:"modelName"`
-	SoftwareVersion string        `json:"softwareVersion"`
-	Zones           []jsonZone    `json:"zones"`
-	Sensors         []jsonSensor  `json:"sensors"`
-	Buttons         []jsonButton  `json:"buttons"`
-	ConnPool        *jsonConnPool `json:"connPool"`
-	Type            string        `json:"type"`
-	Auth            *jsonAuth     `json:"auth"`
-	HubID           string        `json:"hubId"`
-	DeviceIDs       []string      `json:"deviceIds"`
-	IsDupe          bool          `json:"isDupe"`
+	ID              string             `json:"id"`
+	Address         string             `json:"address"`
+	Name            string             `json:"name"`
+	Description     string             `json:"description"`
+	ModelNumber     string             `json:"modelNumber"`
+	ModelName       string             `json:"modelName"`
+	SoftwareVersion string             `json:"softwareVersion"`
+	ConnPool        *jsonConnPool      `json:"connPool"`
+	Type            string             `json:"type"`
+	Auth            *jsonAuth          `json:"auth"`
+	HubID           string             `json:"hubId"`
+	DeviceIDs       []string           `json:"deviceIds"`
+	IsDupe          bool               `json:"isDupe"`
+	Features        []*feature.Feature `json:"features"`
 }
 type devices []jsonDevice
 
@@ -87,19 +71,11 @@ type jsonDiscovererInfo struct {
 
 type jsonMonitorGroup struct {
 	TimeoutInSeconds int      `json:"timeoutInSeconds"`
-	SensorIDs        []string `json:"sensorIds"`
-	ZoneIDs          []string `json:"zoneIds"`
+	FeatureIDs       []string `json:"featureIds"`
 }
 
-type jsonZoneLevel struct {
-	Value float32 `json:"value"`
-	R     byte    `json:"r"`
-	G     byte    `json:"g"`
-	B     byte    `json:"b"`
-}
 type jsonMonitorGroupResponse struct {
-	Sensors map[string]jsonSensorAttr `json:"sensors"`
-	Zones   map[string]jsonZoneLevel  `json:"zones"`
+	Features map[string]map[string]*attr.Attribute `json:"features"`
 }
 
 type jsonRecipe struct {
@@ -137,55 +113,5 @@ func (slice scenes) Less(i, j int) bool {
 	return strings.ToLower(slice[i].Name) < strings.ToLower(slice[j].Name)
 }
 func (slice scenes) Swap(i, j int) {
-	slice[i], slice[j] = slice[j], slice[i]
-}
-
-type jsonSensorAttr struct {
-	Name     string            `json:"name"`
-	Value    string            `json:"value"`
-	DataType string            `json:"dataType"`
-	States   map[string]string `json:"states"`
-}
-
-type jsonSensor struct {
-	ID          string         `json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Address     string         `json:"address"`
-	DeviceID    string         `json:"deviceId"`
-	Attr        jsonSensorAttr `json:"attr"`
-	IsDupe      bool           `json:"isDupe"`
-}
-type sensors []jsonSensor
-
-func (slice sensors) Len() int {
-	return len(slice)
-}
-func (slice sensors) Less(i, j int) bool {
-	return slice[i].Name < slice[j].Name
-}
-func (slice sensors) Swap(i, j int) {
-	slice[i], slice[j] = slice[j], slice[i]
-}
-
-type jsonZone struct {
-	Address     string `json:"address"`
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	DeviceID    string `json:"deviceId"`
-	Type        string `json:"type"`
-	Output      string `json:"output"`
-	IsDupe      bool   `json:"isDupe"`
-}
-type zones []jsonZone
-
-func (slice zones) Len() int {
-	return len(slice)
-}
-func (slice zones) Less(i, j int) bool {
-	return strings.ToLower(slice[i].Name) < strings.ToLower(slice[j].Name)
-}
-func (slice zones) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }

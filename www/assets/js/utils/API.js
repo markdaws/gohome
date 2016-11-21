@@ -5,7 +5,7 @@ var BASE = '//' + window.location.hostname + ':5000';
 */
 var API = {
     //TODO: Use a client side router and middleware
-    
+
     // setSID sets the session ID, this is needed to call an API
     setSID: function(sid) {
         this.SID = sid;
@@ -19,7 +19,7 @@ var API = {
             window.location = '/';
             return true;
         }
-        
+
         return false;
     },
 
@@ -27,10 +27,15 @@ var API = {
     url: function(url) {
         return BASE + url + '?sid=' + this.SID;
     },
-    
+
+    monitorGroups: function(monitorId) {
+        var conn = new WebSocket('ws:' + this.url('/api/v1/monitor/groups/' + monitorId));
+        return conn;
+    },
+
     deviceLoadAll: function(callback) {
         $.ajax({
-            url: this.url('/api/v1/devices'), 
+            url: this.url('/api/v1/devices'),
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -40,7 +45,7 @@ var API = {
                 if (this.checkErr(xhr)) {
                     return;
                 }
-                
+
                 callback({
                     err: err,
                     xhr: xhr,
@@ -87,7 +92,7 @@ var API = {
 
                 callback(xhr.responseJSON.err);
             }.bind(this)
-        });        
+        });
     },
 
     // Deletes a device on the server
@@ -102,13 +107,33 @@ var API = {
             error: function(xhr, status, err) {
                 if (this.checkErr(xhr)) {
                     return;
-                }                                
+                }
 
                 callback({
                     err: err,
                     status: status,
                     xhr: xhr
                 });
+            }.bind(this)
+        });
+    },
+
+    deviceSetFeatureAttrs: function(deviceId, featureId, attrs, callback) {
+        $.ajax({
+            url: this.url('/api/v1/devices/' + deviceId + '/features/' + featureId + '/apply'),
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(attrs),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                if (this.checkErr(xhr)) {
+                    return;
+                }
+
+                callback(xhr.responseJSON.err);
             }.bind(this)
         });
     },
@@ -251,13 +276,7 @@ var API = {
                     return;
                 }
 
-                alert('//TODO: This needs to be changed');
-                var errors = (xhr.responseJSON || {}).errors;
-                callback({
-                    err: err,
-                    xhr: xhr,
-                    validationErrors: errors
-                });
+                callback(xhr.responseJSON.err);
             }.bind(this)
         });
     },
@@ -358,172 +377,20 @@ var API = {
             }.bind(this)
         });
     },
-    
-    // sensorLoadAll loads all of the sensors from the backing store
-    sensorLoadAll: function(callback) {
-        $.ajax({
-            url: this.url('/api/v1/sensors'),
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                if (this.checkErr(xhr)) {
-                    return;
-                }
 
-                callback({
-                    err: err,
-                    status: status,
-                    xhr: xhr,
-                });
-            }.bind(this)
-        });
-    },
-
-    // sensorCreate creates a new sensor on the server
-    sensorCreate: function(sensorJson, callback) {
+    // featureUpdate updates a feature on the server with the new values
+    featureUpdate: function(deviceId, featureId, featureJson, callback) {
         $.ajax({
-            url: this.url('/api/v1/sensors'),
-            type: 'POST',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(sensorJson),
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                callback(xhr.responseJSON.err);
-            }.bind(this)
-        });
-    },
-
-    // sensorUpdate updates a sensor on the server with the new values
-    sensorUpdate: function(sensorJson, callback) {
-        $.ajax({
-            url: this.url('/api/v1/sensors/' + sensorJson.id),
+            url: this.url('/api/v1/devices/' + deviceId + '/features/' + featureId),
             type: 'PUT',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(sensorJson),
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                if (this.checkErr(xhr)) {
-                    return;
-                }
-
-                callback(xhr.responseJSON.err);
-            }.bind(this)
-        });        
-    },
-
-    // zoneLoadAll loads all of the zones from the backing store
-    zoneLoadAll: function(callback) {
-        $.ajax({
-            url: this.url('/api/v1/zones'),
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                callback({
-                    err: err,
-                    status: status,
-                    xhr: xhr,
-                });
-            }.bind(this)
-        });
-    },
-
-    // zoneCreate creates a new zone on the server
-    zoneCreate: function(zoneJson, callback) {
-        $.ajax({
-            url: this.url('/api/v1/zones'),
-            type: 'POST',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(zoneJson),
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                if (this.checkErr(xhr)) {
-                    return;
-                }
-
-                callback(xhr.responseJSON.err);
-            }.bind(this)
-        });
-    },
-
-    // zoneUpdate updates a zone on the server with the new values
-    zoneUpdate: function(zoneJson, callback) {
-        $.ajax({
-            url: this.url('/api/v1/zones/' + zoneJson.id),
-            type: 'PUT',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(zoneJson),
+            data: JSON.stringify(featureJson),
             success: function(data) {
                 callback(null, data);
             },
             error: function(xhr, status, err) {
                 callback(xhr.responseJSON.err);
-            }.bind(this)
-        });        
-    },
-
-    // zoneSetLevel sets the level of a zone.
-    // cmd -> 'turnOn | turnOff | setLevel
-    zoneSetLevel: function(zoneId, cmd, value, r, g, b, callback) {
-        $.ajax({
-            url: this.url('/api/v1/zones/' + zoneId + '/level'),
-            type: 'PUT',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({
-                cmd: cmd,
-                value: value,
-                r: r,
-                g: g,
-                b: b
-            }),
-            success: function(data) {
-                callback(null, data);
-            },
-            error: function(xhr, status, err) {
-                if (this.checkErr(xhr)) {
-                    return;
-                }
-
-                callback(err);
-            }.bind(this)
-        });
-    },
-
-    // buttonLoadAll loads all of the buttons in the system
-    buttonLoadAll: function(callback) {
-        $.ajax({
-            url: this.url('/api/v1/buttons'),
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                callback(null, data);
-            }.bind(this),
-            error: function(xhr, status, err) {
-                if (this.checkErr(xhr)) {
-                    return;
-                }
-
-                callback({
-                    err: err,
-                    xhr: xhr,
-                    status: status
-                });
             }.bind(this)
         });
     },
@@ -572,7 +439,7 @@ var API = {
 
     sessionCreate: function(login, password, callback) {
         // NOTE: This api lives on the WWW server, so we get a session cookie set on the
-        // WWW domain
+        // WWW domain, vs. this being on the API domain
         $.ajax({
             url: '//' + window.location.host + '/api/v1/users/' + login + '/sessions',
             type: 'POST',
@@ -590,7 +457,6 @@ var API = {
                 callback({});
             }.bind(this)
         });
-    },
-
+    }
 };
 module.exports = API;

@@ -3,14 +3,15 @@ package belkin
 import (
 	"html"
 	"regexp"
-	"strconv"
+	"sync"
 	"time"
 
 	belkinExt "github.com/go-home-iot/belkin"
 	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -24,79 +25,131 @@ type consumer struct {
 func (c *consumer) ConsumerName() string {
 	return c.Name
 }
+
 func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 	go func() {
 		for e := range ch {
 			switch evt := e.(type) {
-			case *gohome.ZonesReportEvt:
-				for _, zone := range c.Device.OwnedZones(evt.ZoneIDs) {
-					dev := &belkinExt.Device{
-						Scan: belkinExt.ScanResponse{
-							SearchType: string(c.DeviceType),
-							Location:   c.Device.Address,
-						},
-					}
-
-					switch c.DeviceType {
-					case belkinExt.DTMaker:
-						attrs, err := dev.FetchAttributes(time.Second * 5)
-						if err != nil {
-							log.V("Belkin - failed to fetch attrs: %s", err)
-							continue
-						}
-
-						if attrs.Switch != nil {
-							c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-								ZoneName: zone.Name,
-								ZoneID:   zone.ID,
-								Level:    cmd.Level{Value: float32(*attrs.Switch)},
-							})
-						}
-
-					case belkinExt.DTInsight:
-						state, err := dev.FetchBinaryState(time.Second * 5)
-						if err != nil {
-							log.V("Belkin - failed to fetch binary state: %s", err)
-							continue
-						}
-
-						c.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-							ZoneName: zone.Name,
-							ZoneID:   zone.ID,
-							Level:    cmd.Level{Value: float32(state)},
-						})
-					}
-				}
-
-			case *gohome.SensorsReportEvt:
-				for _, sensor := range c.Device.OwnedSensors(evt.SensorIDs) {
-					dev := &belkinExt.Device{
-						Scan: belkinExt.ScanResponse{
-							SearchType: string(c.DeviceType),
-							Location:   c.Device.Address,
-						},
-					}
-					attrs, err := dev.FetchAttributes(time.Second * 5)
-					if err != nil {
-						log.V("Belkin - failed to fetch attrs: %s", err)
-						continue
-					}
-
-					if attrs.Sensor != nil {
-						attr := sensor.Attr
-						attr.Value = strconv.Itoa(*attrs.Sensor)
-						c.System.Services.EvtBus.Enqueue(&gohome.SensorAttrChangedEvt{
-							SensorName: sensor.Name,
-							SensorID:   sensor.ID,
-							Attr:       attr,
-						})
-					}
-
+			case *gohome.FeaturesReportEvt:
+				switch c.DeviceType {
+				case belkinExt.DTInsight:
+					c.reportInsight(evt)
+				case belkinExt.DTMaker:
+					c.reportMaker(evt)
 				}
 			}
 		}
 	}()
 }
+
+func (c *consumer) reportInsight(evt *gohome.FeaturesReportEvt) {
+
+	dev := &belkinExt.Device{
+		Scan: belkinExt.ScanResponse{
+			SearchType: string(c.DeviceType),
+			Location:   c.Device.Address,
+		},
+	}
+
+	// Get all of the features we own, then fetch latest values
+	for _, f := range c.Device.OwnedFeatures(evt.FeatureIDs) {
+		switch f.Type {
+		case feature.FTOutlet:
+			state, err := dev.FetchBinaryState(time.Second * 5)
+			if err != nil {
+				log.V("Belkin - failed to fetch binary state: %s", err)
+				continue
+			}
+
+			var onOffVal int32
+			switch state {
+			case 0:
+				onOffVal = attr.OnOffOff
+			case 1, 8:
+				onOffVal = attr.OnOffOn
+			}
+
+			onoff := feature.OutletCloneAttrs(f)
+			onoff.Value = onOffVal
+			c.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+				FeatureID: f.ID,
+				Attrs:     feature.NewAttrs(onoff),
+			})
+		}
+	}
+}
+
+func (c *consumer) reportMaker(evt *gohome.FeaturesReportEvt) {
+	dev := &belkinExt.Device{
+		Scan: belkinExt.ScanResponse{
+			SearchType: string(c.DeviceType),
+			Location:   c.Device.Address,
+		},
+	}
+	var once sync.Once
+	var fetchErr error
+	var attrs *belkinExt.DeviceAttributes
+
+	// Get all of the features we own, then fetch latest values
+	for _, f := range c.Device.OwnedFeatures(evt.FeatureIDs) {
+
+		// We only need to do one call to the device to get all of the feature info
+		// so usong once will only call the request once
+		once.Do(func() {
+			attrs, fetchErr = dev.FetchAttributes(time.Second * 5)
+		})
+
+		if fetchErr != nil {
+			log.V("Belkin - failed to fetch attrs: %s", fetchErr)
+			continue
+		}
+
+		switch f.Type {
+		case feature.FTSwitch:
+			if attrs.Switch == nil {
+				continue
+			}
+
+			var onOffVal int32
+			switch *attrs.Switch {
+			case 0:
+				onOffVal = attr.OnOffOff
+			case 1, 8:
+				onOffVal = attr.OnOffOn
+			}
+
+			onoff := feature.SwitchCloneAttrs(f)
+			onoff.Value = onOffVal
+			c.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+				FeatureID: f.ID,
+				Attrs:     feature.NewAttrs(onoff),
+			})
+
+		case feature.FTSensor:
+
+			if attrs.Sensor == nil {
+				continue
+			}
+			var openCloseVal int32
+			switch *attrs.Sensor {
+			case 0:
+				openCloseVal = attr.OpenCloseClosed
+			case 1:
+				openCloseVal = attr.OpenCloseOpen
+			}
+
+			// Sensors only have one attribute, it can be any kind of attribute with any local
+			// ID so we just grab the only attribute and update it
+			attribute := attr.Only(f.Attrs).Clone()
+			attribute.Value = openCloseVal
+			c.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+				FeatureID: f.ID,
+				Attrs:     feature.NewAttrs(attribute),
+			})
+		}
+	}
+}
+
 func (c *consumer) StopConsuming() {
 	//TODO:
 }
@@ -120,13 +173,22 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 		return
 	}
 
+	var sensor *feature.Feature
+	var swtch *feature.Feature
+	var outlet *feature.Feature
+	for _, f := range p.Device.Features {
+		switch f.Type {
+		case feature.FTSensor:
+			sensor = f
+		case feature.FTSwitch:
+			swtch = f
+		case feature.FTOutlet:
+			outlet = f
+		}
+	}
+
 	// Contents are double HTML encoded when returned from the device
 	body := html.UnescapeString(html.UnescapeString(e.Body))
-
-	// We only have one zone and sensor, have to check incase we don't currently have
-	// a zone or sensor imported
-	zone, hasZone := p.Device.Zones["1"]
-	sensor, hasSensor := p.Device.Sensors["1"]
 
 	// This could be a response with an attribute list, or it could be a binary state property
 	attrList := attrRegexp.FindStringSubmatch(body)
@@ -136,25 +198,50 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 			return
 		}
 
-		if attrs.Sensor != nil && hasSensor {
-			p.System.Services.EvtBus.Enqueue(&gohome.SensorAttrChangedEvt{
-				SensorID:   sensor.ID,
-				SensorName: sensor.Name,
-				Attr: gohome.SensorAttr{
-					Name:     "sensor",
-					Value:    strconv.Itoa(*attrs.Sensor),
-					DataType: gohome.SDTInt,
-					States:   sensor.Attr.States,
-				},
-			})
-		} else if attrs.Switch != nil && hasZone {
-			p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-				ZoneName: zone.Name,
-				ZoneID:   zone.ID,
-				Level:    cmd.Level{Value: float32(*attrs.Switch)},
+		if attrs.Sensor != nil && sensor != nil {
+			var openCloseVal int32
+			switch *attrs.Sensor {
+			case 0:
+				openCloseVal = attr.OpenCloseClosed
+			case 1:
+				openCloseVal = attr.OpenCloseOpen
+			}
+
+			attribute := attr.Only(sensor.Attrs).Clone()
+			attribute.Value = openCloseVal
+			p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+				FeatureID: sensor.ID,
+				Attrs:     feature.NewAttrs(attribute),
 			})
 		}
-	} else if hasZone {
+
+		if attrs.Switch != nil {
+			var onOffVal int32
+			switch *attrs.Switch {
+			case 0:
+				onOffVal = attr.OnOffOff
+			case 1:
+				onOffVal = attr.OnOffOn
+			}
+
+			if swtch != nil {
+				onoff := feature.SwitchCloneAttrs(swtch)
+				onoff.Value = onOffVal
+				p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+					FeatureID: swtch.ID,
+					Attrs:     feature.NewAttrs(onoff),
+				})
+			}
+			if outlet != nil {
+				onoff := feature.OutletCloneAttrs(outlet)
+				onoff.Value = onOffVal
+				p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+					FeatureID: outlet.ID,
+					Attrs:     feature.NewAttrs(onoff),
+				})
+			}
+		}
+	} else if swtch != nil || outlet != nil {
 		binary := binaryRegexp.FindStringSubmatch(body)
 		if binary == nil || len(binary) == 0 {
 			return
@@ -167,11 +254,31 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 		if level == 8 {
 			level = 1
 		}
-		p.System.Services.EvtBus.Enqueue(&gohome.ZoneLevelReportingEvt{
-			ZoneName: zone.Name,
-			ZoneID:   zone.ID,
-			Level:    cmd.Level{Value: float32(level)},
-		})
+
+		var onOffVal int32
+		switch level {
+		case 0:
+			onOffVal = attr.OnOffOff
+		case 1:
+			onOffVal = attr.OnOffOn
+		}
+
+		if swtch != nil {
+			onoff := feature.SwitchCloneAttrs(swtch)
+			onoff.Value = onOffVal
+			p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+				FeatureID: swtch.ID,
+				Attrs:     feature.NewAttrs(onoff),
+			})
+		}
+		if outlet != nil {
+			onoff := feature.OutletCloneAttrs(outlet)
+			onoff.Value = onOffVal
+			p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+				FeatureID: outlet.ID,
+				Attrs:     feature.NewAttrs(onoff),
+			})
+		}
 	}
 }
 
