@@ -7,7 +7,6 @@ import (
 
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/zone"
 	"github.com/stretchr/testify/require"
 )
 

@@ -8,7 +8,6 @@ import (
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/zone"
 	"github.com/stretchr/testify/require"
 )
 
