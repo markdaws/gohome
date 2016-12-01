@@ -64,6 +64,7 @@ func (s *wwwServer) listenAndServe(addr string) error {
 	sub.Handle("/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
 
 	r.HandleFunc("/api/v1/users/{login}/sessions", apiNewSessionHandler(s.system, s.sessions)).Methods("POST")
+	r.HandleFunc("/logout", logoutHandler(s.rootPath))
 	r.HandleFunc("/", rootHandler(s.rootPath))
 
 	server := &http.Server{
@@ -78,6 +79,12 @@ func (s *wwwServer) listenAndServe(addr string) error {
 func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, rootPath+"/assets/html/index.html")
+	}
+}
+
+func logoutHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, rootPath+"/assets/html/logout.html")
 	}
 }
 
