@@ -15,10 +15,10 @@ var Login = React.createClass({
             error: null
         };
     },
-    
+
     loginClicked: function(evt) {
         evt.preventDefault();
-        
+
         this.setState({error: null});
 
         var $el = $(ReactDOM.findDOMNode(this))
@@ -45,7 +45,7 @@ var Login = React.createClass({
             //expire cookie: document.cookie = 'sid=; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
         }.bind(this));
     },
-    
+
     render: function() {
         return (
             <div {...classes()}>
@@ -62,6 +62,7 @@ var Login = React.createClass({
                             id="login"
                             autoCapitalize="none"
                             autoCorrect="off"
+                            autoFocus
                             placeholder="Login"></input>
                     </div>
 
@@ -75,7 +76,7 @@ var Login = React.createClass({
                 <div {...classes('error', this.state.error !== null ? '' : 'hidden')}>
                     The login/password combination is not valid, follow the instructions below to add a user or update your password
                 </div>
-                
+
                 <div {...classes('need-credentials')}>
                     Don't have a login/password, or forgot your details, click <a href="https://github.com/markdaws/gohome">here</a> and follow the instructions.
                 </div>

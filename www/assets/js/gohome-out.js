@@ -31605,6 +31605,7 @@
 	                            id: 'login',
 	                            autoCapitalize: 'none',
 	                            autoCorrect: 'off',
+	                            autoFocus: true,
 	                            placeholder: 'Login' })
 	                    ),
 	                    React.createElement(
