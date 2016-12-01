@@ -116,7 +116,7 @@ func NewFromType(ID, fType string) *Feature {
 	case FTHeatZone:
 		return NewHeatZone(ID)
 	case FTLightZone:
-		return NewLightZone(ID, true, true)
+		return NewLightZone(ID, LightZoneModeHSL)
 	case FTOutlet:
 		return NewOutlet(ID)
 	case FTSwitch:
@@ -199,13 +199,24 @@ const (
 	// LightZoneBrightnessLocalID is the local ID for the brightness attribute
 	LightZoneBrightnessLocalID string = "brightness"
 
-	// LightZoneHueLocalID is the local ID for the Hue attribute
-	LightZoneHueLocalID string = "hue"
+	// LightZoneHSLLocalID is the local ID for the HSL attribute
+	LightZoneHSLLocalID string = "hsl"
+
+	// LightZoneModeBinary indicates the light can only be in either an on or off
+	// state, nothing inbetween i.e. not dimmable
+	LightZoneModeBinary = "binary"
+
+	// LightZoneModeContinuous indicates the light can be dimmed
+	LightZoneModeContinuous = "continuous"
+
+	// LightZoneModeHSL indicates the light supports different colours mapped to
+	// values in the HSL color space
+	LightZoneModeHSL = "hsl"
 )
 
 // NewLightZone returns a feature initialized as a LightZone.  A Light zone represents
 // a single or multiple bulbs
-func NewLightZone(ID string, dimmable, hue bool) *Feature {
+func NewLightZone(ID, mode string) *Feature {
 	s := &Feature{
 		ID:    ID,
 		Type:  FTLightZone,
@@ -217,25 +228,27 @@ func NewLightZone(ID string, dimmable, hue bool) *Feature {
 	onOff.Name = "On/Off"
 	s.Attrs[onOff.LocalID] = onOff
 
-	// If the light is also dimmable then we need to add a brightness attribute
-	if dimmable {
+	switch mode {
+	case LightZoneModeBinary:
+		// Nothing else to do, only support on/off
+
+	case LightZoneModeContinuous:
+		// Light can be dimmed
 		brightness := attr.NewBrightness("brightness", nil)
 		brightness.Name = "Brightness"
 		s.Attrs[brightness.LocalID] = brightness
-	}
 
-	// If the light can set RGB values, add a hue attribute
-	if hue {
-		hue := attr.NewHue("hue", nil)
-		hue.Name = "Hue"
-		s.Attrs[hue.LocalID] = hue
+	case LightZoneModeHSL:
+		hsl := attr.NewHSL("hsl", nil)
+		hsl.Name = "HSL"
+		s.Attrs[hsl.LocalID] = hsl
 	}
 
 	return s
 }
 
 // LightZoneCloneAttrs clone the common attributes for a light zone so they can be updated
-func LightZoneCloneAttrs(f *Feature) (onoff, brightness, hue *attr.Attribute) {
+func LightZoneCloneAttrs(f *Feature) (onoff, brightness, hsl *attr.Attribute) {
 	var ok bool
 	if brightness, ok = f.Attrs[LightZoneBrightnessLocalID]; ok {
 		brightness = brightness.Clone()
@@ -245,8 +258,8 @@ func LightZoneCloneAttrs(f *Feature) (onoff, brightness, hue *attr.Attribute) {
 		onoff = onoff.Clone()
 	}
 
-	if hue, ok := f.Attrs[LightZoneHueLocalID]; ok {
-		hue = hue.Clone()
+	if hsl, ok = f.Attrs[LightZoneHSLLocalID]; ok {
+		hsl = hsl.Clone()
 	}
 	return
 }
@@ -292,7 +305,8 @@ func WindowTreatmentCloneAttrs(f *Feature) (openClose, offset *attr.Attribute) {
 	return
 }
 
-//TODO: Attributes?
+// NewButton returns a new button instance
+// TODO: Attributes?
 func NewButton(ID string) *Feature {
 	b := &Feature{
 		ID:    ID,

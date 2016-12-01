@@ -61,33 +61,18 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 						},
 					}, nil
 				}
-			case attr.ATBrightness:
+			case attr.ATHSL:
 				return &cmd.Func{
 					Func: func() error {
-						return fmt.Errorf("unsupported")
-						//TODO: Fix
-						/*
-							var rV, gV, bV byte
-							lvl := command.Level.Value
-							if lvl == 0 {
-								if (command.Level.R == 0) && (command.Level.G == 0) && (command.Level.B == 0) {
-									rV = 0
-									gV = 0
-									bV = 0
-								} else {
-									rV = command.Level.R
-									gV = command.Level.G
-									bV = command.Level.B
-								}
-							} else {
-								rV = byte((lvl / 100) * 255)
-								gV = rV
-								bV = rV
-							}
+						hsl := attribute.Value.(string)
+						r, g, b, err := attr.HSLStringToRGB(hsl)
+						if err != nil {
+							return fmt.Errorf("unable to read HSL value: %s", hsl)
+						}
 
-							return getConnAndExecute(d, func(conn *pool.Connection) error {
-								return fluxwifiExt.SetLevel(rV, gV, bV, conn)
-							})*/
+						return getConnAndExecute(d, func(conn *pool.Connection) error {
+							return fluxwifiExt.SetLevel(byte(r), byte(g), byte(b), conn)
+						})
 					},
 				}, nil
 			}

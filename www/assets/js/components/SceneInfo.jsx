@@ -44,18 +44,34 @@ var SceneInfo = React.createClass({
     saveScene: function() {
         this.setState({ errors: null });
 
-        if (this.state.clientId !== '') {
+        if (!this.state.id) {
             Api.sceneCreate(this.toJson(), function(err, data) {
-                if (err) {
+                if (err && !err.validation) {
                     this.setState({saveButtonStatus: 'error' });
+                    return;
+                } else if (err && err.validation) {
+                    this.setState({
+                        saveButtonStatus: 'error',
+                        errors: err.validation.errors[this.state.id]
+                    });
                     return;
                 }
                 this.props.createdScene(data, this.props.scene.clientId);
             }.bind(this));
         } else {
-
-            //TODO: Fix
-            this.props.updateScene(this.toJson());
+            Api.sceneUpdate(this.toJson(), function(err, data) {
+                if (err && !err.validation) {
+                    this.setState({saveButtonStatus: 'error' });
+                    return;
+                } else if (err && err.validation) {
+                    this.setState({
+                        saveButtonStatus: 'error',
+                        errors: err.validation.errors[this.state.id]
+                    });
+                    return;
+                }
+                this.props.updatedScene(data, this.props.scene.id);
+            }.bind(this));
         }
     },
 
@@ -97,12 +113,10 @@ var SceneInfo = React.createClass({
             } else {
                 var commands = this.props.scene.commands || [];
                 commandNodes = commands.map(function(command) {
-                    //TODO: We need to give commands an ID on the server so we can have a proper index
-                    var key = Math.random();
                     var info = (
                         <CommandInfo
                             scene={self.props.scene}
-                            key={key}
+                            key={command.id || command.clientId}
                             index={cmdIndex}
                             devices={self.props.devices}
                             scenes={self.props.scenes}

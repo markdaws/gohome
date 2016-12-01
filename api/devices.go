@@ -158,7 +158,7 @@ func apiDeviceApplyFeaturesAttrsHandler(savePath string, system *gohome.System) 
 			return
 		}
 
-		desc := "TODO:"
+		desc := "FeatureSetAttrs"
 		err = system.Services.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.FeatureSetAttrs{
 			FeatureID:   featureID,
 			FeatureName: f.Name,

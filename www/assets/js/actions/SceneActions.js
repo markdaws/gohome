@@ -24,17 +24,9 @@ var SceneActions = {
         };
     },
 
-    update: function(sceneJson) {
+    updated: function(sceneJson, id) {
         return function(dispatch) {
-            dispatch({ type: Constants.SCENE_UPDATE, id: sceneJson.id });
-
-            Api.sceneUpdate(sceneJson, function(err, data) {
-                if (err) {
-                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err, id: sceneJson.id });
-                    return;
-                }
-                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data, id: sceneJson.id, sceneJson: sceneJson });
-            });
+            dispatch({ type: Constants.SCENE_UPDATE_RAW, data: sceneJson, id: id });
         };
     },
 

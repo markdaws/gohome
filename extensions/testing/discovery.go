@@ -53,8 +53,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 	light := feature.NewLightZone(
 		sys.NewGlobalID(),
-		false,
-		false)
+		feature.LightZoneModeBinary)
 	light.Address = "1"
 	light.Name = "onoff light"
 	light.DeviceID = dev.ID
@@ -62,8 +61,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 	dimmableLight := feature.NewLightZone(
 		sys.NewGlobalID(),
-		true,
-		false)
+		feature.LightZoneModeContinuous)
 	dimmableLight.Address = "2"
 	dimmableLight.Name = "dimmable light"
 	dimmableLight.DeviceID = dev.ID
@@ -97,14 +95,13 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	window.DeviceID = dev.ID
 	dev.AddFeature(window)
 
-	hueLight := feature.NewLightZone(
+	colorLight := feature.NewLightZone(
 		sys.NewGlobalID(),
-		true,
-		true)
-	hueLight.Address = "7"
-	hueLight.Name = "hue light"
-	hueLight.DeviceID = dev.ID
-	dev.AddFeature(hueLight)
+		feature.LightZoneModeHSL)
+	colorLight.Address = "7"
+	colorLight.Name = "colour light"
+	colorLight.DeviceID = dev.ID
+	dev.AddFeature(colorLight)
 
 	button := feature.NewButton(sys.NewGlobalID())
 	button.Name = "button1"

@@ -52,7 +52,7 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 
 				if state.Power < 2 {
 					// Get the cloned attributes
-					onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+					onoff, _, hsl := feature.LightZoneCloneAttrs(f)
 
 					var onoffVal int32
 					if state.Power > 0 {
@@ -61,17 +61,11 @@ func (c *consumer) StartConsuming(ch chan evtbus.Event) {
 						onoffVal = attr.OnOffOff
 					}
 					onoff.Value = onoffVal
-
-					brightness.Value = float32(state.Power)
-
-					//TODO: Hue, convert RGB to hue
-					//R:     state.R,
-					//G:     state.G,
-					//B:     state.B,
+					hsl.Value = attr.RGBToHSLString(int(state.R), int(state.G), int(state.B))
 
 					c.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
 						FeatureID: f.ID,
-						Attrs:     feature.NewAttrs(brightness, onoff),
+						Attrs:     feature.NewAttrs(onoff, hsl),
 					})
 				}
 			}
@@ -119,23 +113,19 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 
 				// 2 is unknown so ignore
 				if state.Power < 2 {
-					onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+					onoff, _, hsl := feature.LightZoneCloneAttrs(f)
 
-					brightness.Value = float32(state.Power)
 					if state.Power > 0 {
 						onoff.Value = attr.OnOffOn
 					} else {
 						onoff.Value = attr.OnOffOff
 					}
 
-					//TODO: Hue, convert RGB to hue
-					//R:     state.R,
-					//G:     state.G,
-					//B:     state.B,
+					hsl.Value = attr.RGBToHSLString(int(state.R), int(state.G), int(state.B))
 
 					p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
 						FeatureID: f.ID,
-						Attrs:     feature.NewAttrs(onoff, brightness),
+						Attrs:     feature.NewAttrs(onoff, hsl),
 					})
 				}
 			}

@@ -7,7 +7,7 @@ var Type = {
     OpenClose: 'OpenClose',
     OnOff: 'OnOff',
     Brightness: 'Brightness',
-    Hue: 'Hue',
+    HSL: 'HSL',
     Offset: 'Offset',
     Temperature: 'Temperature'
 };

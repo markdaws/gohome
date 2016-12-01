@@ -90,7 +90,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 		for _, room := range resp.Rooms {
 			for _, roomDev := range room.Devices {
-				light := feature.NewLightZone(sys.NewGlobalID(), true, false)
+				light := feature.NewLightZone(sys.NewGlobalID(), feature.LightZoneModeContinuous)
 				light.Name = roomDev.Name
 				light.Address = roomDev.DID
 				light.DeviceID = dev.ID

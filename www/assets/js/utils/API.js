@@ -198,14 +198,7 @@ var API = {
                     return;
                 }
 
-                alert('//TODO: this needs to be changed');
-                var errors = (xhr.responseJSON || {}).errors;
-                callback({
-                    err: err,
-                    xhr: xhr,
-                    validationErrors: errors,
-                    id: scene.id
-                });
+                callback(xhr.responseJSON.err);
             }.bind(this)
         });
     },
@@ -226,14 +219,7 @@ var API = {
                     return;
                 }
 
-                alert('//TODO: this needs to be changed');
-                var errors = (xhr.responseJSON || {}).errors;
-                callback({
-                    err: err,
-                    xhr: xhr,
-                    validationErrors: errors,
-                    id: scene.id
-                });
+                callback(xhr.responseJSON.err);
             }.bind(this)
         });
     },

@@ -23912,14 +23912,7 @@
 	                    return;
 	                }
 
-	                alert('//TODO: this needs to be changed');
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    validationErrors: errors,
-	                    id: scene.id
-	                });
+	                callback(xhr.responseJSON.err);
 	            }.bind(this)
 	        });
 	    },
@@ -23940,14 +23933,7 @@
 	                    return;
 	                }
 
-	                alert('//TODO: this needs to be changed');
-	                var errors = (xhr.responseJSON || {}).errors;
-	                callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    validationErrors: errors,
-	                    id: scene.id
-	                });
+	                callback(xhr.responseJSON.err);
 	            }.bind(this)
 	        });
 	    },
@@ -25343,9 +25329,14 @@
 	            case Feature.Type.LightZone:
 	                icon1 = 'icon ion-ios-lightbulb-outline';
 
-	                //TODO: Hue
-	                //color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
-	                if (attrs[Feature.LightZone.AttrIDs.Brightness]) {
+	                if (attrs[Feature.LightZone.AttrIDs.HSL]) {
+	                    color = attrs[Feature.LightZone.AttrIDs.HSL].value;
+	                    if (color == null) {
+	                        opacity = 0;
+	                    } else {
+	                        opacity = 1;
+	                    }
+	                } else if (attrs[Feature.LightZone.AttrIDs.Brightness]) {
 	                    // The light zone supports brightness, show the current intensity
 	                    val = attrs[Feature.LightZone.AttrIDs.Brightness].value;
 	                    if (val == null) {
@@ -25411,7 +25402,6 @@
 
 	            case Feature.Type.HeatZone:
 	                icon1 = 'icon ion-ios-flame-outline';
-	                //TODO: Units
 	                var current = attrs[Feature.HeatZone.AttrIDs.CurrentTemp].value;
 	                var target = attrs[Feature.HeatZone.AttrIDs.TargetTemp].value;
 
@@ -25500,13 +25490,13 @@
 	                    React.createElement(
 	                        'clipPath',
 	                        { id: 'lightClip' },
-	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '29', width: '200', height: '65' })
+	                        React.createElement('rect', { className: 'clipRect', x: '0', y: '20', width: '200', height: '65' })
 	                    )
 	                ),
 	                React.createElement('circle', {
 	                    cx: '100',
-	                    cy: '53',
-	                    r: '25',
+	                    cy: '48',
+	                    r: '22',
 	                    fill: color,
 	                    clipPath: 'url(#lightClip)',
 	                    style: { 'opacity': opacity, 'clipPath': 'url(#lightClip)' } })
@@ -25548,7 +25538,7 @@
 	LightZone.AttrIDs = {
 	    OnOff: 'onoff',
 	    Brightness: 'brightness',
-	    Hue: 'hue'
+	    HSL: 'hsl'
 	};
 
 	function HeatZone() {}
@@ -25611,7 +25601,7 @@
 	    OpenClose: 'OpenClose',
 	    OnOff: 'OnOff',
 	    Brightness: 'Brightness',
-	    Hue: 'Hue',
+	    HSL: 'HSL',
 	    Offset: 'Offset',
 	    Temperature: 'Temperature'
 	};
@@ -27880,8 +27870,7 @@
 	                        readOnlyFields: 'id',
 	                        key: scene.id || scene.clientId,
 	                        createdScene: this.props.createdScene,
-
-	                        updateScene: this.props.updateScene,
+	                        updatedScene: this.props.updatedScene,
 	                        deleteScene: this.props.deleteScene,
 	                        addCommand: this.props.addCommand })
 	                );
@@ -27956,14 +27945,12 @@
 	            dispatch(SceneActions.addCommand(sceneId, cmd));
 	        },
 
-	        //TODO: Check
 	        createdScene: function createdScene(sceneJson, clientId) {
 	            dispatch(SceneActions.created(sceneJson, clientId));
 	        },
 
-	        //TODO: Check
-	        updateScene: function updateScene(sceneJson) {
-	            dispatch(SceneActions.update(sceneJson));
+	        updatedScene: function updatedScene(sceneJson, id) {
+	            dispatch(SceneActions.updated(sceneJson));
 	        }
 	    };
 	}
@@ -28192,18 +28179,34 @@
 	    saveScene: function saveScene() {
 	        this.setState({ errors: null });
 
-	        if (this.state.clientId !== '') {
+	        if (!this.state.id) {
 	            Api.sceneCreate(this.toJson(), function (err, data) {
-	                if (err) {
+	                if (err && !err.validation) {
 	                    this.setState({ saveButtonStatus: 'error' });
+	                    return;
+	                } else if (err && err.validation) {
+	                    this.setState({
+	                        saveButtonStatus: 'error',
+	                        errors: err.validation.errors[this.state.id]
+	                    });
 	                    return;
 	                }
 	                this.props.createdScene(data, this.props.scene.clientId);
 	            }.bind(this));
 	        } else {
-
-	            //TODO: Fix
-	            this.props.updateScene(this.toJson());
+	            Api.sceneUpdate(this.toJson(), function (err, data) {
+	                if (err && !err.validation) {
+	                    this.setState({ saveButtonStatus: 'error' });
+	                    return;
+	                } else if (err && err.validation) {
+	                    this.setState({
+	                        saveButtonStatus: 'error',
+	                        errors: err.validation.errors[this.state.id]
+	                    });
+	                    return;
+	                }
+	                this.props.updatedScene(data, this.props.scene.id);
+	            }.bind(this));
 	        }
 	    },
 
@@ -28249,11 +28252,9 @@
 	            } else {
 	                var commands = this.props.scene.commands || [];
 	                commandNodes = commands.map(function (command) {
-	                    //TODO: We need to give commands an ID on the server so we can have a proper index
-	                    var key = Math.random();
 	                    var info = React.createElement(CommandInfo, {
 	                        scene: self.props.scene,
-	                        key: key,
+	                        key: command.id || command.clientId,
 	                        index: cmdIndex,
 	                        devices: self.props.devices,
 	                        scenes: self.props.scenes,
@@ -28887,7 +28888,7 @@
 	var BrightnessAttr = __webpack_require__(262);
 	var OnOffAttr = __webpack_require__(265);
 	var TempAttr = __webpack_require__(268);
-	var HueAttr = __webpack_require__(271);
+	var HSLAttr = __webpack_require__(357);
 	var OffsetAttr = __webpack_require__(274);
 	var OpenClosedAttr = __webpack_require__(277);
 	var Feature = __webpack_require__(216);
@@ -29001,9 +29002,9 @@
 	                        attr: attribute }));
 	                    break;
 
-	                case Attribute.Type.Hue:
-	                    attributes.push(React.createElement(HueAttr, {
-	                        onHueChanged: this.setAttrs,
+	                case Attribute.Type.HSL:
+	                    attributes.push(React.createElement(HSLAttr, {
+	                        onChanged: this.setAttrs,
 	                        key: localID,
 	                        attr: attribute }));
 	                    break;
@@ -29468,120 +29469,9 @@
 
 
 /***/ },
-/* 271 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
-	var Api = __webpack_require__(204);
-	var Attribute = __webpack_require__(217);
-	var BEMHelper = __webpack_require__(209);
-
-	var classes = new BEMHelper({
-	    name: 'HueAttr',
-	    prefix: 'b-'
-	});
-	__webpack_require__(272);
-
-	var HueAttr = React.createClass({
-	    displayName: 'HueAttr',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.attr.value
-	        };
-	    },
-
-	    initSlider: function initSlider() {
-	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-HueAttr__slider');
-	        sliders.ColorPickerSliders({
-	            color: "rgb(36, 170, 242)",
-	            flat: true,
-	            swatches: false,
-	            order: {
-	                hsl: 1
-	            }
-	        });
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        this._slider = this.initSlider();
-	    },
-
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        if (nextProps.attr && nextProps.attr != this.props.attr) {
-	            var newLevel = nextProps.attr.value;
-	            if (newLevel == null) {
-	                return;
-	            }
-	            this.setState({ value: newLevel });
-	            //this._slider && this._slider.set(Math.round(newLevel));
-	        }
-	    },
-
-	    setAttrs: function setAttrs(attrs) {
-	        this.setState({ attrs: attrs });
-	    },
-
-	    render: function render() {
-	        var val = '-';
-	        if (this.state.value != null) {
-	            val = this.state.value + '%';
-	        }
-
-	        var readOnly = this.props.attr.perms == Attribute.Perms.ReadOnly;
-	        return React.createElement(
-	            'div',
-	            classes(''),
-	            React.createElement('div', classes('slider', readOnly ? 'read-only' : ''))
-	        );
-	    }
-	});
-	module.exports = HueAttr;
-
-/***/ },
-/* 272 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(273);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HueAttr.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HueAttr.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 273 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(213)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-HueAttr {\n  position: relative;\n  height: 130px;\n}\n.b-HueAttr__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 10px;\n}\n.b-HueAttr__slider--read-only {\n  visibility: hidden;\n}\n.b-HueAttr__name {\n  float: left;\n  font-size: 15px;\n  margin-left: 31px;\n  margin-top: 19px;\n}\n.b-HueAttr__value {\n  float: right;\n  display: inline-block;\n  margin-right: 31px;\n  font-size: 40px;\n}\n.b-HueAttr__value--hidden {\n  display: none;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
+/* 271 */,
+/* 272 */,
+/* 273 */,
 /* 274 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -29892,7 +29782,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-FeatureControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-FeatureControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 242px;\n  margin-top: 3px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n", ""]);
+	exports.push([module.id, ".b-FeatureControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-FeatureControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 242px;\n  margin-top: 3px;\n  margin-bottom: 20px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n", ""]);
 
 	// exports
 
@@ -29969,17 +29859,9 @@
 	        };
 	    },
 
-	    update: function update(sceneJson) {
+	    updated: function updated(sceneJson, id) {
 	        return function (dispatch) {
-	            dispatch({ type: Constants.SCENE_UPDATE, id: sceneJson.id });
-
-	            Api.sceneUpdate(sceneJson, function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.SCENE_UPDATE_FAIL, err: err, id: sceneJson.id });
-	                    return;
-	                }
-	                dispatch({ type: Constants.SCENE_UPDATE_RAW, data: data, id: sceneJson.id, sceneJson: sceneJson });
-	            });
+	            dispatch({ type: Constants.SCENE_UPDATE_RAW, data: sceneJson, id: id });
 	        };
 	    },
 
@@ -31364,12 +31246,10 @@
 
 	        case Constants.SCENE_UPDATE_RAW:
 	            newState = Object.assign({}, newState);
-	            newState.saveState = Object.assign({}, newState.saveState);
-	            newState.saveState[action.id] = { status: 'success' };
 	            newState.items = newState.items.map(function (scene) {
 	                // Replace with actual scene from the server
 	                if (scene.id === action.id) {
-	                    return action.sceneJson;
+	                    return action.data;
 	                }
 	                return scene;
 	            });
@@ -31678,6 +31558,190 @@
 
 	// module
 	exports.push([module.id, ".b-Login {\n  margin: 20px;\n  font-weight: 200;\n}\n.b-Login__header {\n  margin-top: 60px;\n  text-align: center;\n}\n.b-Login__header-logo {\n  width: 210px;\n}\n.b-Login__login-form {\n  margin-top: 50px;\n}\n.b-Login__need-credentials {\n  margin-top: 30px;\n}\n.b-Login__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-Login__error--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 311 */,
+/* 312 */,
+/* 313 */,
+/* 314 */,
+/* 315 */,
+/* 316 */,
+/* 317 */,
+/* 318 */,
+/* 319 */,
+/* 320 */,
+/* 321 */,
+/* 322 */,
+/* 323 */,
+/* 324 */,
+/* 325 */,
+/* 326 */,
+/* 327 */,
+/* 328 */,
+/* 329 */,
+/* 330 */,
+/* 331 */,
+/* 332 */,
+/* 333 */,
+/* 334 */,
+/* 335 */,
+/* 336 */,
+/* 337 */,
+/* 338 */,
+/* 339 */,
+/* 340 */,
+/* 341 */,
+/* 342 */,
+/* 343 */,
+/* 344 */,
+/* 345 */,
+/* 346 */,
+/* 347 */,
+/* 348 */,
+/* 349 */,
+/* 350 */,
+/* 351 */,
+/* 352 */,
+/* 353 */,
+/* 354 */,
+/* 355 */,
+/* 356 */,
+/* 357 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var Attribute = __webpack_require__(217);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'HSLAttr',
+	    prefix: 'b-'
+	});
+	__webpack_require__(358);
+
+	var HSLAttr = React.createClass({
+	    displayName: 'HSLAttr',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.attr.value
+	        };
+	    },
+
+	    initSlider: function initSlider() {
+	        var self = this;
+	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-HSLAttr__slider');
+
+	        sliders.ColorPickerSliders({
+	            color: 'hsl(0, 100%, 50%)',
+	            flat: true,
+	            swatches: false,
+	            order: {
+	                hsl: 1
+	            },
+	            onchange: function onchange(container, color) {
+	                var hsl = color.tiny.toHsl();
+	                if (self._ignoreChange || hsl.h === 0 && hsl.s === 1 && hsl.l === 0.5) {
+	                    // If we got an update from the API, shouldn't fire a change event here
+	                    // since we only want to do that when the user changes the slider. No way
+	                    // to distinguish with this control
+	                    self._ignoreChange = false;
+
+	                    // This is the default value, ignore since this fires on load an we can't
+	                    // distinguish between it and the user moving the slider. There is a bug
+	                    // here that the user can't set 0,0,0 since we ignore it now.
+	                    return;
+	                }
+
+	                // this fires many times as they are sliding, let them stop moving before we
+	                // send the commands
+	                clearTimeout(self._timeoutId);
+	                self._timeoutId = setTimeout(function () {
+	                    var hsl = color.tiny.toHslString();
+	                    self.setState({ value: hsl });
+	                    self.props.onChanged && self.props.onChanged(self.props.attr, hsl);
+	                }, 500);
+	            }
+	        });
+	        return sliders;
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this._slider = this.initSlider();
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.attr && nextProps.attr != this.props.attr) {
+	            var newLevel = nextProps.attr.value;
+	            if (newLevel == null) {
+	                return;
+	            }
+	            this.setState({ value: newLevel });
+
+	            // This should not trigger an update, just needed to update UI.
+	            this._ignoreChange = true;
+	            this._slider && this._slider.trigger("colorpickersliders.updateColor", newLevel);
+	        }
+	    },
+
+	    setAttrs: function setAttrs(attrs) {
+	        this.setState({ attrs: attrs });
+	    },
+
+	    render: function render() {
+	        var readOnly = this.props.attr.perms == Attribute.Perms.ReadOnly;
+	        return React.createElement(
+	            'div',
+	            classes(''),
+	            React.createElement('div', classes('slider', readOnly ? 'read-only' : ''))
+	        );
+	    }
+	});
+	module.exports = HSLAttr;
+
+/***/ },
+/* 358 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(359);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HSLAttr.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HSLAttr.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 359 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-HueAttr {\n  position: relative;\n  height: 130px;\n}\n.b-HueAttr__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 10px;\n}\n.b-HueAttr__slider--read-only {\n  visibility: hidden;\n}\n.b-HueAttr__name {\n  float: left;\n  font-size: 15px;\n  margin-left: 31px;\n  margin-top: 19px;\n}\n.b-HueAttr__value {\n  float: right;\n  display: inline-block;\n  margin-right: 31px;\n  font-size: 40px;\n}\n.b-HueAttr__value--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 

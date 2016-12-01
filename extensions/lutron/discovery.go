@@ -287,8 +287,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 				return nil, badConfig(fmt.Errorf("error adding window treatment to device\n", err))
 			}
 		} else {
-			dimmable := true
-			light := feature.NewLightZone(d.System.NewGlobalID(), dimmable, false)
+			light := feature.NewLightZone(d.System.NewGlobalID(), feature.LightZoneModeContinuous)
 			light.Name = zoneName
 			light.Address = zoneID
 			light.DeviceID = sbp.ID

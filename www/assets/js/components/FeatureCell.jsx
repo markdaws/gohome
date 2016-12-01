@@ -62,9 +62,14 @@ var FeatureCell = React.createClass({
             case Feature.Type.LightZone:
                 icon1 = 'icon ion-ios-lightbulb-outline';
 
-                //TODO: Hue
-                //color = "#" + ((1 << 24) + (lev.r << 16) + (lev.g << 8) + lev.b).toString(16).slice(1);
-                if (attrs[Feature.LightZone.AttrIDs.Brightness]) {
+                if (attrs[Feature.LightZone.AttrIDs.HSL]) {
+                    color = attrs[Feature.LightZone.AttrIDs.HSL].value;
+                    if (color == null) {
+                        opacity = 0;
+                    } else {
+                        opacity = 1;
+                    }
+                } else if (attrs[Feature.LightZone.AttrIDs.Brightness]) {
                     // The light zone supports brightness, show the current intensity
                     val = attrs[Feature.LightZone.AttrIDs.Brightness].value;
                     if (val == null) {
@@ -130,7 +135,6 @@ var FeatureCell = React.createClass({
 
             case Feature.Type.HeatZone:
                 icon1 = 'icon ion-ios-flame-outline';
-                //TODO: Units
                 var current = attrs[Feature.HeatZone.AttrIDs.CurrentTemp].value;
                 var target = attrs[Feature.HeatZone.AttrIDs.TargetTemp].value;
 
@@ -213,13 +217,13 @@ var FeatureCell = React.createClass({
                     xlinkHref="http://www.w3.org/1999/xlink">
                     <g>
                         <clipPath id="lightClip">
-                            <rect className="clipRect" x="0" y="29" width="200" height="65" />
+                            <rect className="clipRect" x="0" y="20" width="200" height="65" />
                         </clipPath>
                     </g>
                     <circle
                         cx="100"
-                        cy="53"
-                        r="25"
+                        cy="48"
+                        r="22"
                         fill={color}
                         clipPath="url(#lightClip)"
                         style={{'opacity': opacity, 'clipPath':'url(#lightClip)'}}/>

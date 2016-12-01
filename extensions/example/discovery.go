@@ -99,8 +99,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	// Add a new LightZone, we will make this dimmable and not have an rgb channel
 	light := feature.NewLightZone(
 		sys.NewGlobalID(),
-		true,
-		false)
+		feature.LightZoneModeContinuous)
 	light.Address = "1"
 	light.Name = "fake light"
 	light.DeviceID = dev.ID

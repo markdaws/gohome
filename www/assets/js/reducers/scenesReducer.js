@@ -40,12 +40,10 @@ module.exports = function(state, action) {
 
     case Constants.SCENE_UPDATE_RAW:
         newState = Object.assign({}, newState);
-        newState.saveState = Object.assign({}, newState.saveState);
-        newState.saveState[action.id] = { status: 'success' };
         newState.items = newState.items.map(function(scene) {
             // Replace with actual scene from the server
             if (scene.id === action.id) {
-                return action.sceneJson;
+                return action.data;
             }
             return scene;
         });

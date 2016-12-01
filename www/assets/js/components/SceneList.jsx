@@ -58,8 +58,7 @@ var SceneList = React.createClass({
                             readOnlyFields="id"
                             key={scene.id || scene.clientId}
                             createdScene={this.props.createdScene}
-
-                            updateScene={this.props.updateScene}
+                            updatedScene={this.props.updatedScene}
                             deleteScene={this.props.deleteScene}
                             addCommand={this.props.addCommand} />
                     </div>
@@ -125,14 +124,12 @@ function mapDispatchToProps(dispatch) {
             dispatch(SceneActions.addCommand(sceneId, cmd));
         },
 
-        //TODO: Check
         createdScene: function(sceneJson, clientId) {
             dispatch(SceneActions.created(sceneJson, clientId));
         },
 
-        //TODO: Check
-        updateScene: function(sceneJson) {
-            dispatch(SceneActions.update(sceneJson));
+        updatedScene: function(sceneJson, id) {
+            dispatch(SceneActions.updated(sceneJson));
         },
     }
 }

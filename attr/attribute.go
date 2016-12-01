@@ -2,7 +2,10 @@ package attr
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 
+	"github.com/lucasb-eyer/go-colorful"
 	"github.com/markdaws/gohome/log"
 )
 
@@ -44,8 +47,8 @@ const (
 	// ATOnOff represents an OnOff attribute
 	ATOnOff string = "OnOff"
 
-	// ATHue represents a Hue attribute
-	ATHue string = "Hue"
+	// ATHSL represents a HSL attribute
+	ATHSL string = "HSL"
 
 	// ATOffset represents an Offset attribute
 	ATOffset string = "Offset"
@@ -201,6 +204,12 @@ func NewFloat32(localID, concrete string, val *float32) *Attribute {
 	return attr
 }
 
+// NewString returns a new attribute initialized as a string data type
+func NewString(localID, concrete string, val *string) *Attribute {
+	attr := NewAttribute(localID, concrete, DTString, val)
+	return attr
+}
+
 // BoolP returns a pointer to a bool containing the passed in value
 func BoolP(val bool) *bool {
 	return &val
@@ -213,6 +222,11 @@ func Int32P(val int32) *int32 {
 
 // Float32P returns a pointer to a float32 containing the passed in value
 func Float32P(val float32) *float32 {
+	return &val
+}
+
+// StringP returns a pointer to a string containing the passed in value
+func StringP(val string) *string {
 	return &val
 }
 
@@ -314,13 +328,68 @@ func NewOffset(localID string, val *float32) *Attribute {
 	return attr
 }
 
-// NewHue returns a new Attribute instance initialized as a Hue type
-func NewHue(localID string, val *int32) *Attribute {
-	attr := NewInt32(localID, ATHue, val)
-	attr.Min = int32(0)
-	attr.Max = int32(359)
-	attr.Step = int32(1)
+// NewHSL returns a new attribute instance initialized as a HSL attribute. For HSL attributes
+// they are a string, expecting the format 'hsl(HUE, SAT%, LUM%) where HUE is a number between
+// 0 and 360, and SAT/LUM are 0 to 255
+func NewHSL(localID string, val *string) *Attribute {
+	attr := NewString(localID, ATHSL, val)
 	return attr
+}
+
+// RGBToHSLString converts the R,G,B values to a HSL string
+func RGBToHSLString(r, g, b int) string {
+	c := colorful.Color{
+		R: float64(r) / 360,
+		G: float64(g) / 255,
+		B: float64(b) / 255,
+	}
+	h, s, l := c.Hsl()
+	return HSLConstruct(int32(h), int32(s*100), int32(l*100))
+}
+
+// HSLStringToRGB converts a HSL string e.g. hsl(100, 32%, 99%) to its corresponding RGB values
+func HSLStringToRGB(hsl string) (byte, byte, byte, error) {
+	h, s, l, err := HSLDeconstruct(hsl)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	c := colorful.Hsl(float64(h), float64(s)/100, float64(l)/100)
+	return byte(c.R * 255), byte(c.G * 255), byte(c.B * 255), nil
+}
+
+var hslRegexp = regexp.MustCompile("hsl\\((.+)\\s*,\\s*(.+)%\\s*,\\s*(.+)%\\s*\\)")
+
+// HSLDeconstruct takes in a HSL string e.g. hsl(255, 44%, 32%) and returns the HSL
+// components e.g. 255,44,32
+func HSLDeconstruct(val string) (int32, int32, int32, error) {
+	//format hsl(100, 50%, 50%)
+	matches := hslRegexp.FindStringSubmatch(val)
+	if len(matches) == 0 {
+		return 0, 0, 0, fmt.Errorf("invalid HSL format")
+	}
+
+	hue, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("invalid hue value, must be an integer")
+	}
+
+	saturation, err := strconv.Atoi(matches[2])
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("invalid saturation value, must be an integer")
+	}
+
+	luminence, err := strconv.Atoi(matches[3])
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("invalid luminence value, must be an integer")
+	}
+
+	return int32(hue), int32(saturation), int32(luminence), nil
+}
+
+// HSLConstruct takes in H,S,L values and converts then to a HSL string e.g. hsl(255, 44%, 32%)
+func HSLConstruct(hue, saturation, luminence int32) string {
+	return fmt.Sprintf("hsl(%d, %d%%, %d%%)", hue, saturation, luminence)
 }
 
 // NewTemp returns a new Attribute instance initialized as a Temp type

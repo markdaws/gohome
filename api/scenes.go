@@ -13,7 +13,6 @@ import (
 	"github.com/markdaws/gohome/attr"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/store"
-	"github.com/markdaws/gohome/validation"
 	errExt "github.com/pkg/errors"
 )
 
@@ -297,13 +296,13 @@ func apiSceneHandlerUpdate(savePath string, system *gohome.System) func(http.Res
 		sceneID := mux.Vars(r)["ID"]
 		scene, ok := system.Scenes[sceneID]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest(fmt.Sprintf("invalid scene ID: %s", sceneID), w)
 			return
 		}
 
-		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 4096))
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("unable to read request body", w)
 			return
 		}
 
@@ -313,7 +312,7 @@ func apiSceneHandlerUpdate(savePath string, system *gohome.System) func(http.Res
 			Description *string `json:"description"`
 		}
 		if err = json.Unmarshal(body, &updates); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respBadRequest("unable to parse request body, invalid JSON", w)
 			return
 		}
 
@@ -330,9 +329,7 @@ func apiSceneHandlerUpdate(savePath string, system *gohome.System) func(http.Res
 
 		valErrs := updatedScene.Validate()
 		if valErrs != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			json.NewEncoder(w).Encode(validation.NewErrorJSON(&updates, sceneID, valErrs))
+			respValErr(&updates, sceneID, valErrs, w)
 			return
 		}
 
@@ -340,12 +337,14 @@ func apiSceneHandlerUpdate(savePath string, system *gohome.System) func(http.Res
 
 		err = store.SaveSystem(savePath, system)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			respErr(errExt.Wrap(err, "failed to save system to disk"), w)
 			return
 		}
 
+		// TODO: Jsonify scene object and return full object, not fields user passed in
+		// same for devices
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(struct{}{})
+		json.NewEncoder(w).Encode(updates)
 	}
 }
 
@@ -369,6 +368,11 @@ func apiSceneHandlerCreate(savePath string, system *gohome.System) func(http.Res
 			Name:        scene.Name,
 			Description: scene.Description,
 			Managed:     true,
+		}
+		valErrs := newScene.Validate()
+		if valErrs != nil {
+			respValErr(&scene, scene.ID, valErrs, w)
+			return
 		}
 		system.AddScene(newScene)
 

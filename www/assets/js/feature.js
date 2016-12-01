@@ -14,7 +14,7 @@ function LightZone() {}
 LightZone.AttrIDs = {
     OnOff: 'onoff',
     Brightness: 'brightness',
-    Hue: 'hue'
+    HSL: 'hsl'
 };
 
 function HeatZone() {}

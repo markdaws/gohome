@@ -4,7 +4,7 @@ var Attribute = require('../attribute.js');
 var BrightnessAttr = require('./BrightnessAttr.jsx');
 var OnOffAttr = require('./OnOffAttr.jsx');
 var TempAttr = require('./TempAttr.jsx');
-var HueAttr = require('./HueAttr.jsx');
+var HSLAttr = require('./HSLAttr.jsx');
 var OffsetAttr = require('./OffsetAttr.jsx');
 var OpenClosedAttr = require('./OpenClosedAttr.jsx');
 var Feature = require('../feature.js');
@@ -118,10 +118,10 @@ var FeatureControl = React.createClass({
                     );
                     break;
 
-                case Attribute.Type.Hue:
+                case Attribute.Type.HSL:
                     attributes.push(
-                        <HueAttr
-                            onHueChanged={this.setAttrs}
+                        <HSLAttr
+                            onChanged={this.setAttrs}
                             key={localID}
                             attr={attribute} />
                     );
