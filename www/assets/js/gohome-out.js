@@ -29782,7 +29782,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-FeatureControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-FeatureControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 242px;\n  margin-top: 3px;\n  margin-bottom: 20px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n", ""]);
+	exports.push([module.id, ".b-FeatureControl {\n  padding: 24px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n}\n.b-FeatureControl__name {\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 222px;\n  margin-top: 3px;\n  margin-bottom: 20px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n", ""]);
 
 	// exports
 

@@ -3,17 +3,24 @@ package evtbus
 import (
 	"errors"
 	"sync"
+	"time"
 )
+
+type filterInfo struct {
+	filter func(Event) bool
+	timer  *time.Timer
+}
 
 // Bus is a type that facilitates sending events from multiple producers to multiple consumers. It
 // is non blocking, so fast producers won't break the bus and slow consumers won't block other consumers
 // from receiving events
 type Bus struct {
-	consumers map[Consumer]chan Event
-	producers []Producer
-	events    chan Event
-	stopped   bool
-	mutex     sync.RWMutex
+	consumers      map[Consumer]chan Event
+	producers      []Producer
+	enqueueFilters map[string]filterInfo
+	events         chan Event
+	stopped        bool
+	mutex          sync.RWMutex
 
 	// Capacity is the number of events that can be in the bus at one time before incoming
 	// events will be ignored
@@ -31,9 +38,13 @@ var ErrBusFull = errors.New("Event bus is full, no more events can be added at t
 
 // NewBus returns an initialized bus
 func NewBus(capacity, consumerCapacity int) *Bus {
-	b := &Bus{Capacity: capacity, ConsumerCapacity: consumerCapacity}
-	b.consumers = make(map[Consumer]chan Event)
-	b.events = make(chan Event, capacity)
+	b := &Bus{
+		Capacity:         capacity,
+		ConsumerCapacity: consumerCapacity,
+		consumers:        make(map[Consumer]chan Event),
+		events:           make(chan Event, capacity),
+		enqueueFilters:   make(map[string]filterInfo),
+	}
 	b.init()
 	return b
 }
@@ -146,6 +157,53 @@ func (b *Bus) RemoveProducer(p Producer) {
 	}
 }
 
+// AddEnqueueFilter adds an enqueue filter. If a filter with the ID already exists
+// it is replaced by the new filter
+func (b *Bus) AddEnqueueFilter(ID string, f func(Event) bool, delay time.Duration) {
+	b.mutex.RLock()
+	oldFilter, ok := b.enqueueFilters[ID]
+	b.mutex.RUnlock()
+
+	if ok {
+		if oldFilter.timer != nil {
+			oldFilter.timer.Stop()
+		}
+	}
+
+	var timer *time.Timer
+	if delay != 0 {
+		timer = time.NewTimer(delay)
+		go func() {
+			<-timer.C
+			b.RemoveEnqueueFilter(ID)
+		}()
+	}
+
+	b.mutex.Lock()
+	b.enqueueFilters[ID] = filterInfo{
+		filter: f,
+		timer:  timer,
+	}
+	b.mutex.Unlock()
+}
+
+// RemoveEnqueueFilter removes an enqueue filter
+func (b *Bus) RemoveEnqueueFilter(ID string) {
+	b.mutex.RLock()
+	oldFilter, ok := b.enqueueFilters[ID]
+	b.mutex.RUnlock()
+
+	if ok {
+		if oldFilter.timer != nil {
+			oldFilter.timer.Stop()
+		}
+
+		b.mutex.Lock()
+		delete(b.enqueueFilters, ID)
+		b.mutex.Unlock()
+	}
+}
+
 // Enqueue adds an event to the event bus. It is non blocking, if there is not
 // enough capacity in the bus to add a new event, the method returns an error
 func (b *Bus) Enqueue(e Event) error {
@@ -153,11 +211,20 @@ func (b *Bus) Enqueue(e Event) error {
 		return nil
 	}
 
+	// Callers can filter events from being added
+	b.mutex.RLock()
+	for _, filterInfo := range b.enqueueFilters {
+		if filterInfo.filter(e) {
+			b.mutex.RUnlock()
+			return nil
+		}
+	}
+	b.mutex.RUnlock()
+
 	select {
 	case b.events <- e:
 		return nil
 	default:
 		return ErrBusFull
 	}
-	return nil
 }

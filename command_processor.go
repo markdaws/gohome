@@ -109,12 +109,14 @@ func (cp *commandProcessor) startWorker(index int) (errRet error) {
 			log.V("CommandProcessor - executing command: %s", c)
 			err := c.Func()
 			if err != nil {
-				log.E("CommandProcessor - execute error: %s", err)
+				log.V("CommandProcessor - execute error: %s", err)
 
-				// Don't continue with any other commands in the group
-				break
+				// keep going, try to complete as many of the commands as possible
 			}
 			log.V("CommandProcessor - executed command: %s", c)
+
+			//TODO: Feature reporting event...?
+			//How to disable
 		}
 	}
 

@@ -61,9 +61,17 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 
 				//TODO: Allow caller to specify a duration
 				targetTemp := command.Attrs[feature.HeatZoneTargetTempLocalID]
-				thermostat.HeatMode(ctx, float32(targetTemp.Value.(int32)), 0)
+				err = thermostat.HeatMode(ctx, float32(targetTemp.Value.(int32)), 0)
 
-				return nil
+				// The honeywell portal takes some time to reflect the new value we set, so if we
+				// query the site again it will still report the old value, since in events.go we are
+				// just polling the value, we supress and updates from the extension for 30 seconds to
+				// make sure we have the latest values
+				if err == nil {
+					gohome.SupressFeatureReporting(b.System, command.FeatureID, command.Attrs, time.Second*30)
+				}
+
+				return err
 			},
 		}, nil
 	}

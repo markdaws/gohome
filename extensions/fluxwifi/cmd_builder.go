@@ -65,13 +65,24 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 				return &cmd.Func{
 					Func: func() error {
 						hsl := attribute.Value.(string)
-						r, g, b, err := attr.HSLStringToRGB(hsl)
+						r, g, bVal, err := attr.HSLStringToRGB(hsl)
 						if err != nil {
 							return fmt.Errorf("unable to read HSL value: %s", hsl)
 						}
 
 						return getConnAndExecute(d, func(conn *pool.Connection) error {
-							return fluxwifiExt.SetLevel(byte(r), byte(g), byte(b), conn)
+							err := fluxwifiExt.SetLevel(byte(r), byte(g), byte(bVal), conn)
+
+							// For this particular piece of hardware it takes some time for it
+							// to report the correct value after it actually gets set on the
+							// hardware, so we inform the system that these values are the
+							// new values and we should ignore any FeatureReportingEvt events from this
+							// feature for the next 30 seconds, so that we don't report back incorrect
+							// values to the users
+							if err == nil {
+								gohome.SupressFeatureReporting(b.System, command.FeatureID, command.Attrs, time.Second*30)
+							}
+							return err
 						})
 					},
 				}, nil

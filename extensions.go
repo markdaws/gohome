@@ -2,9 +2,11 @@ package gohome
 
 import (
 	"net"
+	"time"
 
 	"github.com/go-home-iot/connection-pool"
 	"github.com/go-home-iot/event-bus"
+	"github.com/markdaws/gohome/attr"
 	"github.com/markdaws/gohome/cmd"
 )
 
@@ -192,4 +194,45 @@ func (e *Extensions) ListDiscoverers(sys *System) []DiscovererInfo {
 func NewExtensions() *Extensions {
 	exts := &Extensions{}
 	return exts
+}
+
+// SupressFeatureReporting will stop all FeatureReportingEvt events from being enqueued on the
+// system event bus, if they are for the feature that matches the specified featureID. The filter
+// will be automatically removed after the specified delay.  The reason you may want to call this
+// (see extensions/honeywell/cmd_builder.go) is that for some hardware after you set a new state
+// if you query it for the current state you will get the old state not the new state for some period
+// of time.  If the extension is polling the hardware for current values and we set new values but then
+// report old values, the UI will jump back to an incorrect state. So after setting new values, you
+// can call this function with a delay and all updates from the extension will be ignored for that
+// time period.
+func SupressFeatureReporting(sys *System, featureID string, attrs map[string]*attr.Attribute, delay time.Duration) {
+
+	// If there is an existing filter, remove so we can post the updated values
+	sys.Services.EvtBus.RemoveEnqueueFilter(featureID)
+
+	// First, send a reporting event so we have the latest values that were set on the hardware
+	if attrs != nil {
+		sys.Services.EvtBus.Enqueue(&FeatureReportingEvt{
+			FeatureID: featureID,
+			Attrs:     attrs,
+		})
+	}
+
+	// Stop the event bus from accepting any more events for this feature, until the delay has expired, in effect we
+	// are ignoring the hardware for a period of time
+	sys.Services.EvtBus.AddEnqueueFilter(
+		featureID,
+		func(e evtbus.Event) bool {
+			evt, ok := e.(*FeatureReportingEvt)
+			if !ok {
+				return false
+			}
+
+			if evt.FeatureID == featureID {
+				return true
+			}
+			return false
+		},
+		delay,
+	)
 }

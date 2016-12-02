@@ -1,8 +1,6 @@
 package gohome
 
-import (
-	"github.com/markdaws/gohome/cmd"
-)
+import "github.com/markdaws/gohome/cmd"
 
 type NullExtension struct{}
 

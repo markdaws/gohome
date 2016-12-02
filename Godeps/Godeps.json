@@ -29,7 +29,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/event-bus",
-			"Rev": "1efd53076e277d807f915e88dae92d32e718280f"
+			"Rev": "111087fb156bb79052425ad4388f909da02821d2"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/fluxwifi",
@@ -88,6 +88,10 @@
 		{
 			"ImportPath": "github.com/kardianos/osext",
 			"Rev": "c2c54e542fb797ad986b31721e1baedf214ca413"
+		},
+		{
+			"ImportPath": "github.com/lucasb-eyer/go-colorful",
+			"Rev": "9c2852a141bf4711e4276f8f119c90d0f20a556c"
 		},
 		{
 			"ImportPath": "github.com/nu7hatch/gouuid",
