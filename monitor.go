@@ -256,26 +256,35 @@ func (m *Monitor) featureReporting(featureID string, attrs map[string]*attr.Attr
 	m.mutex.RUnlock()
 
 	// Already have some values, check to see if there are any new ones
+	updatedAttrs := make(map[string]*attr.Attribute)
 	if ok {
 		for localID, attr := range attrs {
-			currentVal, ok := currentAttrs[localID]
+			currentAttr, ok := currentAttrs[localID]
 			if !ok {
-				// We dont have this attribute value, can't short circuit
-				break
+				// We haven't got this cached value, add to value to use
+				updatedAttrs[localID] = attr
+				continue
 			}
 
-			if currentVal != attr.Value {
-				// Value is different to what we have, can't short circuit
-				break
+			if currentAttr.Value != attr.Value {
+				updatedAttrs[localID] = attr
+				continue
 			}
 		}
 	} else {
 		currentAttrs = make(map[string]*attr.Attribute)
+		updatedAttrs = attrs
+	}
+
+	// Nothing new, all cached values equal what we received
+	if len(updatedAttrs) == 0 {
+		return
 	}
 
 	m.mutex.Lock()
+
 	// Merge new attribute values with the ones we already know about
-	for localID, attr := range attrs {
+	for localID, attr := range updatedAttrs {
 		currentAttrs[localID] = attr
 	}
 	m.featureValues[featureID] = currentAttrs
@@ -288,16 +297,15 @@ func (m *Monitor) featureReporting(featureID string, attrs map[string]*attr.Attr
 			MonitorID: groupID,
 			Features:  make(map[string]map[string]*attr.Attribute),
 		}
-		cb.Features[featureID] = currentAttrs
+		cb.Features[featureID] = updatedAttrs
 		m.mutex.RUnlock()
 		group.Handler.Update(cb)
 	}
 
 	m.system.Services.EvtBus.Enqueue(&FeatureAttrsChangedEvt{
 		FeatureID: featureID,
-		Attrs:     currentAttrs,
+		Attrs:     updatedAttrs,
 	})
-
 }
 
 // deviceProducing is called when a device start producing events, in the case of

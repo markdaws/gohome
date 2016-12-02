@@ -48,7 +48,11 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 					return &cmd.Func{
 						Func: func() error {
 							return getConnAndExecute(d, func(conn *pool.Connection) error {
-								return fluxwifiExt.TurnOff(conn)
+								err := fluxwifiExt.TurnOff(conn)
+								if err == nil {
+									gohome.SupressFeatureReporting(b.System, command.FeatureID, command.Attrs, time.Second*30)
+								}
+								return err
 							})
 						},
 					}, nil
@@ -56,7 +60,11 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 					return &cmd.Func{
 						Func: func() error {
 							return getConnAndExecute(d, func(conn *pool.Connection) error {
-								return fluxwifiExt.TurnOn(conn)
+								err := fluxwifiExt.TurnOn(conn)
+								if err == nil {
+									gohome.SupressFeatureReporting(b.System, command.FeatureID, command.Attrs, time.Second*30)
+								}
+								return err
 							})
 						},
 					}, nil

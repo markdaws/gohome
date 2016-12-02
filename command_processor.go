@@ -114,9 +114,6 @@ func (cp *commandProcessor) startWorker(index int) (errRet error) {
 				// keep going, try to complete as many of the commands as possible
 			}
 			log.V("CommandProcessor - executed command: %s", c)
-
-			//TODO: Feature reporting event...?
-			//How to disable
 		}
 	}
 
