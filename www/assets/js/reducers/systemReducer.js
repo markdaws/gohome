@@ -11,6 +11,9 @@ module.exports = function(state, action) {
         break;
 
     case Constants.DEVICE_LOAD_ALL_RAW:
+        action.data.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+        });
         newState.devices = action.data;
         break;
 

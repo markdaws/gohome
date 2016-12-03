@@ -11,6 +11,15 @@ type systemJSON struct {
 	Users       []userJSON   `json:"users"`
 }
 
+type areaJSON struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	ParentID    string   `json:"parentId"`
+	FeatureIDs  []string `json:"featureIds"`
+	AreaIDs     []string `json:"areaIds"`
+}
+
 type userJSON struct {
 	ID        string `json:"id"`
 	Login     string `json:"login"`

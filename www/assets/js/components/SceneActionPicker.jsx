@@ -3,11 +3,11 @@ var Feature = require('../feature.js');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
-    name: 'FeatureTypePicker',
+    name: 'SceneActionPicker',
     prefix: 'b-'
 });
 
-var FeatureTypePicker = React.createClass({
+var SceneActionPicker = React.createClass({
     getDefaultProps: function() {
         return {
             excluded: {},
@@ -28,12 +28,15 @@ var FeatureTypePicker = React.createClass({
         if (type === 'unknown') {
             return;
         }
+
+        // Set back to unknown since we render a new command when this is selected
+        this.setState({ value: 'unknown' });
         this.props.changed && this.props.changed(type);
     },
 
     render: function() {
         var types = [
-            { str: "Select feature type...", val:'unknown'}
+            { str: "Add new action...", val:'unknown'}
         ];
 
         var excluded = this.props.excluded;
@@ -77,4 +80,4 @@ var FeatureTypePicker = React.createClass({
         );
     }
 });
-module.exports = FeatureTypePicker;
+module.exports = SceneActionPicker;

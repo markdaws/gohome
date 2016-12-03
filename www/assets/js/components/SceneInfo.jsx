@@ -4,7 +4,7 @@ var SaveBtn = require('./SaveBtn.jsx');
 var InputValidationMixin = require('./InputValidationMixin.jsx');
 var UniqueIdMixin = require('./UniqueIdMixin.jsx');
 var CommandInfo = require('./CommandInfo.jsx');
-var FeatureTypePicker = require('./FeatureTypePicker.jsx');
+var SceneActionPicker = require('./SceneActionPicker.jsx');
 var Feature = require('../feature.js');
 var SceneActions = require('../actions/SceneActions.js');
 var BEMHelper = require('react-bem-helper');
@@ -79,7 +79,7 @@ var SceneInfo = React.createClass({
         this.props.deleteScene(this.state.id, this.props.scene.clientId);
     },
 
-    featurePickerChanged: function(featureType) {
+    sceneActionPickerChanged: function(featureType) {
         // Current the only command we need for a scene is a FeatureSetAttrs, so we create a
         // FeatureSetAttrs command and return that
         var cmd = {
@@ -137,7 +137,7 @@ var SceneInfo = React.createClass({
                     <div>
                         {commandNodes}
                         <div {...classes('feature-picker')}>
-                            <FeatureTypePicker excluded={excluded} changed={this.featurePickerChanged}/>
+                            <SceneActionPicker excluded={excluded} changed={this.sceneActionPickerChanged}/>
                         </div>
                     </div>
                 );

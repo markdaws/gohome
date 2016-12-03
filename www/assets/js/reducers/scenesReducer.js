@@ -17,6 +17,9 @@ module.exports = function(state, action) {
 
     case Constants.SCENE_LOAD_ALL_RAW:
         newState = Object.assign({}, newState);
+        action.data.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+        });
         newState.items = action.data;
         break;
 

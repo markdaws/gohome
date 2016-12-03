@@ -27255,14 +27255,11 @@
 	        if (type === 'unknown') {
 	            return;
 	        }
-
-	        // Set back to unknown since we render a new command when this is selected
-	        this.setState({ value: 'unknown' });
 	        this.props.changed && this.props.changed(type);
 	    },
 
 	    render: function render() {
-	        var types = [{ str: "Add new action...", val: 'unknown' }];
+	        var types = [{ str: "Select feature type...", val: 'unknown' }];
 
 	        var excluded = this.props.excluded;
 	        if (!excluded[Feature.Type.Button]) {
@@ -28079,7 +28076,7 @@
 	var InputValidationMixin = __webpack_require__(222);
 	var UniqueIdMixin = __webpack_require__(221);
 	var CommandInfo = __webpack_require__(257);
-	var FeatureTypePicker = __webpack_require__(235);
+	var SceneActionPicker = __webpack_require__(311);
 	var Feature = __webpack_require__(216);
 	var SceneActions = __webpack_require__(284);
 	var BEMHelper = __webpack_require__(209);
@@ -28156,7 +28153,7 @@
 	        this.props.deleteScene(this.state.id, this.props.scene.clientId);
 	    },
 
-	    featurePickerChanged: function featurePickerChanged(featureType) {
+	    sceneActionPickerChanged: function sceneActionPickerChanged(featureType) {
 	        // Current the only command we need for a scene is a FeatureSetAttrs, so we create a
 	        // FeatureSetAttrs command and return that
 	        var cmd = {
@@ -28219,7 +28216,7 @@
 	                    React.createElement(
 	                        'div',
 	                        classes('feature-picker'),
-	                        React.createElement(FeatureTypePicker, { excluded: excluded, changed: this.featurePickerChanged })
+	                        React.createElement(SceneActionPicker, { excluded: excluded, changed: this.sceneActionPickerChanged })
 	                    )
 	                );
 	            }
@@ -30644,6 +30641,22 @@
 	    render: function render() {
 	        var body, btns;
 
+	        //TODO: Cache this, only update if features updated
+	        var features = [];
+	        this.props.devices.forEach(function (device) {
+	            (device.features || []).forEach(function (feature) {
+	                // TODO:
+	                // Don't support buttons right now
+	                if (feature.type === Feature.Type.Button) {
+	                    return;
+	                }
+	                features.push(feature);
+	            });
+	        });
+	        features.sort(function (a, b) {
+	            return a.name.localeCompare(b.name);
+	        });
+
 	        if (this.state.editMode) {
 	            btns = React.createElement(
 	                'div',
@@ -30658,22 +30671,6 @@
 	                    )
 	                )
 	            );
-
-	            //TODO: Cache this, only update if features updated
-	            var features = [];
-	            this.props.devices.forEach(function (device) {
-	                (device.features || []).forEach(function (feature) {
-	                    // TODO:
-	                    // Don't support buttons right now
-	                    if (feature.type === Feature.Type.Button) {
-	                        return;
-	                    }
-	                    features.push(feature);
-	                });
-	            });
-	            features.sort(function (a, b) {
-	                return a.name.localCompare(b.name);
-	            });
 
 	            var featureCmps = [];
 	            features.forEach(function (feature) {
@@ -30700,44 +30697,42 @@
 	            var other = [];
 	            var sensors = [];
 
-	            this.props.devices.forEach(function (device) {
-	                (device.features || []).forEach(function (feature) {
+	            var featureCmps = [];
+	            features.forEach(function (feature) {
+	                var cmpFeature = {
+	                    key: 'feature_' + feature.id,
+	                    cell: React.createElement(FeatureCell, {
+	                        key: feature.id,
+	                        ref: "cell_feature_" + feature.id,
+	                        feature: feature }),
+	                    content: React.createElement(FeatureControl, {
+	                        key: feature.id,
+	                        id: feature.id,
+	                        onAttrChanged: this.attrChanged,
+	                        didMount: this.expanderMounted,
+	                        willUnmount: this.expanderUnmounted,
+	                        feature: feature })
+	                };
 
-	                    var cmpFeature = {
-	                        key: 'feature_' + feature.id,
-	                        cell: React.createElement(FeatureCell, {
-	                            key: feature.id,
-	                            ref: "cell_feature_" + feature.id,
-	                            feature: feature }),
-	                        content: React.createElement(FeatureControl, {
-	                            key: feature.id,
-	                            id: feature.id,
-	                            onAttrChanged: this.attrChanged,
-	                            didMount: this.expanderMounted,
-	                            willUnmount: this.expanderUnmounted,
-	                            feature: feature })
-	                    };
-
-	                    // For UI purposes we will group some of the more
-	                    // common features together
-	                    switch (feature.type) {
-	                        case Feature.Type.LightZone:
-	                            lightZones.push(cmpFeature);
-	                            break;
-	                        case Feature.Type.WindowTreatment:
-	                            windowTreatments.push(cmpFeature);
-	                            break;
-	                        case Feature.Type.Sensor:
-	                            sensors.push(cmpFeature);
-	                            break;
-	                        case Feature.Type.Button:
-	                            break;
-	                        //TODO: re-enable
-	                        //right now can't do anything with a button in the UI so hiding
-	                        default:
-	                            other.push(cmpFeature);
-	                    }
-	                }.bind(this));
+	                // For UI purposes we will group some of the more
+	                // common features together
+	                switch (feature.type) {
+	                    case Feature.Type.LightZone:
+	                        lightZones.push(cmpFeature);
+	                        break;
+	                    case Feature.Type.WindowTreatment:
+	                        windowTreatments.push(cmpFeature);
+	                        break;
+	                    case Feature.Type.Sensor:
+	                        sensors.push(cmpFeature);
+	                        break;
+	                    case Feature.Type.Button:
+	                        break;
+	                    //TODO: re-enable
+	                    //right now can't do anything with a button in the UI so hiding
+	                    default:
+	                        other.push(cmpFeature);
+	                }
 	            }.bind(this));
 
 	            btns = React.createElement(
@@ -31185,6 +31180,9 @@
 	            break;
 
 	        case Constants.DEVICE_LOAD_ALL_RAW:
+	            action.data.sort(function (a, b) {
+	                return a.name.localeCompare(b.name);
+	            });
 	            newState.devices = action.data;
 	            break;
 
@@ -31307,6 +31305,9 @@
 
 	        case Constants.SCENE_LOAD_ALL_RAW:
 	            newState = Object.assign({}, newState);
+	            action.data.sort(function (a, b) {
+	                return a.name.localeCompare(b.name);
+	            });
 	            newState.items = action.data;
 	            break;
 
@@ -31647,6 +31648,102 @@
 
 	// exports
 
+
+/***/ },
+/* 311 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var Feature = __webpack_require__(216);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'SceneActionPicker',
+	    prefix: 'b-'
+	});
+
+	var SceneActionPicker = React.createClass({
+	    displayName: 'SceneActionPicker',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            excluded: {}
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.type || 'unknown'
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setType(evt.target.value);
+	    },
+
+	    setType: function setType(type) {
+	        if (type === 'unknown') {
+	            return;
+	        }
+
+	        // Set back to unknown since we render a new command when this is selected
+	        this.setState({ value: 'unknown' });
+	        this.props.changed && this.props.changed(type);
+	    },
+
+	    render: function render() {
+	        var types = [{ str: "Add new action...", val: 'unknown' }];
+
+	        var excluded = this.props.excluded;
+	        if (!excluded[Feature.Type.Button]) {
+	            types.push({ str: "Button", val: Feature.Type.Button });
+	        }
+	        if (!excluded[Feature.Type.CoolZone]) {
+	            types.push({ str: "Cool Zone", val: Feature.Type.CoolZone });
+	        }
+	        if (!excluded[Feature.Type.HeatZone]) {
+	            types.push({ str: "Heat Zone", val: Feature.Type.HeatZone });
+	        }
+	        if (!excluded[Feature.Type.LightZone]) {
+	            types.push({ str: "Light Zone", val: Feature.Type.LightZone });
+	        }
+	        if (!excluded[Feature.Type.Sensor]) {
+	            types.push({ str: "Sensor", val: Feature.Type.Sensor });
+	        }
+	        if (!excluded[Feature.Type.Switch]) {
+	            types.push({ str: "Switch", val: Feature.Type.Switch });
+	        }
+	        if (!excluded[Feature.Type.Outlet]) {
+	            types.push({ str: "Outlet", val: Feature.Type.Outlet });
+	        }
+	        if (!excluded[Feature.Type.WindowTreatment]) {
+	            types.push({ str: "Window Treatment", val: Feature.Type.WindowTreatment });
+	        }
+
+	        var nodes = types.map(function (type) {
+	            return React.createElement(
+	                'option',
+	                { value: type.val, key: type.val },
+	                type.str
+	            );
+	        });
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                nodes
+	            )
+	        );
+	    }
+	});
+	module.exports = SceneActionPicker;
 
 /***/ }
 /******/ ]);

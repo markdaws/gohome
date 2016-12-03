@@ -22,6 +22,7 @@ type SystemServices struct {
 type System struct {
 	Name        string
 	Description string
+	Area        *Area
 	Devices     map[string]*Device
 	Scenes      map[string]*Scene
 	Features    map[string]*feature.Feature
@@ -40,6 +41,12 @@ func NewSystem(name, desc string) *System {
 		Scenes:      make(map[string]*Scene),
 		Features:    make(map[string]*feature.Feature),
 		Users:       make(map[string]*User),
+	}
+
+	// Area is the root area which all of the devices and features are contained within
+	s.Area = &Area{
+		ID:   s.NewGlobalID(),
+		Name: "Home",
 	}
 
 	s.Extensions = NewExtensions()

@@ -269,6 +269,22 @@ var FeatureList = React.createClass({
     render: function() {
         var body, btns;
 
+        //TODO: Cache this, only update if features updated
+        var features = [];
+        this.props.devices.forEach(function(device) {
+            (device.features || []).forEach(function(feature) {
+                // TODO:
+                // Don't support buttons right now
+                if (feature.type === Feature.Type.Button) {
+                    return;
+                }
+                features.push(feature);
+            })
+        });
+        features.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+        });
+
         if (this.state.editMode) {
             btns = (
                 <div>
@@ -279,22 +295,6 @@ var FeatureList = React.createClass({
                     </div>
                 </div>
             );
-
-            //TODO: Cache this, only update if features updated
-            var features = [];
-            this.props.devices.forEach(function(device) {
-                (device.features || []).forEach(function(feature) {
-                    // TODO:
-                    // Don't support buttons right now
-                    if (feature.type === Feature.Type.Button) {
-                        return;
-                    }
-                    features.push(feature);
-                })
-            });
-            features.sort(function(a, b) {
-                return a.name.localCompare(b.name);
-            });
 
             var featureCmps = [];
             features.forEach(function(feature) {
@@ -322,44 +322,42 @@ var FeatureList = React.createClass({
             var other = [];
             var sensors = [];
 
-            this.props.devices.forEach(function(device) {
-                (device.features || []).forEach(function(feature) {
+            var featureCmps = [];
+            features.forEach(function(feature) {
+                var cmpFeature = {
+                    key: 'feature_' + feature.id,
+                    cell: <FeatureCell
+                              key={feature.id}
+                              ref={"cell_feature_" + feature.id}
+                              feature={feature} />,
+                    content: <FeatureControl
+                    key={feature.id}
+                    id={feature.id}
+                    onAttrChanged={this.attrChanged}
+                    didMount={this.expanderMounted}
+                    willUnmount={this.expanderUnmounted}
+                    feature={feature} />
+                };
 
-                    var cmpFeature = {
-                        key: 'feature_' + feature.id,
-                        cell: <FeatureCell
-                                  key={feature.id}
-                                  ref={"cell_feature_" + feature.id}
-                                  feature={feature} />,
-                        content: <FeatureControl
-                                     key={feature.id}
-                                     id={feature.id}
-                                     onAttrChanged={this.attrChanged}
-                                     didMount={this.expanderMounted}
-                                     willUnmount={this.expanderUnmounted}
-                                     feature={feature} />
-                    };
-
-                    // For UI purposes we will group some of the more
-                    // common features together
-                    switch(feature.type) {
-                        case Feature.Type.LightZone:
-                            lightZones.push(cmpFeature)
-                            break;
-                        case Feature.Type.WindowTreatment:
-                            windowTreatments.push(cmpFeature);
-                            break;
-                        case Feature.Type.Sensor:
-                            sensors.push(cmpFeature)
-                            break;
-                        case Feature.Type.Button:
-                            break;
-                            //TODO: re-enable
-                            //right now can't do anything with a button in the UI so hiding
-                        default:
-                            other.push(cmpFeature)
-                    }
-                }.bind(this));
+                // For UI purposes we will group some of the more
+                // common features together
+                switch(feature.type) {
+                    case Feature.Type.LightZone:
+                        lightZones.push(cmpFeature)
+                        break;
+                    case Feature.Type.WindowTreatment:
+                        windowTreatments.push(cmpFeature);
+                        break;
+                    case Feature.Type.Sensor:
+                        sensors.push(cmpFeature)
+                        break;
+                    case Feature.Type.Button:
+                        break;
+                        //TODO: re-enable
+                        //right now can't do anything with a button in the UI so hiding
+                    default:
+                        other.push(cmpFeature)
+                }
             }.bind(this));
 
             btns = (
