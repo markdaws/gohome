@@ -53,14 +53,10 @@ var FeatureControl = React.createClass({
     },
 
     setAttrs: function(attr, value) {
-        //TODO: This should just keep track of the attributes, how to have an unset
-        //state for all UI elements, including slider?
         var newAttr = Object.assign({}, attr)
         newAttr.value = value;
 
-        // Keep track of all the changes
         this._modifiedAttrs[newAttr.localId] = newAttr;
-
         this.props.onAttrChanged && this.props.onAttrChanged(this.props.feature, newAttr);
     },
 

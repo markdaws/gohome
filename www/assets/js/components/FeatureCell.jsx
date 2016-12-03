@@ -62,14 +62,28 @@ var FeatureCell = React.createClass({
             case Feature.Type.LightZone:
                 icon1 = 'icon ion-ios-lightbulb-outline';
 
-                if (attrs[Feature.LightZone.AttrIDs.HSL]) {
+                var isOff = true
+                var onOffVal = attrs[Feature.LightZone.AttrIDs.OnOff].value;
+                if (!onOffVal) {
+                    val = '';
+                } else {
+                    if (onOffVal === 2) {
+                        isOff = false
+                        opacity = 1;
+                    }
+                    val = Attribute.OnOff.States[onOffVal];
+                }
+
+                if (!isOff && attrs[Feature.LightZone.AttrIDs.HSL]) {
                     color = attrs[Feature.LightZone.AttrIDs.HSL].value;
                     if (color == null) {
                         opacity = 0;
                     } else {
                         opacity = 1;
                     }
-                } else if (attrs[Feature.LightZone.AttrIDs.Brightness]) {
+                }
+
+                if (!isOff && attrs[Feature.LightZone.AttrIDs.Brightness]) {
                     // The light zone supports brightness, show the current intensity
                     val = attrs[Feature.LightZone.AttrIDs.Brightness].value;
                     if (val == null) {
@@ -78,18 +92,8 @@ var FeatureCell = React.createClass({
                         opacity = val / 100;
                         val = parseInt(val, 10) + '%';
                     }
-                } else {
-                    // The light zone is only on/off, show that state
-                    var onOffVal = attrs[Feature.LightZone.AttrIDs.OnOff].value;
-                    if (!onOffVal) {
-                        val = '';
-                    } else {
-                        if (onOffVal === 2) {
-                            opacity = 1;
-                        }
-                        val = Attribute.OnOff.States[onOffVal];
-                    }
                 }
+
                 break;
 
             case Feature.Type.Switch:

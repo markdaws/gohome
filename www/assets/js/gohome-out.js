@@ -25329,14 +25329,28 @@
 	            case Feature.Type.LightZone:
 	                icon1 = 'icon ion-ios-lightbulb-outline';
 
-	                if (attrs[Feature.LightZone.AttrIDs.HSL]) {
+	                var isOff = true;
+	                var onOffVal = attrs[Feature.LightZone.AttrIDs.OnOff].value;
+	                if (!onOffVal) {
+	                    val = '';
+	                } else {
+	                    if (onOffVal === 2) {
+	                        isOff = false;
+	                        opacity = 1;
+	                    }
+	                    val = Attribute.OnOff.States[onOffVal];
+	                }
+
+	                if (!isOff && attrs[Feature.LightZone.AttrIDs.HSL]) {
 	                    color = attrs[Feature.LightZone.AttrIDs.HSL].value;
 	                    if (color == null) {
 	                        opacity = 0;
 	                    } else {
 	                        opacity = 1;
 	                    }
-	                } else if (attrs[Feature.LightZone.AttrIDs.Brightness]) {
+	                }
+
+	                if (!isOff && attrs[Feature.LightZone.AttrIDs.Brightness]) {
 	                    // The light zone supports brightness, show the current intensity
 	                    val = attrs[Feature.LightZone.AttrIDs.Brightness].value;
 	                    if (val == null) {
@@ -25345,18 +25359,8 @@
 	                        opacity = val / 100;
 	                        val = parseInt(val, 10) + '%';
 	                    }
-	                } else {
-	                    // The light zone is only on/off, show that state
-	                    var onOffVal = attrs[Feature.LightZone.AttrIDs.OnOff].value;
-	                    if (!onOffVal) {
-	                        val = '';
-	                    } else {
-	                        if (onOffVal === 2) {
-	                            opacity = 1;
-	                        }
-	                        val = Attribute.OnOff.States[onOffVal];
-	                    }
 	                }
+
 	                break;
 
 	            case Feature.Type.Switch:
@@ -28939,14 +28943,10 @@
 	    },
 
 	    setAttrs: function setAttrs(attr, value) {
-	        //TODO: This should just keep track of the attributes, how to have an unset
-	        //state for all UI elements, including slider?
 	        var newAttr = Object.assign({}, attr);
 	        newAttr.value = value;
 
-	        // Keep track of all the changes
 	        this._modifiedAttrs[newAttr.localId] = newAttr;
-
 	        this.props.onAttrChanged && this.props.onAttrChanged(this.props.feature, newAttr);
 	    },
 
@@ -29214,6 +29214,7 @@
 	    displayName: 'OnOffAttr',
 
 	    getInitialState: function getInitialState() {
+	        console.log('got state');
 	        return {
 	            value: this.props.attr.value
 	        };
@@ -29265,6 +29266,7 @@
 	            if (nextProps.attr.value != null) {
 	                state = nextProps.attr.value === 2;
 	            }
+	            this.setState({ value: nextProps.attr.value });
 	            this._switch && this._switch.bootstrapSwitch('state', state, true);
 	        }
 	    },
@@ -29689,6 +29691,7 @@
 	            if (nextProps.attr.value != null) {
 	                state = nextProps.attr.value === 2;
 	            }
+	            this.setState({ value: nextProps.attr.value });
 	            this._switch && this._switch.bootstrapSwitch('state', state, true);
 	        }
 	    },

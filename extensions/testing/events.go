@@ -43,11 +43,12 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 					})
 
 				case "2":
-					_, brightness, _ := feature.LightZoneCloneAttrs(f)
+					onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
+					onoff.Value = int32(1 + rand.Intn(2))
 					brightness.Value = float32(rand.Intn(101))
 					p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
 						FeatureID: f.ID,
-						Attrs:     feature.NewAttrs(brightness),
+						Attrs:     feature.NewAttrs(onoff, brightness),
 					})
 
 				case "3":
@@ -81,6 +82,15 @@ func (p *producer) StartProducing(b *evtbus.Bus) {
 					p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
 						FeatureID: f.ID,
 						Attrs:     feature.NewAttrs(offset),
+					})
+
+				case "7":
+					onoff, _, hsl := feature.LightZoneCloneAttrs(f)
+					onoff.Value = int32(1 + rand.Intn(2))
+					hsl.Value = attr.RGBToHSLString(rand.Intn(256), rand.Intn(256), rand.Intn(256))
+					p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+						FeatureID: f.ID,
+						Attrs:     feature.NewAttrs(onoff, hsl),
 					})
 				}
 			}

@@ -63,6 +63,7 @@ var OpenClosedAttr = React.createClass({
             if (nextProps.attr.value != null) {
                 state = nextProps.attr.value === 2
             }
+            this.setState({ value: nextProps.attr.value });
             this._switch && this._switch.bootstrapSwitch('state', state, true);
         }
     },
