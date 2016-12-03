@@ -1,0 +1,9 @@
+{
+  "globals": {
+    "$": false,
+    "jQuery": false,
+    "window": false,
+    "document": false,
+    "WebSocket": false
+  }
+}

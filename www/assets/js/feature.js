@@ -40,7 +40,7 @@ WindowTreatment.AttrIDs = {
 };
 
 function cloneAttrs(sourceAttrs) {
-    if (sourceAttrs == null) {
+    if (sourceAttrs === null || sourceAttrs === undefined) {
         return null;
     }
 

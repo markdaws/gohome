@@ -5,6 +5,7 @@ var  uuid = require('uuid');
 
 module.exports = function(state, action) {
     var newState = state;
+    var i;
 
     switch(action.type) {
     case Constants.SCENE_LOAD_ALL:
@@ -55,7 +56,7 @@ module.exports = function(state, action) {
     case Constants.SCENE_DESTROY_RAW:
         newState = Object.assign({}, newState);
 
-        for (var i=0; i<newState.items.length; ++i) {
+        for (i=0; i<newState.items.length; ++i) {
             var found = false;
             if (action.clientId && (action.clientId === newState.items[i].clientId)) {
                 found = true;
@@ -70,6 +71,7 @@ module.exports = function(state, action) {
             }
         }
         break;
+
     case Constants.SCENE_DESTROY_FAIL:
         //TODO:
         break;
@@ -81,7 +83,7 @@ module.exports = function(state, action) {
     case Constants.SCENE_COMMAND_DELETE_RAW:
         newState = Object.assign({}, newState);
         var scenes = newState.items;
-        for (var i=0;i<scenes.length; ++i) {
+        for (i=0;i<scenes.length; ++i) {
             if (scenes[i].id === action.sceneId) {
                 newState.items = newState.items.slice();
                 newState.items[i].commands = CommandsReducer(scenes[i].commands || [], action);

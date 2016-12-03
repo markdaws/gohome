@@ -16,7 +16,7 @@ var Grid = React.createClass({
             console.log('[' + this.props.debugName + '] - ' + msg);
         }
     },
-    
+
     getDefaultProps: function() {
         return {
             cells: [],
@@ -29,7 +29,7 @@ var Grid = React.createClass({
 
     getInitialState: function() {
         this.debug('getInitialState');
-        
+
         return {
             cellIndices: { x:-1, y:-1 },
             expanderIndex: -1,
@@ -47,7 +47,7 @@ var Grid = React.createClass({
             //this.closeExpander();
         }
     },
-    
+
     shouldComponentUpdate: function(nextProps, nextState) {
         //TODO: Fix
         return true;
@@ -66,7 +66,7 @@ var Grid = React.createClass({
         }
         return false;*/
     },
-    
+
     calcCellDimensions: function() {
         var $this = $(ReactDOM.findDOMNode(this));
         var gridWidthNoPadding = $this.width();
@@ -84,7 +84,7 @@ var Grid = React.createClass({
         if (this.props.debugName) {
             console.log('mounting grid: ' + this.props.debugName);
         }
-        
+
         var dimensions = this.calcCellDimensions();
         this.setState({
             cellWidth: dimensions.width,
@@ -102,10 +102,10 @@ var Grid = React.createClass({
             });
         }
     },
-    
+
     closeExpander: function() {
         this.debug('closeExpander');
-        
+
         this.setState({
             expanded: false,
             cellIndices: { x:-1, y:-1},
@@ -114,13 +114,13 @@ var Grid = React.createClass({
             expanderContent: null
         });
     },
-    
+
     cellClicked: function(evt) {
         var $this = $(ReactDOM.findDOMNode(this));
 
         //width() returns without padding
         var gridWidthNoPadding = $this.width();
-        
+
         var cellsPerRow = Math.floor(gridWidthNoPadding / this.state.cellWidth);
 
         var $target = $(evt.target);
@@ -134,7 +134,7 @@ var Grid = React.createClass({
             // Have to take into account the expander height when calculating which
             // cell the user is clicking on
             if (cellIndex > (this.state.expanderIndex - 1)) {
-                var expanderHeight = $this.find('.cmp-ExpanderWrapper').height();
+                var expanderHeight = $this.find('.b-Expander').height();
                 yOffset -= expanderHeight;
             }
         }
@@ -160,7 +160,7 @@ var Grid = React.createClass({
     expanderWillMount: function(content) {
         this.props.expanderWillMount && this.props.expanderWillMount(content);
     },
-    
+
     render: function() {
         function makeCellWrapper(index, selectedIndex, cell) {
             var content = cell.cell;
@@ -190,7 +190,7 @@ var Grid = React.createClass({
         if (this.props.debugName) {
             console.log('[' + this.props.debugName + '] selectedIndex: ' + this.state.selectedIndex);
         }
-        
+
         var transitionGroup = (
             <ReactTransitionGroup key={key + "transition"}>
                 <ExpanderWrapper key={key + 'wrapper'}>

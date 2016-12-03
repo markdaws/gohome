@@ -26,6 +26,7 @@ var ImportGroup = React.createClass({
                 features.push(feature);
             });
         });
+
         return {
             devices: this.props.devices,
             features: features,

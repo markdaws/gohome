@@ -53,6 +53,7 @@ module.exports = function(state, action) {
             }
             return device;
         });
+        break;
 
     case Constants.DEVICE_CREATE_FAIL:
         break;

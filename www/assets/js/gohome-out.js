@@ -67,7 +67,7 @@
 	*/
 
 	// If the user has logged in there is a session cookie, if not we show the login screen
-	var cookies = document.cookie.split(';');
+	var cookies = window.document.cookie.split(';');
 	var sid = '';
 	for (var i = 0; i < cookies.length; ++i) {
 	    var index = cookies[i].indexOf('=');
@@ -24040,18 +24040,20 @@
 	            data: null,
 	            cache: false,
 	            success: function success(data) {
-	                callback && callback(null, data);
+	                if (callback) callback(null, data);
 	            },
 	            error: function (xhr, status, err) {
 	                if (this.checkErr(xhr)) {
 	                    return;
 	                }
 
-	                callback && callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    status: status
-	                });
+	                if (callback) {
+	                    callback({
+	                        err: err,
+	                        xhr: xhr,
+	                        status: status
+	                    });
+	                }
 	            }.bind(this)
 	        });
 	    },
@@ -24066,14 +24068,16 @@
 	            data: null,
 	            cache: false,
 	            success: function success(data) {
-	                callback && callback(null, data);
+	                if (callback) callback(null, data);
 	            },
 	            error: function (xhr, status, err) {
-	                callback && callback({
-	                    err: err,
-	                    xhr: xhr,
-	                    status: status
-	                });
+	                if (callback) {
+	                    callback({
+	                        err: err,
+	                        xhr: xhr,
+	                        status: status
+	                    });
+	                }
 	            }.bind(this)
 	        });
 	    },
@@ -24439,6 +24443,7 @@
 	                features.push(feature);
 	            });
 	        });
+
 	        return {
 	            devices: this.props.devices,
 	            features: features,
@@ -25568,7 +25573,7 @@
 	};
 
 	function cloneAttrs(sourceAttrs) {
-	    if (sourceAttrs == null) {
+	    if (sourceAttrs === null || sourceAttrs === undefined) {
 	        return null;
 	    }
 
@@ -25719,7 +25724,7 @@
 	            showToken: false,
 	            errors: this.props.errors,
 	            saveButtonStatus: '',
-	            dirty: !this.props.id,
+	            dirty: false,
 	            connPool: this.props.connPool,
 	            cmdBuilder: this.props.cmdBuilder,
 	            type: this.props.type
@@ -25747,11 +25752,13 @@
 	            buttons: this.props.buttons,
 	            connPool: this.props.connPool,
 	            cmdBuilder: this.props.cmdBuilder,
+	            features: this.props.features,
 	            type: s.type
 	        };
 	    },
 
 	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        return;
 	        //TODO: Needed?
 	        if (nextProps.name != "") {
 	            this.setState({ name: nextProps.name });
@@ -25771,62 +25778,6 @@
 	        if (nextProps.id != "") {
 	            this.setState({ id: nextProps.id });
 	        }
-	    },
-
-	    createDevice: function createDevice() {
-	        /*
-	        //TODO: Revisit now ew have one API to save everything at once
-	        Api.deviceCreate(this.toJson(), function(err, deviceData) {
-	            if (err) {
-	                this.setState({
-	                    saveButtonStatus: 'error',
-	                    errors: err.validation.errors
-	                });
-	                return;
-	            }
-	             // Let callers know the device has been saved
-	            this.props.createdDevice(this.state.id, deviceData);
-	             // Now we need to loop through each of the zones and save them
-	            function saveZone(index) {
-	                if (index >= this.props.zones.length) {
-	                    saveSensor.bind(this)(0)
-	                    return;
-	                }
-	                 var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
-	                Api.zoneCreate(zone, function(err, zoneData) {
-	                    if (err) {
-	                        zoneInfo.setErrors(err.validation.errors);
-	                        this.setState({
-	                            saveButtonStatus: 'error'
-	                        });
-	                        return;
-	                    }
-	                     this.props.savedZone(zoneData);
-	                    saveZone.bind(this)(index+1);
-	                }.bind(this));
-	            }
-	            saveZone.bind(this)(0);
-	             // Loop through sensors saving
-	            function saveSensor(index) {
-	                if (index >= this.props.sensors.length) {
-	                    this.setState({ saveButtonStatus: 'success' });
-	                    return;
-	                }
-	                 var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
-	                Api.sensorCreate(sensor, function(err, sensorData) {
-	                    if (err) {
-	                        sensorInfo.setErrors(err.validation.errors);
-	                        this.setState({
-	                            saveButtonStatus: 'error'
-	                        });
-	                        return;
-	                    }
-	                     this.props.savedSensor(sensorData);
-	                    saveSensor.bind(this)(index+1);
-	                }.bind(this));
-	            }
-	         }.bind(this));
-	        */
 	    },
 
 	    updateDevice: function updateDevice() {
@@ -25852,12 +25803,7 @@
 
 	    save: function save() {
 	        this.setState({ errors: null });
-
-	        if (this.state.id) {
-	            this.updateDevice();
-	        } else {
-	            this.createDevice();
-	        }
+	        this.updateDevice();
 	    },
 
 	    deleteDevice: function deleteDevice() {
@@ -26242,14 +26188,6 @@
 	        };
 	    },
 
-	    componentDidMount: function componentDidMount() {
-	        // If a value wasn't passed in, raise a changed notification so callers
-	        // can set their value accordingly since we default to unknown
-	        if (this.state.value === 'unknown') {
-	            this.props.changed && this.props.changed(this.state.value);
-	        }
-	    },
-
 	    selected: function selected(evt) {
 	        this.setType(evt.target.value);
 	    },
@@ -26469,7 +26407,7 @@
 	            // Have to take into account the expander height when calculating which
 	            // cell the user is clicking on
 	            if (cellIndex > this.state.expanderIndex - 1) {
-	                var expanderHeight = $this.find('.cmp-ExpanderWrapper').height();
+	                var expanderHeight = $this.find('.b-Expander').height();
 	                yOffset -= expanderHeight;
 	            }
 	        }
@@ -27450,7 +27388,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ImportGroup {\n  border: 1px solid #eee;\n  border-radius: 4px;\n  padding: 8px;\n}\n.b-ImportGroup__import {\n  margin-bottom: 12px;\n}\n.b-ImportGroup.b-ImportGroup__no-new {\n  font-weight: 200;\n}\n.b-ImportGroup__header {\n  margin-top: 0;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: left;\n}\n.b-ImportGroup__devices--hidden {\n  display: none;\n}\n.b-ImportGroup__features--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-ImportGroup__import {\n  margin-bottom: 12px;\n}\n.b-ImportGroup.b-ImportGroup__no-new {\n  font-weight: 200;\n}\n.b-ImportGroup__header {\n  margin-top: 0;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: left;\n}\n.b-ImportGroup__devices--hidden {\n  display: none;\n}\n.b-ImportGroup__features--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
@@ -28892,7 +28830,7 @@
 	var BrightnessAttr = __webpack_require__(262);
 	var OnOffAttr = __webpack_require__(265);
 	var TempAttr = __webpack_require__(268);
-	var HSLAttr = __webpack_require__(357);
+	var HSLAttr = __webpack_require__(271);
 	var OffsetAttr = __webpack_require__(274);
 	var OpenClosedAttr = __webpack_require__(277);
 	var Feature = __webpack_require__(216);
@@ -29214,7 +29152,6 @@
 	    displayName: 'OnOffAttr',
 
 	    getInitialState: function getInitialState() {
-	        console.log('got state');
 	        return {
 	            value: this.props.attr.value
 	        };
@@ -29471,9 +29408,144 @@
 
 
 /***/ },
-/* 271 */,
-/* 272 */,
-/* 273 */,
+/* 271 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var Api = __webpack_require__(204);
+	var Attribute = __webpack_require__(217);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'HSLAttr',
+	    prefix: 'b-'
+	});
+	__webpack_require__(272);
+
+	var HSLAttr = React.createClass({
+	    displayName: 'HSLAttr',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.attr.value
+	        };
+	    },
+
+	    initSlider: function initSlider() {
+	        var self = this;
+	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-HSLAttr__slider');
+
+	        sliders.ColorPickerSliders({
+	            color: 'hsl(0, 100%, 50%)',
+	            flat: true,
+	            swatches: false,
+	            order: {
+	                hsl: 1
+	            },
+	            onchange: function onchange(container, color) {
+	                var hsl = color.tiny.toHsl();
+	                if (self._ignoreChange || hsl.h === 0 && hsl.s === 1 && hsl.l === 0.5) {
+	                    // If we got an update from the API, shouldn't fire a change event here
+	                    // since we only want to do that when the user changes the slider. No way
+	                    // to distinguish with this control
+	                    self._ignoreChange = false;
+
+	                    // This is the default value, ignore since this fires on load an we can't
+	                    // distinguish between it and the user moving the slider. There is a bug
+	                    // here that the user can't set 0,0,0 since we ignore it now.
+	                    return;
+	                }
+
+	                // this fires many times as they are sliding, let them stop moving before we
+	                // send the commands
+	                clearTimeout(self._timeoutId);
+	                self._timeoutId = setTimeout(function () {
+	                    var hsl = color.tiny.toHslString();
+	                    self.setState({ value: hsl });
+	                    self.props.onChanged && self.props.onChanged(self.props.attr, hsl);
+	                }, 500);
+	            }
+	        });
+	        return sliders;
+	    },
+
+	    componentDidMount: function componentDidMount() {
+	        this._slider = this.initSlider();
+	    },
+
+	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	        if (nextProps.attr && nextProps.attr != this.props.attr) {
+	            var newLevel = nextProps.attr.value;
+	            if (newLevel == null) {
+	                return;
+	            }
+	            this.setState({ value: newLevel });
+
+	            // This should not trigger an update, just needed to update UI.
+	            this._ignoreChange = true;
+	            this._slider && this._slider.trigger("colorpickersliders.updateColor", newLevel);
+	        }
+	    },
+
+	    setAttrs: function setAttrs(attrs) {
+	        this.setState({ attrs: attrs });
+	    },
+
+	    render: function render() {
+	        var readOnly = this.props.attr.perms == Attribute.Perms.ReadOnly;
+	        return React.createElement(
+	            'div',
+	            classes(''),
+	            React.createElement('div', classes('slider', readOnly ? 'read-only' : ''))
+	        );
+	    }
+	});
+	module.exports = HSLAttr;
+
+/***/ },
+/* 272 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(273);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HSLAttr.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HSLAttr.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 273 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-HueAttr {\n  position: relative;\n  height: 130px;\n}\n.b-HueAttr__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 10px;\n}\n.b-HueAttr__slider--read-only {\n  visibility: hidden;\n}\n.b-HueAttr__name {\n  float: left;\n  font-size: 15px;\n  margin-left: 31px;\n  margin-top: 19px;\n}\n.b-HueAttr__value {\n  float: right;\n  display: inline-block;\n  margin-right: 31px;\n  font-size: 40px;\n}\n.b-HueAttr__value--hidden {\n  display: none;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
 /* 274 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -30587,6 +30659,7 @@
 	                )
 	            );
 
+	            //TODO: Cache this, only update if features updated
 	            var features = [];
 	            this.props.devices.forEach(function (device) {
 	                (device.features || []).forEach(function (feature) {
@@ -30595,24 +30668,31 @@
 	                    if (feature.type === Feature.Type.Button) {
 	                        return;
 	                    }
+	                    features.push(feature);
+	                });
+	            });
+	            features.sort(function (a, b) {
+	                return a.name.localCompare(b.name);
+	            });
 
-	                    features.push(React.createElement(
-	                        'div',
-	                        _extends({}, classes('feature-info'), { key: feature.id }),
-	                        React.createElement(FeatureInfo, {
-	                            readOnlyFields: 'id, deviceId',
-	                            key: feature.id,
-	                            feature: feature,
-	                            showSaveBtn: true,
-	                            updatedFeature: this.props.updatedFeature })
-	                    ));
-	                }.bind(this));
+	            var featureCmps = [];
+	            features.forEach(function (feature) {
+	                featureCmps.push(React.createElement(
+	                    'div',
+	                    _extends({}, classes('feature-info'), { key: feature.id }),
+	                    React.createElement(FeatureInfo, {
+	                        readOnlyFields: 'id, deviceId',
+	                        key: feature.id,
+	                        feature: feature,
+	                        showSaveBtn: true,
+	                        updatedFeature: this.props.updatedFeature })
+	                ));
 	            }.bind(this));
 
 	            body = React.createElement(
 	                'div',
 	                null,
-	                features
+	                featureCmps
 	            );
 	        } else {
 	            var lightZones = [];
@@ -31147,6 +31227,7 @@
 	                }
 	                return device;
 	            });
+	            break;
 
 	        case Constants.DEVICE_CREATE_FAIL:
 	            break;
@@ -31214,6 +31295,7 @@
 
 	module.exports = function (state, action) {
 	    var newState = state;
+	    var i;
 
 	    switch (action.type) {
 	        case Constants.SCENE_LOAD_ALL:
@@ -31264,7 +31346,7 @@
 	        case Constants.SCENE_DESTROY_RAW:
 	            newState = Object.assign({}, newState);
 
-	            for (var i = 0; i < newState.items.length; ++i) {
+	            for (i = 0; i < newState.items.length; ++i) {
 	                var found = false;
 	                if (action.clientId && action.clientId === newState.items[i].clientId) {
 	                    found = true;
@@ -31279,6 +31361,7 @@
 	                }
 	            }
 	            break;
+
 	        case Constants.SCENE_DESTROY_FAIL:
 	            //TODO:
 	            break;
@@ -31290,7 +31373,7 @@
 	        case Constants.SCENE_COMMAND_DELETE_RAW:
 	            newState = Object.assign({}, newState);
 	            var scenes = newState.items;
-	            for (var i = 0; i < scenes.length; ++i) {
+	            for (i = 0; i < scenes.length; ++i) {
 	                if (scenes[i].id === action.sceneId) {
 	                    newState.items = newState.items.slice();
 	                    newState.items[i].commands = CommandsReducer(scenes[i].commands || [], action);
@@ -31561,190 +31644,6 @@
 
 	// module
 	exports.push([module.id, ".b-Login {\n  margin: 20px;\n  font-weight: 200;\n}\n.b-Login__header {\n  margin-top: 60px;\n  text-align: center;\n}\n.b-Login__header-logo {\n  width: 210px;\n}\n.b-Login__login-form {\n  margin-top: 50px;\n}\n.b-Login__need-credentials {\n  margin-top: 30px;\n}\n.b-Login__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-Login__error--hidden {\n  display: none;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 311 */,
-/* 312 */,
-/* 313 */,
-/* 314 */,
-/* 315 */,
-/* 316 */,
-/* 317 */,
-/* 318 */,
-/* 319 */,
-/* 320 */,
-/* 321 */,
-/* 322 */,
-/* 323 */,
-/* 324 */,
-/* 325 */,
-/* 326 */,
-/* 327 */,
-/* 328 */,
-/* 329 */,
-/* 330 */,
-/* 331 */,
-/* 332 */,
-/* 333 */,
-/* 334 */,
-/* 335 */,
-/* 336 */,
-/* 337 */,
-/* 338 */,
-/* 339 */,
-/* 340 */,
-/* 341 */,
-/* 342 */,
-/* 343 */,
-/* 344 */,
-/* 345 */,
-/* 346 */,
-/* 347 */,
-/* 348 */,
-/* 349 */,
-/* 350 */,
-/* 351 */,
-/* 352 */,
-/* 353 */,
-/* 354 */,
-/* 355 */,
-/* 356 */,
-/* 357 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(34);
-	var Api = __webpack_require__(204);
-	var Attribute = __webpack_require__(217);
-	var BEMHelper = __webpack_require__(209);
-
-	var classes = new BEMHelper({
-	    name: 'HSLAttr',
-	    prefix: 'b-'
-	});
-	__webpack_require__(358);
-
-	var HSLAttr = React.createClass({
-	    displayName: 'HSLAttr',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.attr.value
-	        };
-	    },
-
-	    initSlider: function initSlider() {
-	        var self = this;
-	        var sliders = $(ReactDOM.findDOMNode(this)).find('.b-HSLAttr__slider');
-
-	        sliders.ColorPickerSliders({
-	            color: 'hsl(0, 100%, 50%)',
-	            flat: true,
-	            swatches: false,
-	            order: {
-	                hsl: 1
-	            },
-	            onchange: function onchange(container, color) {
-	                var hsl = color.tiny.toHsl();
-	                if (self._ignoreChange || hsl.h === 0 && hsl.s === 1 && hsl.l === 0.5) {
-	                    // If we got an update from the API, shouldn't fire a change event here
-	                    // since we only want to do that when the user changes the slider. No way
-	                    // to distinguish with this control
-	                    self._ignoreChange = false;
-
-	                    // This is the default value, ignore since this fires on load an we can't
-	                    // distinguish between it and the user moving the slider. There is a bug
-	                    // here that the user can't set 0,0,0 since we ignore it now.
-	                    return;
-	                }
-
-	                // this fires many times as they are sliding, let them stop moving before we
-	                // send the commands
-	                clearTimeout(self._timeoutId);
-	                self._timeoutId = setTimeout(function () {
-	                    var hsl = color.tiny.toHslString();
-	                    self.setState({ value: hsl });
-	                    self.props.onChanged && self.props.onChanged(self.props.attr, hsl);
-	                }, 500);
-	            }
-	        });
-	        return sliders;
-	    },
-
-	    componentDidMount: function componentDidMount() {
-	        this._slider = this.initSlider();
-	    },
-
-	    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	        if (nextProps.attr && nextProps.attr != this.props.attr) {
-	            var newLevel = nextProps.attr.value;
-	            if (newLevel == null) {
-	                return;
-	            }
-	            this.setState({ value: newLevel });
-
-	            // This should not trigger an update, just needed to update UI.
-	            this._ignoreChange = true;
-	            this._slider && this._slider.trigger("colorpickersliders.updateColor", newLevel);
-	        }
-	    },
-
-	    setAttrs: function setAttrs(attrs) {
-	        this.setState({ attrs: attrs });
-	    },
-
-	    render: function render() {
-	        var readOnly = this.props.attr.perms == Attribute.Perms.ReadOnly;
-	        return React.createElement(
-	            'div',
-	            classes(''),
-	            React.createElement('div', classes('slider', readOnly ? 'read-only' : ''))
-	        );
-	    }
-	});
-	module.exports = HSLAttr;
-
-/***/ },
-/* 358 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(359);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HSLAttr.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./HSLAttr.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 359 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(213)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-HueAttr {\n  position: relative;\n  height: 130px;\n}\n.b-HueAttr__slider {\n  max-width: 400px;\n  position: absolute;\n  left: 0;\n  right: 0;\n  margin-left: 30px;\n  margin-right: 30px;\n  bottom: 10px;\n}\n.b-HueAttr__slider--read-only {\n  visibility: hidden;\n}\n.b-HueAttr__name {\n  float: left;\n  font-size: 15px;\n  margin-left: 31px;\n  margin-top: 19px;\n}\n.b-HueAttr__value {\n  float: right;\n  display: inline-block;\n  margin-right: 31px;\n  font-size: 40px;\n}\n.b-HueAttr__value--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 

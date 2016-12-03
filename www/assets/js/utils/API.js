@@ -326,18 +326,20 @@ var API = {
             data: null,
             cache: false,
             success: function(data) {
-                callback && callback(null, data);
+                if (callback) callback(null, data);
             },
             error: function(xhr, status, err) {
                 if (this.checkErr(xhr)) {
                     return;
                 }
 
-                callback && callback({
-                    err: err,
-                    xhr: xhr,
-                    status: status
-                });
+                if (callback) {
+                    callback({
+                        err: err,
+                        xhr: xhr,
+                        status: status
+                    });
+                }
             }.bind(this)
         });
     },
@@ -352,14 +354,16 @@ var API = {
             data: null,
             cache: false,
             success: function(data) {
-                callback && callback(null, data);
+                if (callback) callback(null, data);
             },
             error: function(xhr, status, err) {
-                callback && callback({
-                    err: err,
-                    xhr: xhr,
-                    status: status
-                });
+                if (callback) {
+                    callback({
+                        err: err,
+                        xhr: xhr,
+                        status: status
+                    });
+                }
             }.bind(this)
         });
     },

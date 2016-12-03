@@ -19,7 +19,7 @@ ReactDOM.render(
 */
 
 // If the user has logged in there is a session cookie, if not we show the login screen
-var cookies = document.cookie.split(';');
+var cookies = window.document.cookie.split(';');
 var sid = '';
 for (var i=0; i<cookies.length; ++i) {
     var index = cookies[i].indexOf('=');
@@ -44,7 +44,7 @@ if (sid !== '') {
             </Provider>,
         document.getElementsByClassName('content')[0]
     );
-} else {    
+} else {
     ReactDOM.render(
             <Provider store={store}>
             <Login />

@@ -33,6 +33,9 @@ module.exports = {
             }
         ]
     },
+    jshint: {
+        strict: "global"
+    },
     plugins: minify ? [
         new webpack.optimize.UglifyJsPlugin({
             minimize: true

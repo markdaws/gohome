@@ -11,7 +11,6 @@ require('../../css/components/OnOffAttr.less')
 
 var OnOffAttr = React.createClass({
     getInitialState: function() {
-        console.log('got state');
         return {
             value: this.props.attr.value
         };

@@ -30,7 +30,7 @@ var DeviceInfo = React.createClass({
             showToken: false,
             errors: this.props.errors,
             saveButtonStatus: '',
-            dirty: !this.props.id,
+            dirty: false,
             connPool: this.props.connPool,
             cmdBuilder: this.props.cmdBuilder,
             type: this.props.type,
@@ -58,11 +58,13 @@ var DeviceInfo = React.createClass({
             buttons: this.props.buttons,
             connPool: this.props.connPool,
             cmdBuilder: this.props.cmdBuilder,
+            features: this.props.features,
             type: s.type
         };
     },
 
     componentWillReceiveProps: function(nextProps) {
+        return;
         //TODO: Needed?
         if (nextProps.name != "") {
             this.setState({ name: nextProps.name });
@@ -82,70 +84,6 @@ var DeviceInfo = React.createClass({
         if (nextProps.id != "" ) {
             this.setState({ id: nextProps.id });
         }
-    },
-
-    createDevice: function() {
-        /*
-        //TODO: Revisit now ew have one API to save everything at once
-        Api.deviceCreate(this.toJson(), function(err, deviceData) {
-            if (err) {
-                this.setState({
-                    saveButtonStatus: 'error',
-                    errors: err.validation.errors
-                });
-                return;
-            }
-
-            // Let callers know the device has been saved
-            this.props.createdDevice(this.state.id, deviceData);
-
-            // Now we need to loop through each of the zones and save them
-            function saveZone(index) {
-                if (index >= this.props.zones.length) {
-                    saveSensor.bind(this)(0)
-                    return;
-                }
-
-                var zone = this.refs["zoneInfo_" + this.props.zones[index].id].toJson();
-                Api.zoneCreate(zone, function(err, zoneData) {
-                    if (err) {
-                        zoneInfo.setErrors(err.validation.errors);
-                        this.setState({
-                            saveButtonStatus: 'error'
-                        });
-                        return;
-                    }
-
-                    this.props.savedZone(zoneData);
-                    saveZone.bind(this)(index+1);
-                }.bind(this));
-            }
-            saveZone.bind(this)(0);
-
-            // Loop through sensors saving
-            function saveSensor(index) {
-                if (index >= this.props.sensors.length) {
-                    this.setState({ saveButtonStatus: 'success' });
-                    return;
-                }
-
-                var sensor = this.refs["sensorInfo_" + this.props.sensors[index].id].toJson();
-                Api.sensorCreate(sensor, function(err, sensorData) {
-                    if (err) {
-                        sensorInfo.setErrors(err.validation.errors);
-                        this.setState({
-                            saveButtonStatus: 'error'
-                        });
-                        return;
-                    }
-
-                    this.props.savedSensor(sensorData);
-                    saveSensor.bind(this)(index+1);
-                }.bind(this));
-            }
-
-        }.bind(this));
-        */
     },
 
     updateDevice: function() {
@@ -171,12 +109,7 @@ var DeviceInfo = React.createClass({
 
     save: function() {
         this.setState({ errors: null });
-
-        if (this.state.id) {
-            this.updateDevice();
-        } else {
-            this.createDevice();
-        }
+        this.updateDevice();
     },
 
     deleteDevice: function() {

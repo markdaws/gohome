@@ -158,11 +158,25 @@ func apiDeviceApplyFeaturesAttrsHandler(savePath string, system *gohome.System) 
 			return
 		}
 
+		// Verify that each attribute passed in is valid. The API only cares that you pass in
+		// localID and value, the other fields for the attribute are pulled from the feature
+		finalAttrs := make(map[string]*attr.Attribute)
+		for localID, attribute := range data {
+			blankAttr, ok := f.Attrs[localID]
+			if !ok {
+				respBadRequest(fmt.Sprintf("invalid localID: %s", localID), w)
+				return
+			}
+
+			finalAttrs[localID] = blankAttr.Clone()
+			finalAttrs[localID].Value = attribute.Value
+		}
+
 		desc := "FeatureSetAttrs"
 		err = system.Services.CmdProcessor.Enqueue(gohome.NewCommandGroup(desc, &cmd.FeatureSetAttrs{
 			FeatureID:   featureID,
 			FeatureName: f.Name,
-			Attrs:       data,
+			Attrs:       finalAttrs,
 		}))
 
 		if err != nil {
@@ -447,6 +461,8 @@ func apiDeviceHandlerUpdate(savePath string, system *gohome.System) func(http.Re
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(data)
+
+		jsonDevices := DevicesToJSON(map[string]*gohome.Device{d.ID: d})
+		json.NewEncoder(w).Encode(jsonDevices[0])
 	}
 }

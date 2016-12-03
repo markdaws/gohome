@@ -280,6 +280,7 @@ var FeatureList = React.createClass({
                 </div>
             );
 
+            //TODO: Cache this, only update if features updated
             var features = [];
             this.props.devices.forEach(function(device) {
                 (device.features || []).forEach(function(feature) {
@@ -288,23 +289,30 @@ var FeatureList = React.createClass({
                     if (feature.type === Feature.Type.Button) {
                         return;
                     }
+                    features.push(feature);
+                })
+            });
+            features.sort(function(a, b) {
+                return a.name.localCompare(b.name);
+            });
 
-                    features.push(
-                        <div {...classes('feature-info')} key={feature.id}>
-                            <FeatureInfo
-                                readOnlyFields="id, deviceId"
-                                key={feature.id}
-                                feature={feature}
-                                showSaveBtn={true}
-                                updatedFeature={this.props.updatedFeature} />
-                        </div>
-                    );
-                }.bind(this));
+            var featureCmps = [];
+            features.forEach(function(feature) {
+                featureCmps.push(
+                    <div {...classes('feature-info')} key={feature.id}>
+                        <FeatureInfo
+                            readOnlyFields="id, deviceId"
+                            key={feature.id}
+                            feature={feature}
+                            showSaveBtn={true}
+                            updatedFeature={this.props.updatedFeature} />
+                    </div>
+                );
             }.bind(this));
 
             body = (
                 <div>
-                    {features}
+                    {featureCmps}
                 </div>
             );
 

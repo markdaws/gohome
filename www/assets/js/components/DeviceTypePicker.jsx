@@ -13,14 +13,6 @@ var DeviceTypePicker = React.createClass({
         };
     },
 
-    componentDidMount: function() {
-        // If a value wasn't passed in, raise a changed notification so callers
-        // can set their value accordingly since we default to unknown
-        if (this.state.value === 'unknown') {
-            this.props.changed && this.props.changed(this.state.value);
-        }
-    },
-
     selected: function(evt) {
         this.setType(evt.target.value);
     },
