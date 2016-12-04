@@ -123,6 +123,8 @@ func LoadSystem(path string) (*gohome.System, error) {
 		}
 	}
 
+	// First we have to load each scene, but without the commands, since a scene could have a
+	// sceneSet command referencing a scene which hasn't been loaded yet
 	for _, scn := range s.Scenes {
 		scene := &gohome.Scene{
 			Address:     scn.Address,
@@ -130,21 +132,29 @@ func LoadSystem(path string) (*gohome.System, error) {
 			Name:        scn.Name,
 			Description: scn.Description,
 		}
+		sys.AddScene(scene)
+		log.V("loaded Scene: ID:%s, Name:%s, Address:%s, Managed:%t",
+			scene.ID, scene.Name, scene.Address, scene.Managed,
+		)
+	}
+
+	for _, scn := range s.Scenes {
+		scene := sys.Scenes[scn.ID]
 
 		scene.Commands = make([]cmd.Command, len(scn.Commands))
-		//TODO: Harden, check map access is ok
 		for i, command := range scn.Commands {
 			var finalCmd cmd.Command
 			switch command.Type {
-			//TODO: Fix
-			/*
-				case "sceneSet":
-					scn := sys.Scenes[command.Attributes["SceneID"].(string)]
-					finalCmd = &cmd.SceneSet{
-						ID:        command.ID,
-						SceneID:   scn.ID,
-						SceneName: scn.Name,
-					}*/
+			case "sceneSet":
+				scn, ok := sys.Scenes[command.Attributes["SceneID"].(string)]
+				if !ok {
+					return nil, fmt.Errorf("invalid scene ID: %s", command.Attributes["SceneID"].(string))
+				}
+				finalCmd = &cmd.SceneSet{
+					ID:        command.ID,
+					SceneID:   scn.ID,
+					SceneName: scn.Name,
+				}
 
 			case "featureSetAttrs":
 				interfaceAttrs := command.Attributes["attrs"].(map[string]interface{})
@@ -183,10 +193,6 @@ func LoadSystem(path string) (*gohome.System, error) {
 			}
 			scene.Commands[i] = finalCmd
 		}
-		sys.AddScene(scene)
-		log.V("loaded Scene: ID:%s, Name:%s, Address:%s, Managed:%t",
-			scene.ID, scene.Name, scene.Address, scene.Managed,
-		)
 	}
 
 	for _, u := range s.Users {
@@ -223,16 +229,14 @@ func SaveSystem(savePath string, s *gohome.System) error {
 		cmds := make([]commandJSON, len(scene.Commands))
 		for j, sCmd := range scene.Commands {
 			switch xCmd := sCmd.(type) {
-			//TODO: Fix
-			/*
-				case *cmd.SceneSet:
-					cmds[j] = commandJSON{
-						ID:   xCmd.ID,
-						Type: "sceneSet",
-						Attributes: map[string]interface{}{
-							"SceneID": xCmd.SceneID,
-						},
-					}*/
+			case *cmd.SceneSet:
+				cmds[j] = commandJSON{
+					ID:   xCmd.ID,
+					Type: "sceneSet",
+					Attributes: map[string]interface{}{
+						"SceneID": xCmd.SceneID,
+					},
+				}
 
 			case *cmd.FeatureSetAttrs:
 				cmds[j] = commandJSON{

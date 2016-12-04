@@ -52,6 +52,9 @@ var SceneActionPicker = React.createClass({
         if (!excluded[Feature.Type.LightZone]) {
             types.push({ str: "Light Zone", val:Feature.Type.LightZone });
         }
+        if (!excluded['Scene']) {
+            types.push({ str: "Scene Set", val:'sceneSet' });
+        }
         if (!excluded[Feature.Type.Sensor]) {
             types.push({ str: "Sensor", val:Feature.Type.Sensor });
         }

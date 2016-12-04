@@ -8,9 +8,8 @@ var SceneSetCommand = module.exports = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
     getInitialState: function() {
         return {
-            id: uuid.v4(),
+            clientId: uuid.v4(),
             sceneId: this.props.command.attributes.SceneID || '',
-            errors: null,
         }
     },
 
@@ -23,28 +22,23 @@ var SceneSetCommand = module.exports = React.createClass({
     toJson: function() {
         return {
             type: 'sceneSet',
-            id: this.state.id,
+            clientId: this.state.clientId,
             attributes: {
                 SceneID: this.state.sceneId
             }
         };
     },
 
-    setErrors: function(errors) {
-        this.setState({ errors: errors });
-    },
-
     scenePickerChanged: function(sceneId) {
         this.setState({ sceneId: sceneId });
+        this.props.onChanged && this.props.onChanged();
     },
-    
+
     render: function() {
-        //TODO: Filter out the parent scene from the scenes list so it can't call itself
         return (
             <div className="cmp-SceneSetCommand">
               <h4>Scene Set</h4>
               <div className={this.addErr("form-group", "attributes_SceneID")}>
-                <label className="control-label" htmlFor={this.uid("attributes_SceneID")}>Scene*</label>
                 <ScenePicker
                     disabled={this.props.disabled}
                     changed={this.scenePickerChanged}

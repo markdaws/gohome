@@ -7,8 +7,8 @@ import (
 
 	lutronExt "github.com/go-home-iot/lutron"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/attr"
 	"github.com/markdaws/gohome/cmd"
+	"github.com/markdaws/gohome/feature"
 )
 
 type cmdBuilder struct {
@@ -30,23 +30,9 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 			return nil, fmt.Errorf("unknown device ID: %s", f.DeviceID)
 		}
 
-		var level float32 = -1
-		for _, attribute := range command.Attrs {
-			attribute := attribute
-			switch attribute.Type {
-			case attr.ATOnOff:
-				if attribute.Value.(int32) == attr.OnOffOff {
-					level = 0
-				} else {
-					level = 100
-				}
-			case attr.ATBrightness, attr.ATOffset:
-				level = attribute.Value.(float32)
-			}
-		}
-
-		if level == -1 {
-			return nil, fmt.Errorf("unsupported attribute")
+		level, err := feature.LightZoneGetBrightness(command.Attrs)
+		if err != nil {
+			return nil, fmt.Errorf("featureSetAttrs command is missing both onoff and brightness")
 		}
 
 		return &cmd.Func{

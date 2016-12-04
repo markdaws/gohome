@@ -56,6 +56,8 @@ var SceneInfo = React.createClass({
                     });
                     return;
                 }
+
+                this.setState({ saveButtonStatus: 'success' });
                 this.props.createdScene(data, this.props.scene.clientId);
             }.bind(this));
         } else {
@@ -70,6 +72,8 @@ var SceneInfo = React.createClass({
                     });
                     return;
                 }
+
+                this.setState({ saveButtonStatus: 'success' });
                 this.props.updatedScene(data, this.props.scene.id);
             }.bind(this));
         }
@@ -79,15 +83,22 @@ var SceneInfo = React.createClass({
         this.props.deleteScene(this.state.id, this.props.scene.clientId);
     },
 
-    sceneActionPickerChanged: function(featureType) {
-        // Current the only command we need for a scene is a FeatureSetAttrs, so we create a
-        // FeatureSetAttrs command and return that
+    sceneActionPickerChanged: function(actionType) {
         var cmd = {
-            clientId: Uuid.v4(),
-            type: 'featureSetAttrs',
-            attributes: {
-                type: featureType
-            }
+            clientId: Uuid.v4()
+        };
+
+        switch (actionType) {
+            case 'sceneSet':
+                cmd.type = 'sceneSet';
+                cmd.attributes = { };
+                break;
+            default:
+                // All other actions are related to features
+                cmd.type = 'featureSetAttrs';
+                cmd.attributes = {
+                    type: actionType
+                };
         }
         this.props.addCommand(this.state.id, cmd);
     },

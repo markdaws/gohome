@@ -1,6 +1,6 @@
 var React = require('react');
 var ReactRedux = require('react-redux');
-//var SceneSetCommand = require('./SceneSetCommand.jsx');
+var SceneSetCommand = require('./SceneSetCommand.jsx');
 var SaveBtn = require('./SaveBtn.jsx');
 var Feature = require('../feature.js');
 var FeatureSetAttrsCommand = require('./FeatureSetAttrsCommand.jsx');
@@ -32,22 +32,35 @@ var CommandInfo = React.createClass({
     },
 
     saveCommand: function() {
-        var cmd = this.refs.cmd;
         this.setState({ errors: [] });
 
-        var featureCmp = this.refs.featureCmp;
-        var settings = featureCmp.getSettings();
+        var data;
+        switch (this.props.command.type) {
+            case 'featureSetAttrs':
+                var featureCmp = this.refs.featureCmp;
+                var settings = featureCmp.getSettings();
+                data = {
+                    type: 'featureSetAttrs',
+                    attributes: {
+                        id: settings.feature.id,
+                        type: settings.feature.type,
+                        attrs: settings.modifiedAttrs
+                    }
+                };
+                break;
+
+            case 'sceneSet':
+                var sceneCmp = this.refs.sceneCmp;
+                data = sceneCmp.toJson();
+                break;
+
+            default:
+                console.error('unknown command type: ' + this.props.command.type);
+        }
 
         Api.sceneSaveCommand(
             this.props.scene.id,
-            {
-                type: 'featureSetAttrs',
-                attributes: {
-                    id: settings.feature.id,
-                    type: settings.feature.type,
-                    attrs: settings.modifiedAttrs
-                }
-            },
+            data,
             function(err, data) {
                 if (err) {
                     this.setState({
@@ -89,29 +102,23 @@ var CommandInfo = React.createClass({
                         devices={this.props.devices}/>
                 );
                 break;
-            default:
-                console.error('unknown command type: ' + command.type);
-                break;
-        }
 
-        /*
-        //TODO: Delete
-        var uiCmd;
-        switch (command.type) {
             case 'sceneSet':
-                uiCmd = (<SceneSetCommand
-                    ref="cmd"
-                    disabled={!this.props.command.isNew}
-                    parentSceneId={this.props.scene.id}
-                    errors={(command.errors || {}).validationErrors}
-                    scenes={this.props.scenes}
-                    command={command} />
-                )
+                uiCmd = (
+                    <SceneSetCommand
+                        ref="sceneCmp"
+                        disabled={command.id}
+                        parentSceneId={this.props.scene.id}
+                        scenes={this.props.scenes}
+                        onChanged={this.commandChanged}
+                        command={command}/>
+                );
                 break;
+
             default:
                 console.error('unknown command type: ' + command.type);
+                break;
         }
-        */
 
         return (
             <div {...classes('','', 'well well-sm clearfix')}>

@@ -264,6 +264,35 @@ func LightZoneCloneAttrs(f *Feature) (onoff, brightness, hsl *attr.Attribute) {
 	return
 }
 
+// LightZoneGetBrightness returns the brightness the light should be set to. It takes in to account
+// if you have an onoff and brightness attribute or just a brightness attribute
+func LightZoneGetBrightness(attrs map[string]*attr.Attribute) (float32, error) {
+	onoff := attrs[LightZoneOnOffLocalID]
+	brightness := attrs[LightZoneBrightnessLocalID]
+
+	var level float32 = -1
+	if onoff != nil {
+		if onoff.Value.(int32) == attr.OnOffOff {
+			level = 0
+		} else {
+			if brightness != nil {
+				level = brightness.Value.(float32)
+			} else {
+				level = 100
+			}
+		}
+	} else {
+		if brightness != nil {
+			level = brightness.Value.(float32)
+		}
+	}
+
+	if level == -1 {
+		return 0, fmt.Errorf("both onoff and brightness attributes are missing, require at least one")
+	}
+	return level, nil
+}
+
 const (
 	// WindowTreatmentOffsetLocalID is the local ID of the offset attribute
 	WindowTreatmentOffsetLocalID string = "offset"

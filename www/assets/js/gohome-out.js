@@ -28130,6 +28130,8 @@
 	                    });
 	                    return;
 	                }
+
+	                this.setState({ saveButtonStatus: 'success' });
 	                this.props.createdScene(data, this.props.scene.clientId);
 	            }.bind(this));
 	        } else {
@@ -28144,6 +28146,8 @@
 	                    });
 	                    return;
 	                }
+
+	                this.setState({ saveButtonStatus: 'success' });
 	                this.props.updatedScene(data, this.props.scene.id);
 	            }.bind(this));
 	        }
@@ -28153,16 +28157,23 @@
 	        this.props.deleteScene(this.state.id, this.props.scene.clientId);
 	    },
 
-	    sceneActionPickerChanged: function sceneActionPickerChanged(featureType) {
-	        // Current the only command we need for a scene is a FeatureSetAttrs, so we create a
-	        // FeatureSetAttrs command and return that
+	    sceneActionPickerChanged: function sceneActionPickerChanged(actionType) {
 	        var cmd = {
-	            clientId: Uuid.v4(),
-	            type: 'featureSetAttrs',
-	            attributes: {
-	                type: featureType
-	            }
+	            clientId: Uuid.v4()
 	        };
+
+	        switch (actionType) {
+	            case 'sceneSet':
+	                cmd.type = 'sceneSet';
+	                cmd.attributes = {};
+	                break;
+	            default:
+	                // All other actions are related to features
+	                cmd.type = 'featureSetAttrs';
+	                cmd.attributes = {
+	                    type: actionType
+	                };
+	        }
 	        this.props.addCommand(this.state.id, cmd);
 	    },
 
@@ -28336,7 +28347,7 @@
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	//var SceneSetCommand = require('./SceneSetCommand.jsx');
+	var SceneSetCommand = __webpack_require__(312);
 	var SaveBtn = __webpack_require__(223);
 	var Feature = __webpack_require__(216);
 	var FeatureSetAttrsCommand = __webpack_require__(258);
@@ -28366,20 +28377,33 @@
 	    },
 
 	    saveCommand: function saveCommand() {
-	        var cmd = this.refs.cmd;
 	        this.setState({ errors: [] });
 
-	        var featureCmp = this.refs.featureCmp;
-	        var settings = featureCmp.getSettings();
+	        var data;
+	        switch (this.props.command.type) {
+	            case 'featureSetAttrs':
+	                var featureCmp = this.refs.featureCmp;
+	                var settings = featureCmp.getSettings();
+	                data = {
+	                    type: 'featureSetAttrs',
+	                    attributes: {
+	                        id: settings.feature.id,
+	                        type: settings.feature.type,
+	                        attrs: settings.modifiedAttrs
+	                    }
+	                };
+	                break;
 
-	        Api.sceneSaveCommand(this.props.scene.id, {
-	            type: 'featureSetAttrs',
-	            attributes: {
-	                id: settings.feature.id,
-	                type: settings.feature.type,
-	                attrs: settings.modifiedAttrs
-	            }
-	        }, function (err, data) {
+	            case 'sceneSet':
+	                var sceneCmp = this.refs.sceneCmp;
+	                data = sceneCmp.toJson();
+	                break;
+
+	            default:
+	                console.error('unknown command type: ' + this.props.command.type);
+	        }
+
+	        Api.sceneSaveCommand(this.props.scene.id, data, function (err, data) {
 	            if (err) {
 	                this.setState({
 	                    saveButtonStatus: 'error'
@@ -28415,29 +28439,21 @@
 	                    onAttrChanged: this.commandChanged,
 	                    devices: this.props.devices });
 	                break;
-	            default:
-	                console.error('unknown command type: ' + command.type);
-	                break;
-	        }
 
-	        /*
-	        //TODO: Delete
-	        var uiCmd;
-	        switch (command.type) {
 	            case 'sceneSet':
-	                uiCmd = (<SceneSetCommand
-	                    ref="cmd"
-	                    disabled={!this.props.command.isNew}
-	                    parentSceneId={this.props.scene.id}
-	                    errors={(command.errors || {}).validationErrors}
-	                    scenes={this.props.scenes}
-	                    command={command} />
-	                )
+	                uiCmd = React.createElement(SceneSetCommand, {
+	                    ref: 'sceneCmp',
+	                    disabled: command.id,
+	                    parentSceneId: this.props.scene.id,
+	                    scenes: this.props.scenes,
+	                    onChanged: this.commandChanged,
+	                    command: command });
 	                break;
+
 	            default:
 	                console.error('unknown command type: ' + command.type);
+	                break;
 	        }
-	        */
 
 	        return React.createElement(
 	            'div',
@@ -31709,6 +31725,9 @@
 	        if (!excluded[Feature.Type.LightZone]) {
 	            types.push({ str: "Light Zone", val: Feature.Type.LightZone });
 	        }
+	        if (!excluded['Scene']) {
+	            types.push({ str: "Scene Set", val: 'sceneSet' });
+	        }
 	        if (!excluded[Feature.Type.Sensor]) {
 	            types.push({ str: "Sensor", val: Feature.Type.Sensor });
 	        }
@@ -31744,6 +31763,139 @@
 	    }
 	});
 	module.exports = SceneActionPicker;
+
+/***/ },
+/* 312 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(222);
+	var UniqueIdMixin = __webpack_require__(221);
+	var ScenePicker = __webpack_require__(313);
+	var uuid = __webpack_require__(287);
+
+	var SceneSetCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            clientId: uuid.v4(),
+	            sceneId: this.props.command.attributes.SceneID || ''
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            scenes: []
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'sceneSet',
+	            clientId: this.state.clientId,
+	            attributes: {
+	                SceneID: this.state.sceneId
+	            }
+	        };
+	    },
+
+	    scenePickerChanged: function scenePickerChanged(sceneId) {
+	        this.setState({ sceneId: sceneId });
+	        this.props.onChanged && this.props.onChanged();
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SceneSetCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Scene Set'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_SceneID") },
+	                React.createElement(ScenePicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.scenePickerChanged,
+	                    scenes: this.props.scenes,
+	                    sceneId: this.state.sceneId,
+	                    parentSceneId: this.props.parentSceneId }),
+	                this.errMsg("attributes_SceneID")
+	            )
+	        );
+	    }
+	});
+	module.exports = SceneSetCommand;
+
+/***/ },
+/* 313 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ScenePicker = React.createClass({
+	    displayName: 'ScenePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.sceneId || ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.scenes.forEach(function (scene) {
+	            if (!scene.id) {
+	                // If this scene has not been saved it can't be used
+	                return;
+	            }
+
+	            // Can't set itself
+	            if (scene.id === this.props.parentSceneId) {
+	                return;
+	            }
+
+	            options.push(React.createElement(
+	                'option',
+	                { key: scene.id, value: scene.id },
+	                scene.name
+	            ));
+	        }.bind(this));
+
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ScenePicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    disabled: this.props.disabled,
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select a Scene...'
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = ScenePicker;
 
 /***/ }
 /******/ ]);

@@ -13,6 +13,7 @@ import (
 	"github.com/markdaws/gohome/attr"
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/store"
+	"github.com/markdaws/gohome/validation"
 	errExt "github.com/pkg/errors"
 )
 
@@ -202,7 +203,6 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-		var cmdID string
 		sceneID := mux.Vars(r)["sceneID"]
 		scene, ok := system.Scenes[sceneID]
 		if !ok {
@@ -228,14 +228,15 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 			return
 		}
 
-		var cmdAttrs map[string]*json.RawMessage
-		if err = json.Unmarshal(*command["attributes"], &cmdAttrs); err != nil {
-			respBadRequest("invalid JSON body, missing attributes key", w)
-			return
-		}
-
+		var finalCmd cmd.Command
 		switch cmdType {
 		case "featureSetAttrs":
+			var cmdAttrs map[string]*json.RawMessage
+			if err = json.Unmarshal(*command["attributes"], &cmdAttrs); err != nil {
+				respBadRequest("invalid JSON body, missing attributes key", w)
+				return
+			}
+
 			var featureID string
 			if err = json.Unmarshal(*cmdAttrs["id"], &featureID); err != nil {
 				respBadRequest("invalid JSON body, missing ID key", w)
@@ -255,22 +256,53 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 			}
 			attr.FixJSON(attrs)
 
-			finalCmd := &cmd.FeatureSetAttrs{
+			finalCmd = &cmd.FeatureSetAttrs{
 				ID:          system.NewGlobalID(),
 				FeatureID:   featureID,
 				FeatureName: f.Name,
 				FeatureType: f.Type,
 				Attrs:       attrs,
 			}
-			cmdID = finalCmd.ID
-			err = scene.AddCommand(finalCmd)
-			if err != nil {
-				respBadRequest(errExt.Wrap(err, "failed to add command to scene").Error(), w)
+
+		case "sceneSet":
+			var sceneCmd jsonCommand
+			if err = json.Unmarshal(body, &sceneCmd); err != nil {
+				respBadRequest("invalid JSON in request body", w)
 				return
+			}
+
+			if _, ok := sceneCmd.Attributes["SceneID"]; !ok {
+				valErrs := validation.NewErrors("attribute_SceneID", "required field", true)
+				respValErr(&sceneCmd, sceneCmd.ID, valErrs, w)
+				return
+			}
+
+			scene, ok := system.Scenes[sceneCmd.Attributes["SceneID"].(string)]
+			if !ok {
+				var valErrs *validation.Errors
+				if sceneCmd.Attributes["SceneID"].(string) == "" {
+					valErrs = validation.NewErrors("attributes_SceneID", "required field", true)
+				} else {
+					valErrs = validation.NewErrors("attributes_SceneID", "invalid Scene ID", true)
+				}
+				respValErr(&sceneCmd, sceneCmd.ID, valErrs, w)
+				return
+			}
+			finalCmd = &cmd.SceneSet{
+				ID:        system.NewGlobalID(),
+				SceneID:   scene.ID,
+				SceneName: scene.Name,
 			}
 
 		default:
 			respBadRequest(fmt.Sprintf("invalid command in type field: %s", cmdType), w)
+			return
+		}
+
+		cmdID := finalCmd.GetID()
+		err = scene.AddCommand(finalCmd)
+		if err != nil {
+			respBadRequest(errExt.Wrap(err, "failed to add command to scene").Error(), w)
 			return
 		}
 
