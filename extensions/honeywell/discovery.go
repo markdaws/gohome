@@ -65,7 +65,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	}
 
 	dev := gohome.NewDevice(
-		sys.NewGlobalID(),
+		sys.NewID(),
 		"Honeywell Thermostat",
 		"",
 		"honeywell.redlink.thermostat",
@@ -78,7 +78,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		auth,
 	)
 
-	heat := feature.NewHeatZone(sys.NewGlobalID())
+	heat := feature.NewHeatZone(sys.NewID())
 	heat.Address = "1"
 	heat.Name = "Heat Zone"
 	heat.DeviceID = dev.ID

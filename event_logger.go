@@ -55,6 +55,12 @@ func (c *EventLogger) StartConsuming(ch chan evtbus.Event) {
 			case *UserLogoutEvt:
 				eventType = "UserLogoutEvt"
 				data = evt
+			case *SunriseEvt:
+				eventType = "Sunrise"
+				data = evt
+			case *SunsetEvt:
+				eventType = "Sunset"
+				data = evt
 			}
 
 			// In verbose mode we log more information, useful for debugging

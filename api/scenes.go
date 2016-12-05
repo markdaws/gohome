@@ -257,7 +257,7 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 			attr.FixJSON(attrs)
 
 			finalCmd = &cmd.FeatureSetAttrs{
-				ID:          system.NewGlobalID(),
+				ID:          system.NewID(),
 				FeatureID:   featureID,
 				FeatureName: f.Name,
 				FeatureType: f.Type,
@@ -289,7 +289,7 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 				return
 			}
 			finalCmd = &cmd.SceneSet{
-				ID:        system.NewGlobalID(),
+				ID:        system.NewID(),
 				SceneID:   scene.ID,
 				SceneName: scene.Name,
 			}
@@ -395,7 +395,7 @@ func apiSceneHandlerCreate(savePath string, system *gohome.System) func(http.Res
 		}
 
 		newScene := &gohome.Scene{
-			ID:          system.NewGlobalID(),
+			ID:          system.NewID(),
 			Address:     scene.Address,
 			Name:        scene.Name,
 			Description: scene.Description,

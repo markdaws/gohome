@@ -57,7 +57,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		modelNumber := "fluxwifi"
 
 		dev := gohome.NewDevice(
-			sys.NewGlobalID(),
+			sys.NewID(),
 			name,
 			"",
 			modelNumber,
@@ -73,7 +73,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			nil,
 		)
 
-		light := feature.NewLightZone(sys.NewGlobalID(), feature.LightZoneModeHSL)
+		light := feature.NewLightZone(sys.NewID(), feature.LightZoneModeHSL)
 		light.Name = dev.Name
 		light.Address = "1"
 		light.DeviceID = dev.ID

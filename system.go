@@ -17,6 +17,12 @@ type SystemServices struct {
 	CmdProcessor CommandProcessor
 }
 
+// NewIDer is an interface for types that can generate globally unique IDs that
+// can be used as IDs for objects in the system
+type NewIDer interface {
+	NewID() string
+}
+
 // System is a container that holds information such as all the zones and devices
 // that have been created.
 type System struct {
@@ -27,6 +33,7 @@ type System struct {
 	Scenes      map[string]*Scene
 	Features    map[string]*feature.Feature
 	Users       map[string]*User
+	Triggers    map[string]Trigger
 	Extensions  *Extensions
 	Services    SystemServices
 }
@@ -41,11 +48,12 @@ func NewSystem(name, desc string) *System {
 		Scenes:      make(map[string]*Scene),
 		Features:    make(map[string]*feature.Feature),
 		Users:       make(map[string]*User),
+		Triggers:    make(map[string]Trigger),
 	}
 
 	// Area is the root area which all of the devices and features are contained within
 	s.Area = &Area{
-		ID:   s.NewGlobalID(),
+		ID:   s.NewID(),
 		Name: "Home",
 	}
 
@@ -53,9 +61,9 @@ func NewSystem(name, desc string) *System {
 	return s
 }
 
-// NewGlobalID returns the next unique global ID that can be used as an identifier
+// NewID returns the next unique global ID that can be used as an identifier
 // for an item in the system.
-func (s *System) NewGlobalID() string {
+func (s *System) NewID() string {
 	ID, err := uuid.NewV4()
 	if err != nil {
 		//TODO: Fail gracefully from this, keep looping?
@@ -161,6 +169,11 @@ func (s *System) AddUser(u *User) {
 	s.Users[u.ID] = u
 }
 
+// AddTrigger adds a trigger to the system
+func (s *System) AddTrigger(t Trigger) {
+	s.Triggers[t.GetID()] = t
+}
+
 // DeleteDevice deletes a device from the system and stops all associated
 // services, for all zones and devices this is responsible for
 func (s *System) DeleteDevice(d *Device) {
@@ -202,4 +215,20 @@ func (s *System) IsDupeDevice(x *Device) (*Device, bool) {
 		}
 	}
 	return nil, false
+}
+
+type Scener interface {
+	Scene(ID string) *Scene
+}
+
+func (s *System) Scene(ID string) *Scene {
+	return s.Scenes[ID]
+}
+
+type CmdEnqueuer interface {
+	CmdEnqueue(g CommandGroup) error
+}
+
+func (s *System) CmdEnqueue(g CommandGroup) error {
+	return s.Services.CmdProcessor.Enqueue(g)
 }

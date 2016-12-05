@@ -13,37 +13,12 @@ import (
 	"github.com/kardianos/osext"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/api"
+	"github.com/markdaws/gohome/clock"
 	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/store"
 	"github.com/markdaws/gohome/www"
 )
-
-type config struct {
-	// SystemPath is a path to the json file containing all of the system information
-	SystemPath string `json:"systemPath"`
-
-	// EventLogPath is the path where the event log will be written
-	EventLogPath string `json::eventLogPath"`
-
-	// WWWAddr is the IP address for the WWW server
-	WWWAddr string `json:"wwwAddr"`
-
-	// WWWPort is the port for the WWW server
-	WWWPort string `json:"wwwPort"`
-
-	// APIAddr is the IP address of the API server
-	APIAddr string `json:"apiAddr"`
-
-	// APIPort is the port number of the API server
-	APIPort string `json:"apiPort"`
-
-	// UPNPNotifyAddr is the IP of the UPNP Notify server
-	UPNPNotifyAddr string `json:"upnpNotifyAddr"`
-
-	// UPNPNotifyPort is the port of the UPNP Notify server
-	UPNPNotifyPort string `json:"upnpNotifyPort"`
-}
 
 func main() {
 
@@ -86,7 +61,7 @@ func setPass(login, password string) {
 	}
 	if user == nil {
 		user = &gohome.User{
-			ID:    sys.NewGlobalID(),
+			ID:    sys.NewID(),
 			Login: login,
 		}
 		err := user.Validate()
@@ -159,6 +134,22 @@ func startServer() {
 	log.V("Initing devices...")
 	sys.InitDevices()
 
+	// TimeHelper helps fire events like sunrise/sunset that extensions and triggers
+	// can use to fire events
+	th := &gohome.TimeHelper{
+		Time:      clock.SystemTime{},
+		System:    sys,
+		Latitude:  cfg.Location.Latitude,
+		Longitude: cfg.Location.Longitude,
+	}
+	eb.AddProducer(th)
+
+	// Start all of the triggers
+	for _, trigger := range sys.Triggers {
+		log.V("adding trigger: %s", trigger.GetName())
+		eb.AddConsumer(trigger)
+	}
+
 	sessions := gohome.NewSessions()
 	go func() {
 		for {
@@ -186,7 +177,7 @@ func startServer() {
 }
 
 func loadSystem() (*gohome.System, config) {
-	var cfg config
+	var cfg *config
 
 	// Find the config file, if we can't find one, fall back to defaults
 	folderPath, err := osext.ExecutableFolder()
@@ -198,13 +189,19 @@ func loadSystem() (*gohome.System, config) {
 	file, err := os.Open(folderPath + "/config.json")
 	if err != nil {
 		log.V("Error trying to open config.json [%s], falling back to defaults", folderPath)
-		cfg = defaultConfig(folderPath)
+		cfg = NewDefaultConfig(folderPath)
 	} else {
 		decoder := json.NewDecoder(file)
 		err := decoder.Decode(&cfg)
 		if err != nil {
 			log.V("Failed to parse config.json: %s, generating default config", err)
-			cfg = defaultConfig(folderPath)
+			cfg = NewDefaultConfig(folderPath)
+		} else {
+			defaultCfg := NewDefaultConfig(folderPath)
+
+			// Merge the config and default config, user does not have to specify
+			// all of the config values
+			cfg.Merge(*defaultCfg)
 		}
 	}
 	log.V("Config information: %#v", cfg)
@@ -225,9 +222,23 @@ func loadSystem() (*gohome.System, config) {
 		}
 	} else if err != nil {
 		panic("Failed to load system: " + err.Error())
+	} else {
+		//TODO: Delete - testing
+		trigger := &gohome.TimeTrigger{
+			Time:        clock.SystemTime{},
+			Scener:      sys,
+			NewIDer:     sys,
+			CmdEnqueuer: sys,
+			Name:        "test trigger - sunset front door",
+			Mode:        gohome.TimeTriggerModeSunset,
+			Days:        gohome.TimeTriggerDaysMon | gohome.TimeTriggerDaysTues | gohome.TimeTriggerDaysWed | gohome.TimeTriggerDaysThurs | gohome.TimeTriggerDaysFri | gohome.TimeTriggerDaysSat | gohome.TimeTriggerDaysSun,
+			SceneID:     "f4e60d6c-7322-4acd-473d-a422b7c5bbe7",
+			Evaluating:  nil,
+		}
+		sys.AddTrigger(trigger)
 	}
 
-	return sys, cfg
+	return sys, *cfg
 }
 
 // getIPV4NonLoopbackAddr returns the first ipv4 non loopback address
@@ -261,32 +272,4 @@ func getIPV4NonLoopbackAddr() (string, error) {
 		}
 	}
 	return "", nil
-}
-
-// defaultConfig returns a default config option with all the values
-// populated to some default values
-func defaultConfig(systemPath string) config {
-	addr := "127.0.0.1"
-	useLocalhost := false
-	if !useLocalhost {
-		// Find the first public address we can bind to
-		var err error
-		addr, err = getIPV4NonLoopbackAddr()
-		if err != nil || addr == "" {
-			log.E("Could not detect non loopback IP address, falling back to 127.0.0.1")
-		}
-	}
-
-	cfg := config{
-		SystemPath:     systemPath + "/gohome.json",
-		EventLogPath:   systemPath + "/events.json",
-		WWWAddr:        addr,
-		WWWPort:        "8000",
-		APIAddr:        addr,
-		APIPort:        "5000",
-		UPNPNotifyAddr: addr,
-		UPNPNotifyPort: "8001",
-	}
-
-	return cfg
 }

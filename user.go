@@ -12,7 +12,7 @@ import (
 // UserPrefs contains all of the user specific preferences
 type UserPrefs struct {
 	// UI are user UI preference settings
-	UI UIPrefs
+	UI       UIPrefs
 }
 
 // UIPrefs contains preferences for the UI

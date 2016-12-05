@@ -70,7 +70,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 
 		dev := gohome.NewDevice(
-			sys.NewGlobalID(),
+			sys.NewID(),
 			devInfo.FriendlyName,
 			devInfo.ModelDescription,
 			devInfo.ModelNumber,
@@ -84,7 +84,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		)
 
 		if d.scanType == belkinExt.DTInsight {
-			out := feature.NewOutlet(sys.NewGlobalID())
+			out := feature.NewOutlet(sys.NewID())
 			out.Address = "1"
 			out.Name = devInfo.FriendlyName
 			out.Description = devInfo.ModelDescription
@@ -96,7 +96,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		} else if d.scanType == belkinExt.DTMaker {
 
 			// The WeMo Maker has a switch and a open/close sensorn
-			sw := feature.NewSwitch(sys.NewGlobalID())
+			sw := feature.NewSwitch(sys.NewID())
 			sw.Address = "1"
 			sw.Name = devInfo.FriendlyName
 			sw.Description = devInfo.ModelDescription
@@ -104,7 +104,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			dev.AddFeature(sw)
 
 			sensor := feature.NewSensor(
-				sys.NewGlobalID(),
+				sys.NewID(),
 				attr.NewOpenClose("openclose", nil),
 			)
 			sensor.Address = "2"

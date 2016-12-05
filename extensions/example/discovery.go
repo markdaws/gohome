@@ -79,7 +79,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	log.V("scanning for example hardware")
 
 	dev := gohome.NewDevice(
-		sys.NewGlobalID(), // Each device needs a unique ID
+		sys.NewID(), // Each device needs a unique ID
 		"fake hardware name",
 		"fake hardware description",
 		"example.hardware.1",
@@ -98,7 +98,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 	// Add a new LightZone, we will make this dimmable and not have an rgb channel
 	light := feature.NewLightZone(
-		sys.NewGlobalID(),
+		sys.NewID(),
 		feature.LightZoneModeContinuous)
 	light.Address = "1"
 	light.Name = "fake light"
@@ -114,7 +114,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	openClose.Perms = attr.PermsReadOnly
 
 	sensor := feature.NewSensor(
-		sys.NewGlobalID(),
+		sys.NewID(),
 		openClose,
 	)
 	sensor.Address = "2"

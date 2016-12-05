@@ -21500,7 +21500,6 @@
 	    },
 
 	    componentDidMount: function componentDidMount() {
-	        //TODO: Have a loading screen until all of these have loaded
 	        this.props.loadAllDevices();
 	        this.props.loadAllScenes();
 	    },

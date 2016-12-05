@@ -38,7 +38,7 @@ func (d *discoverer) Info() gohome.DiscovererInfo {
 
 func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string) (*gohome.DiscoveryResults, error) {
 	dev := gohome.NewDevice(
-		sys.NewGlobalID(),
+		sys.NewID(),
 		"test device",
 		"test description",
 		"testing.hardware",
@@ -52,7 +52,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	)
 
 	light := feature.NewLightZone(
-		sys.NewGlobalID(),
+		sys.NewID(),
 		feature.LightZoneModeBinary)
 	light.Address = "1"
 	light.Name = "onoff light"
@@ -60,7 +60,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	dev.AddFeature(light)
 
 	dimmableLight := feature.NewLightZone(
-		sys.NewGlobalID(),
+		sys.NewID(),
 		feature.LightZoneModeContinuous)
 	dimmableLight.Address = "2"
 	dimmableLight.Name = "dimmable light"
@@ -69,7 +69,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 	openClose := attr.NewOpenClose("openclose", nil)
 	sensor := feature.NewSensor(
-		sys.NewGlobalID(),
+		sys.NewID(),
 		openClose,
 	)
 	sensor.Address = "3"
@@ -77,39 +77,39 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 	sensor.DeviceID = dev.ID
 	dev.AddFeature(sensor)
 
-	swtch := feature.NewSwitch(sys.NewGlobalID())
+	swtch := feature.NewSwitch(sys.NewID())
 	swtch.Address = "4"
 	swtch.Name = "switch"
 	swtch.DeviceID = dev.ID
 	dev.AddFeature(swtch)
 
-	heat := feature.NewHeatZone(sys.NewGlobalID())
+	heat := feature.NewHeatZone(sys.NewID())
 	heat.Address = "5"
 	heat.Name = "heat"
 	heat.DeviceID = dev.ID
 	dev.AddFeature(heat)
 
-	window := feature.NewWindowTreatment(sys.NewGlobalID())
+	window := feature.NewWindowTreatment(sys.NewID())
 	window.Address = "6"
 	window.Name = "window"
 	window.DeviceID = dev.ID
 	dev.AddFeature(window)
 
 	colorLight := feature.NewLightZone(
-		sys.NewGlobalID(),
+		sys.NewID(),
 		feature.LightZoneModeHSL)
 	colorLight.Address = "7"
 	colorLight.Name = "colour light"
 	colorLight.DeviceID = dev.ID
 	dev.AddFeature(colorLight)
 
-	button := feature.NewButton(sys.NewGlobalID())
+	button := feature.NewButton(sys.NewID())
 	button.Name = "button1"
 	button.Address = "8"
 	button.DeviceID = dev.ID
 	dev.AddFeature(button)
 
-	outlet := feature.NewOutlet(sys.NewGlobalID())
+	outlet := feature.NewOutlet(sys.NewID())
 	outlet.Name = "outlet"
 	outlet.Address = "9"
 	outlet.DeviceID = dev.ID

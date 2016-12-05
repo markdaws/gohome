@@ -61,7 +61,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 
 		dev := gohome.NewDevice(
-			sys.NewGlobalID(),
+			sys.NewID(),
 			"ConnectedByTcp - ID: "+info.DeviceID,
 			"",
 			"tcp600gwb",
@@ -90,7 +90,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 
 		for _, room := range resp.Rooms {
 			for _, roomDev := range room.Devices {
-				light := feature.NewLightZone(sys.NewGlobalID(), feature.LightZoneModeContinuous)
+				light := feature.NewLightZone(sys.NewID(), feature.LightZoneModeContinuous)
 				light.Name = roomDev.Name
 				light.Address = roomDev.DID
 				light.DeviceID = dev.ID

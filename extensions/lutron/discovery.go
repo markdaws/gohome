@@ -98,7 +98,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		auth *gohome.Auth) *gohome.Device {
 
 		device := gohome.NewDevice(
-			d.System.NewGlobalID(),
+			d.System.NewID(),
 			name,
 			"",
 			modelNumber,
@@ -121,7 +121,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 				btnName = "Button " + btnNumber
 			}
 
-			btn := feature.NewButton(d.System.NewGlobalID())
+			btn := feature.NewButton(d.System.NewID())
 			btn.Name = btnName
 			btn.Description = ""
 			btn.Address = btnNumber
@@ -163,7 +163,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 				/*
 					//TODO: Fix
 					scene := &gohome.Scene{
-						ID:          d.System.NewGlobalID(),
+						ID:          d.System.NewID(),
 						Address:     buttonID,
 						Name:        buttonName,
 						Description: buttonName,
@@ -278,7 +278,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		// make this a window treatment
 		if strings.Contains(strings.ToLower(zoneName), "shade") ||
 			strings.Contains(strings.ToLower(zoneName), "window") {
-			wt := feature.NewWindowTreatment(d.System.NewGlobalID())
+			wt := feature.NewWindowTreatment(d.System.NewID())
 			wt.Name = zoneName
 			wt.Address = zoneID
 			wt.DeviceID = sbp.ID
@@ -287,7 +287,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 				return nil, badConfig(fmt.Errorf("error adding window treatment to device\n", err))
 			}
 		} else {
-			light := feature.NewLightZone(d.System.NewGlobalID(), feature.LightZoneModeContinuous)
+			light := feature.NewLightZone(d.System.NewID(), feature.LightZoneModeContinuous)
 			light.Name = zoneName
 			light.Address = zoneID
 			light.DeviceID = sbp.ID

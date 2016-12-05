@@ -8,6 +8,22 @@ import (
 
 //TODO: SceneSet
 
+// SunriseEvt is fired when it is sunrise
+type SunriseEvt struct{}
+
+// String returns a debug string
+func (e *SunriseEvt) String() string {
+	return "SunriseEvt"
+}
+
+// Sunset is fired when it is sunset
+type SunsetEvt struct{}
+
+// String returns a debug string
+func (e *SunsetEvt) String() string {
+	return "SunsetEvt"
+}
+
 // FeaturesReportEvt is fired when the system wants certain features to
 // report their current values
 type FeaturesReportEvt struct {
