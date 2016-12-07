@@ -144,12 +144,6 @@ func startServer() {
 	}
 	eb.AddProducer(th)
 
-	// Start all of the triggers
-	for _, trigger := range sys.Triggers {
-		log.V("adding trigger: %s", trigger.GetName())
-		eb.AddConsumer(trigger)
-	}
-
 	sessions := gohome.NewSessions()
 	go func() {
 		for {
@@ -170,6 +164,21 @@ func startServer() {
 			time.Sleep(time.Second * 5)
 		}
 	}()
+
+	// Load all of the automation scripts
+	autos, err := gohome.LoadAutomation(sys, cfg.AutomationPath)
+	if err != nil {
+		log.V("error loading automation scripts: %s", err)
+	}
+	sys.Automation = autos
+	for _, auto := range sys.Automation {
+		if auto.Enabled {
+			log.V("automation - starting: %s", auto.Name)
+			eb.AddConsumer(auto)
+		} else {
+			log.V("automation - disabled: %s", auto.Name)
+		}
+	}
 
 	// Sit forever since we have started all the services
 	var done chan bool
@@ -213,7 +222,7 @@ func loadSystem() (*gohome.System, config) {
 		log.V("startup file not found at: %s, creating new system", cfg.SystemPath)
 
 		// First time running the system, create a new blank system, save it
-		sys = gohome.NewSystem("My goHOME system", "")
+		sys = gohome.NewSystem("My goHOME system")
 		intg.RegisterExtensions(sys)
 
 		err = store.SaveSystem(cfg.SystemPath, sys)
@@ -222,20 +231,6 @@ func loadSystem() (*gohome.System, config) {
 		}
 	} else if err != nil {
 		panic("Failed to load system: " + err.Error())
-	} else {
-		//TODO: Delete - testing
-		trigger := &gohome.TimeTrigger{
-			Time:        clock.SystemTime{},
-			Scener:      sys,
-			NewIDer:     sys,
-			CmdEnqueuer: sys,
-			Name:        "test trigger - sunset front door",
-			Mode:        gohome.TimeTriggerModeSunset,
-			Days:        gohome.TimeTriggerDaysMon | gohome.TimeTriggerDaysTues | gohome.TimeTriggerDaysWed | gohome.TimeTriggerDaysThurs | gohome.TimeTriggerDaysFri | gohome.TimeTriggerDaysSat | gohome.TimeTriggerDaysSun,
-			SceneID:     "f4e60d6c-7322-4acd-473d-a422b7c5bbe7",
-			Evaluating:  nil,
-		}
-		sys.AddTrigger(trigger)
 	}
 
 	return sys, *cfg

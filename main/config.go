@@ -12,7 +12,10 @@ type config struct {
 	SystemPath string `json:"systemPath"`
 
 	// EventLogPath is the path where the event log will be written
-	EventLogPath string `json::eventLogPath"`
+	EventLogPath string `json:"eventLogPath"`
+
+	// AutomationPath is the path where all the automation files live
+	AutomationPath string `json:"automationPath"`
 
 	// WWWAddr is the IP address for the WWW server
 	WWWAddr string `json:"wwwAddr"`
@@ -35,6 +38,8 @@ type config struct {
 	// Location specifies the lat/long where the home is physically located. This is needed
 	// if you want to get accurate sunrise/sunset times
 	Location location `json:"location"`
+
+	//TODO: TimeZone?
 }
 
 func (c *config) Merge(cfg config) {
@@ -43,6 +48,9 @@ func (c *config) Merge(cfg config) {
 	}
 	if c.EventLogPath == "" {
 		c.EventLogPath = cfg.EventLogPath
+	}
+	if c.AutomationPath == "" {
+		c.AutomationPath = cfg.AutomationPath
 	}
 	if c.WWWAddr == "" {
 		c.WWWAddr = cfg.WWWAddr
@@ -85,6 +93,7 @@ func NewDefaultConfig(systemPath string) *config {
 	cfg := config{
 		SystemPath:     systemPath + "/gohome.json",
 		EventLogPath:   systemPath + "/events.json",
+		AutomationPath: systemPath + "/automation",
 		WWWAddr:        addr,
 		WWWPort:        "8000",
 		APIAddr:        addr,

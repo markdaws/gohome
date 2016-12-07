@@ -37,7 +37,7 @@ func LoadSystem(path string) (*gohome.System, error) {
 		return nil, err
 	}
 
-	sys := gohome.NewSystem(s.Name, s.Description)
+	sys := gohome.NewSystem(s.Name)
 	intg.RegisterExtensions(sys)
 
 	// Load all devices into global device list

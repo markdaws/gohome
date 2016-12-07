@@ -7,14 +7,9 @@ import (
 
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/clock"
-	"github.com/markdaws/gohome/cmd"
-	"github.com/markdaws/gohome/log"
 )
 
 type Trigger interface {
-	GetID() string
-	GetName() string
-	GetDescription() string
 	evtbus.Consumer
 }
 
@@ -42,41 +37,21 @@ const (
 // TimeTrigger is a trigger that can be used to execute actions either at sunrise/sunset or at an exact
 // time.  You can also specify for the trigger to only fire on certain days of the week
 type TimeTrigger struct {
-	ID          string
-	Name        string
-	Description string
-	Disabled    bool
-	Mode        string
-	Offset      time.Duration
-	At          time.Time
-	Days        uint32
-	SceneID     string
-	Time        clock.Time
-	Scener      Scener
-	CmdEnqueuer CmdEnqueuer
-	NewIDer     NewIDer
-	Evaluating  func()
-
+	Mode       string
+	Offset     time.Duration
+	At         time.Time
+	Days       uint32
+	Time       clock.Time
+	Evaluating func()
+	Triggered  func()
 	//TODO:
 	//Start       time.Time
 	//TODO:
 	//End         time.Time
 }
 
-func (t *TimeTrigger) GetID() string {
-	return t.ID
-}
-
-func (t *TimeTrigger) GetName() string {
-	return t.Name
-}
-
-func (t *TimeTrigger) GetDescription() string {
-	return t.Description
-}
-
 func (t *TimeTrigger) ConsumerName() string {
-	return fmt.Sprintf("timetrigger - %s", t.Name)
+	return fmt.Sprintf("timetrigger")
 }
 
 func (t *TimeTrigger) StartConsuming(ch chan evtbus.Event) {
@@ -115,11 +90,11 @@ func (t *TimeTrigger) scheduleSunset(ch chan evtbus.Event) {
 }
 
 func (t *TimeTrigger) scheduleExact() {
-	// If the time does not have a date it will be 0001 as the year (the null time)
+	// If the time does not have a date it will be 0000 as the year (the null time)
 	// if we have a date then this fires only once, otherwise if it doesn't have a
 	// date it is just a time so we look at the days of the week to see if it should
 	// execute
-	hasDate := t.At.Year() != 1
+	hasDate := t.At.Year() != 0
 
 	count := 0
 	for {
@@ -144,7 +119,7 @@ func (t *TimeTrigger) scheduleExact() {
 			// If the At value has a date then this trigger is for an explicit date/time
 			// so it's only executed once
 			<-t.Time.After(delta)
-			t.executeScene()
+			t.Triggered()
 
 			// don't run again, was an explicit date/time trigger
 			return
@@ -164,7 +139,7 @@ func (t *TimeTrigger) scheduleExact() {
 				// Make sure we haven't gone past the time
 				if delta >= 0 {
 					<-t.Time.After(delta)
-					t.executeScene()
+					t.Triggered()
 				}
 			}
 
@@ -192,26 +167,7 @@ func (t *TimeTrigger) scheduleAction() {
 	if (t.Days & daysValue) != 0 {
 		go func() {
 			<-t.Time.After(t.Offset)
-			t.executeScene()
+			t.Triggered()
 		}()
 	}
-}
-
-func (t *TimeTrigger) executeScene() {
-	scene := t.Scener.Scene(t.SceneID)
-	if scene == nil {
-		log.V(fmt.Sprintf("timetrigger[%s] - invalid scene ID: %s", t.Name, t.SceneID))
-		return
-	}
-
-	log.V(fmt.Sprintf("timetrigger[%s] - set scene execute: %s", t.Name, scene.Name))
-
-	sceneCmd := &cmd.SceneSet{
-		ID:        t.NewIDer.NewID(),
-		SceneID:   scene.ID,
-		SceneName: scene.Name,
-	}
-
-	desc := fmt.Sprintf("timetrigger[%s] - set scene: %s", t.Name, scene.Name)
-	t.CmdEnqueuer.CmdEnqueue(NewCommandGroup(desc, sceneCmd))
 }

@@ -33,22 +33,21 @@ type System struct {
 	Scenes      map[string]*Scene
 	Features    map[string]*feature.Feature
 	Users       map[string]*User
-	Triggers    map[string]Trigger
+	Automation  []*Automation
 	Extensions  *Extensions
 	Services    SystemServices
 }
 
 // NewSystem returns an initial System instance.  It is still up to the caller
 // to create all of the services and add them to the system after calling this function
-func NewSystem(name, desc string) *System {
+func NewSystem(name string) *System {
 	s := &System{
 		Name:        name,
-		Description: desc,
+		Description: "",
 		Devices:     make(map[string]*Device),
 		Scenes:      make(map[string]*Scene),
 		Features:    make(map[string]*feature.Feature),
 		Users:       make(map[string]*User),
-		Triggers:    make(map[string]Trigger),
 	}
 
 	// Area is the root area which all of the devices and features are contained within
@@ -169,11 +168,6 @@ func (s *System) AddUser(u *User) {
 	s.Users[u.ID] = u
 }
 
-// AddTrigger adds a trigger to the system
-func (s *System) AddTrigger(t Trigger) {
-	s.Triggers[t.GetID()] = t
-}
-
 // DeleteDevice deletes a device from the system and stops all associated
 // services, for all zones and devices this is responsible for
 func (s *System) DeleteDevice(d *Device) {
@@ -217,6 +211,8 @@ func (s *System) IsDupeDevice(x *Device) (*Device, bool) {
 	return nil, false
 }
 
+//TODO: Delete
+/*
 type Scener interface {
 	Scene(ID string) *Scene
 }
@@ -232,3 +228,4 @@ type CmdEnqueuer interface {
 func (s *System) CmdEnqueue(g CommandGroup) error {
 	return s.Services.CmdProcessor.Enqueue(g)
 }
+*/

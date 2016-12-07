@@ -6,27 +6,8 @@ import (
 
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/cmd"
 	"github.com/stretchr/testify/require"
 )
-
-type MockSystem struct {
-	CommandGroup *gohome.CommandGroup
-}
-
-func (s *MockSystem) Scene(ID string) *gohome.Scene {
-	return &gohome.Scene{
-		ID:   "45678",
-		Name: "Mock Scene",
-	}
-}
-func (s *MockSystem) CmdEnqueue(g gohome.CommandGroup) error {
-	s.CommandGroup = &g
-	return nil
-}
-func (s *MockSystem) NewID() string {
-	return "12345"
-}
 
 type MockTime struct {
 	now   time.Time
@@ -44,22 +25,20 @@ func (mt MockTime) After(d time.Duration) <-chan time.Time {
 func TestSunrise(t *testing.T) {
 	t.Parallel()
 
-	ms := &MockSystem{}
 	mt := MockTime{
 		now:   time.Date(2016, time.December, 5, 10, 0, 0, 0, time.UTC),
 		after: func(d time.Duration) <-chan time.Time { return time.After(d) },
 	}
 
+	wasTriggered := false
 	trigger := &gohome.TimeTrigger{
-		Time:        mt,
-		Scener:      ms,
-		NewIDer:     ms,
-		CmdEnqueuer: ms,
-		Name:        "test trigger",
-		Mode:        gohome.TimeTriggerModeSunrise,
-		Offset:      0,
-		Days:        gohome.TimeTriggerDaysMon | gohome.TimeTriggerDaysFri,
-		SceneID:     "12345",
+		Time:   mt,
+		Mode:   gohome.TimeTriggerModeSunrise,
+		Offset: 0,
+		Days:   gohome.TimeTriggerDaysMon | gohome.TimeTriggerDaysFri,
+		Triggered: func() {
+			wasTriggered = true
+		},
 	}
 
 	ch := make(chan evtbus.Event)
@@ -70,37 +49,26 @@ func TestSunrise(t *testing.T) {
 
 	// Send sunset - nothing should happen
 	time.Sleep(time.Second * 1)
-
-	require.NotNil(t, ms.CommandGroup)
-
-	// Make sure all of the required values are set
-	sceneCmd, ok := ms.CommandGroup.Cmds[0].(*cmd.SceneSet)
-	require.True(t, ok)
-
-	require.Equal(t, "12345", sceneCmd.ID)
-	require.Equal(t, "45678", sceneCmd.SceneID)
-	require.Equal(t, "Mock Scene", sceneCmd.SceneName)
+	require.True(t, wasTriggered)
 }
 
 func TestSunset(t *testing.T) {
 	t.Parallel()
 
-	ms := &MockSystem{}
 	mt := MockTime{
 		now:   time.Date(2016, time.December, 5, 10, 0, 0, 0, time.UTC),
 		after: func(d time.Duration) <-chan time.Time { return time.After(d) },
 	}
 
+	wasTriggered := false
 	trigger := &gohome.TimeTrigger{
-		Time:        mt,
-		Scener:      ms,
-		NewIDer:     ms,
-		CmdEnqueuer: ms,
-		Name:        "test trigger",
-		Mode:        gohome.TimeTriggerModeSunset,
-		Offset:      0,
-		Days:        gohome.TimeTriggerDaysMon | gohome.TimeTriggerDaysFri,
-		SceneID:     "12345",
+		Time:   mt,
+		Mode:   gohome.TimeTriggerModeSunset,
+		Offset: 0,
+		Days:   gohome.TimeTriggerDaysMon | gohome.TimeTriggerDaysFri,
+		Triggered: func() {
+			wasTriggered = true
+		},
 	}
 
 	ch := make(chan evtbus.Event)
@@ -112,35 +80,25 @@ func TestSunset(t *testing.T) {
 	// Send sunset - nothing should happen
 	time.Sleep(time.Second * 1)
 
-	require.NotNil(t, ms.CommandGroup)
-
-	// Make sure all of the required values are set
-	sceneCmd, ok := ms.CommandGroup.Cmds[0].(*cmd.SceneSet)
-	require.True(t, ok)
-
-	require.Equal(t, "12345", sceneCmd.ID)
-	require.Equal(t, "45678", sceneCmd.SceneID)
-	require.Equal(t, "Mock Scene", sceneCmd.SceneName)
+	require.True(t, wasTriggered)
 }
 
 func TestExactWithDate(t *testing.T) {
 	t.Parallel()
 
-	ms := &MockSystem{}
 	mt := MockTime{
 		now:   time.Date(2016, time.December, 5, 10, 0, 0, 0, time.UTC),
 		after: func(d time.Duration) <-chan time.Time { return time.After(d) },
 	}
 
+	wasTriggered := false
 	trigger := &gohome.TimeTrigger{
-		Time:        mt,
-		Scener:      ms,
-		NewIDer:     ms,
-		CmdEnqueuer: ms,
-		Name:        "test trigger",
-		Mode:        gohome.TimeTriggerModeExact,
-		At:          mt.Now().Add(time.Second * 1),
-		SceneID:     "12345",
+		Time: mt,
+		Mode: gohome.TimeTriggerModeExact,
+		At:   mt.Now().Add(time.Second * 1),
+		Triggered: func() {
+			wasTriggered = true
+		},
 	}
 
 	ch := make(chan evtbus.Event)
@@ -148,16 +106,7 @@ func TestExactWithDate(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
-	require.NotNil(t, ms.CommandGroup)
-
-	// Make sure all of the required values are set
-	sceneCmd, ok := ms.CommandGroup.Cmds[0].(*cmd.SceneSet)
-	require.True(t, ok)
-
-	require.Equal(t, "12345", sceneCmd.ID)
-	require.Equal(t, "45678", sceneCmd.SceneID)
-	require.Equal(t, "Mock Scene", sceneCmd.SceneName)
-
+	require.True(t, wasTriggered)
 }
 
 func TestExactWithoutDate(t *testing.T) {
@@ -173,21 +122,17 @@ func TestExactWithoutDate(t *testing.T) {
 			return c
 		},
 	}
-	ms := &MockSystem{}
-
-	// If the time doesn't have a date, then it runs every day (for the days it was
-	// specified) at the desired time
-	nullTime := time.Time{}
 
 	// This is the same as the current mock time
 	at := time.Date(
-		nullTime.Year(), nullTime.Month(), nullTime.Day(),
+		0, 1, 1,
 		mt.Now().Hour(), mt.Now().Minute(), mt.Now().Second(), 0, mt.Now().Location())
 
 	// move in to the future
 	at = at.Add(time.Second)
 
 	evalCount := 0
+	wasTriggered := false
 	eval := func() {
 		// This is called each time the trigger evaluates if it should run
 
@@ -202,36 +147,28 @@ func TestExactWithoutDate(t *testing.T) {
 		// Start on Monday, if eval is one, it means we ran on monday, so we should have got
 		// an execute scene, then also on friday
 		if evalCount == 1 || evalCount == 5 {
-			require.NotNil(t, ms.CommandGroup)
-
-			sceneCmd, ok := ms.CommandGroup.Cmds[0].(*cmd.SceneSet)
-			require.True(t, ok)
-
-			require.Equal(t, "12345", sceneCmd.ID)
-			require.Equal(t, "45678", sceneCmd.SceneID)
-			require.Equal(t, "Mock Scene", sceneCmd.SceneName)
+			require.True(t, wasTriggered)
+			wasTriggered = false
 		} else {
-			require.Nil(t, ms.CommandGroup)
+			require.False(t, wasTriggered)
 		}
-		ms.CommandGroup = nil
 		evalCount++
 	}
 
 	trigger := &gohome.TimeTrigger{
-		Time:        &mt,
-		Scener:      ms,
-		NewIDer:     ms,
-		CmdEnqueuer: ms,
-		Name:        "test trigger - withoutdate",
-		Mode:        gohome.TimeTriggerModeExact,
-		Days:        gohome.TimeTriggerDaysMon | gohome.TimeTriggerDaysFri,
-		At:          at,
-		SceneID:     "12345",
-		Evaluating:  eval,
+		Time:       &mt,
+		Mode:       gohome.TimeTriggerModeExact,
+		Days:       gohome.TimeTriggerDaysMon | gohome.TimeTriggerDaysFri,
+		At:         at,
+		Evaluating: eval,
+		Triggered: func() {
+			wasTriggered = true
+		},
 	}
 
 	ch := make(chan evtbus.Event)
 	trigger.StartConsuming(ch)
 
 	time.Sleep(time.Second * 2)
+	require.Equal(t, 6, evalCount)
 }
