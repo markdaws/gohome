@@ -86,6 +86,9 @@ func LoadAutomation(sys *System, path string) ([]*Automation, error) {
 	}
 
 	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".yaml") {
+			continue
+		}
 		fullPath := path + "/" + file.Name()
 		b, err := ioutil.ReadFile(fullPath)
 		if err != nil {

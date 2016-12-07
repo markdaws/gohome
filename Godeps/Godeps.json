@@ -11,6 +11,10 @@
 			"Rev": "172fbbbb329cf7e031dd3ab35766186fc2081eab"
 		},
 		{
+			"ImportPath": "github.com/cpucycle/astrotime",
+			"Rev": "9c7d514efdb561775030eaf8f1a9ae6bddb3a2ca"
+		},
+		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
 			"Comment": "v1.0.0-3-g6d21280",
 			"Rev": "6d212800a42e8ab5c146b8ace3490ee17e5225f9"
@@ -54,6 +58,10 @@
 		{
 			"ImportPath": "github.com/go-home-iot/upnp",
 			"Rev": "2c09b675ee9a96ce62f34abd26d218504783641c"
+		},
+		{
+			"ImportPath": "github.com/go-yaml/yaml",
+			"Rev": "a5b47d31c556af34a302ce5d659e6fea44d90de0"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
