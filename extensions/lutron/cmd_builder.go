@@ -30,18 +30,36 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 			return nil, fmt.Errorf("unknown device ID: %s", f.DeviceID)
 		}
 
-		level, err := feature.LightZoneGetBrightness(command.Attrs)
-		if err != nil {
-			return nil, fmt.Errorf("featureSetAttrs command is missing both onoff and brightness")
-		}
+		// Lutron supports light zones or window treatments
+		switch f.Type {
+		case feature.FTLightZone:
+			level, err := feature.LightZoneGetBrightness(command.Attrs)
+			if err != nil {
+				return nil, err
+			}
 
-		return &cmd.Func{
-			Func: func() error {
-				return getWriterAndExec(d, func(d lutronExt.Device, w io.Writer) error {
-					return d.SetLevel(level, f.Address, w)
-				})
-			},
-		}, nil
+			return &cmd.Func{
+				Func: func() error {
+					return getWriterAndExec(d, func(d lutronExt.Device, w io.Writer) error {
+						return d.SetLevel(level, f.Address, w)
+					})
+				},
+			}, nil
+
+		case feature.FTWindowTreatment:
+			level, err := feature.WindowTreatmentGetOffset(command.Attrs)
+			if err != nil {
+				return nil, err
+			}
+
+			return &cmd.Func{
+				Func: func() error {
+					return getWriterAndExec(d, func(d lutronExt.Device, w io.Writer) error {
+						return d.SetLevel(level, f.Address, w)
+					})
+				},
+			}, nil
+		}
 
 	default:
 		return nil, fmt.Errorf("unsupported command type")

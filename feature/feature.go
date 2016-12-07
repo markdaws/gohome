@@ -321,6 +321,36 @@ func NewWindowTreatment(ID string) *Feature {
 	return s
 }
 
+// WindowTreatmentGetOffset returns the desired offset, taking into account the open/close value
+// if it is present in the attributes. So if openclose is closed even if there is a offset
+// value it is ignored.
+func WindowTreatmentGetOffset(attrs map[string]*attr.Attribute) (float32, error) {
+	openclose := attrs[WindowTreatmentOpenCloseLocalID]
+	offset := attrs[WindowTreatmentOffsetLocalID]
+
+	var level float32 = -1
+	if openclose != nil {
+		if openclose.Value.(int32) == attr.OpenCloseClosed {
+			level = 0
+		} else {
+			if offset != nil {
+				level = offset.Value.(float32)
+			} else {
+				level = 100
+			}
+		}
+	} else {
+		if offset != nil {
+			level = offset.Value.(float32)
+		}
+	}
+
+	if level == -1 {
+		return 0, fmt.Errorf("both openclose and offset attributes are missing, require at least one")
+	}
+	return level, nil
+}
+
 // WindowTreatmentCloneAttrs clone the common attributes for a window treatment so they can be updated
 func WindowTreatmentCloneAttrs(f *Feature) (openClose, offset *attr.Attribute) {
 	var ok bool

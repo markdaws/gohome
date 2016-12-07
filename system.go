@@ -135,13 +135,27 @@ func (s *System) AddFeature(f *feature.Feature) {
 	s.Features[f.ID] = f
 }
 
-// ButtonGeatures returns a slice containing all of the button features in the system
+// ButtonFeatures returns a slice containing all of the button features in the system
 func (s *System) ButtonFeatures() map[string]*feature.Feature {
 	//TODO: Worth caching?
 
 	features := make(map[string]*feature.Feature)
 	for _, f := range s.Features {
 		if f.Type == feature.FTButton {
+			features[f.ID] = f
+		}
+	}
+	return features
+}
+
+// FeaturesByType returns a map of all the features in the system that match the feature type, keyed
+// by feature ID
+func (s *System) FeaturesByType(ft string) map[string]*feature.Feature {
+	//TODO: Worth caching?
+
+	features := make(map[string]*feature.Feature)
+	for _, f := range s.Features {
+		if f.Type == ft {
 			features[f.ID] = f
 		}
 	}

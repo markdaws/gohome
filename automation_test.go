@@ -8,10 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Time with year + time
-// Time with only time
-// No days specified, should default to every day
-// Actions...
 func TestTimeTriggerNoDate(t *testing.T) {
 	t.Parallel()
 
@@ -69,6 +65,34 @@ actions:
 	trigger := auto.Trigger.(*gohome.TimeTrigger)
 	require.Equal(t, gohome.TimeTriggerModeExact, trigger.Mode)
 	require.Equal(t, gohome.TimeTriggerDaysMon|gohome.TimeTriggerDaysFri, trigger.Days)
+	require.Equal(t, time.Date(2016, 11, 19, 13, 59, 30, 0, time.Now().Location()), trigger.At)
+}
+
+func TestTimeWithNoDaysDefaultsToEveryDay(t *testing.T) {
+	t.Parallel()
+
+	config := `
+name: Test
+trigger:
+  time:
+    at: '2016/11/19 13:59:30'
+actions:
+  - scene:
+      id: 12345
+`
+	sys := gohome.NewSystem("test system")
+	s1 := &gohome.Scene{ID: "12345"}
+	sys.AddScene(s1)
+
+	auto, err := gohome.NewAutomation(sys, config)
+	require.Nil(t, err)
+
+	trigger := auto.Trigger.(*gohome.TimeTrigger)
+	require.Equal(t, gohome.TimeTriggerModeExact, trigger.Mode)
+	require.Equal(t,
+		gohome.TimeTriggerDaysSun|gohome.TimeTriggerDaysMon|gohome.TimeTriggerDaysTues|
+			gohome.TimeTriggerDaysWed|gohome.TimeTriggerDaysThurs|gohome.TimeTriggerDaysFri|
+			gohome.TimeTriggerDaysSat, trigger.Days)
 	require.Equal(t, time.Date(2016, 11, 19, 13, 59, 30, 0, time.Now().Location()), trigger.At)
 }
 
