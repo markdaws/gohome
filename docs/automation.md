@@ -32,7 +32,7 @@ if it loads successfully. It is fails to load there will be an error written to 
 ###Testing Automation
 When you are writing some automation, rather than having to wait until the trigger fires to test your script to make sure it executes as expected, you can test the automation and make it execute immediately.  Once you have written the file, restart the goHOME server and the new script will be loaded, no in the UI, click on the "automation" tab in the app header, you will see your automation listed in the UI. IF you click on the item, a "Test" button will appear, clicking on it will immediately execute your automation, so you can verify it is working as expected.
 
-![](docs/automation.png)
+![](automation.png)
 
 ###Syntax
 Here is an example automation script, lets call it sunset.yaml More details on the exact syntax and all allowable values are listed after this example.
