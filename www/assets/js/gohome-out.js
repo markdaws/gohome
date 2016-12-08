@@ -21477,6 +21477,7 @@
 	var System = __webpack_require__(201);
 	var SceneList = __webpack_require__(249);
 	var FeatureList = __webpack_require__(293);
+	var AutomationList = __webpack_require__(314);
 	var Logging = __webpack_require__(296);
 	var SceneActions = __webpack_require__(284);
 	var SystemActions = __webpack_require__(205);
@@ -21494,6 +21495,7 @@
 	    getDefaultProps: function getDefaultProps() {
 	        return {
 	            devices: [],
+	            automations: [],
 	            //TODO: Change to array
 	            scenes: { items: [] }
 	        };
@@ -21502,6 +21504,7 @@
 	    componentDidMount: function componentDidMount() {
 	        this.props.loadAllDevices();
 	        this.props.loadAllScenes();
+	        this.props.loadAllAutomation();
 	    },
 
 	    render: function render() {
@@ -21561,6 +21564,15 @@
 	                        { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
 	                        React.createElement('i', { className: 'fa fa-tablet' })
 	                    )
+	                ),
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation', className: '' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#automation', role: 'tab', 'aria-controls': 'automation', 'data-toggle': 'tab' },
+	                        React.createElement('i', { className: 'fa fa-cogs' })
+	                    )
 	                )
 	            ),
 	            React.createElement(
@@ -21608,6 +21620,20 @@
 	                        classes('spinner'),
 	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "") })
 	                    )
+	                ),
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'automation' },
+	                    React.createElement(
+	                        'div',
+	                        { className: this.props.appLoadStatus.automationLoaded ? "" : "hideTabContent" },
+	                        React.createElement(AutomationList, { automations: this.props.automations })
+	                    ),
+	                    React.createElement(
+	                        'div',
+	                        classes('spinner'),
+	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.automationLoaded ? "hidden" : "") })
+	                    )
 	                )
 	            )
 	        );
@@ -21617,6 +21643,7 @@
 	function mapStateToProps(state) {
 	    return {
 	        devices: state.system.devices,
+	        automations: state.automations,
 	        scenes: state.scenes,
 	        appLoadStatus: state.appLoadStatus,
 	        errors: state.errors
@@ -21630,6 +21657,9 @@
 	        },
 	        loadAllScenes: function loadAllScenes() {
 	            dispatch(SceneActions.loadAll());
+	        },
+	        loadAllAutomation: function loadAllAutomation() {
+	            dispatch(SystemActions.loadAllAutomation());
 	        }
 	    };
 	}
@@ -23746,6 +23776,46 @@
 	        return conn;
 	    },
 
+	    automationLoadAll: function automationLoadAll(callback) {
+	        $.ajax({
+	            url: this.url('/api/v1/automations'),
+	            dataType: 'json',
+	            cache: false,
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+
+	                callback({
+	                    err: err,
+	                    xhr: xhr,
+	                    status: status
+	                });
+	            }.bind(this)
+	        });
+	    },
+
+	    automationTest: function automationTest(automationId, callback) {
+	        $.ajax({
+	            url: this.url('/api/v1/automations/' + automationId + '/test'),
+	            type: 'POST',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            success: function (data) {
+	                callback(null, data);
+	            }.bind(this),
+	            error: function (xhr, status, err) {
+	                if (this.checkErr(xhr)) {
+	                    return;
+	                }
+	                callback({ err: err });
+	            }.bind(this)
+	        });
+	    },
+
 	    deviceLoadAll: function deviceLoadAll(callback) {
 	        $.ajax({
 	            url: this.url('/api/v1/devices'),
@@ -24222,6 +24292,20 @@
 	        };
 	    },
 
+	    loadAllAutomation: function loadAllAutomation() {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.AUTOMATION_LOAD_ALL });
+
+	            Api.automationLoadAll(function (err, data) {
+	                if (err) {
+	                    dispatch({ type: Constants.AUTOMATION_LOAD_ALL_FAIL, err: err });
+	                    return;
+	                }
+	                dispatch({ type: Constants.AUTOMATION_LOAD_ALL_RAW, data: data });
+	            });
+	        };
+	    },
+
 	    loadAllDevices: function loadAllDevices() {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.DEVICE_LOAD_ALL });
@@ -24234,21 +24318,8 @@
 	                dispatch({ type: Constants.DEVICE_LOAD_ALL_RAW, data: data });
 	            });
 	        };
-	    },
-
-	    loadAllButtons: function loadAllButtons() {
-	        return function (dispatch) {
-	            dispatch({ type: Constants.BUTTON_LOAD_ALL });
-
-	            Api.buttonLoadAll(function (err, data) {
-	                if (err) {
-	                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
-	                    return;
-	                }
-	                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
-	            });
-	        };
 	    }
+
 	};
 	module.exports = SystemActions;
 
@@ -24269,6 +24340,11 @@
 	 */
 
 	module.exports = keyMirror({
+
+	    // Load all of the automation items from the server
+	    AUTOMATION_LOAD_ALL: null,
+	    AUTOMATION_LOAD_ALL_RAW: null,
+	    AUTOMATION_LOAD_ALL_FAIL: null,
 
 	    // Load all of the devices from the server
 	    DEVICE_LOAD_ALL: null,
@@ -31105,12 +31181,14 @@
 	var scenesReducer = __webpack_require__(304);
 	var loadStatusReducer = __webpack_require__(306);
 	var errorReducer = __webpack_require__(307);
+	var automationReducer = __webpack_require__(323);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
 	    scenes: scenesReducer,
 	    appLoadStatus: loadStatusReducer,
-	    errors: errorReducer
+	    errors: errorReducer,
+	    automations: automationReducer
 	});
 
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
@@ -31168,10 +31246,15 @@
 	        // Initial load of the app
 	        appLoadStatus: {
 	            devicesLoaded: false,
-	            scenesLoaded: false
+	            scenesLoaded: false,
+	            automationLoaded: false
 	        },
 
+	        // Array of all the automation scripts loaded in the system
+	        automations: [],
+
 	        // An array of errors that should be displayed in the app
+	        //TODO: delete
 	        errors: []
 	    };
 	};
@@ -31472,6 +31555,11 @@
 	        case Constants.DEVICE_LOAD_ALL_RAW:
 	            newState = Object.assign({}, state);
 	            newState.devicesLoaded = true;
+	            break;
+
+	        case Constants.AUTOMATION_LOAD_ALL_RAW:
+	            newState = Object.assign({}, state);
+	            newState.automationLoaded = true;
 	            break;
 
 	        default:
@@ -31895,6 +31983,296 @@
 	    }
 	});
 	module.exports = ScenePicker;
+
+/***/ },
+/* 314 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var AutomationCell = __webpack_require__(315);
+	var Automation = __webpack_require__(318);
+	var Grid = __webpack_require__(227);
+	var BEMHelper = __webpack_require__(209);
+	var Feature = __webpack_require__(216);
+
+	var classes = new BEMHelper({
+	    name: 'AutomationList',
+	    prefix: 'b-'
+	});
+	__webpack_require__(321);
+
+	var AutomationList = React.createClass({
+	    displayName: 'AutomationList',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            automations: []
+	        };
+	    },
+
+	    render: function render() {
+	        var gridCells = this.props.automations.map(function (automation) {
+	            return {
+	                key: automation.name,
+	                cell: React.createElement(AutomationCell, { automation: automation }),
+	                content: React.createElement(Automation, { automation: automation, key: automation.name })
+	            };
+	        });
+
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            React.createElement(
+	                'h2',
+	                classes('header'),
+	                'Automation'
+	            ),
+	            React.createElement(Grid, { cells: gridCells })
+	        );
+	    }
+	});
+
+	module.exports = AutomationList;
+
+/***/ },
+/* 315 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'AutomationCell',
+	    prefix: 'b-'
+	});
+	__webpack_require__(316);
+
+	var AutomationCell = React.createClass({
+	    displayName: 'AutomationCell',
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            React.createElement(
+	                'div',
+	                classes('icon'),
+	                React.createElement('i', { className: 'icon ion-ios-cog-outline' })
+	            ),
+	            React.createElement(
+	                'div',
+	                classes('name'),
+	                this.props.automation.name
+	            )
+	        );
+	    }
+	});
+	module.exports = AutomationCell;
+
+/***/ },
+/* 316 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(317);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationCell.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 317 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-AutomationCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-AutomationCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-AutomationCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 318 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var React = __webpack_require__(1);
+	var Api = __webpack_require__(204);
+	var BEMHelper = __webpack_require__(209);
+
+	var classes = new BEMHelper({
+	    name: 'Automation',
+	    prefix: 'b-'
+	});
+	__webpack_require__(319);
+
+	var Automation = React.createClass({
+	    displayName: 'Automation',
+
+	    handleClick: function handleClick(event) {
+	        Api.automationTest(this.props.automation.id, function (err, data) {
+	            if (err) {
+	                //TODO: Show error/success
+	                console.error(err);
+	            }
+	        });
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            React.createElement(
+	                'div',
+	                classes('name'),
+	                this.props.automation.name
+	            ),
+	            React.createElement(
+	                'a',
+	                _extends({ role: 'button' }, classes('activate', '', 'btn btn-primary'), { onClick: this.handleClick }),
+	                'Test'
+	            )
+	        );
+	    }
+	});
+	module.exports = Automation;
+
+/***/ },
+/* 319 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(320);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Automation.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Automation.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 320 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-Automation {\n  padding: 8px 12px 0px 12px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n  height: 112px;\n}\n.b-Automation__name {\n  text-align: left;\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 296px;\n  margin-top: 3px;\n  margin-bottom: 12px;\n  /* use ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-Automation__activate {\n  font-size: 20px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 321 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(322);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationList.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationList.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 322 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-AutomationList {\n  position: relative;\n}\n.b-AutomationList__header {\n  margin-top: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 323 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(206);
+	var initialState = __webpack_require__(302);
+
+	module.exports = function (state, action) {
+	    var newState = state;
+
+	    switch (action.type) {
+	        case Constants.AUTOMATION_LOAD_ALL:
+	            break;
+
+	        case Constants.AUTOMATION_LOAD_ALL_RAW:
+	            action.data.sort(function (a, b) {
+	                return a.name.localeCompare(b.name);
+	            });
+	            newState = action.data;
+	            break;
+
+	        case Constants.AUTOMATION_LOAD_ALL_FAIL:
+	            break;
+	        default:
+	            newState = newState || initialState().automations;
+	    }
+
+	    return newState;
+	};
 
 /***/ }
 /******/ ]);

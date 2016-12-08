@@ -50,6 +50,20 @@ var SystemActions = {
         };
     },
 
+    loadAllAutomation: function() {
+        return function(dispatch) {
+            dispatch({ type: Constants.AUTOMATION_LOAD_ALL });
+
+            Api.automationLoadAll(function(err, data) {
+                if (err) {
+                    dispatch({ type: Constants.AUTOMATION_LOAD_ALL_FAIL, err: err });
+                    return;
+                }
+                dispatch({ type: Constants.AUTOMATION_LOAD_ALL_RAW, data: data });
+            });
+        };
+    },
+
     loadAllDevices: function() {
         return function(dispatch) {
             dispatch({ type: Constants.DEVICE_LOAD_ALL });
@@ -64,18 +78,5 @@ var SystemActions = {
         };
     },
 
-    loadAllButtons: function() {
-        return function(dispatch) {
-            dispatch({ type: Constants.BUTTON_LOAD_ALL });
-
-            Api.buttonLoadAll(function(err, data) {
-                if (err) {
-                    dispatch({ type: Constants.BUTTON_LOAD_ALL_FAIL, err: err });
-                    return;
-                }
-                dispatch({ type: Constants.BUTTON_LOAD_ALL_RAW, data: data });
-            });
-        };
-    }
 };
 module.exports = SystemActions;

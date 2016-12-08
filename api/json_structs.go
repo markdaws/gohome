@@ -7,6 +7,11 @@ import (
 	"github.com/markdaws/gohome/feature"
 )
 
+type jsonAutomation struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type jsonCommand struct {
 	ID         string                 `json:"id"`
 	Type       string                 `json:"type"`

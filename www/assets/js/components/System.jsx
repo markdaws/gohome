@@ -15,7 +15,7 @@ var System = React.createClass({
             importing: false,
         };
     },
-    
+
     importProduct: function() {
         this.setState({ importing: true });
     },
@@ -41,7 +41,7 @@ var System = React.createClass({
                     </h5>
                 );
             } else {
-                body = <DeviceList devices={this.props.devices}/>                
+                body = <DeviceList devices={this.props.devices}/>
             }
 
             header = (

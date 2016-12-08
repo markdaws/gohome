@@ -3,6 +3,7 @@ var ReactRedux = require('react-redux');
 var System = require('./System.jsx');
 var SceneList = require('./SceneList.jsx');
 var FeatureList = require('./FeatureList.jsx');
+var AutomationList = require('./AutomationList.jsx');
 var Logging = require('./Logging.jsx');
 var SceneActions = require('../actions/SceneActions.js');
 var SystemActions = require('../actions/SystemActions.js');
@@ -18,6 +19,7 @@ var ControlApp = React.createClass({
     getDefaultProps: function() {
         return {
             devices: [],
+            automations: [],
             //TODO: Change to array
             scenes: { items: [] }
         };
@@ -26,6 +28,7 @@ var ControlApp = React.createClass({
     componentDidMount: function() {
         this.props.loadAllDevices();
         this.props.loadAllScenes();
+        this.props.loadAllAutomation();
     },
 
     render: function() {
@@ -69,6 +72,11 @@ var ControlApp = React.createClass({
                             <i className="fa fa-tablet"></i>
                         </a>
                     </li>
+                    <li role="presentation" className="">
+                        <a href="#automation" role="tab" aria-controls="automation" data-toggle="tab">
+                            <i className="fa fa-cogs"></i>
+                        </a>
+                    </li>
                 </ul>
                 <div className="tab-content">
                     <div role="tabpanel" className="tab-pane fade" id="scenes">
@@ -96,6 +104,14 @@ var ControlApp = React.createClass({
                             <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
                         </div>
                     </div>
+                    <div role="tabpanel" className="tab-pane fade" id="automation">
+                        <div className={(this.props.appLoadStatus.automationLoaded ? "" : "hideTabContent")}>
+                            <AutomationList automations={this.props.automations} />
+                        </div>
+                        <div {...classes('spinner')}>
+                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.automationLoaded ? "hidden" : "")}></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -105,6 +121,7 @@ var ControlApp = React.createClass({
 function mapStateToProps(state) {
     return {
         devices: state.system.devices,
+        automations: state.automations,
         scenes: state.scenes,
         appLoadStatus: state.appLoadStatus,
         errors: state.errors
@@ -119,6 +136,9 @@ function mapDispatchToProps(dispatch) {
         loadAllScenes: function() {
             dispatch(SceneActions.loadAll());
         },
+        loadAllAutomation: function() {
+            dispatch(SystemActions.loadAllAutomation());
+        }
     }
 }
 

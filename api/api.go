@@ -44,6 +44,7 @@ func (s *apiServer) listenAndServe(addr string) error {
 	RegisterDiscoveryHandlers(r, s)
 	RegisterMonitorHandlers(r, s)
 	RegisterUserHandlers(r, s)
+	RegisterAutomationHandlers(r, s)
 
 	n := negroni.New()
 	n.Use(negroni.HandlerFunc(CheckValidSession(s.sessions)))

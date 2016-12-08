@@ -10,6 +10,11 @@ var keyMirror = require('keyMirror');
 
 module.exports = keyMirror({
 
+    // Load all of the automation items from the server
+    AUTOMATION_LOAD_ALL: null,
+    AUTOMATION_LOAD_ALL_RAW: null,
+    AUTOMATION_LOAD_ALL_FAIL: null,
+
     // Load all of the devices from the server
     DEVICE_LOAD_ALL: null,
     DEVICE_LOAD_ALL_RAW: null,

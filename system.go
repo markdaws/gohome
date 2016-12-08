@@ -33,7 +33,7 @@ type System struct {
 	Scenes      map[string]*Scene
 	Features    map[string]*feature.Feature
 	Users       map[string]*User
-	Automation  []*Automation
+	Automation  map[string]*Automation
 	Extensions  *Extensions
 	Services    SystemServices
 }

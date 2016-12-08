@@ -15,6 +15,11 @@ module.exports = function(state, action) {
         newState.devicesLoaded = true;
         break;
 
+    case Constants.AUTOMATION_LOAD_ALL_RAW:
+        newState = Object.assign({}, state);
+        newState.automationLoaded = true;
+        break;
+
     default:
         newState = state || initialState().appLoadStatus;
     }

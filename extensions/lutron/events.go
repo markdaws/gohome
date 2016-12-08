@@ -97,6 +97,7 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 			dev, err := lutronExt.DeviceFromModelNumber(p.Device.ModelNumber)
 			if err != nil {
 				log.V("unable to get lutron device for model number %s", p.Device.ModelNumber)
+				p.Device.Connections.Release(conn, nil)
 				continue
 			}
 
@@ -129,7 +130,7 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 					case feature.FTLightZone:
 						onoff, brightness, _ := feature.LightZoneCloneAttrs(f)
 
-						// Check f the light zone is dimmable, if so it will have a brightness attribute
+						// Check if the light zone is dimmable, if so it will have a brightness attribute
 						if brightness != nil {
 							brightness.Value = e.Level
 						}

@@ -33,6 +33,46 @@ var API = {
         return conn;
     },
 
+    automationLoadAll: function(callback) {
+        $.ajax({
+            url: this.url('/api/v1/automations'),
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                if (this.checkErr(xhr)) {
+                    return;
+                }
+
+                callback({
+                    err: err,
+                    xhr: xhr,
+                    status: status
+                });
+            }.bind(this)
+        });
+    },
+
+    automationTest: function(automationId, callback) {
+        $.ajax({
+            url: this.url('/api/v1/automations/' + automationId + '/test'),
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            success: function(data) {
+                callback(null, data);
+            }.bind(this),
+            error: function(xhr, status, err) {
+                if (this.checkErr(xhr)) {
+                    return;
+                }
+                callback({ err: err });
+            }.bind(this)
+        });
+    },
+
     deviceLoadAll: function(callback) {
         $.ajax({
             url: this.url('/api/v1/devices'),

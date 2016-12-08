@@ -11,6 +11,7 @@ import (
 
 type Trigger interface {
 	evtbus.Consumer
+	Trigger()
 }
 
 const (
@@ -48,6 +49,10 @@ type TimeTrigger struct {
 	//Start       time.Time
 	//TODO:
 	//End         time.Time
+}
+
+func (t *TimeTrigger) Trigger() {
+	t.Triggered()
 }
 
 func (t *TimeTrigger) ConsumerName() string {

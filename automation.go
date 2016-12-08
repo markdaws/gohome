@@ -77,9 +77,9 @@ type automationIntermediate struct {
 }
 
 // LoadAutomation loads all of the automation files from the specified path
-func LoadAutomation(sys *System, path string) ([]*Automation, error) {
+func LoadAutomation(sys *System, path string) (map[string]*Automation, error) {
 
-	var autos []*Automation
+	autos := make(map[string]*Automation)
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to enumerate automation files: %s", err)
@@ -101,8 +101,7 @@ func LoadAutomation(sys *System, path string) ([]*Automation, error) {
 			log.E("automation - failed to create automation: %s, %s", fullPath, err)
 			continue
 		}
-
-		autos = append(autos, auto)
+		autos[auto.ID] = auto
 	}
 	return autos, nil
 }
