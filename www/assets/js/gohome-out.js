@@ -32042,35 +32042,40 @@
 
 	'use strict';
 
-	var React = __webpack_require__(1);
-	var BEMHelper = __webpack_require__(209);
+	var _react = __webpack_require__(1);
 
-	var classes = new BEMHelper({
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactBemHelper = __webpack_require__(209);
+
+	var _reactBemHelper2 = _interopRequireDefault(_reactBemHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var classes = new _reactBemHelper2.default({
 	    name: 'AutomationCell',
 	    prefix: 'b-'
 	});
 	__webpack_require__(316);
 
-	var AutomationCell = React.createClass({
-	    displayName: 'AutomationCell',
+	var AutomationCell = function AutomationCell(_ref) {
+	    var automation = _ref.automation;
 
-	    render: function render() {
-	        return React.createElement(
+	    return _react2.default.createElement(
+	        'div',
+	        classes(),
+	        _react2.default.createElement(
 	            'div',
-	            classes(),
-	            React.createElement(
-	                'div',
-	                classes('icon'),
-	                React.createElement('i', { className: 'icon ion-ios-cog-outline' })
-	            ),
-	            React.createElement(
-	                'div',
-	                classes('name'),
-	                this.props.automation.name
-	            )
-	        );
-	    }
-	});
+	            classes('icon'),
+	            _react2.default.createElement('i', { className: 'icon ion-ios-cog-outline' })
+	        ),
+	        _react2.default.createElement(
+	            'div',
+	            classes('name'),
+	            automation.name
+	        )
+	    );
+	};
 	module.exports = AutomationCell;
 
 /***/ },
@@ -32121,45 +32126,79 @@
 
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-	var React = __webpack_require__(1);
-	var Api = __webpack_require__(204);
-	var BEMHelper = __webpack_require__(209);
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var classes = new BEMHelper({
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _API = __webpack_require__(204);
+
+	var _API2 = _interopRequireDefault(_API);
+
+	var _reactBemHelper = __webpack_require__(209);
+
+	var _reactBemHelper2 = _interopRequireDefault(_reactBemHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var classes = new _reactBemHelper2.default({
 	    name: 'Automation',
 	    prefix: 'b-'
 	});
 	__webpack_require__(319);
 
-	var Automation = React.createClass({
-	    displayName: 'Automation',
+	var Automation = function (_React$Component) {
+	    _inherits(Automation, _React$Component);
 
-	    handleClick: function handleClick(event) {
-	        Api.automationTest(this.props.automation.id, function (err, data) {
-	            if (err) {
-	                //TODO: Show error/success
-	                console.error(err);
-	            }
-	        });
-	    },
+	    function Automation() {
+	        _classCallCheck(this, Automation);
 
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            classes(),
-	            React.createElement(
-	                'div',
-	                classes('name'),
-	                this.props.automation.name
-	            ),
-	            React.createElement(
-	                'a',
-	                _extends({ role: 'button' }, classes('activate', '', 'btn btn-primary'), { onClick: this.handleClick }),
-	                'Test'
-	            )
-	        );
+	        var _this = _possibleConstructorReturn(this, (Automation.__proto__ || Object.getPrototypeOf(Automation)).call(this));
+
+	        _this.handleClick = _this.handleClick.bind(_this);
+	        return _this;
 	    }
-	});
+
+	    _createClass(Automation, [{
+	        key: 'handleClick',
+	        value: function handleClick(event) {
+	            _API2.default.automationTest(this.props.automation.id, function (err, data) {
+	                if (err) {
+	                    //TODO: Show error/success
+	                    console.error(err);
+	                }
+	            });
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            return _react2.default.createElement(
+	                'div',
+	                classes(),
+	                _react2.default.createElement(
+	                    'div',
+	                    classes('name'),
+	                    this.props.automation.name
+	                ),
+	                _react2.default.createElement(
+	                    'a',
+	                    _extends({ role: 'button' }, classes('activate', '', 'btn btn-primary'), { onClick: this.handleClick }),
+	                    'Test'
+	                )
+	            );
+	        }
+	    }]);
+
+	    return Automation;
+	}(_react2.default.Component);
+
 	module.exports = Automation;
 
 /***/ },

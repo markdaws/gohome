@@ -1,6 +1,6 @@
-var React = require('react');
-var Api = require('../utils/API.js')
-var BEMHelper = require('react-bem-helper');
+import React from 'react';
+import Api from '../utils/API.js';
+import BEMHelper from 'react-bem-helper';
 
 var classes = new BEMHelper({
     name: 'Automation',
@@ -8,17 +8,22 @@ var classes = new BEMHelper({
 });
 require('../../css/components/Automation.less')
 
-var Automation = React.createClass({
-    handleClick: function(event) {
+class Automation extends React.Component {
+    constructor() {
+        super();
+        this.handleClick = this.handleClick.bind(this);
+    }
+
+    handleClick(event) {
         Api.automationTest(this.props.automation.id, function(err, data) {
             if (err) {
                 //TODO: Show error/success
                 console.error(err);
             }
         });
-    },
+    }
 
-    render: function() {
+    render() {
         return (
             <div {...classes()}>
                 <div {...classes('name')}>
@@ -30,5 +35,5 @@ var Automation = React.createClass({
             </div>
         )
     }
-});
+}
 module.exports = Automation;

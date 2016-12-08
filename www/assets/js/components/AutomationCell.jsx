@@ -1,5 +1,5 @@
-var React = require('react');
-var BEMHelper = require('react-bem-helper');
+import React from 'react';
+import BEMHelper from 'react-bem-helper';
 
 var classes = new BEMHelper({
     name: 'AutomationCell',
@@ -7,18 +7,16 @@ var classes = new BEMHelper({
 });
 require('../../css/components/AutomationCell.less')
 
-var AutomationCell = React.createClass({
-    render: function() {
-        return (
-            <div {...classes()}>
-                <div {...classes('icon')}>
-                    <i className="icon ion-ios-cog-outline"></i>
-                </div>
-                <div {...classes('name')}>
-                    {this.props.automation.name}
-                </div>
+const AutomationCell = ({automation}) => {
+    return (
+        <div {...classes()}>
+            <div {...classes('icon')}>
+                <i className="icon ion-ios-cog-outline"></i>
             </div>
-        );
-    }
-});
+            <div {...classes('name')}>
+                {automation.name}
+            </div>
+        </div>
+    );
+};
 module.exports = AutomationCell;
