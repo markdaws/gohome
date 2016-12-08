@@ -118,7 +118,7 @@ func writeDiscoveryResults(sys *gohome.System, result *gohome.DiscoveryResults, 
 	// return the existing device and zone but also append the new zone so the user has
 	// change to import the new zone
 	for existingDeviceID, dupeDevice := range dupeDevices {
-		existingDevice := sys.Devices[existingDeviceID]
+		existingDevice := sys.DeviceByID(existingDeviceID)
 
 		// JSONify the existing device, since this is a dupe we want to send back the
 		// current device to the user

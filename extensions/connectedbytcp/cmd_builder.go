@@ -18,13 +18,13 @@ type cmdBuilder struct {
 func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 	switch command := c.(type) {
 	case *cmd.FeatureSetAttrs:
-		f, ok := b.System.Features[command.FeatureID]
-		if !ok {
+		f := b.System.FeatureByID(command.FeatureID)
+		if f == nil {
 			return nil, fmt.Errorf("unknown feature ID: %s", command.FeatureID)
 		}
 
-		d, ok := b.System.Devices[f.DeviceID]
-		if !ok {
+		d := b.System.DeviceByID(f.DeviceID)
+		if d == nil {
 			return nil, fmt.Errorf("unknown device ID: %s", f.DeviceID)
 		}
 

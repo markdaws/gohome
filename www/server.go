@@ -107,7 +107,7 @@ func apiNewSessionHandler(sys *gohome.System, sessions *gohome.Sessions) func(ht
 		}()
 
 		var user *gohome.User
-		for _, u := range sys.Users {
+		for _, u := range sys.Users() {
 			if strings.ToLower(u.Login) == strings.ToLower(login) {
 				user = u
 				break

@@ -80,7 +80,7 @@ func (c *config) Merge(cfg config) {
 // populated to some default values
 func NewDefaultConfig(systemPath string) *config {
 	addr := "127.0.0.1"
-	useLocalhost := true
+	useLocalhost := false
 	if !useLocalhost {
 		// Find the first public address we can bind to
 		var err error

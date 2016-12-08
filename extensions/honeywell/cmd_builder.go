@@ -25,13 +25,13 @@ func (b *cmdBuilder) Build(c cmd.Command) (*cmd.Func, error) {
 		return nil, fmt.Errorf("unsupported command type")
 	}
 
-	f, ok := b.System.Features[command.FeatureID]
-	if !ok {
+	f := b.System.FeatureByID(command.FeatureID)
+	if f == nil {
 		return nil, fmt.Errorf("unknown feature ID: %s", command.FeatureID)
 	}
 
-	d, ok := b.System.Devices[f.DeviceID]
-	if !ok {
+	d := b.System.DeviceByID(f.DeviceID)
+	if d == nil {
 		return nil, fmt.Errorf("unknown device ID: %s", f.DeviceID)
 	}
 

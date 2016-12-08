@@ -243,8 +243,8 @@ func (m *Monitor) featureReporting(featureID string, attrs map[string]*attr.Attr
 	}
 
 	// If not a valid featureID in the system, ignore
-	_, ok = m.system.Features[featureID]
-	if !ok {
+	f := m.system.FeatureByID(featureID)
+	if f == nil {
 		return
 	}
 

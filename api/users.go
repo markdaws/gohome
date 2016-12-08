@@ -26,7 +26,7 @@ func apiNewSessionHandler(sys *gohome.System, sessions *sessions.CookieStore) fu
 
 		login := mux.Vars(r)["login"]
 		var user *gohome.User
-		for _, u := range sys.Users {
+		for _, u := range sys.Users() {
 			if u.Login == login {
 				user = u
 				break

@@ -50,26 +50,24 @@ var ControlApp = React.createClass({
             );
         }
 
-        if (this.props.errors && this.props.errors.length > 0) {
-            console.error(this.props.errors)
+        var emptyAutomationBody;
+        if (this.props.automations.length === 0) {
+            emptyAutomationBody = (
+                <h5 {...classes('empty-message-automations')}>You don't have any automation.  Follow the instructions <a target="_blank" href="https://github.com/markdaws/gohome/blob/master/docs/automation.md">here</a> to create some automation rules.</h5>
+            );
         }
 
         return (
             <div {...classes()}>
                 <ul className="nav nav-tabs" role="tablist">
-                    <li role="presentation" className="">
-                        <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">
-                            <i className="fa fa-sliders"></i>
-                        </a>
-                    </li>
                     <li role="presentation" className="active">
                         <a href="#features" role="tab" aria-controls="features" data-toggle="tab">
                             <i className="fa fa-code-fork"></i>
                         </a>
                     </li>
                     <li role="presentation" className="">
-                        <a href="#system" role="tab" aria-controls="system" data-toggle="tab">
-                            <i className="fa fa-tablet"></i>
+                        <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">
+                            <i className="fa fa-sliders"></i>
                         </a>
                     </li>
                     <li role="presentation" className="">
@@ -77,8 +75,21 @@ var ControlApp = React.createClass({
                             <i className="fa fa-cogs"></i>
                         </a>
                     </li>
+                    <li role="presentation" className="">
+                        <a href="#system" role="tab" aria-controls="system" data-toggle="tab">
+                            <i className="fa fa-tablet"></i>
+                        </a>
+                    </li>
                 </ul>
                 <div className="tab-content">
+                    <div role="tabpanel" className="tab-pane active" id="features">
+                        <div className={(this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent")}>
+                            {featureBody}
+                        </div>
+                        <div {...classes('spinner')}>
+                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.devicesLoaded ? "hidden" : "")}></i>
+                        </div>
+                    </div>
                     <div role="tabpanel" className="tab-pane fade" id="scenes">
                         <div className={(this.props.appLoadStatus.scenesLoaded ? "" : "hideTabContent")}>
                             <SceneList scenes={this.props.scenes} devices={this.props.devices} />
@@ -88,12 +99,13 @@ var ControlApp = React.createClass({
                             <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
                         </div>
                     </div>
-                    <div role="tabpanel" className="tab-pane active" id="features">
-                        <div className={(this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent")}>
-                            {featureBody}
+                    <div role="tabpanel" className="tab-pane fade" id="automation">
+                        <div className={(this.props.appLoadStatus.automationLoaded ? "" : "hideTabContent")}>
+                            <AutomationList automations={this.props.automations} />
+                            {emptyAutomationBody}
                         </div>
                         <div {...classes('spinner')}>
-                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.devicesLoaded ? "hidden" : "")}></i>
+                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.automationLoaded ? "hidden" : "")}></i>
                         </div>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="system">
@@ -102,14 +114,6 @@ var ControlApp = React.createClass({
                         </div>
                         <div {...classes('spinner')}>
                             <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
-                        </div>
-                    </div>
-                    <div role="tabpanel" className="tab-pane fade" id="automation">
-                        <div className={(this.props.appLoadStatus.automationLoaded ? "" : "hideTabContent")}>
-                            <AutomationList automations={this.props.automations} />
-                        </div>
-                        <div {...classes('spinner')}>
-                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.automationLoaded ? "hidden" : "")}></i>
                         </div>
                     </div>
                 </div>

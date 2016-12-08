@@ -21528,8 +21528,19 @@
 	            );
 	        }
 
-	        if (this.props.errors && this.props.errors.length > 0) {
-	            console.error(this.props.errors);
+	        var emptyAutomationBody;
+	        if (this.props.automations.length === 0) {
+	            emptyAutomationBody = React.createElement(
+	                'h5',
+	                classes('empty-message-automations'),
+	                'You don\'t have any automation.  Follow the instructions ',
+	                React.createElement(
+	                    'a',
+	                    { target: '_blank', href: 'https://github.com/markdaws/gohome/blob/master/docs/automation.md' },
+	                    'here'
+	                ),
+	                ' to create some automation rules.'
+	            );
 	        }
 
 	        return React.createElement(
@@ -21538,15 +21549,6 @@
 	            React.createElement(
 	                'ul',
 	                { className: 'nav nav-tabs', role: 'tablist' },
-	                React.createElement(
-	                    'li',
-	                    { role: 'presentation', className: '' },
-	                    React.createElement(
-	                        'a',
-	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
-	                        React.createElement('i', { className: 'fa fa-sliders' })
-	                    )
-	                ),
 	                React.createElement(
 	                    'li',
 	                    { role: 'presentation', className: 'active' },
@@ -21561,8 +21563,8 @@
 	                    { role: 'presentation', className: '' },
 	                    React.createElement(
 	                        'a',
-	                        { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
-	                        React.createElement('i', { className: 'fa fa-tablet' })
+	                        { href: '#scenes', role: 'tab', 'aria-controls': 'scenes', 'data-toggle': 'tab' },
+	                        React.createElement('i', { className: 'fa fa-sliders' })
 	                    )
 	                ),
 	                React.createElement(
@@ -21573,11 +21575,34 @@
 	                        { href: '#automation', role: 'tab', 'aria-controls': 'automation', 'data-toggle': 'tab' },
 	                        React.createElement('i', { className: 'fa fa-cogs' })
 	                    )
+	                ),
+	                React.createElement(
+	                    'li',
+	                    { role: 'presentation', className: '' },
+	                    React.createElement(
+	                        'a',
+	                        { href: '#system', role: 'tab', 'aria-controls': 'system', 'data-toggle': 'tab' },
+	                        React.createElement('i', { className: 'fa fa-tablet' })
+	                    )
 	                )
 	            ),
 	            React.createElement(
 	                'div',
 	                { className: 'tab-content' },
+	                React.createElement(
+	                    'div',
+	                    { role: 'tabpanel', className: 'tab-pane active', id: 'features' },
+	                    React.createElement(
+	                        'div',
+	                        { className: this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent" },
+	                        featureBody
+	                    ),
+	                    React.createElement(
+	                        'div',
+	                        classes('spinner'),
+	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.devicesLoaded ? "hidden" : "") })
+	                    )
+	                ),
 	                React.createElement(
 	                    'div',
 	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'scenes' },
@@ -21595,16 +21620,17 @@
 	                ),
 	                React.createElement(
 	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane active', id: 'features' },
+	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'automation' },
 	                    React.createElement(
 	                        'div',
-	                        { className: this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent" },
-	                        featureBody
+	                        { className: this.props.appLoadStatus.automationLoaded ? "" : "hideTabContent" },
+	                        React.createElement(AutomationList, { automations: this.props.automations }),
+	                        emptyAutomationBody
 	                    ),
 	                    React.createElement(
 	                        'div',
 	                        classes('spinner'),
-	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.devicesLoaded ? "hidden" : "") })
+	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.automationLoaded ? "hidden" : "") })
 	                    )
 	                ),
 	                React.createElement(
@@ -21619,20 +21645,6 @@
 	                        'div',
 	                        classes('spinner'),
 	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "") })
-	                    )
-	                ),
-	                React.createElement(
-	                    'div',
-	                    { role: 'tabpanel', className: 'tab-pane fade', id: 'automation' },
-	                    React.createElement(
-	                        'div',
-	                        { className: this.props.appLoadStatus.automationLoaded ? "" : "hideTabContent" },
-	                        React.createElement(AutomationList, { automations: this.props.automations })
-	                    ),
-	                    React.createElement(
-	                        'div',
-	                        classes('spinner'),
-	                        React.createElement('i', { className: "fa fa-spinner fa-spin " + (this.props.appLoadStatus.automationLoaded ? "hidden" : "") })
 	                    )
 	                )
 	            )
@@ -31163,7 +31175,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n  box-shadow: 0px 2px 4px #bbb;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
+	exports.push([module.id, ".b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp__empty-message-automations {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n  box-shadow: 0px 2px 4px #bbb;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
 
 	// exports
 

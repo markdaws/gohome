@@ -178,8 +178,8 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 
 	for _, action := range auto.Actions {
 		if action.Scene != nil {
-			scene, ok := sys.Scenes[action.Scene.ID]
-			if !ok {
+			scene := sys.SceneByID(action.Scene.ID)
+			if scene == nil {
 				return nil, fmt.Errorf("invalid scene ID: %s", action.Scene.ID)
 			}
 
@@ -205,8 +205,8 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				zn, ok := sys.Features[*lz.ID]
-				if !ok {
+				zn := sys.FeatureByID(*lz.ID)
+				if zn == nil {
 					return nil, fmt.Errorf("invalid LightZone ID: %s", *lz.ID)
 				}
 
@@ -233,8 +233,8 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				wt, ok := sys.Features[*action.WindowTreatment.ID]
-				if !ok {
+				wt := sys.FeatureByID(*action.WindowTreatment.ID)
+				if wt == nil {
 					return nil, fmt.Errorf("invalid WindowTreatment ID: %s", *action.WindowTreatment.ID)
 				}
 
@@ -261,8 +261,8 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 				}
 			} else {
 				// Action only applies to a specific outlet
-				outlet, ok := sys.Features[*action.Outlet.ID]
-				if !ok {
+				outlet := sys.FeatureByID(*action.Outlet.ID)
+				if outlet == nil {
 					return nil, fmt.Errorf("invalid outlet ID: %s", *action.Outlet.ID)
 				}
 				command := buildOutletCommand(outlet, action.Outlet.OnOff)
@@ -288,8 +288,8 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 				}
 			} else {
 				// Action only applies to a specific outlet
-				sw, ok := sys.Features[*action.Switch.ID]
-				if !ok {
+				sw := sys.FeatureByID(*action.Switch.ID)
+				if sw == nil {
 					return nil, fmt.Errorf("invalid switch ID: %s", *action.Switch.ID)
 				}
 				command := buildSwitchCommand(sw, action.Switch.OnOff)
@@ -313,8 +313,8 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				hz, ok := sys.Features[*action.HeatZone.ID]
-				if !ok {
+				hz := sys.FeatureByID(*action.HeatZone.ID)
+				if hz == nil {
 					return nil, fmt.Errorf("invalid heat zone ID: %s", *action.HeatZone.ID)
 				}
 				command := buildHeatZoneCommand(hz, action.HeatZone.TargetTemp)

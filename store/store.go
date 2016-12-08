@@ -96,16 +96,16 @@ func LoadSystem(path string) (*gohome.System, error) {
 	// Have to go back through patching up devices to point to their child devices
 	// since we only store device ID pointers in the JSON
 	for _, d := range s.Devices {
-		dev := sys.Devices[d.ID]
+		dev := sys.DeviceByID(d.ID)
 		for _, dID := range d.DeviceIDs {
-			childDev := sys.Devices[dID]
+			childDev := sys.DeviceByID(dID)
 			dev.AddDevice(childDev)
 		}
 
 		// If the device has a hub we have to correctly set up that relationship
 		if d.HubID != "" {
-			hub, ok := sys.Devices[d.HubID]
-			if !ok {
+			hub := sys.DeviceByID(d.HubID)
+			if hub == nil {
 				return nil, fmt.Errorf("invalid hub ID: %s", d.HubID)
 			}
 			dev.Hub = hub
@@ -139,15 +139,19 @@ func LoadSystem(path string) (*gohome.System, error) {
 	}
 
 	for _, scn := range s.Scenes {
-		scene := sys.Scenes[scn.ID]
+		scene := sys.SceneByID(scn.ID)
+		if scene == nil {
+			log.V("missing scene with ID: %s", scn.ID)
+			continue
+		}
 
 		scene.Commands = make([]cmd.Command, len(scn.Commands))
 		for i, command := range scn.Commands {
 			var finalCmd cmd.Command
 			switch command.Type {
 			case "sceneSet":
-				scn, ok := sys.Scenes[command.Attributes["SceneID"].(string)]
-				if !ok {
+				scn := sys.SceneByID(command.Attributes["SceneID"].(string))
+				if scn == nil {
 					return nil, fmt.Errorf("invalid scene ID: %s", command.Attributes["SceneID"].(string))
 				}
 				finalCmd = &cmd.SceneSet{
@@ -175,8 +179,8 @@ func LoadSystem(path string) (*gohome.System, error) {
 				attr.FixJSON(attrs)
 
 				featureID := command.Attributes["featureId"].(string)
-				f, ok := sys.Features[featureID]
-				if !ok {
+				f := sys.FeatureByID(featureID)
+				if f == nil {
 					return nil, fmt.Errorf("invalid feature ID: %s", featureID)
 				}
 
@@ -216,9 +220,10 @@ func SaveSystem(savePath string, s *gohome.System) error {
 		Description: s.Description,
 	}
 
-	out.Scenes = make([]sceneJSON, len(s.Scenes))
+	scenes := s.Scenes()
+	out.Scenes = make([]sceneJSON, len(scenes))
 	var i = 0
-	for _, scene := range s.Scenes {
+	for _, scene := range scenes {
 		out.Scenes[i] = sceneJSON{
 			Address:     scene.Address,
 			ID:          scene.ID,
@@ -257,8 +262,9 @@ func SaveSystem(savePath string, s *gohome.System) error {
 	}
 
 	i = 0
-	out.Devices = make([]deviceJSON, len(s.Devices))
-	for _, device := range s.Devices {
+	devices := s.Devices()
+	out.Devices = make([]deviceJSON, len(devices))
+	for _, device := range devices {
 		hub := device.Hub
 		var hubID = ""
 		if hub != nil {
@@ -307,8 +313,9 @@ func SaveSystem(savePath string, s *gohome.System) error {
 	}
 
 	i = 0
-	out.Users = make([]userJSON, len(s.Users))
-	for _, u := range s.Users {
+	users := s.Users()
+	out.Users = make([]userJSON, len(users))
+	for _, u := range users {
 		out.Users[i] = userJSON{
 			ID:        u.ID,
 			Login:     u.Login,

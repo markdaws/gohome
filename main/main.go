@@ -53,7 +53,7 @@ func setPass(login, password string) {
 
 	// Add/update user
 	var user *gohome.User
-	for _, u := range sys.Users {
+	for _, u := range sys.Users() {
 		if u.Login == login {
 			user = u
 			break
@@ -170,8 +170,8 @@ func startServer() {
 	if err != nil {
 		log.V("error loading automation scripts: %s", err)
 	}
-	sys.Automation = autos
-	for _, auto := range sys.Automation {
+	for _, auto := range autos {
+		sys.AddAutomation(auto)
 		if auto.Enabled {
 			log.V("automation - starting: %s", auto.Name)
 			eb.AddConsumer(auto)

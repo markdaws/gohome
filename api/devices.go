@@ -94,7 +94,7 @@ func apiDevicesHandler(system *gohome.System) func(http.ResponseWriter, *http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		if err := json.NewEncoder(w).Encode(DevicesToJSON(system.Devices)); err != nil {
+		if err := json.NewEncoder(w).Encode(DevicesToJSON(system.Devices())); err != nil {
 			respErr(err, w)
 		}
 	}
@@ -105,8 +105,8 @@ func apiDeviceHandlerDelete(savePath string, system *gohome.System) func(http.Re
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		deviceID := mux.Vars(r)["id"]
-		device, ok := system.Devices[deviceID]
-		if !ok {
+		device := system.DeviceByID(deviceID)
+		if device == nil {
 			respBadRequest(fmt.Sprintf("invalid device ID: %s", deviceID), w)
 			return
 		}
@@ -145,15 +145,15 @@ func apiDeviceApplyFeaturesAttrsHandler(savePath string, system *gohome.System) 
 		attr.FixJSON(data)
 
 		deviceID := mux.Vars(r)["id"]
-		_, ok := system.Devices[deviceID]
-		if !ok {
+		dev := system.DeviceByID(deviceID)
+		if dev == nil {
 			respBadRequest(fmt.Sprintf("invalid device ID: %s", deviceID), w)
 			return
 		}
 
 		featureID := mux.Vars(r)["fid"]
-		f, ok := system.Features[featureID]
-		if !ok {
+		f := system.FeatureByID(featureID)
+		if f == nil {
 			respBadRequest(fmt.Sprintf("invalid feature ID: %s", featureID), w)
 			return
 		}
@@ -205,15 +205,15 @@ func apiDeviceUpdateFeatureHandler(savePath string, system *gohome.System) func(
 		}
 
 		deviceID := mux.Vars(r)["id"]
-		_, ok := system.Devices[deviceID]
-		if !ok {
+		dev := system.DeviceByID(deviceID)
+		if dev == nil {
 			respBadRequest(fmt.Sprintf("invalid device ID: %s", deviceID), w)
 			return
 		}
 
 		featureID := mux.Vars(r)["fid"]
-		f, ok := system.Features[featureID]
-		if !ok {
+		f := system.FeatureByID(featureID)
+		if f == nil {
 			respBadRequest(fmt.Sprintf("invalid feature ID: %s", featureID), w)
 			return
 		}
@@ -284,7 +284,7 @@ func apiAddDeviceHandler(savePath string, system *gohome.System) func(http.Respo
 			return
 		}
 
-		if _, ok := system.Devices[data.ID]; ok {
+		if dev := system.DeviceByID(data.ID); dev == nil {
 			respBadRequest(fmt.Sprintf("trying to add a device with a duplicate ID: %s", data.ID), w)
 			return
 		}
@@ -299,9 +299,8 @@ func apiAddDeviceHandler(savePath string, system *gohome.System) func(http.Respo
 		}
 
 		var hub *gohome.Device
-		var foundHub bool
 		if data.HubID != "" {
-			if hub, foundHub = system.Devices[data.HubID]; !foundHub {
+			if hub = system.DeviceByID(data.HubID); hub == nil {
 				respBadRequest(fmt.Sprintf("invalid hub ID: %s", data.HubID), w)
 				return
 			}
@@ -352,7 +351,7 @@ func apiAddDeviceHandler(savePath string, system *gohome.System) func(http.Respo
 		}
 
 		for _, f := range data.Features {
-			if _, ok := system.Features[f.ID]; ok {
+			if ft := system.FeatureByID(f.ID); ft == nil {
 				respBadRequest(fmt.Sprintf("trying to add duplicate feature %s", f.ID), w)
 				return
 			}
@@ -412,8 +411,8 @@ func apiDeviceHandlerUpdate(savePath string, system *gohome.System) func(http.Re
 			return
 		}
 
-		d, ok := system.Devices[data.ID]
-		if !ok {
+		d := system.DeviceByID(data.ID)
+		if d == nil {
 			respBadRequest(fmt.Sprintf("invalid device ID: %s", data.ID), w)
 			return
 		}

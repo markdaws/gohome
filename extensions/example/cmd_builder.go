@@ -33,14 +33,14 @@ func (b *cmdBuilder) buildHardwareOneCommands(c cmd.Command) (*cmd.Func, error) 
 	case *cmd.FeatureSetAttrs:
 
 		// Grab the feature that has changed
-		f, ok := b.System.Features[command.FeatureID]
-		if !ok {
+		f := b.System.FeatureByID(command.FeatureID)
+		if f == nil {
 			return nil, fmt.Errorf("invalid feature ID: %s", command.FeatureID)
 		}
 
 		// Get the device that owns the feature
-		dev, ok := b.System.Devices[f.DeviceID]
-		if !ok {
+		dev := b.System.DeviceByID(f.DeviceID)
+		if dev == nil {
 			return nil, fmt.Errorf("invalid device ID: %s", f.DeviceID)
 		}
 		_ = dev

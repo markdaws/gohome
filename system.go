@@ -1,6 +1,8 @@
 package gohome
 
 import (
+	"sync"
+
 	"github.com/go-home-iot/event-bus"
 	"github.com/go-home-iot/upnp"
 	"github.com/markdaws/gohome/feature"
@@ -17,25 +19,21 @@ type SystemServices struct {
 	CmdProcessor CommandProcessor
 }
 
-// NewIDer is an interface for types that can generate globally unique IDs that
-// can be used as IDs for objects in the system
-type NewIDer interface {
-	NewID() string
-}
-
 // System is a container that holds information such as all the zones and devices
 // that have been created.
 type System struct {
 	Name        string
 	Description string
 	Area        *Area
-	Devices     map[string]*Device
-	Scenes      map[string]*Scene
-	Features    map[string]*feature.Feature
-	Users       map[string]*User
-	Automation  map[string]*Automation
 	Extensions  *Extensions
 	Services    SystemServices
+
+	mutex      sync.RWMutex
+	automation map[string]*Automation
+	devices    map[string]*Device
+	features   map[string]*feature.Feature
+	scenes     map[string]*Scene
+	users      map[string]*User
 }
 
 // NewSystem returns an initial System instance.  It is still up to the caller
@@ -44,10 +42,11 @@ func NewSystem(name string) *System {
 	s := &System{
 		Name:        name,
 		Description: "",
-		Devices:     make(map[string]*Device),
-		Scenes:      make(map[string]*Scene),
-		Features:    make(map[string]*feature.Feature),
-		Users:       make(map[string]*User),
+		automation:  make(map[string]*Automation),
+		devices:     make(map[string]*Device),
+		scenes:      make(map[string]*Scene),
+		features:    make(map[string]*feature.Feature),
+		users:       make(map[string]*User),
 	}
 
 	// Area is the root area which all of the devices and features are contained within
@@ -76,9 +75,11 @@ func (s *System) NewID() string {
 // probably trying to initialize.  A device may try to create network connections
 // or other tasks when it is initialized
 func (s *System) InitDevices() {
-	for _, d := range s.Devices {
+	s.mutex.RLock()
+	for _, d := range s.devices {
 		s.InitDevice(d)
 	}
+	s.mutex.RUnlock()
 }
 
 // InitDevice initializes a device.  If the device has a connection pool, this is
@@ -131,61 +132,38 @@ func (s *System) StopDevice(d *Device) {
 	}
 }
 
-func (s *System) AddFeature(f *feature.Feature) {
-	s.Features[f.ID] = f
+// DeviceByID returns the device with the specified ID, nil if not found
+func (s *System) DeviceByID(ID string) *Device {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.devices[ID]
 }
 
-// ButtonFeatures returns a slice containing all of the button features in the system
-func (s *System) ButtonFeatures() map[string]*feature.Feature {
-	//TODO: Worth caching?
-
-	features := make(map[string]*feature.Feature)
-	for _, f := range s.Features {
-		if f.Type == feature.FTButton {
-			features[f.ID] = f
-		}
+// Devices returns a map of all the devices in the system, keyed by device ID
+func (s *System) Devices() map[string]*Device {
+	out := make(map[string]*Device)
+	s.mutex.RLock()
+	for k, v := range s.devices {
+		out[k] = v
 	}
-	return features
-}
-
-// FeaturesByType returns a map of all the features in the system that match the feature type, keyed
-// by feature ID
-func (s *System) FeaturesByType(ft string) map[string]*feature.Feature {
-	//TODO: Worth caching?
-
-	features := make(map[string]*feature.Feature)
-	for _, f := range s.Features {
-		if f.Type == ft {
-			features[f.ID] = f
-		}
-	}
-	return features
+	s.mutex.RUnlock()
+	return out
 }
 
 // AddDevice adds a device to the system
 func (s *System) AddDevice(d *Device) {
-	s.Devices[d.ID] = d
-}
-
-// AddScene adds a scene to the system
-func (s *System) AddScene(scn *Scene) {
-	s.Scenes[scn.ID] = scn
-}
-
-// DeleteScene deletes a scene from the system
-func (s *System) DeleteScene(scn *Scene) {
-	delete(s.Scenes, scn.ID)
-}
-
-// AddUser adds the user to the system
-func (s *System) AddUser(u *User) {
-	s.Users[u.ID] = u
+	s.mutex.Lock()
+	s.devices[d.ID] = d
+	s.mutex.Unlock()
 }
 
 // DeleteDevice deletes a device from the system and stops all associated
 // services, for all zones and devices this is responsible for
 func (s *System) DeleteDevice(d *Device) {
-	delete(s.Devices, d.ID)
+	s.mutex.Lock()
+	delete(s.devices, d.ID)
+	s.mutex.Unlock()
+
 	//TODO: Remove all associated zones + buttons
 	//TODO: Need to stop all services, recipes, networking etc to this device
 }
@@ -196,7 +174,10 @@ func (s *System) DeleteDevice(d *Device) {
 // give a different ID for the device, since they are globally unique even
 // though they are the same device
 func (s *System) IsDupeDevice(x *Device) (*Device, bool) {
-	for _, y := range s.Devices {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	for _, y := range s.devices {
 		if x.Address == y.Address {
 			// Two devices are considered equal if they share the same address, however
 			// if they have the same address but different hubs (if they have one) then
@@ -225,21 +206,109 @@ func (s *System) IsDupeDevice(x *Device) (*Device, bool) {
 	return nil, false
 }
 
-//TODO: Delete
-/*
-type Scener interface {
-	Scene(ID string) *Scene
+// AddFeature adds a feature to the system. If a feature with the same ID already exists
+// it is replaced with the new feature
+func (s *System) AddFeature(f *feature.Feature) {
+	s.mutex.Lock()
+	s.features[f.ID] = f
+	s.mutex.Unlock()
 }
 
-func (s *System) Scene(ID string) *Scene {
-	return s.Scenes[ID]
+// FeatureByID returns the feature with the specified ID, nil if not found
+func (s *System) FeatureByID(ID string) *feature.Feature {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.features[ID]
 }
 
-type CmdEnqueuer interface {
-	CmdEnqueue(g CommandGroup) error
+// FeaturesByType returns a map of all the features in the system that match the feature type, keyed
+// by feature ID
+func (s *System) FeaturesByType(ft string) map[string]*feature.Feature {
+	//TODO: cache?
+	features := make(map[string]*feature.Feature)
+	s.mutex.RLock()
+	for _, f := range s.features {
+		if f.Type == ft {
+			features[f.ID] = f
+		}
+	}
+	s.mutex.RUnlock()
+	return features
 }
 
-func (s *System) CmdEnqueue(g CommandGroup) error {
-	return s.Services.CmdProcessor.Enqueue(g)
+// SceneByID returns the scene with the specified ID, nil if not found
+func (s *System) SceneByID(ID string) *Scene {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.scenes[ID]
 }
-*/
+
+// AddScene adds a scene to the system. If a scene with the same ID already exists, it is
+// overwritten with the new scene
+func (s *System) AddScene(scn *Scene) {
+	s.mutex.Lock()
+	s.scenes[scn.ID] = scn
+	s.mutex.Unlock()
+}
+
+// Scenes returns a map of all the scenes in the system keyed by scene ID
+func (s *System) Scenes() map[string]*Scene {
+	out := make(map[string]*Scene)
+
+	s.mutex.RLock()
+	for k, v := range s.scenes {
+		out[k] = v
+	}
+	s.mutex.RUnlock()
+	return out
+}
+
+// DeleteScene deletes a scene from the system
+func (s *System) DeleteScene(scn *Scene) {
+	s.mutex.Lock()
+	delete(s.scenes, scn.ID)
+	s.mutex.Unlock()
+}
+
+// Automations reutrns all of the automation scripts keyed by ID
+func (s *System) Automations() map[string]*Automation {
+	out := make(map[string]*Automation)
+	s.mutex.RLock()
+	for k, v := range s.automation {
+		out[k] = v
+	}
+	s.mutex.RUnlock()
+	return out
+}
+
+// AddAutomation adds an automation instance to the system
+func (s *System) AddAutomation(a *Automation) {
+	s.mutex.Lock()
+	s.automation[a.ID] = a
+	s.mutex.Unlock()
+}
+
+// AutomationByID returns the automation instance with the specified ID, nil if not found
+func (s *System) AutomationByID(ID string) *Automation {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.automation[ID]
+}
+
+// Users returns a map of all the users, keyed by user ID
+func (s *System) Users() map[string]*User {
+	out := make(map[string]*User)
+	s.mutex.RLock()
+	for k, v := range s.users {
+		out[k] = v
+	}
+	s.mutex.RUnlock()
+	return out
+}
+
+// AddUser adds the user to the system
+func (s *System) AddUser(u *User) {
+	s.mutex.Lock()
+	s.users[u.ID] = u
+	s.mutex.Unlock()
+}

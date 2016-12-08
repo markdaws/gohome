@@ -103,8 +103,8 @@ func apiActiveScenesHandler(system *gohome.System) func(http.ResponseWriter, *ht
 			return
 		}
 
-		scene, ok := system.Scenes[x.ID]
-		if !ok {
+		scene := system.SceneByID(x.ID)
+		if scene == nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -131,7 +131,7 @@ func apiScenesHandler(system *gohome.System) func(http.ResponseWriter, *http.Req
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-		if err := json.NewEncoder(w).Encode(ScenesToJSON(system.Scenes)); err != nil {
+		if err := json.NewEncoder(w).Encode(ScenesToJSON(system.Scenes())); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -141,8 +141,8 @@ func apiSceneHandlerDelete(savePath string, system *gohome.System) func(http.Res
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		sceneID := mux.Vars(r)["ID"]
-		scene, ok := system.Scenes[sceneID]
-		if !ok {
+		scene := system.SceneByID(sceneID)
+		if scene == nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -162,8 +162,8 @@ func apiSceneHandlerCommandDelete(savePath string, system *gohome.System) func(h
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		sceneID := mux.Vars(r)["sceneID"]
-		scene, ok := system.Scenes[sceneID]
-		if !ok {
+		scene := system.SceneByID(sceneID)
+		if scene == nil {
 			respBadRequest(fmt.Sprintf("invalid scene ID: %s", sceneID), w)
 			return
 		}
@@ -204,8 +204,8 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 		sceneID := mux.Vars(r)["sceneID"]
-		scene, ok := system.Scenes[sceneID]
-		if !ok {
+		scene := system.SceneByID(sceneID)
+		if scene == nil {
 			respBadRequest(fmt.Sprintf("invalid scene ID: %s", sceneID), w)
 			return
 		}
@@ -243,8 +243,8 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 				return
 			}
 
-			f, ok := system.Features[featureID]
-			if !ok {
+			f := system.FeatureByID(featureID)
+			if f == nil {
 				respBadRequest(fmt.Sprintf("invalid feature ID: %s", featureID), w)
 				return
 			}
@@ -277,8 +277,8 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 				return
 			}
 
-			scene, ok := system.Scenes[sceneCmd.Attributes["SceneID"].(string)]
-			if !ok {
+			scene := system.SceneByID(sceneCmd.Attributes["SceneID"].(string))
+			if scene == nil {
 				var valErrs *validation.Errors
 				if sceneCmd.Attributes["SceneID"].(string) == "" {
 					valErrs = validation.NewErrors("attributes_SceneID", "required field", true)
@@ -326,8 +326,8 @@ func apiSceneHandlerCommandAdd(savePath string, system *gohome.System) func(http
 func apiSceneHandlerUpdate(savePath string, system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sceneID := mux.Vars(r)["ID"]
-		scene, ok := system.Scenes[sceneID]
-		if !ok {
+		scene := system.SceneByID(sceneID)
+		if scene == nil {
 			respBadRequest(fmt.Sprintf("invalid scene ID: %s", sceneID), w)
 			return
 		}
@@ -365,7 +365,7 @@ func apiSceneHandlerUpdate(savePath string, system *gohome.System) func(http.Res
 			return
 		}
 
-		system.Scenes[sceneID] = &updatedScene
+		system.AddScene(&updatedScene)
 
 		err = store.SaveSystem(savePath, system)
 		if err != nil {

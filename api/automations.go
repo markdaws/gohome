@@ -20,8 +20,9 @@ func apiAutomationHandler(system *gohome.System) func(http.ResponseWriter, *http
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 		i := 0
-		items := make([]jsonAutomation, len(system.Automation))
-		for _, automation := range system.Automation {
+		automations := system.Automations()
+		items := make([]jsonAutomation, len(automations))
+		for _, automation := range automations {
 			items[i] = jsonAutomation{ID: automation.ID, Name: automation.Name}
 			i++
 		}
@@ -35,8 +36,8 @@ func apiAutomationHandler(system *gohome.System) func(http.ResponseWriter, *http
 func apiAutomationTestHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		automationID := mux.Vars(r)["ID"]
-		automation, ok := system.Automation[automationID]
-		if !ok {
+		automation := system.AutomationByID(automationID)
+		if automation == nil {
 			respBadRequest(fmt.Sprintf("invalid automation ID: %s", automationID), w)
 			return
 		}

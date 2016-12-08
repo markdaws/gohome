@@ -147,12 +147,12 @@ func (cp *commandProcessor) buildCommand(c cmd.Command) ([]*cmd.Func, error) {
 	var finalCmd *cmd.Func
 	switch command := c.(type) {
 	case *cmd.FeatureSetAttrs:
-		f, ok := cp.system.Features[command.FeatureID]
-		if !ok {
+		f := cp.system.FeatureByID(command.FeatureID)
+		if f == nil {
 			return nil, fmt.Errorf("unknown feature ID: %s", command.FeatureID)
 		}
-		d, ok := cp.system.Devices[f.DeviceID]
-		if !ok {
+		d := cp.system.DeviceByID(f.DeviceID)
+		if d == nil {
 			return nil, fmt.Errorf("unknown device ID: %s", f.DeviceID)
 		}
 
@@ -174,8 +174,8 @@ func (cp *commandProcessor) buildCommand(c cmd.Command) ([]*cmd.Func, error) {
 		finalCmd = zCmd
 
 	case *cmd.SceneSet:
-		s, ok := cp.system.Scenes[command.SceneID]
-		if !ok {
+		s := cp.system.SceneByID(command.SceneID)
+		if s == nil {
 			return nil, fmt.Errorf("unknown scene ID %s", command.SceneID)
 		}
 		for _, sceneCmd := range s.Commands {
