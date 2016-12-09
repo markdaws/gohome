@@ -8,6 +8,16 @@ import (
 
 //TODO: SceneSet
 
+// AutomationTriggeredEvt is fired when a piece of automation is triggered
+type AutomationTriggeredEvt struct {
+	Name string
+}
+
+// String returns a debug string
+func (e *AutomationTriggeredEvt) String() string {
+	return fmt.Sprintf("AutomationTriggeredEvt[Name: %s]", e.Name)
+}
+
 // SunriseEvt is fired when it is sunrise
 type SunriseEvt struct{}
 
@@ -132,6 +142,14 @@ type UserLogoutEvt struct {
 // String returns a debug string
 func (ul *UserLogoutEvt) String() string {
 	return fmt.Sprintf("UserLogoutEvt[Login: %s]", ul.Login)
+}
+
+// ServerStartEvt fires when the server is started
+type ServerStartedEvt struct{}
+
+// String returns a debug string
+func (e *ServerStartedEvt) String() string {
+	return "ServerStartEvt"
 }
 
 //TODO: Finish device lost plumbing

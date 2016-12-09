@@ -277,7 +277,7 @@ func (d *Device) FetchAttributes(timeout time.Duration) (*DeviceAttributes, erro
 			</s:Body>
 		</s:Envelope>*/
 
-	r := regexp.MustCompile(`(<attributeList>.*</attributeList>)`)
+	r := regexp.MustCompile(`(?s)(<attributeList>.*</attributeList>)`)
 	attrList := r.FindStringSubmatch(body)
 	if attrList == nil || len(attrList) == 0 {
 		return nil, errors.New("attributeList element not found in response from device")

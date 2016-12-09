@@ -89,8 +89,7 @@ type GIP struct {
 	Rooms []Room `xml:"gwrcmd>gdata>gip>room"`
 }
 
-// Discover returns the address e.g. https://192.168.0.23 of the ConnectByTCP Hub if
-// one was found on the network.
+// Scan returns ScanResponse instances for each device found on the network
 func Scan(waitTimeSeconds int) ([]ScanResponse, error) {
 	URN := "urn:greenwavereality-com:service:gop:1"
 	var responses []ScanResponse
@@ -290,14 +289,14 @@ type tcpListener struct {
 	Responses *[]ScanResponse
 }
 
-func (t tcpListener) Response(m gossdp.ResponseMessage) {
+func (l tcpListener) Response(m gossdp.ResponseMessage) {
 	// example response
 	// {MaxAge:7200 SearchType:urn:greenwavereality-com:service:gop:1 DeviceId:71403833960916 Usn:uuid:71403833960916::urn:greenwavereality-com:service:gop:1 Location:https://192.168.0.23 Server:linux UPnP/1.1 Apollo3/3.0.74 RawResponse:0xc2080305a0 Urn:urn:greenwavereality-com:service:gop:1}
-	if m.SearchType != t.URN {
+	if m.SearchType != l.URN {
 		return
 	}
 
-	*t.Responses = append(*t.Responses, ScanResponse{
+	*l.Responses = append(*l.Responses, ScanResponse{
 		MaxAge:     m.MaxAge,
 		SearchType: m.SearchType,
 		DeviceID:   m.DeviceId,

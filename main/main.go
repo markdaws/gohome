@@ -180,6 +180,9 @@ func startServer() {
 		}
 	}
 
+	// Log we started the system
+	sys.Services.EvtBus.Enqueue(&gohome.ServerStartedEvt{})
+
 	// Sit forever since we have started all the services
 	var done chan bool
 	<-done

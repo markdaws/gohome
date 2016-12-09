@@ -56,10 +56,16 @@ func (c *EventLogger) StartConsuming(ch chan evtbus.Event) {
 				eventType = "UserLogoutEvt"
 				data = evt
 			case *SunriseEvt:
-				eventType = "Sunrise"
+				eventType = "SunriseEvt"
 				data = evt
 			case *SunsetEvt:
-				eventType = "Sunset"
+				eventType = "SunsetEvt"
+				data = evt
+			case *ServerStartedEvt:
+				eventType = "ServerStartedEvt"
+				data = evt
+			case *AutomationTriggeredEvt:
+				eventType = "AutomationTriggeredEvt"
 				data = evt
 			}
 

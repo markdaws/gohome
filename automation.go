@@ -159,6 +159,10 @@ func NewAutomation(sys *System, config string) (*Automation, error) {
 			return
 		}
 
+		sys.Services.EvtBus.Enqueue(&AutomationTriggeredEvt{
+			Name: finalAuto.Name,
+		})
+
 		log.V("automation[%s] - trigger fired, enqueuing actions", finalAuto.Name)
 		sys.Services.CmdProcessor.Enqueue(*actions)
 	}
