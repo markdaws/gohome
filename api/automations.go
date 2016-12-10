@@ -23,7 +23,7 @@ func apiAutomationHandler(system *gohome.System) func(http.ResponseWriter, *http
 		automations := system.Automations()
 		items := make([]jsonAutomation, len(automations))
 		for _, automation := range automations {
-			items[i] = jsonAutomation{ID: automation.ID, Name: automation.Name}
+			items[i] = jsonAutomation{Name: automation.Name}
 			i++
 		}
 

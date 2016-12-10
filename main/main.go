@@ -171,6 +171,18 @@ func startServer() {
 		log.V("error loading automation scripts: %s", err)
 	}
 	for _, auto := range autos {
+		auto := auto
+
+		// When the automation is triggered, fire off the actions
+		auto.Triggered = func(actions *gohome.CommandGroup) {
+			sys.Services.EvtBus.Enqueue(&gohome.AutomationTriggeredEvt{
+				Name: auto.Name,
+			})
+
+			log.V("automation[%s] - trigger fired, enqueuing actions", auto.Name)
+			sys.Services.CmdProcessor.Enqueue(*actions)
+		}
+
 		sys.AddAutomation(auto)
 		if auto.Enabled {
 			log.V("automation - starting: %s", auto.Name)

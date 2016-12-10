@@ -4,9 +4,184 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/attr"
+	"github.com/markdaws/gohome/feature"
 	"github.com/stretchr/testify/require"
 )
+
+/*
+type MockSystem struct {
+}
+
+func (s *MockSystem) NewID() string {
+	return ""
+}
+func (s *MockSystem) SceneByID(ID string) *Scene {
+	return nil
+}
+func (s *MockSystem) FeaturesByType(ft string) map[string]*feature.Feature {
+}
+func (s *MockSystem) FeatureByID(ID string) *feature.Feature {
+}
+func (s *MockSystem) FeatureByAID(AID string) *feature.Feature {
+}*/
+
+func TestFeatureTriggerCount(t *testing.T) {
+	t.Parallel()
+
+	config := `
+name: Test
+trigger:
+  feature:
+    count: 3
+    duration: 3000
+    id: 12345
+    condition:
+      attr: 'openclose'
+      op: '=='
+      value: 2
+actions:
+  - light_zone:
+      on_off: 'on'
+`
+
+	sys := gohome.NewSystem("test system")
+	sensor := feature.NewSensor("12345", attr.NewOpenClose("openclose", nil))
+	sys.AddFeature(sensor)
+	auto, err := gohome.NewAutomation(sys, config)
+	require.Nil(t, err)
+
+	// Simulate firing the sensor 3 times in less that 3 seconds, should trigger the event
+	ch := make(chan evtbus.Event)
+	auto.StartConsuming(ch)
+
+	wasTriggered := false
+	auto.Triggered = func(actions *gohome.CommandGroup) {
+		wasTriggered = true
+	}
+
+	//Update
+	openclosed := sensor.Attrs["openclose"].Clone()
+	openclosed.Value = attr.OpenCloseOpen
+
+	evt := &gohome.FeatureAttrsChangedEvt{
+		FeatureID: "12345",
+		Attrs:     feature.NewAttrs(openclosed),
+	}
+
+	require.False(t, wasTriggered)
+	ch <- evt
+	time.Sleep(100 * time.Millisecond)
+	require.False(t, wasTriggered)
+
+	ch <- evt
+	time.Sleep(100 * time.Millisecond)
+	require.False(t, wasTriggered)
+
+	ch <- evt
+	time.Sleep(100 * time.Millisecond)
+
+	// Should trigger after 3 events inside the required time
+	require.True(t, wasTriggered)
+}
+
+func TestFeatureTriggerCountExpiredDuration(t *testing.T) {
+	// Make sure that if we trigger events but not within the desired time the trigger doesn't fire
+	t.Parallel()
+
+	config := `
+name: Test
+trigger:
+  feature:
+    count: 3
+    duration: 1000
+    id: 12345
+    condition:
+      attr: 'openclose'
+      op: '=='
+      value: 2
+actions:
+  - light_zone:
+      on_off: 'on'
+`
+
+	sys := gohome.NewSystem("test system")
+	sensor := feature.NewSensor("12345", attr.NewOpenClose("openclose", nil))
+	sys.AddFeature(sensor)
+	auto, err := gohome.NewAutomation(sys, config)
+	require.Nil(t, err)
+
+	// Simulate firing the sensor 3 times in less that 3 seconds, should trigger the event
+	ch := make(chan evtbus.Event)
+	auto.StartConsuming(ch)
+
+	wasTriggered := false
+	auto.Triggered = func(actions *gohome.CommandGroup) {
+		wasTriggered = true
+	}
+
+	//Update
+	openclosed := sensor.Attrs["openclose"].Clone()
+	openclosed.Value = attr.OpenCloseOpen
+
+	evt := &gohome.FeatureAttrsChangedEvt{
+		FeatureID: "12345",
+		Attrs:     feature.NewAttrs(openclosed),
+	}
+
+	require.False(t, wasTriggered)
+	ch <- evt
+	time.Sleep(100 * time.Millisecond)
+	require.False(t, wasTriggered)
+
+	ch <- evt
+	time.Sleep(100 * time.Millisecond)
+	require.False(t, wasTriggered)
+
+	//Make sure the last event is past the duration so the trigger shouldn't fire
+	time.Sleep(time.Second * 2)
+	ch <- evt
+	time.Sleep(100 * time.Millisecond)
+
+	// Should not have triggered
+	require.False(t, wasTriggered)
+
+	// Make sure it will trigger after a failure
+	ch <- evt
+	time.Sleep(100 * time.Millisecond)
+	require.False(t, wasTriggered)
+
+	ch <- evt
+	time.Sleep(100 * time.Millisecond)
+	require.True(t, wasTriggered)
+}
+
+func TestSensorTrigger(t *testing.T) {
+	t.Parallel()
+
+	config := `
+name: Test
+trigger:
+  sensor:
+    condition:
+      attr: 'on_off'
+      op: 'eq'
+      value: 'off'
+actions:
+  - scene:
+      id: 12345
+`
+
+	sys := gohome.NewSystem("test system")
+	s1 := &gohome.Scene{ID: "12345"}
+	sys.AddScene(s1)
+
+	auto, err := gohome.NewAutomation(sys, config)
+	require.Nil(t, err)
+	_ = auto
+}
 
 func TestTimeTriggerNoDate(t *testing.T) {
 	t.Parallel()
@@ -21,14 +196,6 @@ actions:
   - scene:
       id: 12345
 `
-	/*
-	   	  - light_zone:
-	         id: 12345
-	         attrs:
-	           onoff: on
-	           brightness: 98
-	*/
-
 	sys := gohome.NewSystem("test system")
 	s1 := &gohome.Scene{ID: "12345"}
 	sys.AddScene(s1)

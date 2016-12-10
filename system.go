@@ -235,11 +235,12 @@ func (s *System) FeatureByID(ID string) *feature.Feature {
 }
 
 // FeatureByAID returns the feature with the specified automation ID, nil if not found
-func (s *System) FeatureByAID(featureType, AID string) *feature.Feature {
+func (s *System) FeatureByAID(AID string) *feature.Feature {
+	//TODO: Cache
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	for _, f := range s.features {
-		if f.Type == featureType && f.AutomationID == AID {
+		if f.AutomationID == AID {
 			return f
 		}
 	}
@@ -306,10 +307,10 @@ func (s *System) Automations() map[string]*Automation {
 	return out
 }
 
-// AddAutomation adds an automation instance to the system
+// AddAutomation adds an automation instance to the system, indexed by name
 func (s *System) AddAutomation(a *Automation) {
 	s.mutex.Lock()
-	s.automation[a.ID] = a
+	s.automation[a.Name] = a
 	s.mutex.Unlock()
 }
 

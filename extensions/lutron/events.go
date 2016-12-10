@@ -175,6 +175,9 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 					state := feature.ButtonCloneAttrs(btn)
 					state.Value = attr.ButtonStatePressed
 
+					// TODO: What happens here if we are firing this event, and the monitor
+					// system eventually handles buttons, need to make sure we don't fire
+					// two events (fame for button release)
 					p.System.Services.EvtBus.Enqueue(&gohome.FeatureAttrsChangedEvt{
 						FeatureID: btn.ID,
 						Attrs:     feature.NewAttrs(state),

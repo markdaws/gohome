@@ -26609,7 +26609,7 @@
 	            classes(),
 	            React.createElement(
 	                'div',
-	                { key: 'wha', className: 'clearfix beforeExpander' },
+	                { className: 'clearfix beforeExpander' },
 	                content,
 	                React.createElement('div', { style: { clear: "both" } })
 	            )
@@ -31263,6 +31263,7 @@
 	    render: function render() {
 	        var gridCells = this.props.automations.map(function (automation) {
 	            return {
+	                // Note: automations don't have an ID
 	                key: automation.name,
 	                cell: React.createElement(AutomationCell, { automation: automation }),
 	                content: React.createElement(Automation, { automation: automation, key: automation.name })
@@ -31752,7 +31753,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp__empty-message-automations {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n  box-shadow: 0px 2px 4px #bbb;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
+	exports.push([module.id, ".b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp__empty-message-automations {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp .tab-content {\n  max-width: 768px;\n  margin: 0 auto;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n", ""]);
 
 	// exports
 
@@ -32383,7 +32384,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-Login {\n  margin: 20px;\n  font-weight: 200;\n}\n.b-Login__header {\n  margin-top: 60px;\n  text-align: center;\n}\n.b-Login__header-logo {\n  width: 210px;\n}\n.b-Login__login-form {\n  margin-top: 50px;\n}\n.b-Login__need-credentials {\n  margin-top: 30px;\n}\n.b-Login__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-Login__error--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-Login {\n  margin: 20px;\n  font-weight: 200;\n  max-width: 500px;\n  margin: 0 auto;\n}\n.b-Login__header {\n  margin-top: 60px;\n  text-align: center;\n}\n.b-Login__header-logo {\n  width: 210px;\n}\n.b-Login__login-form {\n  margin-top: 50px;\n}\n.b-Login__need-credentials {\n  margin-top: 30px;\n}\n.b-Login__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-Login__error--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 

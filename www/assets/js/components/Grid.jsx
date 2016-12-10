@@ -214,7 +214,7 @@ var Grid = React.createClass({
 
         return (
             <div {...classes()}>
-                <div key="wha" className="clearfix beforeExpander">
+                <div className="clearfix beforeExpander">
                     {content}
                     <div style={{clear:"both"}}></div>
                 </div>

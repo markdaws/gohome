@@ -21,6 +21,7 @@ var AutomationList = React.createClass({
     render: function() {
         var gridCells = this.props.automations.map(function(automation) {
             return {
+                // Note: automations don't have an ID
                 key: automation.name,
                 cell: <AutomationCell automation={automation} />,
                 content: <Automation automation={automation} key={automation.name}/>

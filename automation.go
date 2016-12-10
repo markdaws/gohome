@@ -15,14 +15,23 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
+// automationSys provides access to system information, just enough for the automation type to function
+type automationSys interface {
+	NewID() string
+	SceneByID(ID string) *Scene
+	FeaturesByType(featureType string) map[string]*feature.Feature
+	FeatureByID(ID string) *feature.Feature
+	FeatureByAID(AID string) *feature.Feature
+}
+
 // Automation represents an automation instance. Each piece of automation has a trigger which is a set
 // of conditions which when evaluating to true cause the automation actions to execute
 type Automation struct {
-	ID      string
 	Name    string
 	Enabled bool
 	Trigger Trigger
 	evtbus.Consumer
+	Triggered func(actions *CommandGroup)
 }
 
 func (a *Automation) ConsumerName() string {
@@ -37,6 +46,98 @@ func (a *Automation) StopConsuming() {
 	a.Trigger.StopConsuming()
 }
 
+type condition struct {
+	AttrLocalID *string     `yaml:"attr"`
+	Op          *string     `yaml:"op"`
+	Value       interface{} `yaml:"value"`
+	feature     *feature.Feature
+	And         []*condition `yaml:"and"`
+	Or          []*condition `yaml:"or"`
+}
+
+func (c *condition) Evaluate(e *FeatureAttrsChangedEvt) bool {
+	if c.feature.ID != e.FeatureID {
+		return false
+	}
+
+	attribute, ok := e.Attrs[*c.AttrLocalID]
+	if !ok {
+		return false
+	}
+
+	switch attribute.DataType {
+	case attr.DTInt32:
+		a := attribute.Value.(int32)
+		b := toInt32(c.Value)
+		if b == nil {
+			return false
+		}
+		switch *c.Op {
+		case "<":
+			return a < *b
+		case ">":
+			return a > *b
+		case "==":
+			return a == *b
+		case "!=":
+			return a != *b
+		case "<=":
+			return a <= *b
+		case ">=":
+			return a >= *b
+		}
+
+	case attr.DTFloat32:
+		a := attribute.Value.(float32)
+		b := toFloat32(c.Value)
+		if b == nil {
+			return false
+		}
+		switch *c.Op {
+		case "<":
+			return a < *b
+		case ">":
+			return a > *b
+		case "==":
+			return a == *b
+		case "!=":
+			return a != *b
+		case "<=":
+			return a <= *b
+		case ">=":
+			return a >= *b
+		}
+
+	case attr.DTString:
+		a := attribute.Value.(string)
+		b := c.Value.(string)
+		switch *c.Op {
+		case "<":
+			return a < b
+		case ">":
+			return a > b
+		case "==":
+			return a == b
+		case "!=":
+			return a != b
+		case "<=":
+			return a <= b
+		case ">=":
+			return a >= b
+		}
+
+	case attr.DTBool:
+		switch *c.Op {
+		case "==":
+			return attribute.Value == c.Value
+		case "!=":
+			return attribute.Value != c.Value
+		}
+	}
+
+	return false
+}
+
 // helper type to deserialize the yaml in to our internal object model
 type automationIntermediate struct {
 	Name    string `yaml:"name"`
@@ -46,6 +147,13 @@ type automationIntermediate struct {
 			At   string `yaml:"at"`
 			Days string `yaml:"days"`
 		} `yaml:"time"`
+		Feature *struct {
+			ID        *string    `yaml:"id"`
+			AID       *string    `yaml:"aid"`
+			Condition *condition `yaml:"condition"`
+			Count     int        `yaml:"count"`
+			Duration  int        `yaml:"duration"`
+		} `yaml:"feature"`
 	} `yaml:"trigger"`
 	Actions []struct {
 		Scene *struct {
@@ -82,7 +190,7 @@ type automationIntermediate struct {
 }
 
 // LoadAutomation loads all of the automation files from the specified path
-func LoadAutomation(sys *System, path string) (map[string]*Automation, error) {
+func LoadAutomation(sys automationSys, path string) (map[string]*Automation, error) {
 
 	autos := make(map[string]*Automation)
 	files, err := ioutil.ReadDir(path)
@@ -106,13 +214,13 @@ func LoadAutomation(sys *System, path string) (map[string]*Automation, error) {
 			log.E("automation - failed to create automation: %s, %s", fullPath, err)
 			continue
 		}
-		autos[auto.ID] = auto
+		autos[auto.Name] = auto
 	}
 	return autos, nil
 }
 
 // NewAutomation creates a new automation instance
-func NewAutomation(sys *System, config string) (*Automation, error) {
+func NewAutomation(sys automationSys, config string) (*Automation, error) {
 
 	var auto automationIntermediate
 	err := yaml.Unmarshal([]byte(config), &auto)
@@ -151,7 +259,6 @@ func NewAutomation(sys *System, config string) (*Automation, error) {
 	}
 
 	finalAuto := &Automation{
-		ID:      sys.NewID(),
 		Name:    auto.Name,
 		Enabled: *auto.Enabled,
 	}
@@ -164,12 +271,9 @@ func NewAutomation(sys *System, config string) (*Automation, error) {
 			return
 		}
 
-		sys.Services.EvtBus.Enqueue(&AutomationTriggeredEvt{
-			Name: finalAuto.Name,
-		})
-
-		log.V("automation[%s] - trigger fired, enqueuing actions", finalAuto.Name)
-		sys.Services.CmdProcessor.Enqueue(*actions)
+		if finalAuto.Triggered != nil {
+			finalAuto.Triggered(actions)
+		}
 	}
 
 	trigger, err := parseTrigger(sys, auto, triggered)
@@ -181,7 +285,7 @@ func NewAutomation(sys *System, config string) (*Automation, error) {
 	return finalAuto, nil
 }
 
-func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, error) {
+func parseActions(sys automationSys, auto automationIntermediate) (*CommandGroup, error) {
 
 	cmdGroup := CommandGroup{Desc: auto.Name}
 
@@ -214,7 +318,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				zn, err := getFeature(sys, lz.ID, lz.AID, feature.FTLightZone)
+				zn, err := getFeature(sys, lz.ID, lz.AID)
 				if err != nil {
 					return nil, err
 				}
@@ -242,7 +346,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				wt, err := getFeature(sys, action.WindowTreatment.ID, action.WindowTreatment.AID, feature.FTWindowTreatment)
+				wt, err := getFeature(sys, action.WindowTreatment.ID, action.WindowTreatment.AID)
 				if err != nil {
 					return nil, err
 				}
@@ -268,7 +372,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				outlet, err := getFeature(sys, action.Outlet.ID, action.Outlet.AID, feature.FTOutlet)
+				outlet, err := getFeature(sys, action.Outlet.ID, action.Outlet.AID)
 				if err != nil {
 					return nil, err
 				}
@@ -293,7 +397,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				sw, err := getFeature(sys, action.Switch.ID, action.Switch.AID, feature.FTSwitch)
+				sw, err := getFeature(sys, action.Switch.ID, action.Switch.AID)
 				if err != nil {
 					return nil, err
 				}
@@ -318,7 +422,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				hz, err := getFeature(sys, action.HeatZone.ID, action.HeatZone.AID, feature.FTHeatZone)
+				hz, err := getFeature(sys, action.HeatZone.ID, action.HeatZone.AID)
 				if err != nil {
 					return nil, err
 				}
@@ -336,9 +440,9 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 	return &cmdGroup, nil
 }
 
-func getFeature(sys *System, id, aid *string, featureType string) (*feature.Feature, error) {
+func getFeature(sys automationSys, id, aid *string) (*feature.Feature, error) {
 	if aid != nil {
-		f := sys.FeatureByAID(featureType, *aid)
+		f := sys.FeatureByAID(*aid)
 		if f == nil {
 			return nil, fmt.Errorf("invalid automation ID: %s", *aid)
 		}
@@ -494,8 +598,51 @@ func buildWindowTreatmentCommand(wt *feature.Feature, openClosedVal *string, off
 	}
 }
 
-func parseTrigger(sys *System, auto automationIntermediate, triggered func()) (Trigger, error) {
-	if auto.Trigger.Time != nil {
+func parseCondition(f *feature.Feature, c *condition) error {
+	if c.AttrLocalID != nil {
+		c.feature = f
+
+		_, ok := f.Attrs[*c.AttrLocalID]
+		if !ok {
+			return fmt.Errorf("invalid attr key: %s", *c.AttrLocalID)
+		}
+
+		if c.Op == nil {
+			return fmt.Errorf("missing op key")
+		}
+
+		if c.Value == nil {
+			return fmt.Errorf("missing value key")
+		}
+
+		return nil
+	} else {
+		return fmt.Errorf("condition is missing an 'attr' key")
+	}
+
+	return nil
+}
+
+func parseTrigger(sys automationSys, auto automationIntermediate, triggered func()) (Trigger, error) {
+	if auto.Trigger.Feature != nil {
+		if auto.Trigger.Feature.Condition == nil {
+			return nil, fmt.Errorf("feature trigger missing condition key")
+		}
+
+		ft, err := getFeature(sys, auto.Trigger.Feature.ID, auto.Trigger.Feature.AID)
+		if err != nil {
+			return nil, err
+		}
+
+		err = parseCondition(ft, auto.Trigger.Feature.Condition)
+		return &FeatureTrigger{
+			Count:     auto.Trigger.Feature.Count,
+			Duration:  time.Duration(auto.Trigger.Feature.Duration) * time.Millisecond,
+			Triggered: triggered,
+			Condition: auto.Trigger.Feature.Condition,
+		}, nil
+
+	} else if auto.Trigger.Time != nil {
 		t := auto.Trigger.Time
 
 		var mode string

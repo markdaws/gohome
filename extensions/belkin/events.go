@@ -209,7 +209,7 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 
 			attribute := attr.Only(sensor.Attrs).Clone()
 			attribute.Value = openCloseVal
-			p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+			p.System.Services.EvtBus.Enqueue(&gohome.FeatureAttrsChangedEvt{
 				FeatureID: sensor.ID,
 				Attrs:     feature.NewAttrs(attribute),
 			})
@@ -227,7 +227,7 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 			if swtch != nil {
 				onoff := feature.SwitchCloneAttrs(swtch)
 				onoff.Value = onOffVal
-				p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+				p.System.Services.EvtBus.Enqueue(&gohome.FeatureAttrsChangedEvt{
 					FeatureID: swtch.ID,
 					Attrs:     feature.NewAttrs(onoff),
 				})
@@ -235,7 +235,7 @@ func (p *producer) UPNPNotify(e upnp.NotifyEvent) {
 			if outlet != nil {
 				onoff := feature.OutletCloneAttrs(outlet)
 				onoff.Value = onOffVal
-				p.System.Services.EvtBus.Enqueue(&gohome.FeatureReportingEvt{
+				p.System.Services.EvtBus.Enqueue(&gohome.FeatureAttrsChangedEvt{
 					FeatureID: outlet.ID,
 					Attrs:     feature.NewAttrs(onoff),
 				})
