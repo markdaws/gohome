@@ -27,6 +27,8 @@ func RegisterDeviceHandlers(r *mux.Router, s *apiServer) {
 		apiDevicesHandler(s.system)).Methods("GET")
 	r.HandleFunc("/api/v1/devices",
 		apiAddDeviceHandler(s.systemSavePath, s.system)).Methods("POST")
+	r.HandleFunc("/api/v1/devices/{id}/features",
+		apiDeviceAddFeatureHandler(s.systemSavePath, s.system)).Methods("POST")
 	r.HandleFunc("/api/v1/devices/{id}",
 		apiDeviceHandlerDelete(s.systemSavePath, s.system)).Methods("DELETE")
 	r.HandleFunc("/api/v1/devices/{id}",
@@ -64,11 +66,6 @@ func DevicesToJSON(devs map[string]*gohome.Device) []jsonDevice {
 			hubID = device.Hub.ID
 		}
 
-		var deviceIDs []string
-		for _, dev := range device.Devices {
-			deviceIDs = append(deviceIDs, dev.ID)
-		}
-
 		devices[i] = jsonDevice{
 			ID:              device.ID,
 			Address:         device.Address,
@@ -81,7 +78,6 @@ func DevicesToJSON(devs map[string]*gohome.Device) []jsonDevice {
 			Auth:            authJSON,
 			Type:            string(device.Type),
 			HubID:           hubID,
-			DeviceIDs:       deviceIDs,
 			Features:        device.Features,
 		}
 		i++
@@ -268,6 +264,57 @@ func apiDeviceUpdateFeatureHandler(savePath string, system *gohome.System) func(
 	}
 }
 
+func apiDeviceAddFeatureHandler(savePath string, system *gohome.System) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
+		if err != nil {
+			respBadRequest(fmt.Sprintf("failed to read request body: %s", err), w)
+			return
+		}
+
+		var data feature.Feature
+		if err = json.Unmarshal(body, &data); err != nil {
+			respBadRequest(fmt.Sprintf("invalid request body: %s", err), w)
+			return
+		}
+
+		deviceID := mux.Vars(r)["id"]
+		dev := system.DeviceByID(deviceID)
+		if dev == nil {
+			respBadRequest(fmt.Sprintf("invalid device ID: %s", deviceID), w)
+			return
+		}
+
+		newFeature := feature.NewFromType(data.ID, data.Type)
+		newFeature.Name = data.Name
+		newFeature.Address = data.Address
+		newFeature.Description = data.Description
+		newFeature.DeviceID = data.DeviceID
+
+		valErrs := newFeature.Validate()
+		if valErrs != nil {
+			respValErr(&data, data.ID, valErrs, w)
+			return
+		}
+
+		dev.AddFeature(newFeature)
+		system.AddFeature(newFeature)
+
+		err = store.SaveSystem(savePath, system)
+		if err != nil {
+			respErr(errExt.Wrap(err, "error writing changes to disk"), w)
+			return
+		}
+
+		// Don't support chaning attrs at this moment
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		//TODO: Return new data
+		json.NewEncoder(w).Encode(struct{}{})
+	}
+}
+
 func apiAddDeviceHandler(savePath string, system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -284,7 +331,7 @@ func apiAddDeviceHandler(savePath string, system *gohome.System) func(http.Respo
 			return
 		}
 
-		if dev := system.DeviceByID(data.ID); dev == nil {
+		if dev := system.DeviceByID(data.ID); dev != nil {
 			respBadRequest(fmt.Sprintf("trying to add a device with a duplicate ID: %s", data.ID), w)
 			return
 		}
@@ -351,7 +398,7 @@ func apiAddDeviceHandler(savePath string, system *gohome.System) func(http.Respo
 		}
 
 		for _, f := range data.Features {
-			if ft := system.FeatureByID(f.ID); ft == nil {
+			if ft := system.FeatureByID(f.ID); ft != nil {
 				respBadRequest(fmt.Sprintf("trying to add duplicate feature %s", f.ID), w)
 				return
 			}

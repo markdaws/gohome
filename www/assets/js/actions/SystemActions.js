@@ -50,6 +50,12 @@ var SystemActions = {
         };
     },
 
+    importedFeature: function(featureJson) {
+        return function(dispatch) {
+            dispatch({ type: Constants.FEATURE_IMPORT_RAW, data: featureJson });
+        };
+    },
+
     loadAllAutomation: function() {
         return function(dispatch) {
             dispatch({ type: Constants.AUTOMATION_LOAD_ALL });

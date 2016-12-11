@@ -84,6 +84,21 @@ module.exports = function(state, action) {
     case Constants.DEVICE_IMPORT_FAIL:
         break;
 
+    case Constants.FEATURE_IMPORT:
+        break;
+    case Constants.FEATURE_IMPORT_RAW:
+        newState.devices = newState.devices.map(function(device) {
+            if (device.id === action.data.deviceId) {
+                //TODO: Clone device?
+                device.features = device.features.slice();
+                device.features.push(action.data);
+                return device;
+            }
+            return device;
+        });
+        break;
+    case Constants.FEATURE_IMPORT_FAIL:
+        break;
     case Constants.DEVICE_DESTROY:
         break;
 

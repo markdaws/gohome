@@ -97,7 +97,6 @@ func writeDiscoveryResults(sys *gohome.System, result *gohome.DiscoveryResults, 
 
 		//Need to fix the hubID if it points to a dupe device
 		if dupeDevice, ok := deviceToDupe[device.Hub.ID]; ok {
-			fmt.Printf("found dupe hub on: %s\n", device.Name)
 			device.Hub = dupeDevice
 		}
 
@@ -125,25 +124,20 @@ func writeDiscoveryResults(sys *gohome.System, result *gohome.DiscoveryResults, 
 		jsonDupeDevice := DevicesToJSON(map[string]*gohome.Device{existingDevice.ID: existingDevice})[0]
 		jsonDupeDevice.IsDupe = true
 
-		_ = dupeDevice
-		//TODO:
-		/*
-			for i, _ := range jsonDupeDevice.Feature {
-				jsonDupeDevice.Features[i].IsDupe = true
-			}*/
+		// Mark all features as dupes since they are already in the system
+		features := jsonDupeDevice.Features
+		for _, f := range features {
+			f.IsDupe = true
+		}
 
-		//TODO:
-		/*
-			for _, feature := range dupeDevice.Features {
-				if _, isDupe := existingDevice.IsDupeFeature(feature); !isDupe {
-					//TODO: Need to clone things here...
-					jsonSensor := SensorsToJSON(map[string]*gohome.Sensor{sen.ID: sen})[0]
-					feature.IsDupe = false
-					feature.DeviceID = existingDevice.ID
-					//Already in lthe list
-					jsonDupeDevice.Sensors = append(jsonDupeDevice.Sensors, jsonSensor)
-				}
-			}*/
+		// Loop through the new items returned from the discovery results, see which ones
+		// are dupes and non dupes
+		for _, feature := range dupeDevice.Features {
+			isDupe := existingDevice.IsDupeFeature(feature)
+			feature.IsDupe = isDupe
+			feature.DeviceID = existingDevice.ID
+			jsonDupeDevice.Features = append(jsonDupeDevice.Features, feature)
+		}
 
 		jsonDevices = append(jsonDevices, jsonDupeDevice)
 	}

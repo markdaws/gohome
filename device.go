@@ -69,10 +69,8 @@ type Device struct {
 	// SoftwareVersion can store what version of software is installed on the device
 	SoftwareVersion string
 
-	// Devices - keyed by device address not global ID
-	Devices map[string]*Device
-
 	// Features is a slice of features the device owns and exports
+	// TODO: Hide behind getter/setter, mutex
 	Features []*feature.Feature
 
 	// CmdBuilder knows how to take an abstract command like ZoneSetLevel and turn
@@ -116,7 +114,6 @@ func NewDevice(
 		Name:            name,
 		Description:     description,
 		Hub:             hub,
-		Devices:         make(map[string]*Device),
 		Auth:            auth,
 		CmdBuilder:      cmdBuilder,
 		Connections:     connPool,
@@ -152,15 +149,6 @@ func (d *Device) AddFeature(f *feature.Feature) error {
 	return nil
 }
 
-// AddDevice adds a device as a child of this device
-func (d *Device) AddDevice(cd *Device) error {
-	if _, ok := d.Devices[cd.Address]; ok {
-		return fmt.Errorf("device with address: %s already added to parent device", cd.Address)
-	}
-	d.Devices[cd.Address] = cd
-	return nil
-}
-
 // OwnedFeature returns a slice of features that the device owns, where the
 // map is keyed by feature.ID
 func (d *Device) OwnedFeatures(featureIDs map[string]bool) []*feature.Feature {
@@ -188,21 +176,6 @@ func (d *Device) ButtonByAddress(addr string) *feature.Feature {
 	return nil
 }
 
-/*
-//TODO: Remove
-// IsDupeZone returns true if this zone is a dupe of one the device already owns. This check
-// is not based on ID equality, since users could try to import a zone and it is given a new
-// ID when it is scanned, but it might be a dupe of a zone we previously scanned, so we have
-// to check equality on other properties
-func (d *Device) IsDupeZone(z *zone.Zone) (*zone.Zone, bool) {
-	zone, ok := d.Zones[z.Address]
-	return zone, ok
-}
-*/
-
-//TODO: Is Dupe Feature, remove code above
-//TODO: Address required?
-
 // FeatureByAddress returns the first feature that matches the specified address
 // nil if no match is found
 func (d *Device) FeatureTypeByAddress(t string, addr string) *feature.Feature {
@@ -212,4 +185,15 @@ func (d *Device) FeatureTypeByAddress(t string, addr string) *feature.Feature {
 		}
 	}
 	return nil
+}
+
+// IsDupeFeature returns true if this is considered a duplicates feature, otherwise false. Features
+// are considered equal, if they have the same type and address.
+func (d *Device) IsDupeFeature(f *feature.Feature) bool {
+	for _, ft := range d.Features {
+		if ft.Type == f.Type && ft.Address == f.Address {
+			return true
+		}
+	}
+	return false
 }

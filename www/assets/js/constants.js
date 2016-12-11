@@ -54,6 +54,10 @@ module.exports = keyMirror({
     FEATURE_UPDATE_RAW: null,
     FEATURE_UPDATE_FAIL: null,
 
+    FEATURE_IMPORT: null,
+    FEATURE_IMPORT_RAW: null,
+    FEATURE_IMPORT_FAIL: null,
+
     // Load all of the scenes from the server
     SCENE_LOAD_ALL: null,
     SCENE_LOAD_ALL_RAW: null,

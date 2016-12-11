@@ -162,11 +162,13 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 					}
 
 				case *lutronExt.BtnPressEvt:
-					sourceDevice, ok := p.Device.Devices[e.DeviceAddress]
-					if !ok {
-						return
-					}
-					_ = sourceDevice
+					/*
+						sourceDevice, ok := p.Device.Devices[e.DeviceAddress]
+						if !ok {
+							return
+						}
+						_ = sourceDevice
+					*/
 
 					//TODO: Fix
 					/*
@@ -182,11 +184,13 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 						}*/
 
 				case *lutronExt.BtnReleaseEvt:
-					sourceDevice, ok := p.Device.Devices[e.DeviceAddress]
-					if !ok {
-						return
-					}
-					_ = sourceDevice
+					/*
+						sourceDevice, ok := p.Device.Devices[e.DeviceAddress]
+						if !ok {
+							return
+						}
+						_ = sourceDevice
+					*/
 
 					//TODO: Fix
 					/*

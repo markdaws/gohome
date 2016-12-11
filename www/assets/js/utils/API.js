@@ -425,6 +425,22 @@ var API = {
         });
     },
 
+    featureCreate: function(deviceId, featureJson, callback) {
+        $.ajax({
+            url: this.url('/api/v1/devices/' + deviceId + '/features'),
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(featureJson),
+            success: function(data) {
+                callback(null, data);
+            },
+            error: function(xhr, status, err) {
+                callback(xhr.responseJSON.err);
+            }.bind(this)
+        });
+    },
+
     // discoverersList lists all of the discoverers
     discoverersList: function(callback) {
         $.ajax({

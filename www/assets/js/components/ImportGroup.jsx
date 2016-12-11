@@ -88,11 +88,12 @@ var ImportGroup = React.createClass({
             featureErrors: {},
         });
 
-        // TODO: Remove, do on server
         // When we are saving devices, we need to sort the devices so that
         // we save devices that don't have a hub before devices that do have
         // a hub, because we can't save a device that points to a hub that we
-        // haven't potentially saved yet
+        // haven't potentially saved yet. Don't support hubs having hubs right
+        // now otherwise we would need a dependency graph traversal instead of
+        // a simple sort
         var sortedDevices = ([].concat(this.state.devices)).sort(function(x, y) {
             var xHasHub = x.hubId !== '';
             var yHasHub = y.hubId !== '';
@@ -126,33 +127,37 @@ var ImportGroup = React.createClass({
             }.bind(this));
 
             if (device.isDupe || this._savedDevices[device.id]) {
-                //TODO:
-                // Don't save the device, save any new features
-                function saveZone(index) {
-                    if (index >= device.zones.length) {
-                        // saved all of the zones, move on to the sensors
-                        //TODO:saveSensor.bind(this)(0);
+                var saveFeature = (index) => {
+                    if (index >= device.features.length) {
+                        // Saved all the features, move on to the next device
                         saveDevice.bind(this)(devIndex + 1);
                         return;
                     }
 
-                    var zone = device.zones[index];
-                    Api.zoneCreate(zone, function(err, zoneData) {
+                    var feature = device.features[index];
+                    if (this._savedFeatures[feature.id]) {
+                        // Already saved, can skip
+                        saveFeature(index + 1);
+                        return
+                    }
+
+                    Api.featureCreate(device.id, feature, function(err, featureData) {
                         if (err) {
-                            var zoneErrs = {};
-                            zoneErrs[zone.id] = err.validation.errors[zone.id];
+                            var featureErrs = {};
+                            featureErrs[feature.id] = err.validation.errors[feature.id];
                             this.setState({
                                 saveButtonStatus: 'error',
-                                zoneErrors: zoneErrs
+                                featureErrors: featureErrs
                             });
                             return
                         }
-                        this.props.createdZones([ zone ]);
-                        this._savedZones[zone.id] = true;
-                        saveZone.bind(this)(index + 1);
+
+                        this.props.createdFeature(feature);
+                        this._savedFeatures[feature.id] = true;
+                        saveFeature(index + 1);
                     }.bind(this));
                 }
-                saveZone.bind(this)(0);
+                saveFeature(0);
             } else {
                 Api.deviceCreate(device, function(err, deviceData) {
                     if (err) {

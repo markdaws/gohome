@@ -97,8 +97,7 @@ var DiscoverDevices = React.createClass({
             importGroup = <ImportGroup
                     devices={this.state.devices}
                     createdDevice={this.props.importedDevice}
-                    createdZones={this.props.importedZones}
-                    createdSensors={this.props.importedSensors} />;
+                    createdFeature={this.props.importedFeature} />;
         }
 
         return (
@@ -127,6 +126,9 @@ function mapDispatchToProps(dispatch) {
     return {
         importedDevice: function(deviceJson) {
             dispatch(SystemActions.importedDevice(deviceJson));
+        },
+        importedFeature: function(featureJson) {
+            dispatch(SystemActions.importedFeature(featureJson));
         },
     };
 }

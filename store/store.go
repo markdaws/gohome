@@ -97,10 +97,6 @@ func LoadSystem(path string) (*gohome.System, error) {
 	// since we only store device ID pointers in the JSON
 	for _, d := range s.Devices {
 		dev := sys.DeviceByID(d.ID)
-		for _, dID := range d.DeviceIDs {
-			childDev := sys.DeviceByID(dID)
-			dev.AddDevice(childDev)
-		}
 
 		// If the device has a hub we have to correctly set up that relationship
 		if d.HubID != "" {
@@ -302,12 +298,6 @@ func SaveSystem(savePath string, s *gohome.System) error {
 
 		d.Features = device.Features
 
-		d.DeviceIDs = make([]string, len(device.Devices))
-		di := 0
-		for _, dev := range device.Devices {
-			d.DeviceIDs[di] = dev.ID
-			di++
-		}
 		out.Devices[i] = d
 		i++
 	}

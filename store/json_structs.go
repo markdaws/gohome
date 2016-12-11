@@ -49,7 +49,6 @@ type deviceJSON struct {
 	ModelName       string             `json:"modelName"`
 	SoftwareVersion string             `json:"softwareVersion"`
 	HubID           string             `json:"hubId"`
-	DeviceIDs       []string           `json:"deviceIds"`
 	Auth            *authJSON          `json:"auth"`
 	ConnPool        *connPoolJSON      `json:"connPool"`
 	Features        []*feature.Feature `json:"features"`

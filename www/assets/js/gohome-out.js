@@ -50,8 +50,8 @@
 	var ReactDOM = __webpack_require__(34);
 	var ControlApp = __webpack_require__(172);
 	var Provider = __webpack_require__(173).Provider;
-	var store = __webpack_require__(300);
-	var Login = __webpack_require__(308);
+	var store = __webpack_require__(312);
+	var Login = __webpack_require__(321);
 	var Api = __webpack_require__(204);
 
 	/*
@@ -21476,10 +21476,10 @@
 	var ReactRedux = __webpack_require__(173);
 	var System = __webpack_require__(201);
 	var SceneList = __webpack_require__(249);
-	var FeatureList = __webpack_require__(293);
-	var AutomationList = __webpack_require__(314);
-	var Logging = __webpack_require__(296);
-	var SceneActions = __webpack_require__(284);
+	var FeatureList = __webpack_require__(296);
+	var AutomationList = __webpack_require__(299);
+	var Logging = __webpack_require__(308);
+	var SceneActions = __webpack_require__(288);
 	var SystemActions = __webpack_require__(205);
 	var BEMHelper = __webpack_require__(209);
 
@@ -21487,7 +21487,7 @@
 	    name: 'ControlApp',
 	    prefix: 'b-'
 	});
-	__webpack_require__(298);
+	__webpack_require__(310);
 
 	var ControlApp = React.createClass({
 	    displayName: 'ControlApp',
@@ -23699,8 +23699,7 @@
 	            importGroup = React.createElement(ImportGroup, {
 	                devices: this.state.devices,
 	                createdDevice: this.props.importedDevice,
-	                createdZones: this.props.importedZones,
-	                createdSensors: this.props.importedSensors });
+	                createdFeature: this.props.importedFeature });
 	        }
 
 	        return React.createElement(
@@ -23741,6 +23740,9 @@
 	    return {
 	        importedDevice: function importedDevice(deviceJson) {
 	            dispatch(SystemActions.importedDevice(deviceJson));
+	        },
+	        importedFeature: function importedFeature(featureJson) {
+	            dispatch(SystemActions.importedFeature(featureJson));
 	        }
 	    };
 	}
@@ -24180,6 +24182,22 @@
 	        });
 	    },
 
+	    featureCreate: function featureCreate(deviceId, featureJson, callback) {
+	        $.ajax({
+	            url: this.url('/api/v1/devices/' + deviceId + '/features'),
+	            type: 'POST',
+	            dataType: 'json',
+	            contentType: 'application/json; charset=utf-8',
+	            data: JSON.stringify(featureJson),
+	            success: function success(data) {
+	                callback(null, data);
+	            },
+	            error: function (xhr, status, err) {
+	                callback(xhr.responseJSON.err);
+	            }.bind(this)
+	        });
+	    },
+
 	    // discoverersList lists all of the discoverers
 	    discoverersList: function discoverersList(callback) {
 	        $.ajax({
@@ -24304,6 +24322,12 @@
 	        };
 	    },
 
+	    importedFeature: function importedFeature(featureJson) {
+	        return function (dispatch) {
+	            dispatch({ type: Constants.FEATURE_IMPORT_RAW, data: featureJson });
+	        };
+	    },
+
 	    loadAllAutomation: function loadAllAutomation() {
 	        return function (dispatch) {
 	            dispatch({ type: Constants.AUTOMATION_LOAD_ALL });
@@ -24396,6 +24420,10 @@
 	    FEATURE_UPDATE: null,
 	    FEATURE_UPDATE_RAW: null,
 	    FEATURE_UPDATE_FAIL: null,
+
+	    FEATURE_IMPORT: null,
+	    FEATURE_IMPORT_RAW: null,
+	    FEATURE_IMPORT_FAIL: null,
 
 	    // Load all of the scenes from the server
 	    SCENE_LOAD_ALL: null,
@@ -24592,11 +24620,12 @@
 	            featureErrors: {}
 	        });
 
-	        // TODO: Remove, do on server
 	        // When we are saving devices, we need to sort the devices so that
 	        // we save devices that don't have a hub before devices that do have
 	        // a hub, because we can't save a device that points to a hub that we
-	        // haven't potentially saved yet
+	        // haven't potentially saved yet. Don't support hubs having hubs right
+	        // now otherwise we would need a dependency graph traversal instead of
+	        // a simple sort
 	        var sortedDevices = [].concat(this.state.devices).sort(function (x, y) {
 	            var xHasHub = x.hubId !== '';
 	            var yHasHub = y.hubId !== '';
@@ -24629,36 +24658,37 @@
 	            }.bind(this));
 
 	            if (device.isDupe || this._savedDevices[device.id]) {
-	                (function () {
-	                    //TODO:
-	                    // Don't save the device, save any new features
-	                    var saveZone = function saveZone(index) {
-	                        if (index >= device.zones.length) {
-	                            // saved all of the zones, move on to the sensors
-	                            //TODO:saveSensor.bind(this)(0);
-	                            saveDevice.bind(this)(devIndex + 1);
+	                var saveFeature = function saveFeature(index) {
+	                    if (index >= device.features.length) {
+	                        // Saved all the features, move on to the next device
+	                        saveDevice.bind(_this)(devIndex + 1);
+	                        return;
+	                    }
+
+	                    var feature = device.features[index];
+	                    if (_this._savedFeatures[feature.id]) {
+	                        // Already saved, can skip
+	                        saveFeature(index + 1);
+	                        return;
+	                    }
+
+	                    Api.featureCreate(device.id, feature, function (err, featureData) {
+	                        if (err) {
+	                            var featureErrs = {};
+	                            featureErrs[feature.id] = err.validation.errors[feature.id];
+	                            this.setState({
+	                                saveButtonStatus: 'error',
+	                                featureErrors: featureErrs
+	                            });
 	                            return;
 	                        }
 
-	                        var zone = device.zones[index];
-	                        Api.zoneCreate(zone, function (err, zoneData) {
-	                            if (err) {
-	                                var zoneErrs = {};
-	                                zoneErrs[zone.id] = err.validation.errors[zone.id];
-	                                this.setState({
-	                                    saveButtonStatus: 'error',
-	                                    zoneErrors: zoneErrs
-	                                });
-	                                return;
-	                            }
-	                            this.props.createdZones([zone]);
-	                            this._savedZones[zone.id] = true;
-	                            saveZone.bind(this)(index + 1);
-	                        }.bind(this));
-	                    };
-
-	                    saveZone.bind(_this)(0);
-	                })();
+	                        this.props.createdFeature(feature);
+	                        this._savedFeatures[feature.id] = true;
+	                        saveFeature(index + 1);
+	                    }.bind(_this));
+	                };
+	                saveFeature(0);
 	            } else {
 	                Api.deviceCreate(device, function (err, deviceData) {
 	                    if (err) {
@@ -27839,7 +27869,7 @@
 	var SceneControl = __webpack_require__(253);
 	var SceneInfo = __webpack_require__(256);
 	var UniqueIdMixin = __webpack_require__(221);
-	var SceneActions = __webpack_require__(284);
+	var SceneActions = __webpack_require__(288);
 	var Grid = __webpack_require__(227);
 	var BEMHelper = __webpack_require__(209);
 	var Feature = __webpack_require__(216);
@@ -27848,7 +27878,7 @@
 	    name: 'SceneList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(291);
+	__webpack_require__(294);
 
 	var SceneList = React.createClass({
 	    displayName: 'SceneList',
@@ -28163,18 +28193,18 @@
 	var InputValidationMixin = __webpack_require__(222);
 	var UniqueIdMixin = __webpack_require__(221);
 	var CommandInfo = __webpack_require__(257);
-	var SceneActionPicker = __webpack_require__(311);
+	var SceneActionPicker = __webpack_require__(291);
 	var Feature = __webpack_require__(216);
-	var SceneActions = __webpack_require__(284);
+	var SceneActions = __webpack_require__(288);
 	var BEMHelper = __webpack_require__(209);
 	var Api = __webpack_require__(204);
-	var Uuid = __webpack_require__(287);
+	var Uuid = __webpack_require__(260);
 
 	var classes = new BEMHelper({
 	    name: 'SceneInfo',
 	    prefix: 'b-'
 	});
-	__webpack_require__(289);
+	__webpack_require__(292);
 
 	var SceneInfo = React.createClass({
 	    displayName: 'SceneInfo',
@@ -28434,20 +28464,20 @@
 
 	var React = __webpack_require__(1);
 	var ReactRedux = __webpack_require__(173);
-	var SceneSetCommand = __webpack_require__(312);
+	var SceneSetCommand = __webpack_require__(258);
 	var SaveBtn = __webpack_require__(223);
 	var Feature = __webpack_require__(216);
-	var FeatureSetAttrsCommand = __webpack_require__(258);
+	var FeatureSetAttrsCommand = __webpack_require__(262);
 	var Api = __webpack_require__(204);
 	var Constants = __webpack_require__(206);
-	var SceneActions = __webpack_require__(284);
+	var SceneActions = __webpack_require__(288);
 	var BEMHelper = __webpack_require__(209);
 
 	var classes = new BEMHelper({
 	    name: 'CommandInfo',
 	    prefix: 'b-'
 	});
-	__webpack_require__(285);
+	__webpack_require__(289);
 
 	var CommandInfo = React.createClass({
 	    displayName: 'CommandInfo',
@@ -28580,17 +28610,378 @@
 	'use strict';
 
 	var React = __webpack_require__(1);
+	var InputValidationMixin = __webpack_require__(222);
+	var UniqueIdMixin = __webpack_require__(221);
+	var ScenePicker = __webpack_require__(259);
+	var uuid = __webpack_require__(260);
+
+	var SceneSetCommand = module.exports = React.createClass({
+	    displayName: 'exports',
+
+	    mixins: [UniqueIdMixin, InputValidationMixin],
+	    getInitialState: function getInitialState() {
+	        return {
+	            clientId: uuid.v4(),
+	            sceneId: this.props.command.attributes.SceneID || ''
+	        };
+	    },
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            scenes: []
+	        };
+	    },
+
+	    toJson: function toJson() {
+	        return {
+	            type: 'sceneSet',
+	            clientId: this.state.clientId,
+	            attributes: {
+	                SceneID: this.state.sceneId
+	            }
+	        };
+	    },
+
+	    scenePickerChanged: function scenePickerChanged(sceneId) {
+	        this.setState({ sceneId: sceneId });
+	        this.props.onChanged && this.props.onChanged();
+	    },
+
+	    render: function render() {
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-SceneSetCommand' },
+	            React.createElement(
+	                'h4',
+	                null,
+	                'Scene Set'
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "attributes_SceneID") },
+	                React.createElement(ScenePicker, {
+	                    disabled: this.props.disabled,
+	                    changed: this.scenePickerChanged,
+	                    scenes: this.props.scenes,
+	                    sceneId: this.state.sceneId,
+	                    parentSceneId: this.props.parentSceneId }),
+	                this.errMsg("attributes_SceneID")
+	            )
+	        );
+	    }
+	});
+	module.exports = SceneSetCommand;
+
+/***/ },
+/* 259 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+
+	var ScenePicker = React.createClass({
+	    displayName: 'ScenePicker',
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.sceneId || ''
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setState({ value: evt.target.value });
+	        this.props.changed && this.props.changed(evt.target.value);
+	    },
+
+	    render: function render() {
+	        var options = [];
+	        this.props.scenes.forEach(function (scene) {
+	            if (!scene.id) {
+	                // If this scene has not been saved it can't be used
+	                return;
+	            }
+
+	            // Can't set itself
+	            if (scene.id === this.props.parentSceneId) {
+	                return;
+	            }
+
+	            options.push(React.createElement(
+	                'option',
+	                { key: scene.id, value: scene.id },
+	                scene.name
+	            ));
+	        }.bind(this));
+
+	        return React.createElement(
+	            'div',
+	            { className: 'cmp-ScenePicker' },
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    disabled: this.props.disabled,
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                React.createElement(
+	                    'option',
+	                    { value: '' },
+	                    'Select a Scene...'
+	                ),
+	                options
+	            )
+	        );
+	    }
+	});
+	module.exports = ScenePicker;
+
+/***/ },
+/* 260 */
+/***/ function(module, exports, __webpack_require__) {
+
+	//     uuid.js
+	//
+	//     Copyright (c) 2010-2012 Robert Kieffer
+	//     MIT License - http://opensource.org/licenses/mit-license.php
+
+	// Unique ID creation requires a high quality random # generator.  We feature
+	// detect to determine the best RNG source, normalizing to a function that
+	// returns 128-bits of randomness, since that's what's usually required
+	var _rng = __webpack_require__(261);
+
+	// Maps for number <-> hex string conversion
+	var _byteToHex = [];
+	var _hexToByte = {};
+	for (var i = 0; i < 256; i++) {
+	  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
+	  _hexToByte[_byteToHex[i]] = i;
+	}
+
+	// **`parse()` - Parse a UUID into it's component bytes**
+	function parse(s, buf, offset) {
+	  var i = (buf && offset) || 0, ii = 0;
+
+	  buf = buf || [];
+	  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
+	    if (ii < 16) { // Don't overflow!
+	      buf[i + ii++] = _hexToByte[oct];
+	    }
+	  });
+
+	  // Zero out remaining bytes if string was short
+	  while (ii < 16) {
+	    buf[i + ii++] = 0;
+	  }
+
+	  return buf;
+	}
+
+	// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
+	function unparse(buf, offset) {
+	  var i = offset || 0, bth = _byteToHex;
+	  return  bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] + '-' +
+	          bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]] +
+	          bth[buf[i++]] + bth[buf[i++]];
+	}
+
+	// **`v1()` - Generate time-based UUID**
+	//
+	// Inspired by https://github.com/LiosK/UUID.js
+	// and http://docs.python.org/library/uuid.html
+
+	// random #'s we need to init node and clockseq
+	var _seedBytes = _rng();
+
+	// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+	var _nodeId = [
+	  _seedBytes[0] | 0x01,
+	  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
+	];
+
+	// Per 4.2.2, randomize (14 bit) clockseq
+	var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
+
+	// Previous uuid creation time
+	var _lastMSecs = 0, _lastNSecs = 0;
+
+	// See https://github.com/broofa/node-uuid for API details
+	function v1(options, buf, offset) {
+	  var i = buf && offset || 0;
+	  var b = buf || [];
+
+	  options = options || {};
+
+	  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
+
+	  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+	  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+	  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+	  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+	  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
+
+	  // Per 4.2.1.2, use count of uuid's generated during the current clock
+	  // cycle to simulate higher resolution clock
+	  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
+
+	  // Time since last uuid creation (in msecs)
+	  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
+
+	  // Per 4.2.1.2, Bump clockseq on clock regression
+	  if (dt < 0 && options.clockseq === undefined) {
+	    clockseq = clockseq + 1 & 0x3fff;
+	  }
+
+	  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+	  // time interval
+	  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
+	    nsecs = 0;
+	  }
+
+	  // Per 4.2.1.2 Throw error if too many uuids are requested
+	  if (nsecs >= 10000) {
+	    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
+	  }
+
+	  _lastMSecs = msecs;
+	  _lastNSecs = nsecs;
+	  _clockseq = clockseq;
+
+	  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+	  msecs += 12219292800000;
+
+	  // `time_low`
+	  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+	  b[i++] = tl >>> 24 & 0xff;
+	  b[i++] = tl >>> 16 & 0xff;
+	  b[i++] = tl >>> 8 & 0xff;
+	  b[i++] = tl & 0xff;
+
+	  // `time_mid`
+	  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
+	  b[i++] = tmh >>> 8 & 0xff;
+	  b[i++] = tmh & 0xff;
+
+	  // `time_high_and_version`
+	  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+	  b[i++] = tmh >>> 16 & 0xff;
+
+	  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+	  b[i++] = clockseq >>> 8 | 0x80;
+
+	  // `clock_seq_low`
+	  b[i++] = clockseq & 0xff;
+
+	  // `node`
+	  var node = options.node || _nodeId;
+	  for (var n = 0; n < 6; n++) {
+	    b[i + n] = node[n];
+	  }
+
+	  return buf ? buf : unparse(b);
+	}
+
+	// **`v4()` - Generate random UUID**
+
+	// See https://github.com/broofa/node-uuid for API details
+	function v4(options, buf, offset) {
+	  // Deprecated - 'format' argument, as supported in v1.2
+	  var i = buf && offset || 0;
+
+	  if (typeof(options) == 'string') {
+	    buf = options == 'binary' ? new Array(16) : null;
+	    options = null;
+	  }
+	  options = options || {};
+
+	  var rnds = options.random || (options.rng || _rng)();
+
+	  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+	  rnds[6] = (rnds[6] & 0x0f) | 0x40;
+	  rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+	  // Copy bytes to buffer, if provided
+	  if (buf) {
+	    for (var ii = 0; ii < 16; ii++) {
+	      buf[i + ii] = rnds[ii];
+	    }
+	  }
+
+	  return buf || unparse(rnds);
+	}
+
+	// Export public API
+	var uuid = v4;
+	uuid.v1 = v1;
+	uuid.v4 = v4;
+	uuid.parse = parse;
+	uuid.unparse = unparse;
+
+	module.exports = uuid;
+
+
+/***/ },
+/* 261 */
+/***/ function(module, exports) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {
+	var rng;
+
+	var crypto = global.crypto || global.msCrypto; // for IE 11
+	if (crypto && crypto.getRandomValues) {
+	  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
+	  // Moderately fast, high quality
+	  var _rnds8 = new Uint8Array(16);
+	  rng = function whatwgRNG() {
+	    crypto.getRandomValues(_rnds8);
+	    return _rnds8;
+	  };
+	}
+
+	if (!rng) {
+	  // Math.random()-based (RNG)
+	  //
+	  // If all else fails, use Math.random().  It's fast, but is of unspecified
+	  // quality.
+	  var  _rnds = new Array(16);
+	  rng = function() {
+	    for (var i = 0, r; i < 16; i++) {
+	      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+	      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+	    }
+
+	    return _rnds;
+	  };
+	}
+
+	module.exports = rng;
+
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 262 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
 	var Feature = __webpack_require__(216);
 	var BEMHelper = __webpack_require__(209);
-	var DevicePicker = __webpack_require__(259);
-	var FeaturePicker = __webpack_require__(260);
-	var FeatureControl = __webpack_require__(261);
+	var DevicePicker = __webpack_require__(263);
+	var FeaturePicker = __webpack_require__(264);
+	var FeatureControl = __webpack_require__(265);
 
 	var classes = new BEMHelper({
 	    name: 'FeatureSetAttrsCommand',
 	    prefix: 'b-'
 	});
-	__webpack_require__(282);
+	__webpack_require__(286);
 
 	var FeatureSetAttrsCommand = React.createClass({
 	    displayName: 'FeatureSetAttrsCommand',
@@ -28771,7 +29162,7 @@
 	module.exports = FeatureSetAttrsCommand;
 
 /***/ },
-/* 259 */
+/* 263 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28847,7 +29238,7 @@
 	module.exports = DevicePicker;
 
 /***/ },
-/* 260 */
+/* 264 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -28919,7 +29310,7 @@
 	module.exports = FeaturePicker;
 
 /***/ },
-/* 261 */
+/* 265 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28927,12 +29318,12 @@
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
 	var Attribute = __webpack_require__(217);
-	var BrightnessAttr = __webpack_require__(262);
-	var OnOffAttr = __webpack_require__(265);
-	var TempAttr = __webpack_require__(268);
-	var HSLAttr = __webpack_require__(271);
-	var OffsetAttr = __webpack_require__(274);
-	var OpenClosedAttr = __webpack_require__(277);
+	var BrightnessAttr = __webpack_require__(266);
+	var OnOffAttr = __webpack_require__(269);
+	var TempAttr = __webpack_require__(272);
+	var HSLAttr = __webpack_require__(275);
+	var OffsetAttr = __webpack_require__(278);
+	var OpenClosedAttr = __webpack_require__(281);
 	var Feature = __webpack_require__(216);
 	var BEMHelper = __webpack_require__(209);
 
@@ -28940,7 +29331,7 @@
 	    name: 'FeatureControl',
 	    prefix: 'b-'
 	});
-	__webpack_require__(280);
+	__webpack_require__(284);
 
 	var FeatureControl = React.createClass({
 	    displayName: 'FeatureControl',
@@ -29087,7 +29478,7 @@
 	module.exports = FeatureControl;
 
 /***/ },
-/* 262 */
+/* 266 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29102,7 +29493,7 @@
 	    name: 'BrightnessAttr',
 	    prefix: 'b-'
 	});
-	__webpack_require__(263);
+	__webpack_require__(267);
 
 	var BrightnessAttr = React.createClass({
 	    displayName: 'BrightnessAttr',
@@ -29192,13 +29583,13 @@
 	module.exports = BrightnessAttr;
 
 /***/ },
-/* 263 */
+/* 267 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(264);
+	var content = __webpack_require__(268);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -29218,7 +29609,7 @@
 	}
 
 /***/ },
-/* 264 */
+/* 268 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -29232,7 +29623,7 @@
 
 
 /***/ },
-/* 265 */
+/* 269 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29246,7 +29637,7 @@
 	    name: 'OnOffAttr',
 	    prefix: 'b-'
 	});
-	__webpack_require__(266);
+	__webpack_require__(270);
 
 	var OnOffAttr = React.createClass({
 	    displayName: 'OnOffAttr',
@@ -29323,13 +29714,13 @@
 	module.exports = OnOffAttr;
 
 /***/ },
-/* 266 */
+/* 270 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(267);
+	var content = __webpack_require__(271);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -29349,7 +29740,7 @@
 	}
 
 /***/ },
-/* 267 */
+/* 271 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -29363,7 +29754,7 @@
 
 
 /***/ },
-/* 268 */
+/* 272 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29378,7 +29769,7 @@
 	    name: 'TempAttr',
 	    prefix: 'b-'
 	});
-	__webpack_require__(269);
+	__webpack_require__(273);
 
 	var TempAttr = React.createClass({
 	    displayName: 'TempAttr',
@@ -29468,13 +29859,13 @@
 	module.exports = TempAttr;
 
 /***/ },
-/* 269 */
+/* 273 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(270);
+	var content = __webpack_require__(274);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -29494,7 +29885,7 @@
 	}
 
 /***/ },
-/* 270 */
+/* 274 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -29508,7 +29899,7 @@
 
 
 /***/ },
-/* 271 */
+/* 275 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29523,7 +29914,7 @@
 	    name: 'HSLAttr',
 	    prefix: 'b-'
 	});
-	__webpack_require__(272);
+	__webpack_require__(276);
 
 	var HSLAttr = React.createClass({
 	    displayName: 'HSLAttr',
@@ -29606,13 +29997,13 @@
 	module.exports = HSLAttr;
 
 /***/ },
-/* 272 */
+/* 276 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(273);
+	var content = __webpack_require__(277);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -29632,7 +30023,7 @@
 	}
 
 /***/ },
-/* 273 */
+/* 277 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -29646,7 +30037,7 @@
 
 
 /***/ },
-/* 274 */
+/* 278 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29661,7 +30052,7 @@
 	    name: 'OffsetAttr',
 	    prefix: 'b-'
 	});
-	__webpack_require__(275);
+	__webpack_require__(279);
 
 	var OffsetAttr = React.createClass({
 	    displayName: 'OffsetAttr',
@@ -29751,13 +30142,13 @@
 	module.exports = OffsetAttr;
 
 /***/ },
-/* 275 */
+/* 279 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(276);
+	var content = __webpack_require__(280);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -29777,7 +30168,7 @@
 	}
 
 /***/ },
-/* 276 */
+/* 280 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -29791,7 +30182,7 @@
 
 
 /***/ },
-/* 277 */
+/* 281 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29805,7 +30196,7 @@
 	    name: 'OpenClosedAttr',
 	    prefix: 'b-'
 	});
-	__webpack_require__(278);
+	__webpack_require__(282);
 
 	var OpenClosedAttr = React.createClass({
 	    displayName: 'OpenClosedAttr',
@@ -29883,13 +30274,13 @@
 	module.exports = OpenClosedAttr;
 
 /***/ },
-/* 278 */
+/* 282 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(279);
+	var content = __webpack_require__(283);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -29909,7 +30300,7 @@
 	}
 
 /***/ },
-/* 279 */
+/* 283 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -29923,13 +30314,13 @@
 
 
 /***/ },
-/* 280 */
+/* 284 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(281);
+	var content = __webpack_require__(285);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -29949,7 +30340,7 @@
 	}
 
 /***/ },
-/* 281 */
+/* 285 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -29963,13 +30354,13 @@
 
 
 /***/ },
-/* 282 */
+/* 286 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(283);
+	var content = __webpack_require__(287);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -29989,7 +30380,7 @@
 	}
 
 /***/ },
-/* 283 */
+/* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -30003,7 +30394,7 @@
 
 
 /***/ },
-/* 284 */
+/* 288 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30121,13 +30512,13 @@
 	module.exports = SceneActions;
 
 /***/ },
-/* 285 */
+/* 289 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(286);
+	var content = __webpack_require__(290);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -30147,7 +30538,7 @@
 	}
 
 /***/ },
-/* 286 */
+/* 290 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -30161,241 +30552,112 @@
 
 
 /***/ },
-/* 287 */
+/* 291 */
 /***/ function(module, exports, __webpack_require__) {
 
-	//     uuid.js
-	//
-	//     Copyright (c) 2010-2012 Robert Kieffer
-	//     MIT License - http://opensource.org/licenses/mit-license.php
+	'use strict';
 
-	// Unique ID creation requires a high quality random # generator.  We feature
-	// detect to determine the best RNG source, normalizing to a function that
-	// returns 128-bits of randomness, since that's what's usually required
-	var _rng = __webpack_require__(288);
+	var React = __webpack_require__(1);
+	var Feature = __webpack_require__(216);
+	var BEMHelper = __webpack_require__(209);
 
-	// Maps for number <-> hex string conversion
-	var _byteToHex = [];
-	var _hexToByte = {};
-	for (var i = 0; i < 256; i++) {
-	  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
-	  _hexToByte[_byteToHex[i]] = i;
-	}
+	var classes = new BEMHelper({
+	    name: 'SceneActionPicker',
+	    prefix: 'b-'
+	});
 
-	// **`parse()` - Parse a UUID into it's component bytes**
-	function parse(s, buf, offset) {
-	  var i = (buf && offset) || 0, ii = 0;
+	var SceneActionPicker = React.createClass({
+	    displayName: 'SceneActionPicker',
 
-	  buf = buf || [];
-	  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
-	    if (ii < 16) { // Don't overflow!
-	      buf[i + ii++] = _hexToByte[oct];
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            excluded: {}
+	        };
+	    },
+
+	    getInitialState: function getInitialState() {
+	        return {
+	            value: this.props.type || 'unknown'
+	        };
+	    },
+
+	    selected: function selected(evt) {
+	        this.setType(evt.target.value);
+	    },
+
+	    setType: function setType(type) {
+	        if (type === 'unknown') {
+	            return;
+	        }
+
+	        // Set back to unknown since we render a new command when this is selected
+	        this.setState({ value: 'unknown' });
+	        this.props.changed && this.props.changed(type);
+	    },
+
+	    render: function render() {
+	        var types = [{ str: "Add new action...", val: 'unknown' }];
+
+	        var excluded = this.props.excluded;
+	        if (!excluded[Feature.Type.Button]) {
+	            types.push({ str: "Button", val: Feature.Type.Button });
+	        }
+	        if (!excluded[Feature.Type.CoolZone]) {
+	            types.push({ str: "Cool Zone", val: Feature.Type.CoolZone });
+	        }
+	        if (!excluded[Feature.Type.HeatZone]) {
+	            types.push({ str: "Heat Zone", val: Feature.Type.HeatZone });
+	        }
+	        if (!excluded[Feature.Type.LightZone]) {
+	            types.push({ str: "Light Zone", val: Feature.Type.LightZone });
+	        }
+	        if (!excluded['Scene']) {
+	            types.push({ str: "Scene Set", val: 'sceneSet' });
+	        }
+	        if (!excluded[Feature.Type.Sensor]) {
+	            types.push({ str: "Sensor", val: Feature.Type.Sensor });
+	        }
+	        if (!excluded[Feature.Type.Switch]) {
+	            types.push({ str: "Switch", val: Feature.Type.Switch });
+	        }
+	        if (!excluded[Feature.Type.Outlet]) {
+	            types.push({ str: "Outlet", val: Feature.Type.Outlet });
+	        }
+	        if (!excluded[Feature.Type.WindowTreatment]) {
+	            types.push({ str: "Window Treatment", val: Feature.Type.WindowTreatment });
+	        }
+
+	        var nodes = types.map(function (type) {
+	            return React.createElement(
+	                'option',
+	                { value: type.val, key: type.val },
+	                type.str
+	            );
+	        });
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            React.createElement(
+	                'select',
+	                {
+	                    className: 'form-control',
+	                    onChange: this.selected,
+	                    value: this.state.value },
+	                nodes
+	            )
+	        );
 	    }
-	  });
-
-	  // Zero out remaining bytes if string was short
-	  while (ii < 16) {
-	    buf[i + ii++] = 0;
-	  }
-
-	  return buf;
-	}
-
-	// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
-	function unparse(buf, offset) {
-	  var i = offset || 0, bth = _byteToHex;
-	  return  bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] + '-' +
-	          bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]] +
-	          bth[buf[i++]] + bth[buf[i++]];
-	}
-
-	// **`v1()` - Generate time-based UUID**
-	//
-	// Inspired by https://github.com/LiosK/UUID.js
-	// and http://docs.python.org/library/uuid.html
-
-	// random #'s we need to init node and clockseq
-	var _seedBytes = _rng();
-
-	// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-	var _nodeId = [
-	  _seedBytes[0] | 0x01,
-	  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
-	];
-
-	// Per 4.2.2, randomize (14 bit) clockseq
-	var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
-
-	// Previous uuid creation time
-	var _lastMSecs = 0, _lastNSecs = 0;
-
-	// See https://github.com/broofa/node-uuid for API details
-	function v1(options, buf, offset) {
-	  var i = buf && offset || 0;
-	  var b = buf || [];
-
-	  options = options || {};
-
-	  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
-
-	  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-	  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-	  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-	  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
-	  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
-
-	  // Per 4.2.1.2, use count of uuid's generated during the current clock
-	  // cycle to simulate higher resolution clock
-	  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
-
-	  // Time since last uuid creation (in msecs)
-	  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
-
-	  // Per 4.2.1.2, Bump clockseq on clock regression
-	  if (dt < 0 && options.clockseq === undefined) {
-	    clockseq = clockseq + 1 & 0x3fff;
-	  }
-
-	  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-	  // time interval
-	  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
-	    nsecs = 0;
-	  }
-
-	  // Per 4.2.1.2 Throw error if too many uuids are requested
-	  if (nsecs >= 10000) {
-	    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
-	  }
-
-	  _lastMSecs = msecs;
-	  _lastNSecs = nsecs;
-	  _clockseq = clockseq;
-
-	  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
-	  msecs += 12219292800000;
-
-	  // `time_low`
-	  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-	  b[i++] = tl >>> 24 & 0xff;
-	  b[i++] = tl >>> 16 & 0xff;
-	  b[i++] = tl >>> 8 & 0xff;
-	  b[i++] = tl & 0xff;
-
-	  // `time_mid`
-	  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
-	  b[i++] = tmh >>> 8 & 0xff;
-	  b[i++] = tmh & 0xff;
-
-	  // `time_high_and_version`
-	  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
-	  b[i++] = tmh >>> 16 & 0xff;
-
-	  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
-	  b[i++] = clockseq >>> 8 | 0x80;
-
-	  // `clock_seq_low`
-	  b[i++] = clockseq & 0xff;
-
-	  // `node`
-	  var node = options.node || _nodeId;
-	  for (var n = 0; n < 6; n++) {
-	    b[i + n] = node[n];
-	  }
-
-	  return buf ? buf : unparse(b);
-	}
-
-	// **`v4()` - Generate random UUID**
-
-	// See https://github.com/broofa/node-uuid for API details
-	function v4(options, buf, offset) {
-	  // Deprecated - 'format' argument, as supported in v1.2
-	  var i = buf && offset || 0;
-
-	  if (typeof(options) == 'string') {
-	    buf = options == 'binary' ? new Array(16) : null;
-	    options = null;
-	  }
-	  options = options || {};
-
-	  var rnds = options.random || (options.rng || _rng)();
-
-	  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-	  rnds[6] = (rnds[6] & 0x0f) | 0x40;
-	  rnds[8] = (rnds[8] & 0x3f) | 0x80;
-
-	  // Copy bytes to buffer, if provided
-	  if (buf) {
-	    for (var ii = 0; ii < 16; ii++) {
-	      buf[i + ii] = rnds[ii];
-	    }
-	  }
-
-	  return buf || unparse(rnds);
-	}
-
-	// Export public API
-	var uuid = v4;
-	uuid.v1 = v1;
-	uuid.v4 = v4;
-	uuid.parse = parse;
-	uuid.unparse = unparse;
-
-	module.exports = uuid;
-
+	});
+	module.exports = SceneActionPicker;
 
 /***/ },
-/* 288 */
-/***/ function(module, exports) {
-
-	/* WEBPACK VAR INJECTION */(function(global) {
-	var rng;
-
-	var crypto = global.crypto || global.msCrypto; // for IE 11
-	if (crypto && crypto.getRandomValues) {
-	  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
-	  // Moderately fast, high quality
-	  var _rnds8 = new Uint8Array(16);
-	  rng = function whatwgRNG() {
-	    crypto.getRandomValues(_rnds8);
-	    return _rnds8;
-	  };
-	}
-
-	if (!rng) {
-	  // Math.random()-based (RNG)
-	  //
-	  // If all else fails, use Math.random().  It's fast, but is of unspecified
-	  // quality.
-	  var  _rnds = new Array(16);
-	  rng = function() {
-	    for (var i = 0, r; i < 16; i++) {
-	      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
-	      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
-	    }
-
-	    return _rnds;
-	  };
-	}
-
-	module.exports = rng;
-
-
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ },
-/* 289 */
+/* 292 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(290);
+	var content = __webpack_require__(293);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -30415,7 +30677,7 @@
 	}
 
 /***/ },
-/* 290 */
+/* 293 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -30429,13 +30691,13 @@
 
 
 /***/ },
-/* 291 */
+/* 294 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(292);
+	var content = __webpack_require__(295);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -30455,7 +30717,7 @@
 	}
 
 /***/ },
-/* 292 */
+/* 295 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -30469,7 +30731,7 @@
 
 
 /***/ },
-/* 293 */
+/* 296 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30481,7 +30743,7 @@
 	var Grid = __webpack_require__(227);
 	var Feature = __webpack_require__(216);
 	var FeatureCell = __webpack_require__(215);
-	var FeatureControl = __webpack_require__(261);
+	var FeatureControl = __webpack_require__(265);
 	var FeatureInfo = __webpack_require__(234);
 	var SystemActions = __webpack_require__(205);
 	var Api = __webpack_require__(204);
@@ -30491,7 +30753,7 @@
 	    name: 'FeatureList',
 	    prefix: 'b-'
 	});
-	__webpack_require__(294);
+	__webpack_require__(297);
 
 	//TODO: Need to get the correct state when we come out of edit mode, currently lost
 
@@ -30913,13 +31175,13 @@
 	module.exports = ReactRedux.connect(null, mapDispatchToProps)(FeatureList);
 
 /***/ },
-/* 294 */
+/* 297 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(295);
+	var content = __webpack_require__(298);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -30939,7 +31201,7 @@
 	}
 
 /***/ },
-/* 295 */
+/* 298 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -30953,14 +31215,311 @@
 
 
 /***/ },
-/* 296 */
+/* 299 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var React = __webpack_require__(1);
+	var AutomationCell = __webpack_require__(300);
+	var Automation = __webpack_require__(303);
+	var Grid = __webpack_require__(227);
+	var BEMHelper = __webpack_require__(209);
+	var Feature = __webpack_require__(216);
+
+	var classes = new BEMHelper({
+	    name: 'AutomationList',
+	    prefix: 'b-'
+	});
+	__webpack_require__(306);
+
+	var AutomationList = React.createClass({
+	    displayName: 'AutomationList',
+
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            automations: []
+	        };
+	    },
+
+	    render: function render() {
+	        var gridCells = this.props.automations.map(function (automation) {
+	            return {
+	                key: automation.name,
+	                cell: React.createElement(AutomationCell, { automation: automation }),
+	                content: React.createElement(Automation, { automation: automation, key: automation.name })
+	            };
+	        });
+
+	        return React.createElement(
+	            'div',
+	            classes(),
+	            React.createElement(
+	                'h2',
+	                classes('header'),
+	                'Automation'
+	            ),
+	            React.createElement(Grid, { cells: gridCells })
+	        );
+	    }
+	});
+
+	module.exports = AutomationList;
+
+/***/ },
+/* 300 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactBemHelper = __webpack_require__(209);
+
+	var _reactBemHelper2 = _interopRequireDefault(_reactBemHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var classes = new _reactBemHelper2.default({
+	    name: 'AutomationCell',
+	    prefix: 'b-'
+	});
+	__webpack_require__(301);
+
+	var AutomationCell = function AutomationCell(_ref) {
+	    var automation = _ref.automation;
+
+	    return _react2.default.createElement(
+	        'div',
+	        classes(),
+	        _react2.default.createElement(
+	            'div',
+	            classes('icon'),
+	            _react2.default.createElement('i', { className: 'icon ion-ios-cog-outline' })
+	        ),
+	        _react2.default.createElement(
+	            'div',
+	            classes('name'),
+	            automation.name
+	        )
+	    );
+	};
+	module.exports = AutomationCell;
+
+/***/ },
+/* 301 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(302);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationCell.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationCell.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 302 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-AutomationCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-AutomationCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-AutomationCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 303 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _API = __webpack_require__(204);
+
+	var _API2 = _interopRequireDefault(_API);
+
+	var _reactBemHelper = __webpack_require__(209);
+
+	var _reactBemHelper2 = _interopRequireDefault(_reactBemHelper);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var classes = new _reactBemHelper2.default({
+	    name: 'Automation',
+	    prefix: 'b-'
+	});
+	__webpack_require__(304);
+
+	var Automation = function (_React$Component) {
+	    _inherits(Automation, _React$Component);
+
+	    function Automation() {
+	        _classCallCheck(this, Automation);
+
+	        var _this = _possibleConstructorReturn(this, (Automation.__proto__ || Object.getPrototypeOf(Automation)).call(this));
+
+	        _this.handleClick = _this.handleClick.bind(_this);
+	        return _this;
+	    }
+
+	    _createClass(Automation, [{
+	        key: 'handleClick',
+	        value: function handleClick(event) {
+	            _API2.default.automationTest(this.props.automation.id, function (err, data) {
+	                if (err) {
+	                    //TODO: Show error/success
+	                    console.error(err);
+	                }
+	            });
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            return _react2.default.createElement(
+	                'div',
+	                classes(),
+	                _react2.default.createElement(
+	                    'div',
+	                    classes('name'),
+	                    this.props.automation.name
+	                ),
+	                _react2.default.createElement(
+	                    'a',
+	                    _extends({ role: 'button' }, classes('activate', '', 'btn btn-primary'), { onClick: this.handleClick }),
+	                    'Test'
+	                )
+	            );
+	        }
+	    }]);
+
+	    return Automation;
+	}(_react2.default.Component);
+
+	module.exports = Automation;
+
+/***/ },
+/* 304 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(305);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Automation.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Automation.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 305 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-Automation {\n  padding: 8px 12px 0px 12px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n  height: 112px;\n}\n.b-Automation__name {\n  text-align: left;\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 296px;\n  margin-top: 3px;\n  margin-bottom: 12px;\n  /* use ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-Automation__activate {\n  font-size: 20px;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 306 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(307);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationList.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationList.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 307 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".b-AutomationList {\n  position: relative;\n}\n.b-AutomationList__header {\n  margin-top: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 308 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var LogLine = __webpack_require__(297);
+	var LogLine = __webpack_require__(309);
 
 	var Logging = React.createClass({
 	    displayName: 'Logging',
@@ -31096,7 +31655,7 @@
 	module.exports = Logging;
 
 /***/ },
-/* 297 */
+/* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -31141,13 +31700,13 @@
 	module.exports = LogLine;
 
 /***/ },
-/* 298 */
+/* 310 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(299);
+	var content = __webpack_require__(311);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -31167,7 +31726,7 @@
 	}
 
 /***/ },
-/* 299 */
+/* 311 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -31181,19 +31740,19 @@
 
 
 /***/ },
-/* 300 */
+/* 312 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Redux = __webpack_require__(180);
-	var thunk = __webpack_require__(301).default;
-	var initialState = __webpack_require__(302);
-	var systemReducer = __webpack_require__(303);
-	var scenesReducer = __webpack_require__(304);
-	var loadStatusReducer = __webpack_require__(306);
-	var errorReducer = __webpack_require__(307);
-	var automationReducer = __webpack_require__(323);
+	var thunk = __webpack_require__(313).default;
+	var initialState = __webpack_require__(314);
+	var systemReducer = __webpack_require__(315);
+	var scenesReducer = __webpack_require__(316);
+	var loadStatusReducer = __webpack_require__(318);
+	var errorReducer = __webpack_require__(319);
+	var automationReducer = __webpack_require__(320);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
@@ -31206,7 +31765,7 @@
 	module.exports = Redux.applyMiddleware(thunk)(Redux.createStore)(rootReducer, initialState());
 
 /***/ },
-/* 301 */
+/* 313 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -31234,7 +31793,7 @@
 	exports['default'] = thunk;
 
 /***/ },
-/* 302 */
+/* 314 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -31272,14 +31831,14 @@
 	};
 
 /***/ },
-/* 303 */
+/* 315 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(302);
-	var uuid = __webpack_require__(287);
+	var initialState = __webpack_require__(314);
+	var uuid = __webpack_require__(260);
 
 	module.exports = function (state, action) {
 	    //TODO: Don't always mutate
@@ -31363,6 +31922,21 @@
 	        case Constants.DEVICE_IMPORT_FAIL:
 	            break;
 
+	        case Constants.FEATURE_IMPORT:
+	            break;
+	        case Constants.FEATURE_IMPORT_RAW:
+	            newState.devices = newState.devices.map(function (device) {
+	                if (device.id === action.data.deviceId) {
+	                    //TODO: Clone device?
+	                    device.features = device.features.slice();
+	                    device.features.push(action.data);
+	                    return device;
+	                }
+	                return device;
+	            });
+	            break;
+	        case Constants.FEATURE_IMPORT_FAIL:
+	            break;
 	        case Constants.DEVICE_DESTROY:
 	            break;
 
@@ -31391,15 +31965,15 @@
 	};
 
 /***/ },
-/* 304 */
+/* 316 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(302);
-	var CommandsReducer = __webpack_require__(305);
-	var uuid = __webpack_require__(287);
+	var initialState = __webpack_require__(314);
+	var CommandsReducer = __webpack_require__(317);
+	var uuid = __webpack_require__(260);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -31501,13 +32075,13 @@
 	};
 
 /***/ },
-/* 305 */
+/* 317 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var Uuid = __webpack_require__(287);
+	var Uuid = __webpack_require__(260);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -31547,13 +32121,13 @@
 	};
 
 /***/ },
-/* 306 */
+/* 318 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(302);
+	var initialState = __webpack_require__(314);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -31582,13 +32156,13 @@
 	};
 
 /***/ },
-/* 307 */
+/* 319 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(302);
+	var initialState = __webpack_require__(314);
 
 	module.exports = function (state, action) {
 	    var newState = state;
@@ -31606,7 +32180,39 @@
 	};
 
 /***/ },
-/* 308 */
+/* 320 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Constants = __webpack_require__(206);
+	var initialState = __webpack_require__(314);
+
+	module.exports = function (state, action) {
+	    var newState = state;
+
+	    switch (action.type) {
+	        case Constants.AUTOMATION_LOAD_ALL:
+	            break;
+
+	        case Constants.AUTOMATION_LOAD_ALL_RAW:
+	            action.data.sort(function (a, b) {
+	                return a.name.localeCompare(b.name);
+	            });
+	            newState = action.data;
+	            break;
+
+	        case Constants.AUTOMATION_LOAD_ALL_FAIL:
+	            break;
+	        default:
+	            newState = newState || initialState().automations;
+	    }
+
+	    return newState;
+	};
+
+/***/ },
+/* 321 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -31622,7 +32228,7 @@
 	    name: 'Login',
 	    prefix: 'b-'
 	});
-	__webpack_require__(309);
+	__webpack_require__(322);
 
 	var Login = React.createClass({
 	    displayName: 'Login',
@@ -31725,13 +32331,13 @@
 	module.exports = Login;
 
 /***/ },
-/* 309 */
+/* 322 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(310);
+	var content = __webpack_require__(323);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -31751,7 +32357,7 @@
 	}
 
 /***/ },
-/* 310 */
+/* 323 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -31763,567 +32369,6 @@
 
 	// exports
 
-
-/***/ },
-/* 311 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var Feature = __webpack_require__(216);
-	var BEMHelper = __webpack_require__(209);
-
-	var classes = new BEMHelper({
-	    name: 'SceneActionPicker',
-	    prefix: 'b-'
-	});
-
-	var SceneActionPicker = React.createClass({
-	    displayName: 'SceneActionPicker',
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            excluded: {}
-	        };
-	    },
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.type || 'unknown'
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setType(evt.target.value);
-	    },
-
-	    setType: function setType(type) {
-	        if (type === 'unknown') {
-	            return;
-	        }
-
-	        // Set back to unknown since we render a new command when this is selected
-	        this.setState({ value: 'unknown' });
-	        this.props.changed && this.props.changed(type);
-	    },
-
-	    render: function render() {
-	        var types = [{ str: "Add new action...", val: 'unknown' }];
-
-	        var excluded = this.props.excluded;
-	        if (!excluded[Feature.Type.Button]) {
-	            types.push({ str: "Button", val: Feature.Type.Button });
-	        }
-	        if (!excluded[Feature.Type.CoolZone]) {
-	            types.push({ str: "Cool Zone", val: Feature.Type.CoolZone });
-	        }
-	        if (!excluded[Feature.Type.HeatZone]) {
-	            types.push({ str: "Heat Zone", val: Feature.Type.HeatZone });
-	        }
-	        if (!excluded[Feature.Type.LightZone]) {
-	            types.push({ str: "Light Zone", val: Feature.Type.LightZone });
-	        }
-	        if (!excluded['Scene']) {
-	            types.push({ str: "Scene Set", val: 'sceneSet' });
-	        }
-	        if (!excluded[Feature.Type.Sensor]) {
-	            types.push({ str: "Sensor", val: Feature.Type.Sensor });
-	        }
-	        if (!excluded[Feature.Type.Switch]) {
-	            types.push({ str: "Switch", val: Feature.Type.Switch });
-	        }
-	        if (!excluded[Feature.Type.Outlet]) {
-	            types.push({ str: "Outlet", val: Feature.Type.Outlet });
-	        }
-	        if (!excluded[Feature.Type.WindowTreatment]) {
-	            types.push({ str: "Window Treatment", val: Feature.Type.WindowTreatment });
-	        }
-
-	        var nodes = types.map(function (type) {
-	            return React.createElement(
-	                'option',
-	                { value: type.val, key: type.val },
-	                type.str
-	            );
-	        });
-	        return React.createElement(
-	            'div',
-	            classes(),
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                nodes
-	            )
-	        );
-	    }
-	});
-	module.exports = SceneActionPicker;
-
-/***/ },
-/* 312 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var InputValidationMixin = __webpack_require__(222);
-	var UniqueIdMixin = __webpack_require__(221);
-	var ScenePicker = __webpack_require__(313);
-	var uuid = __webpack_require__(287);
-
-	var SceneSetCommand = module.exports = React.createClass({
-	    displayName: 'exports',
-
-	    mixins: [UniqueIdMixin, InputValidationMixin],
-	    getInitialState: function getInitialState() {
-	        return {
-	            clientId: uuid.v4(),
-	            sceneId: this.props.command.attributes.SceneID || ''
-	        };
-	    },
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            scenes: []
-	        };
-	    },
-
-	    toJson: function toJson() {
-	        return {
-	            type: 'sceneSet',
-	            clientId: this.state.clientId,
-	            attributes: {
-	                SceneID: this.state.sceneId
-	            }
-	        };
-	    },
-
-	    scenePickerChanged: function scenePickerChanged(sceneId) {
-	        this.setState({ sceneId: sceneId });
-	        this.props.onChanged && this.props.onChanged();
-	    },
-
-	    render: function render() {
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-SceneSetCommand' },
-	            React.createElement(
-	                'h4',
-	                null,
-	                'Scene Set'
-	            ),
-	            React.createElement(
-	                'div',
-	                { className: this.addErr("form-group", "attributes_SceneID") },
-	                React.createElement(ScenePicker, {
-	                    disabled: this.props.disabled,
-	                    changed: this.scenePickerChanged,
-	                    scenes: this.props.scenes,
-	                    sceneId: this.state.sceneId,
-	                    parentSceneId: this.props.parentSceneId }),
-	                this.errMsg("attributes_SceneID")
-	            )
-	        );
-	    }
-	});
-	module.exports = SceneSetCommand;
-
-/***/ },
-/* 313 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-
-	var ScenePicker = React.createClass({
-	    displayName: 'ScenePicker',
-
-	    getInitialState: function getInitialState() {
-	        return {
-	            value: this.props.sceneId || ''
-	        };
-	    },
-
-	    selected: function selected(evt) {
-	        this.setState({ value: evt.target.value });
-	        this.props.changed && this.props.changed(evt.target.value);
-	    },
-
-	    render: function render() {
-	        var options = [];
-	        this.props.scenes.forEach(function (scene) {
-	            if (!scene.id) {
-	                // If this scene has not been saved it can't be used
-	                return;
-	            }
-
-	            // Can't set itself
-	            if (scene.id === this.props.parentSceneId) {
-	                return;
-	            }
-
-	            options.push(React.createElement(
-	                'option',
-	                { key: scene.id, value: scene.id },
-	                scene.name
-	            ));
-	        }.bind(this));
-
-	        return React.createElement(
-	            'div',
-	            { className: 'cmp-ScenePicker' },
-	            React.createElement(
-	                'select',
-	                {
-	                    className: 'form-control',
-	                    disabled: this.props.disabled,
-	                    onChange: this.selected,
-	                    value: this.state.value },
-	                React.createElement(
-	                    'option',
-	                    { value: '' },
-	                    'Select a Scene...'
-	                ),
-	                options
-	            )
-	        );
-	    }
-	});
-	module.exports = ScenePicker;
-
-/***/ },
-/* 314 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var React = __webpack_require__(1);
-	var AutomationCell = __webpack_require__(315);
-	var Automation = __webpack_require__(318);
-	var Grid = __webpack_require__(227);
-	var BEMHelper = __webpack_require__(209);
-	var Feature = __webpack_require__(216);
-
-	var classes = new BEMHelper({
-	    name: 'AutomationList',
-	    prefix: 'b-'
-	});
-	__webpack_require__(321);
-
-	var AutomationList = React.createClass({
-	    displayName: 'AutomationList',
-
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            automations: []
-	        };
-	    },
-
-	    render: function render() {
-	        var gridCells = this.props.automations.map(function (automation) {
-	            return {
-	                key: automation.name,
-	                cell: React.createElement(AutomationCell, { automation: automation }),
-	                content: React.createElement(Automation, { automation: automation, key: automation.name })
-	            };
-	        });
-
-	        return React.createElement(
-	            'div',
-	            classes(),
-	            React.createElement(
-	                'h2',
-	                classes('header'),
-	                'Automation'
-	            ),
-	            React.createElement(Grid, { cells: gridCells })
-	        );
-	    }
-	});
-
-	module.exports = AutomationList;
-
-/***/ },
-/* 315 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactBemHelper = __webpack_require__(209);
-
-	var _reactBemHelper2 = _interopRequireDefault(_reactBemHelper);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var classes = new _reactBemHelper2.default({
-	    name: 'AutomationCell',
-	    prefix: 'b-'
-	});
-	__webpack_require__(316);
-
-	var AutomationCell = function AutomationCell(_ref) {
-	    var automation = _ref.automation;
-
-	    return _react2.default.createElement(
-	        'div',
-	        classes(),
-	        _react2.default.createElement(
-	            'div',
-	            classes('icon'),
-	            _react2.default.createElement('i', { className: 'icon ion-ios-cog-outline' })
-	        ),
-	        _react2.default.createElement(
-	            'div',
-	            classes('name'),
-	            automation.name
-	        )
-	    );
-	};
-	module.exports = AutomationCell;
-
-/***/ },
-/* 316 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(317);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationCell.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationCell.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 317 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(213)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-AutomationCell {\n  pointer-events: none;\n  position: relative;\n  height: 100%;\n  text-align: center;\n  /* needed to sopt spaces between cells */\n  font-size: 0px;\n}\n.b-AutomationCell__name {\n  font-size: 12px;\n  text-transform: uppercase;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  margin: 0 auto 8px auto;\n  padding-left: 4px;\n  padding-right: 4px;\n  /* TODO: ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-AutomationCell__icon {\n  font-size: 50px;\n  color: #555;\n  padding-top: 12px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 318 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _API = __webpack_require__(204);
-
-	var _API2 = _interopRequireDefault(_API);
-
-	var _reactBemHelper = __webpack_require__(209);
-
-	var _reactBemHelper2 = _interopRequireDefault(_reactBemHelper);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var classes = new _reactBemHelper2.default({
-	    name: 'Automation',
-	    prefix: 'b-'
-	});
-	__webpack_require__(319);
-
-	var Automation = function (_React$Component) {
-	    _inherits(Automation, _React$Component);
-
-	    function Automation() {
-	        _classCallCheck(this, Automation);
-
-	        var _this = _possibleConstructorReturn(this, (Automation.__proto__ || Object.getPrototypeOf(Automation)).call(this));
-
-	        _this.handleClick = _this.handleClick.bind(_this);
-	        return _this;
-	    }
-
-	    _createClass(Automation, [{
-	        key: 'handleClick',
-	        value: function handleClick(event) {
-	            _API2.default.automationTest(this.props.automation.id, function (err, data) {
-	                if (err) {
-	                    //TODO: Show error/success
-	                    console.error(err);
-	                }
-	            });
-	        }
-	    }, {
-	        key: 'render',
-	        value: function render() {
-	            return _react2.default.createElement(
-	                'div',
-	                classes(),
-	                _react2.default.createElement(
-	                    'div',
-	                    classes('name'),
-	                    this.props.automation.name
-	                ),
-	                _react2.default.createElement(
-	                    'a',
-	                    _extends({ role: 'button' }, classes('activate', '', 'btn btn-primary'), { onClick: this.handleClick }),
-	                    'Test'
-	                )
-	            );
-	        }
-	    }]);
-
-	    return Automation;
-	}(_react2.default.Component);
-
-	module.exports = Automation;
-
-/***/ },
-/* 319 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(320);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Automation.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./Automation.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 320 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(213)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-Automation {\n  padding: 8px 12px 0px 12px;\n  padding-left: 12px;\n  padding-right: 12px;\n  text-align: center;\n  height: 112px;\n}\n.b-Automation__name {\n  text-align: left;\n  text-transform: uppercase;\n  font-size: 20px;\n  max-width: 296px;\n  margin-top: 3px;\n  margin-bottom: 12px;\n  /* use ellipsis mixin */\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.b-Automation__activate {\n  font-size: 20px;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 321 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(322);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationList.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./AutomationList.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 322 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(213)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".b-AutomationList {\n  position: relative;\n}\n.b-AutomationList__header {\n  margin-top: 12px;\n  text-transform: uppercase;\n  font-weight: 200;\n  text-align: center;\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 323 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(302);
-
-	module.exports = function (state, action) {
-	    var newState = state;
-
-	    switch (action.type) {
-	        case Constants.AUTOMATION_LOAD_ALL:
-	            break;
-
-	        case Constants.AUTOMATION_LOAD_ALL_RAW:
-	            action.data.sort(function (a, b) {
-	                return a.name.localeCompare(b.name);
-	            });
-	            newState = action.data;
-	            break;
-
-	        case Constants.AUTOMATION_LOAD_ALL_FAIL:
-	            break;
-	        default:
-	            newState = newState || initialState().automations;
-	    }
-
-	    return newState;
-	};
 
 /***/ }
 /******/ ]);

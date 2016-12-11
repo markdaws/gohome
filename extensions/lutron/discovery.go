@@ -228,8 +228,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			// first is the IP address to talk to it, but then it also have the DeviceID which is needed
 			// to press the buttons, so here, we make another device and assign the buttons to this
 			// new device and use the lutron hub solely for communicating to.
-			sbpSceneDevice := makeDevice("", "Smart Bridge - Phantom Buttons", deviceID, device, sbp, nil)
-			sbp.AddDevice(sbpSceneDevice)
+			sbpSceneDevice := makeDevice("", "Smart Bridge - Scene Buttons", deviceID, device, sbp, nil)
 			scenes, err := makeScenes(device, sbpSceneDevice)
 			if err != nil {
 				return nil, err
@@ -258,7 +257,6 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 		var deviceName string = device["Name"].(string)
 		gohomeDevice := makeDevice("", deviceName, deviceID, device, sbp, nil)
-		sbp.AddDevice(gohomeDevice)
 
 		result.Devices = append(result.Devices, gohomeDevice)
 	}
