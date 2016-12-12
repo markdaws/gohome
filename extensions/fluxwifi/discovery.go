@@ -9,7 +9,7 @@ import (
 
 var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
 	ID:          "fluxwifi.bulbs",
-	Name:        "FluxWIFI",
+	Name:        "FluxWIFI Bulbs",
 	Description: "Discover FluxWIFI bulbs",
 }}
 

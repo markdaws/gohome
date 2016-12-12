@@ -13,11 +13,11 @@ import (
 
 var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
 	ID:          "belkin.wemo.insight",
-	Name:        "Belkin WeMo Insight",
+	Name:        "Belkin - WeMo Insight",
 	Description: "Discover Belkin WeMo Insight devices",
 }, gohome.DiscovererInfo{
 	ID:          "belkin.wemo.maker",
-	Name:        "Belkin WeMo Maker",
+	Name:        "Belkin - WeMo Maker",
 	Description: "Discover Belkin WeMo Maker devices",
 }}
 

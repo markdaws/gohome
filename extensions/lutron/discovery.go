@@ -15,8 +15,8 @@ import (
 
 var infos = []gohome.DiscovererInfo{gohome.DiscovererInfo{
 	ID:          "lutron.l-bdgpro2-wh",
-	Name:        "Lutron Smart Bridge Pro",
-	Description: "Discover Lutron Smart Bridge Pro hubs",
+	Name:        "Lutron - Caseta Wireless Smart Bridge",
+	Description: "Discover Lutron Caseta Wireless Smart Bridge devices",
 
 	PreScanInfo: "To get your configuration information, go to the Lutron app, then go: " +
 		"Settings -> Advanced -> Integration -> Send Integration Report. Copy and paste the contents " +
