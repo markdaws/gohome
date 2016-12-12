@@ -25602,7 +25602,9 @@
 	                    d: 'M105 45 L82 75 L100 75 L95 100 L120 67 L100 65',
 	                    stroke: 'yellow',
 	                    style: { 'opacity': opacity },
-	                    fill: 'yellow' })
+	                    fill: 'yellow',
+	                    transform: 'translate(-1, -10)'
+	                })
 	            ),
 	            React.createElement(
 	                'svg',

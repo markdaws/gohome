@@ -55,6 +55,9 @@ const (
 
 	// ATTemperature represents a temperature attribute
 	ATTemperature string = "Temperature"
+
+	// ATButtonState represents a button state e.g. pressed/released
+	ATButtonState string = "BtnState"
 )
 
 const (
@@ -278,6 +281,15 @@ func NewAttribute(localID, t, dataType string, val interface{}) *Attribute {
 		log.E("unknown data type in attribute: %s:%s:%t", dataType, DTFloat32, dataType == DTFloat32)
 	}
 	return a
+}
+
+const (
+	ButtonStatePressed  int32 = 1
+	ButtonStateReleased int32 = 2
+)
+
+func NewButtonState(localID string, val *int32) *Attribute {
+	return NewInt32(localID, ATButtonState, val)
 }
 
 const (

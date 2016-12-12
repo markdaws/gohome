@@ -139,6 +139,19 @@ func (s *System) DeviceByID(ID string) *Device {
 	return s.devices[ID]
 }
 
+// DeviceByAddress returns the first device found with the specified address
+func (s *System) DeviceByAddress(addr string) *Device {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	for _, dev := range s.devices {
+		if dev.Address == addr {
+			return dev
+		}
+	}
+	return nil
+}
+
 // Devices returns a map of all the devices in the system, keyed by device ID
 func (s *System) Devices() map[string]*Device {
 	out := make(map[string]*Device)

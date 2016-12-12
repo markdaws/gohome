@@ -162,48 +162,42 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 					}
 
 				case *lutronExt.BtnPressEvt:
-					/*
-						sourceDevice, ok := p.Device.Devices[e.DeviceAddress]
-						if !ok {
-							return
-						}
-						_ = sourceDevice
-					*/
+					sourceDev := p.System.DeviceByAddress(e.DeviceAddress)
+					if sourceDev == nil {
+						return
+					}
 
-					//TODO: Fix
-					/*
-						if btn := sourceDevice.ButtonByAddress(e.Address); btn != nil {
-							p.System.Services.EvtBus.Enqueue(&gohome.ButtonPressEvt{
-								BtnAddress:    btn.Address,
-								BtnID:         btn.ID,
-								BtnName:       btn.Name,
-								DeviceName:    sourceDevice.Name,
-								DeviceAddress: sourceDevice.Address,
-								DeviceID:      sourceDevice.ID,
-							})
-						}*/
+					btn := sourceDev.FeatureTypeByAddress(feature.FTButton, e.Address)
+					if btn == nil {
+						return
+					}
+
+					state := feature.ButtonCloneAttrs(btn)
+					state.Value = attr.ButtonStatePressed
+
+					p.System.Services.EvtBus.Enqueue(&gohome.FeatureAttrsChangedEvt{
+						FeatureID: btn.ID,
+						Attrs:     feature.NewAttrs(state),
+					})
 
 				case *lutronExt.BtnReleaseEvt:
-					/*
-						sourceDevice, ok := p.Device.Devices[e.DeviceAddress]
-						if !ok {
-							return
-						}
-						_ = sourceDevice
-					*/
+					sourceDev := p.System.DeviceByAddress(e.DeviceAddress)
+					if sourceDev == nil {
+						return
+					}
 
-					//TODO: Fix
-					/*
-						if btn := sourceDevice.ButtonByAddress(e.Address); btn != nil {
-							p.System.Services.EvtBus.Enqueue(&gohome.ButtonReleaseEvt{
-								BtnAddress:    btn.Address,
-								BtnID:         btn.ID,
-								BtnName:       btn.Name,
-								DeviceName:    sourceDevice.Name,
-								DeviceAddress: sourceDevice.Address,
-								DeviceID:      sourceDevice.ID,
-							})
-						}*/
+					btn := sourceDev.FeatureTypeByAddress(feature.FTButton, e.Address)
+					if btn == nil {
+						return
+					}
+
+					state := feature.ButtonCloneAttrs(btn)
+					state.Value = attr.ButtonStateReleased
+
+					p.System.Services.EvtBus.Enqueue(&gohome.FeatureAttrsChangedEvt{
+						FeatureID: btn.ID,
+						Attrs:     feature.NewAttrs(state),
+					})
 
 				case *lutronExt.UnknownEvt:
 					// Don't care, ignore

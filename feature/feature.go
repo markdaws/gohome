@@ -165,11 +165,11 @@ func NewHeatZone(ID string) *Feature {
 	}
 
 	// The current temp is read only since you set the target temp not the current
-	current := attr.NewTemp("currenttemp", nil)
+	current := attr.NewTemp(HeatZoneCurrentTempLocalID, nil)
 	current.Perms = attr.PermsReadOnly
 	current.Name = "Current Temperature"
 
-	target := attr.NewTemp("targettemp", nil)
+	target := attr.NewTemp(HeatZoneTargetTempLocalID, nil)
 	target.Name = "Target Temperature"
 	s.Attrs = Attrs{
 		current.LocalID: current,
@@ -224,7 +224,7 @@ func NewLightZone(ID, mode string) *Feature {
 	}
 
 	// All light zones can be turned on and off
-	onOff := attr.NewOnOff("onoff", nil)
+	onOff := attr.NewOnOff(LightZoneOnOffLocalID, nil)
 	onOff.Name = "On/Off"
 	s.Attrs[onOff.LocalID] = onOff
 
@@ -234,12 +234,12 @@ func NewLightZone(ID, mode string) *Feature {
 
 	case LightZoneModeContinuous:
 		// Light can be dimmed
-		brightness := attr.NewBrightness("brightness", nil)
+		brightness := attr.NewBrightness(LightZoneBrightnessLocalID, nil)
 		brightness.Name = "Brightness"
 		s.Attrs[brightness.LocalID] = brightness
 
 	case LightZoneModeHSL:
-		hsl := attr.NewHSL("hsl", nil)
+		hsl := attr.NewHSL(LightZoneHSLLocalID, nil)
 		hsl.Name = "HSL"
 		s.Attrs[hsl.LocalID] = hsl
 	}
@@ -310,9 +310,9 @@ func NewWindowTreatment(ID string) *Feature {
 		ID:   ID,
 		Type: FTWindowTreatment,
 	}
-	offset := attr.NewOffset("offset", nil)
+	offset := attr.NewOffset(WindowTreatmentOffsetLocalID, nil)
 	offset.Name = "Offset"
-	openClose := attr.NewOpenClose("openclose", nil)
+	openClose := attr.NewOpenClose(WindowTreatmentOpenCloseLocalID, nil)
 	openClose.Name = "Open/Close"
 	s.Attrs = Attrs{
 		offset.LocalID:    offset,
@@ -364,15 +364,27 @@ func WindowTreatmentCloneAttrs(f *Feature) (openClose, offset *attr.Attribute) {
 	return
 }
 
+const (
+	// ButtonStateLocalID is the local ID for the state attribute such as pressed/released
+	ButtonStateLocalID string = "state"
+)
+
 // NewButton returns a new button instance
-// TODO: Attributes?
 func NewButton(ID string) *Feature {
 	b := &Feature{
-		ID:    ID,
-		Type:  FTButton,
-		Attrs: make(map[string]*attr.Attribute),
+		ID:   ID,
+		Type: FTButton,
 	}
+	bs := attr.NewButtonState(ButtonStateLocalID, nil)
+	bs.Name = "State"
+	b.Attrs = Attrs{bs.LocalID: bs}
 	return b
+}
+
+// ButtonCloneAttrs clones the common attributes for a button so they can be updated
+func ButtonCloneAttrs(f *Feature) (state *attr.Attribute) {
+	state = f.Attrs[ButtonStateLocalID].Clone()
+	return
 }
 
 const (
@@ -386,7 +398,7 @@ func NewSwitch(ID string) *Feature {
 		ID:   ID,
 		Type: FTSwitch,
 	}
-	onOff := attr.NewOnOff("onoff", nil)
+	onOff := attr.NewOnOff(SwitchOnOffLocalID, nil)
 	onOff.Name = "On/Off"
 	s.Attrs = Attrs{onOff.LocalID: onOff}
 	return s
@@ -413,7 +425,7 @@ func NewOutlet(ID string) *Feature {
 		ID:   ID,
 		Type: FTOutlet,
 	}
-	onOff := attr.NewOnOff("onoff", nil)
+	onOff := attr.NewOnOff(OutletOnOffLocalID, nil)
 	onOff.Name = "On/Off"
 	s.Attrs = Attrs{onOff.LocalID: onOff}
 	return s

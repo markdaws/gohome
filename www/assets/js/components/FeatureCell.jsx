@@ -212,7 +212,9 @@ var FeatureCell = React.createClass({
                         d="M105 45 L82 75 L100 75 L95 100 L120 67 L100 65"
                         stroke="yellow"
                         style={{'opacity': opacity}}
-                        fill="yellow"></path>
+                        fill="yellow"
+                        transform="translate(-1, -10)"
+                    ></path>
                 </svg>
                 <svg
                     {...classes('light-color', this.props.feature.type)}
