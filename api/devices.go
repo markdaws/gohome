@@ -215,12 +215,13 @@ func apiDeviceUpdateFeatureHandler(savePath string, system *gohome.System) func(
 		}
 
 		updatedFeature := feature.Feature{
-			ID:          data.ID,
-			Type:        data.Type,
-			Name:        data.Name,
-			Address:     data.Address,
-			Description: data.Description,
-			DeviceID:    data.DeviceID,
+			ID:           data.ID,
+			AutomationID: data.AutomationID,
+			Type:         data.Type,
+			Name:         data.Name,
+			Address:      data.Address,
+			Description:  data.Description,
+			DeviceID:     data.DeviceID,
 		}
 
 		valErrs := updatedFeature.Validate()
@@ -248,6 +249,7 @@ func apiDeviceUpdateFeatureHandler(savePath string, system *gohome.System) func(
 
 		// Validation passed now we can update the actual object
 		f.Type = data.Type
+		f.AutomationID = data.AutomationID
 		f.Name = data.Name
 		f.Address = data.Address
 		f.Description = data.Description
@@ -288,6 +290,7 @@ func apiDeviceAddFeatureHandler(savePath string, system *gohome.System) func(htt
 		}
 
 		newFeature := feature.NewFromType(data.ID, data.Type)
+		newFeature.AutomationID = data.AutomationID
 		newFeature.Name = data.Name
 		newFeature.Address = data.Address
 		newFeature.Description = data.Description

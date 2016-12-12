@@ -53,24 +53,29 @@ type automationIntermediate struct {
 		} `yaml:"scene"`
 		LightZone *struct {
 			ID         *string  `yaml:"id"`
+			AID        *string  `yaml:"aid"`
 			OnOff      *string  `yaml:"on_off"`
 			Brightness *float64 `yaml:"brightness"`
 		} `yaml:"light_zone"`
 		Outlet *struct {
 			ID    *string `yaml:"id"`
+			AID   *string `yaml:"aid"`
 			OnOff *string `yaml:"on_off"`
 		} `yaml:"outlet"`
 		Switch *struct {
 			ID    *string `yaml:"id"`
+			AID   *string `yaml:"aid"`
 			OnOff *string `yaml:"on_off"`
 		} `yaml:"switch"`
 		WindowTreatment *struct {
 			ID         *string  `yaml:"id"`
+			AID        *string  `yaml:"aid"`
 			OpenClosed *string  `yaml:"open_closed"`
 			Offset     *float64 `yaml:"offset"`
 		} `yaml:"window_treatment"`
 		HeatZone *struct {
 			ID         *string  `yaml:"id"`
+			AID        *string  `yaml:"aid"`
 			TargetTemp *float64 `yaml:"target_temp"`
 		} `yaml:"heat_zone"`
 	} `yaml:"actions"`
@@ -194,7 +199,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 			})
 		} else if action.LightZone != nil {
 			lz := action.LightZone
-			if lz.ID == nil {
+			if lz.ID == nil && lz.AID == nil {
 				// The user did not specify an ID, so we apply the attributes to all light zones
 				lightZones := sys.FeaturesByType(feature.FTLightZone)
 				if len(lightZones) == 0 {
@@ -209,9 +214,9 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				zn := sys.FeatureByID(*lz.ID)
-				if zn == nil {
-					return nil, fmt.Errorf("invalid LightZone ID: %s", *lz.ID)
+				zn, err := getFeature(sys, lz.ID, lz.AID, feature.FTLightZone)
+				if err != nil {
+					return nil, err
 				}
 
 				command := buildLightZoneCommand(zn, lz.OnOff, lz.Brightness)
@@ -222,7 +227,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 				cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 			}
 		} else if action.WindowTreatment != nil {
-			if action.WindowTreatment.ID == nil {
+			if action.WindowTreatment.ID == nil && action.WindowTreatment.AID == nil {
 				// The user did not specify an ID, so we apply the attributes to all window treatments
 				treatments := sys.FeaturesByType(feature.FTWindowTreatment)
 				if len(treatments) == 0 {
@@ -237,9 +242,9 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				wt := sys.FeatureByID(*action.WindowTreatment.ID)
-				if wt == nil {
-					return nil, fmt.Errorf("invalid WindowTreatment ID: %s", *action.WindowTreatment.ID)
+				wt, err := getFeature(sys, action.WindowTreatment.ID, action.WindowTreatment.AID, feature.FTWindowTreatment)
+				if err != nil {
+					return nil, err
 				}
 
 				command := buildWindowTreatmentCommand(wt, action.WindowTreatment.OpenClosed, action.WindowTreatment.Offset)
@@ -249,8 +254,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 				cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 			}
 		} else if action.Outlet != nil {
-			if action.Outlet.ID == nil {
-				// Apply actions to all outlets
+			if action.Outlet.ID == nil && action.Outlet.AID == nil {
 				outlets := sys.FeaturesByType(feature.FTOutlet)
 				if len(outlets) == 0 {
 					continue
@@ -264,10 +268,9 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				// Action only applies to a specific outlet
-				outlet := sys.FeatureByID(*action.Outlet.ID)
-				if outlet == nil {
-					return nil, fmt.Errorf("invalid outlet ID: %s", *action.Outlet.ID)
+				outlet, err := getFeature(sys, action.Outlet.ID, action.Outlet.AID, feature.FTOutlet)
+				if err != nil {
+					return nil, err
 				}
 				command := buildOutletCommand(outlet, action.Outlet.OnOff)
 				if command == nil {
@@ -276,8 +279,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 				cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 			}
 		} else if action.Switch != nil {
-			if action.Switch.ID == nil {
-				// Apply actions to all switches
+			if action.Switch.ID == nil && action.Switch.AID == nil {
 				switches := sys.FeaturesByType(feature.FTSwitch)
 				if len(switches) == 0 {
 					continue
@@ -291,10 +293,9 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				// Action only applies to a specific outlet
-				sw := sys.FeatureByID(*action.Switch.ID)
-				if sw == nil {
-					return nil, fmt.Errorf("invalid switch ID: %s", *action.Switch.ID)
+				sw, err := getFeature(sys, action.Switch.ID, action.Switch.AID, feature.FTSwitch)
+				if err != nil {
+					return nil, err
 				}
 				command := buildSwitchCommand(sw, action.Switch.OnOff)
 				if command == nil {
@@ -303,7 +304,7 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 				cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 			}
 		} else if action.HeatZone != nil {
-			if action.HeatZone.ID == nil {
+			if action.HeatZone.ID == nil && action.HeatZone.AID == nil {
 				zones := sys.FeaturesByType(feature.FTHeatZone)
 				if len(zones) == 0 {
 					continue
@@ -317,9 +318,9 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 					cmdGroup.Cmds = append(cmdGroup.Cmds, command)
 				}
 			} else {
-				hz := sys.FeatureByID(*action.HeatZone.ID)
-				if hz == nil {
-					return nil, fmt.Errorf("invalid heat zone ID: %s", *action.HeatZone.ID)
+				hz, err := getFeature(sys, action.HeatZone.ID, action.HeatZone.AID, feature.FTHeatZone)
+				if err != nil {
+					return nil, err
 				}
 				command := buildHeatZoneCommand(hz, action.HeatZone.TargetTemp)
 				if command == nil {
@@ -333,6 +334,26 @@ func parseActions(sys *System, auto automationIntermediate) (*CommandGroup, erro
 	}
 
 	return &cmdGroup, nil
+}
+
+func getFeature(sys *System, id, aid *string, featureType string) (*feature.Feature, error) {
+	if aid != nil {
+		f := sys.FeatureByAID(featureType, *aid)
+		if f == nil {
+			return nil, fmt.Errorf("invalid automation ID: %s", *aid)
+		}
+		return f, nil
+	}
+
+	if id != nil {
+		f := sys.FeatureByID(*id)
+		if f == nil {
+			return nil, fmt.Errorf("invalid ID: %s", *id)
+		}
+		return f, nil
+	}
+
+	return nil, fmt.Errorf("invalid automation, missing id and aid key, one must be present")
 }
 
 func buildOutletCommand(outlet *feature.Feature, onOffVal *string) cmd.Command {

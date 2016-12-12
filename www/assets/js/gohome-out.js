@@ -27143,10 +27143,6 @@
 	});
 	__webpack_require__(236);
 
-	//TODO: Remove zoneTypePicker
-	//TODO: Remove zoneOutputPicker
-	//TODO: Remove sensor specific cmps
-
 	var FeatureInfo = React.createClass({
 	    displayName: 'FeatureInfo',
 
@@ -27162,6 +27158,7 @@
 	        var f = this.props.feature;
 	        return {
 	            id: f.id,
+	            aid: f.aid,
 	            name: f.name,
 	            description: f.description,
 	            address: f.address,
@@ -27180,6 +27177,7 @@
 	        var f = this.props.feature;
 	        return _ref = {
 	            id: f.id,
+	            aid: s.aid,
 	            name: s.name,
 	            description: s.description,
 	            address: s.address,
@@ -27324,6 +27322,24 @@
 	                    type: 'text',
 	                    id: this.uid("address") }),
 	                this.errMsg('address')
+	            ),
+	            React.createElement(
+	                'div',
+	                { className: this.addErr("form-group", "aid") },
+	                React.createElement(
+	                    'label',
+	                    _extends({}, classes('label', '', 'control-label'), { htmlFor: this.uid("aid") }),
+	                    'Automation ID'
+	                ),
+	                React.createElement('input', {
+	                    value: this.state.aid,
+	                    readOnly: this.isReadOnly("aid"),
+	                    'data-statepath': 'aid',
+	                    onChange: this._changed,
+	                    className: 'id form-control',
+	                    type: 'text',
+	                    id: this.uid("aid") }),
+	                this.errMsg("aid")
 	            ),
 	            React.createElement(
 	                'div',

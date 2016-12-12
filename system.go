@@ -234,6 +234,18 @@ func (s *System) FeatureByID(ID string) *feature.Feature {
 	return s.features[ID]
 }
 
+// FeatureByAID returns the feature with the specified automation ID, nil if not found
+func (s *System) FeatureByAID(featureType, AID string) *feature.Feature {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, f := range s.features {
+		if f.Type == featureType && f.AutomationID == AID {
+			return f
+		}
+	}
+	return nil
+}
+
 // FeaturesByType returns a map of all the features in the system that match the feature type, keyed
 // by feature ID
 func (s *System) FeaturesByType(ft string) map[string]*feature.Feature {

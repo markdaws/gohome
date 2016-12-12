@@ -57,6 +57,11 @@ type Feature struct {
 	// Type represents a concrete type for the feature e.g. LightZone, Outlet etc.
 	Type string `json:"type"`
 
+	// AutomationID is a more user friendly automation ID, that can be any value the user
+	// wants to reference a feature in an automation script, vs the ID attribute that is
+	// an unfriendly GUID
+	AutomationID string `json:"aid"`
+
 	// Address an optional address to identify the feature locally
 	Address string `json:"address"`
 

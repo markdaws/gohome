@@ -12,10 +12,6 @@ var classes = new BEMHelper({
 });
 require('../../css/components/FeatureInfo.less')
 
-//TODO: Remove zoneTypePicker
-//TODO: Remove zoneOutputPicker
-//TODO: Remove sensor specific cmps
-
 var FeatureInfo = React.createClass({
     mixins: [UniqueIdMixin, InputValidationMixin],
 
@@ -29,6 +25,7 @@ var FeatureInfo = React.createClass({
         var f = this.props.feature
         return {
             id: f.id,
+            aid: f.aid,
             name: f.name,
             description: f.description,
             address: f.address,
@@ -45,6 +42,7 @@ var FeatureInfo = React.createClass({
         var f = this.props.feature;
         return {
             id: f.id,
+            aid: s.aid,
             name: s.name,
             description: s.description,
             address: s.address,
@@ -163,6 +161,18 @@ var FeatureInfo = React.createClass({
                       type="text"
                       id={this.uid("address")} />
                   {this.errMsg('address')}
+              </div>
+              <div className={this.addErr("form-group", "aid")}>
+                  <label {...classes('label', '', 'control-label')} htmlFor={this.uid("aid")}>Automation ID</label>
+                  <input
+                      value={this.state.aid}
+                      readOnly={this.isReadOnly("aid")}
+                      data-statepath="aid"
+                      onChange={this._changed}
+                      className="id form-control"
+                      type="text"
+                      id={this.uid("aid")} />
+                  {this.errMsg("aid")}
               </div>
               <div className="pull-right">
                   {saveBtn}
