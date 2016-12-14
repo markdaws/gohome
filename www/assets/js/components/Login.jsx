@@ -9,6 +9,8 @@ var classes = new BEMHelper({
 });
 require('../../css/components/Login.less')
 
+const logo = require('../../images/logo.png');
+
 var Login = React.createClass({
     getInitialState: function() {
         return {
@@ -50,7 +52,7 @@ var Login = React.createClass({
         return (
             <div {...classes()}>
                 <div {...classes('header')}>
-                    <img {...classes('header-logo')} src="/assets/images/logo.png"></img>
+                    <img {...classes('header-logo')} src={logo}></img>
                 </div>
 
                 <div {...classes('login-form')}>

@@ -11,23 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-/*
-type MockSystem struct {
-}
-
-func (s *MockSystem) NewID() string {
-	return ""
-}
-func (s *MockSystem) SceneByID(ID string) *Scene {
-	return nil
-}
-func (s *MockSystem) FeaturesByType(ft string) map[string]*feature.Feature {
-}
-func (s *MockSystem) FeatureByID(ID string) *feature.Feature {
-}
-func (s *MockSystem) FeatureByAID(AID string) *feature.Feature {
-}*/
-
 func TestFeatureTriggerCount(t *testing.T) {
 	t.Parallel()
 

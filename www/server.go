@@ -35,6 +35,23 @@ func ListenAndServe(
 	return server.listenAndServe(addr)
 }
 
+func cacheHandler(prefix string, h http.Handler) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if prefix != "" {
+			temp := strings.Replace(r.URL.Path, prefix, "", -1)
+			index := strings.Index(temp, "/")
+			URLNoTimestamp := prefix + temp[index+1:]
+			r.URL.Path = URLNoTimestamp
+		}
+
+		// Since all resources include cache busting values in the URL each time we have a new build,
+		// we just set the max cache values here
+		w.Header().Add("Cache-Control", "public; max-age=31536000")
+		w.Header().Add("Expires", time.Now().AddDate(1, 0, 0).Format(http.TimeFormat))
+		h.ServeHTTP(w, r)
+	}
+}
+
 func (s *wwwServer) listenAndServe(addr string) error {
 
 	r := mux.NewRouter()
@@ -44,24 +61,23 @@ func (s *wwwServer) listenAndServe(addr string) error {
 	mime.AddExtensionType(".woff2", "application/font-woff2")
 	mime.AddExtensionType(".eot", "application/vnd.ms-fontobject")
 
-	cssHandler := http.FileServer(http.Dir(s.rootPath + "/assets/css/"))
-	extCssHandler := http.FileServer(http.Dir(s.rootPath + "/assets/css/ext/"))
-	jsHandler := http.FileServer(http.Dir(s.rootPath + "/assets/js/"))
-	jsExtHandler := http.FileServer(http.Dir(s.rootPath + "/assets/js/ext/"))
-	fontHandler := http.FileServer(http.Dir(s.rootPath + "/assets/fonts/"))
-	jsxHandler := http.FileServer(http.Dir(s.rootPath + "/assets/jsx/"))
-	extImageHandler := http.FileServer(http.Dir(s.rootPath + "/assets/images/ext/"))
-	imageHandler := http.FileServer(http.Dir(s.rootPath + "/assets/images/"))
+	fileHandler := http.FileServer(http.Dir(s.rootPath + "/dist/"))
 
-	sub := r.PathPrefix("/assets").Subrouter()
-	sub.Handle("/css/{filename}", http.StripPrefix("/assets/css/", gzip.GzipHandler(cssHandler)))
-	sub.Handle("/css/ext/{filename}", http.StripPrefix("/assets/css/ext/", gzip.GzipHandler(extCssHandler)))
-	sub.Handle("/js/{filename}", http.StripPrefix("/assets/js/", gzip.GzipHandler(jsHandler)))
-	sub.Handle("/js/ext/{filename}", http.StripPrefix("/assets/js/ext/", gzip.GzipHandler(jsExtHandler)))
-	sub.Handle("/fonts/{filename}", http.StripPrefix("/assets/fonts/", fontHandler))
-	sub.Handle("/jsx/{filename}", http.StripPrefix("/assets/jsx/", gzip.GzipHandler(jsxHandler)))
-	sub.Handle("/images/ext/{filename}", http.StripPrefix("/assets/images/ext/", extImageHandler))
-	sub.Handle("/images/{filename}", http.StripPrefix("/assets/images/", imageHandler))
+	sub := r.PathPrefix("/").Subrouter()
+
+	// For each type of asset, they can be accessed via a direct url like /images/foo.png or they can
+	// be accessed with some cache busting value prepended before the filename e.g.
+	// /images/12345/foo.png which will redirect to foo.png on the filesystem. This allows you to either
+	// put a hash value in the file name of an asset or some cache busting value like the build time in the
+	// URL instead of having to rename files
+	sub.HandleFunc("/js/{filename}", cacheHandler("", gzip.GzipHandler(fileHandler)))
+	sub.HandleFunc("/js/{timestamp}/{filename}", cacheHandler("/js/", gzip.GzipHandler(fileHandler)))
+	sub.HandleFunc("/css/{filename}", cacheHandler("", gzip.GzipHandler(fileHandler)))
+	sub.HandleFunc("/css/{timestamp}/{filename}", cacheHandler("/css/", gzip.GzipHandler(fileHandler)))
+	sub.HandleFunc("/fonts/{filename}", cacheHandler("", fileHandler))
+	sub.HandleFunc("/fonts/{timestamp}/{filename}", cacheHandler("/fonts/", fileHandler))
+	sub.HandleFunc("/images/{filename}", cacheHandler("", fileHandler))
+	sub.HandleFunc("/images/{timestamp}/{filename}", cacheHandler("/images/", fileHandler))
 
 	r.HandleFunc("/api/v1/users/{login}/sessions", apiNewSessionHandler(s.system, s.sessions)).Methods("POST")
 	r.HandleFunc("/logout", logoutHandler(s.system, s.rootPath))
@@ -78,7 +94,7 @@ func (s *wwwServer) listenAndServe(addr string) error {
 
 func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, rootPath+"/assets/html/index.html")
+		http.ServeFile(w, r, rootPath+"/dist/index.html")
 	}
 }
 
@@ -89,7 +105,7 @@ func logoutHandler(sys *gohome.System, rootPath string) func(http.ResponseWriter
 			Login: "",
 		})
 
-		http.ServeFile(w, r, rootPath+"/assets/html/logout.html")
+		http.ServeFile(w, r, rootPath+"/dist/logout.html")
 	}
 }
 
