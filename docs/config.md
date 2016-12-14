@@ -1,4 +1,6 @@
-Below are all of the config settings for the goHOME application
+Below are all of the config settings for the goHOME application.
+
+By default goHOME will look in the directory where the gohome executable is located for a file called config.json If it can't find one it will create default values for all the settings, so if you want to change the defaults you will need to create a config.json file in the executable directory.
 
 ```json5
 {
