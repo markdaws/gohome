@@ -135,8 +135,33 @@ You can now go to your browser and load the app at the specified location.
 ##Changing the IP address/port 
 If you don't want the default IP/port addresses, you can change the values in the [config](docs/config.md)
 
+##Running the app on boot
+Before running the following commands, change back to the "pi" user instead of the gohome user.
 
-##TODO:
-- run the process as a service
-- autostart
-- restart on crash
+To automatically run the gohome server when the Raspberry PI reboots, create a file at the following location /etc/systemd/system/gohome.service and paste the following contents
+
+```
+[Unit]
+Description=goHOME Server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/gohome/go/src/github.com/markdaws/gohome/gohome --server
+Restart=always
+User=gohome
+WorkingDirectory=/home/gohome/go/src/github.com/markdaws/gohome
+
+[Install]
+WantedBy=multi-user.target
+```
+Save the file, then run the following to make the goHOME server run on boot
+```bash
+sudo systemctl enable gohome
+```
+
+You can start the service by running, without rebooting by
+```bash
+sudo systemctl start gohome
+```
