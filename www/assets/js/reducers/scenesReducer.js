@@ -16,23 +16,20 @@ module.exports = function(state, action) {
         break;
 
     case Constants.SCENE_LOAD_ALL_RAW:
-        newState = Object.assign({}, newState);
         action.data.sort(function(a, b) {
             return a.name.localeCompare(b.name);
         });
-        newState.items = action.data;
+        newState = action.data;
         break;
 
     case Constants.SCENE_NEW_CLIENT:
-        newState = Object.assign({}, newState);
-        newState.items = [{
+        newState = [{
             clientId: uuid.v4()
-        }].concat(newState.items);
+        }].concat(newState);
         break;
 
     case Constants.SCENE_CREATE_RAW:
-        newState = Object.assign({}, newState);
-        newState.items = newState.items.map(function(scene) {
+        newState = newState.map(function(scene) {
             // Replace with actual scene from the server
             if (scene.clientId === action.clientId) {
                 delete action.data.clientId;
@@ -43,8 +40,7 @@ module.exports = function(state, action) {
         break;
 
     case Constants.SCENE_UPDATE_RAW:
-        newState = Object.assign({}, newState);
-        newState.items = newState.items.map(function(scene) {
+        newState = newState.map(function(scene) {
             // Replace with actual scene from the server
             if (scene.id === action.id) {
                 return action.data;
@@ -57,19 +53,17 @@ module.exports = function(state, action) {
         break;
 
     case Constants.SCENE_DESTROY_RAW:
-        newState = Object.assign({}, newState);
-
-        for (i=0; i<newState.items.length; ++i) {
+        for (i=0; i<newState.length; ++i) {
             var found = false;
-            if (action.clientId && (action.clientId === newState.items[i].clientId)) {
+            if (action.clientId && (action.clientId === newState[i].clientId)) {
                 found = true;
             }
-            if (action.id && (action.id === newState.items[i].id)) {
+            if (action.id && (action.id === newState[i].id)) {
                 found = true;
             }
             if (found) {
-                newState.items = newState.items.slice();
-                newState.items.splice(i, 1);
+                newState = newState.slice();
+                newState.splice(i, 1);
                 break;
             }
         }
@@ -84,12 +78,11 @@ module.exports = function(state, action) {
     case Constants.SCENE_COMMAND_SAVE_RAW:
     case Constants.SCENE_COMMAND_SAVE_FAIL:
     case Constants.SCENE_COMMAND_DELETE_RAW:
-        newState = Object.assign({}, newState);
-        var scenes = newState.items;
+        var scenes = newState;
         for (i=0;i<scenes.length; ++i) {
             if (scenes[i].id === action.sceneId) {
-                newState.items = newState.items.slice();
-                newState.items[i].commands = CommandsReducer(scenes[i].commands || [], action);
+                newState = newState.slice();
+                newState[i].commands = CommandsReducer(scenes[i].commands || [], action);
                 break;
             }
         }

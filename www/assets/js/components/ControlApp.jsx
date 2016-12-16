@@ -20,8 +20,7 @@ var ControlApp = React.createClass({
         return {
             devices: [],
             automations: [],
-            //TODO: Change to array
-            scenes: { items: [] }
+            scenes: []
         };
     },
 
@@ -35,7 +34,7 @@ var ControlApp = React.createClass({
         var featureBody;
         if (this.props.devices.length === 0) {
             featureBody = (
-                <h5 {...classes('empty-message-zones')}>You don't have any devices or feature. Go to the devices tab to get started.</h5>
+                <h5 {...classes('empty-message-zones')}>You haven't added any hardware. Go to the hardware tab to get started. </h5>
             );
         } else {
             featureBody = (
@@ -44,9 +43,9 @@ var ControlApp = React.createClass({
         }
 
         var emptySceneBody;
-        if (this.props.scenes.items.length === 0) {
+        if (this.props.scenes.length === 0) {
             emptySceneBody = (
-                <h5 {...classes('empty-message-scenes')}>You don't have any scenes.  Click on the Edit button to add a new Scene.</h5>
+                <h5 {...classes('empty-message-scenes')}>You don't have any scenes.  Click on the "+" button to add a new Scene.</h5>
             );
         }
 

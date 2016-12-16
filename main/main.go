@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"time"
 
@@ -149,7 +148,7 @@ func startServer() {
 		for {
 			endPoint := cfg.WWWAddr + ":" + cfg.WWWPort
 			log.V("WWW Server starting, listening on %s", endPoint)
-			err := www.ListenAndServe("./www", endPoint, sys, sessions)
+			err := www.ListenAndServe("./www", endPoint, sys, sessions, &cfg)
 			log.E("error with WWW server, shutting down: %s\n", err)
 			time.Sleep(time.Second * 5)
 		}
@@ -200,8 +199,8 @@ func startServer() {
 	<-done
 }
 
-func loadSystem() (*gohome.System, config) {
-	var cfg *config
+func loadSystem() (*gohome.System, gohome.Config) {
+	var cfg *gohome.Config
 
 	// Find the config file, if we can't find one, fall back to defaults
 	folderPath, err := osext.ExecutableFolder()
@@ -213,15 +212,15 @@ func loadSystem() (*gohome.System, config) {
 	file, err := os.Open(folderPath + "/config.json")
 	if err != nil {
 		log.V("Error trying to open config.json [%s], falling back to defaults", folderPath)
-		cfg = NewDefaultConfig(folderPath)
+		cfg = gohome.NewDefaultConfig(folderPath)
 	} else {
 		decoder := json.NewDecoder(file)
 		err := decoder.Decode(&cfg)
 		if err != nil {
 			log.V("Failed to parse config.json: %s, generating default config", err)
-			cfg = NewDefaultConfig(folderPath)
+			cfg = gohome.NewDefaultConfig(folderPath)
 		} else {
-			defaultCfg := NewDefaultConfig(folderPath)
+			defaultCfg := gohome.NewDefaultConfig(folderPath)
 
 			// Merge the config and default config, user does not have to specify
 			// all of the config values
@@ -249,37 +248,4 @@ func loadSystem() (*gohome.System, config) {
 	}
 
 	return sys, *cfg
-}
-
-// getIPV4NonLoopbackAddr returns the first ipv4 non loopback address
-// we can find. If non can be found an error is returned
-func getIPV4NonLoopbackAddr() (string, error) {
-
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return "", err
-	}
-
-	for _, i := range ifaces {
-		addrs, err := i.Addrs()
-		if err != nil {
-			continue
-		}
-
-		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-
-			if ip.To4() != nil &&
-				!ip.IsLoopback() {
-				return ip.To4().String(), nil
-			}
-		}
-	}
-	return "", nil
 }

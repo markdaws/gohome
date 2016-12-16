@@ -12,7 +12,7 @@ require('../../css/components/System.less')
 var System = React.createClass({
     getInitialState: function() {
         return {
-            importing: false,
+            importing: this.props.devices.length === 0,
         };
     },
 

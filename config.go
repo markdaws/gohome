@@ -1,13 +1,17 @@
-package main
+package gohome
 
-import "github.com/markdaws/gohome/log"
+import (
+	"net"
+
+	"github.com/markdaws/gohome/log"
+)
 
 type location struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
-type config struct {
+type Config struct {
 	// SystemPath is a path to the json file containing all of the system information
 	SystemPath string `json:"systemPath"`
 
@@ -42,7 +46,7 @@ type config struct {
 	//TODO: TimeZone?
 }
 
-func (c *config) Merge(cfg config) {
+func (c *Config) Merge(cfg Config) {
 	if c.SystemPath == "" {
 		c.SystemPath = cfg.SystemPath
 	}
@@ -76,9 +80,9 @@ func (c *config) Merge(cfg config) {
 	}
 }
 
-// defaultConfig returns a default config option with all the values
+// defaultConfig returns a default Config option with all the values
 // populated to some default values
-func NewDefaultConfig(systemPath string) *config {
+func NewDefaultConfig(systemPath string) *Config {
 	addr := "127.0.0.1"
 	useLocalhost := false
 	if !useLocalhost {
@@ -90,7 +94,7 @@ func NewDefaultConfig(systemPath string) *config {
 		}
 	}
 
-	cfg := config{
+	cfg := Config{
 		SystemPath:     systemPath + "/gohome.json",
 		EventLogPath:   systemPath + "/events.json",
 		AutomationPath: systemPath + "/automation",
@@ -104,4 +108,37 @@ func NewDefaultConfig(systemPath string) *config {
 	}
 
 	return &cfg
+}
+
+// getIPV4NonLoopbackAddr returns the first ipv4 non loopback address
+// we can find. If non can be found an error is returned
+func getIPV4NonLoopbackAddr() (string, error) {
+
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+
+	for _, i := range ifaces {
+		addrs, err := i.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			if ip.To4() != nil &&
+				!ip.IsLoopback() {
+				return ip.To4().String(), nil
+			}
+		}
+	}
+	return "", nil
 }

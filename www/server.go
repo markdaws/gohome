@@ -18,6 +18,7 @@ type wwwServer struct {
 	rootPath string
 	system   *gohome.System
 	sessions *gohome.Sessions
+	cfg      *gohome.Config
 }
 
 // ListenAndServe creates a new WWW server, that handles API calls and also
@@ -26,11 +27,13 @@ func ListenAndServe(
 	rootPath string,
 	addr string,
 	system *gohome.System,
-	sessions *gohome.Sessions) error {
+	sessions *gohome.Sessions,
+	cfg *gohome.Config) error {
 	server := &wwwServer{
 		rootPath: rootPath,
 		system:   system,
 		sessions: sessions,
+		cfg:      cfg,
 	}
 	return server.listenAndServe(addr)
 }
@@ -81,6 +84,8 @@ func (s *wwwServer) listenAndServe(addr string) error {
 
 	r.HandleFunc("/api/v1/users/{login}/sessions", apiNewSessionHandler(s.system, s.sessions)).Methods("POST")
 	r.HandleFunc("/logout", logoutHandler(s.system, s.rootPath))
+	r.HandleFunc("/config", configHandler(s.cfg, s.sessions))
+	r.HandleFunc("/system", systemHandler(s.cfg, s.sessions))
 	r.HandleFunc("/", rootHandler(s.rootPath))
 
 	server := &http.Server{
@@ -95,6 +100,56 @@ func (s *wwwServer) listenAndServe(addr string) error {
 func rootHandler(rootPath string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, rootPath+"/dist/index.html")
+	}
+}
+
+func configHandler(cfg *gohome.Config, sessions *gohome.Sessions) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sid, err := r.Cookie("sid")
+		if err != nil {
+			w.Write([]byte("Must be logged in to see this file"))
+			return
+		}
+
+		_, ok := sessions.Get(sid.Value)
+		if !ok {
+			w.Write([]byte("Must be logged in to see this file"))
+			return
+		}
+
+		b, err := json.MarshalIndent(cfg, "", "  ")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(b))
+	}
+}
+
+func systemHandler(cfg *gohome.Config, sessions *gohome.Sessions) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sid, err := r.Cookie("sid")
+		if err != nil {
+			w.Write([]byte("Must be logged in to see this file"))
+			return
+		}
+
+		_, ok := sessions.Get(sid.Value)
+		if !ok {
+			w.Write([]byte("Must be logged in to see this file"))
+			return
+		}
+
+		b, err := ioutil.ReadFile(cfg.SystemPath)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(b)
 	}
 }
 

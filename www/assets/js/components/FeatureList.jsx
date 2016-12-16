@@ -331,12 +331,13 @@ var FeatureList = React.createClass({
                               ref={"cell_feature_" + feature.id}
                               feature={feature} />,
                     content: <FeatureControl
-                    key={feature.id}
-                    id={feature.id}
-                    onAttrChanged={this.attrChanged}
-                    didMount={this.expanderMounted}
-                    willUnmount={this.expanderUnmounted}
-                    feature={feature} />
+                                 key={feature.id}
+                                 id={feature.id}
+                                 height={300}
+                                 onAttrChanged={this.attrChanged}
+                                 didMount={this.expanderMounted}
+                                 willUnmount={this.expanderUnmounted}
+                                 feature={feature} />
                 };
 
                 // For UI purposes we will group some of the more

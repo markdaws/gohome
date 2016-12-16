@@ -191,9 +191,14 @@ var Grid = React.createClass({
             console.log('[' + this.props.debugName + '] selectedIndex: ' + this.state.selectedIndex);
         }
 
+        var height;
+        if (this.state.expanderContent) {
+            height = this.state.expanderContent.props.height;
+        }
+
         var transitionGroup = (
             <ReactTransitionGroup key={key + "transition"}>
-                <ExpanderWrapper key={key + 'wrapper'}>
+                <ExpanderWrapper key={key + 'wrapper'} contentHeight={height}>
                     {this.state.expanderContent}
                 </ExpanderWrapper>
             </ReactTransitionGroup>
@@ -232,9 +237,19 @@ var ExpanderWrapper = React.createClass({
     // Part of the calls for TransitionGroup, have to set the CSS property
     // to the initial value, then after a small delay set the end animation value
     componentWillAppear: function(cb) {
+        // TODO: gross - fix these animations, react + animation == suckage
+        var height = -500;
+        if (this.props.contentHeight) {
+            height = -1 * this.props.contentHeight;
+        }
+
         var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
-        $this.css({ 'margin-top': -500 });
+        $this.css( 'margin-top', height + 'px');
+        $this.css( '-webkit-transition', 'none');
+        $this.css( 'transition', 'none');
         setTimeout(function() {
+            $this.css( '-webkit-transition', 'margin-top 550ms ease-out');
+            $this.css( 'transition', 'margin-top 550ms ease-out');
             cb();
         }, 10);
     },
@@ -243,9 +258,11 @@ var ExpanderWrapper = React.createClass({
         $this.css({ 'margin-top': '0px' });
     },
     componentWillLeave: function(cb) {
+        //TODO: Not being executed
+        /*
         var $this = $(ReactDOM.findDOMNode(this)).find('animateWrapper');
         $this.css({ 'margin-top': -500 });
-        cb();
+        cb();*/
     },
     render: function() {
         return (

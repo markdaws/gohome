@@ -20,12 +20,16 @@ var SceneList = React.createClass({
 
     getDefaultProps: function() {
         return {
+            scenes: [],
             devices: []
         };
     },
 
     getInitialState: function() {
-        return { editMode: false };
+        return {
+            // If we don't have any scenes, then we immediately enter in edit mode
+            editMode: this.props.scenes.length === 0
+        };
     },
 
     edit: function() {
@@ -40,19 +44,14 @@ var SceneList = React.createClass({
         var body;
         var btns;
 
-        var scenes = this.props.scenes.items;
+        var scenes = this.props.scenes;
         var gridCells = [];
         if (this.state.editMode) {
             body = scenes.map(function(scene) {
-                var saveState;
-
-                // Check for input validation errors from the server
-                saveState = (this.props.scenes.saveState[scene.id] || {});
-
                 return (
                     <div {...classes('scene-info')} key={scene.id || scene.clientId}>
                         <SceneInfo
-                            scenes={this.props.scenes.items}
+                            scenes={this.props.scenes}
                             devices={this.props.devices}
                             scene={scene}
                             readOnlyFields="id"

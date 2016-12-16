@@ -5,14 +5,7 @@ module.exports = function() {
             devices: []
         },
 
-        scenes: {
-            // array of scene objects
-            items: [],
-
-            // TODO: Rethink
-            // Save state of the different scenes, will be keyed by id, or  client id if no id
-            saveState: { }
-        },
+        scenes: [],
 
         // Initial load of the app
         appLoadStatus: {
@@ -23,9 +16,5 @@ module.exports = function() {
 
         // Array of all the automation scripts loaded in the system
         automations: [],
-
-        // An array of errors that should be displayed in the app
-        //TODO: delete
-        errors: []
     };
 };

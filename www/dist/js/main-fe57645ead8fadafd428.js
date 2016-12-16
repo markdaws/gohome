@@ -51,7 +51,7 @@
 	var ControlApp = __webpack_require__(172);
 	var Provider = __webpack_require__(173).Provider;
 	var store = __webpack_require__(312);
-	var Login = __webpack_require__(321);
+	var Login = __webpack_require__(320);
 	var Api = __webpack_require__(204);
 
 	/*
@@ -21496,8 +21496,7 @@
 	        return {
 	            devices: [],
 	            automations: [],
-	            //TODO: Change to array
-	            scenes: { items: [] }
+	            scenes: []
 	        };
 	    },
 
@@ -21513,18 +21512,18 @@
 	            featureBody = React.createElement(
 	                'h5',
 	                classes('empty-message-zones'),
-	                'You don\'t have any devices or feature. Go to the devices tab to get started.'
+	                'You haven\'t added any hardware. Go to the hardware tab to get started. '
 	            );
 	        } else {
 	            featureBody = React.createElement(FeatureList, { devices: this.props.devices });
 	        }
 
 	        var emptySceneBody;
-	        if (this.props.scenes.items.length === 0) {
+	        if (this.props.scenes.length === 0) {
 	            emptySceneBody = React.createElement(
 	                'h5',
 	                classes('empty-message-scenes'),
-	                'You don\'t have any scenes.  Click on the Edit button to add a new Scene.'
+	                'You don\'t have any scenes.  Click on the "+" button to add a new Scene.'
 	            );
 	        }
 
@@ -23442,7 +23441,7 @@
 
 	    getInitialState: function getInitialState() {
 	        return {
-	            importing: false
+	            importing: this.props.devices.length === 0
 	        };
 	    },
 
@@ -26581,12 +26580,17 @@
 	            console.log('[' + this.props.debugName + '] selectedIndex: ' + this.state.selectedIndex);
 	        }
 
+	        var height;
+	        if (this.state.expanderContent) {
+	            height = this.state.expanderContent.props.height;
+	        }
+
 	        var transitionGroup = React.createElement(
 	            ReactTransitionGroup,
 	            { key: key + "transition" },
 	            React.createElement(
 	                ExpanderWrapper,
-	                { key: key + 'wrapper' },
+	                { key: key + 'wrapper', contentHeight: height },
 	                this.state.expanderContent
 	            )
 	        );
@@ -26628,9 +26632,19 @@
 	    // Part of the calls for TransitionGroup, have to set the CSS property
 	    // to the initial value, then after a small delay set the end animation value
 	    componentWillAppear: function componentWillAppear(cb) {
+	        // TODO: gross - fix these animations, react + animation == suckage
+	        var height = -500;
+	        if (this.props.contentHeight) {
+	            height = -1 * this.props.contentHeight;
+	        }
+
 	        var $this = $(ReactDOM.findDOMNode(this)).find('.animateWrapper');
-	        $this.css({ 'margin-top': -500 });
+	        $this.css('margin-top', height + 'px');
+	        $this.css('-webkit-transition', 'none');
+	        $this.css('transition', 'none');
 	        setTimeout(function () {
+	            $this.css('-webkit-transition', 'margin-top 550ms ease-out');
+	            $this.css('transition', 'margin-top 550ms ease-out');
 	            cb();
 	        }, 10);
 	    },
@@ -26639,9 +26653,11 @@
 	        $this.css({ 'margin-top': '0px' });
 	    },
 	    componentWillLeave: function componentWillLeave(cb) {
+	        //TODO: Not being executed
+	        /*
 	        var $this = $(ReactDOM.findDOMNode(this)).find('animateWrapper');
 	        $this.css({ 'margin-top': -500 });
-	        cb();
+	        cb();*/
 	    },
 	    render: function render() {
 	        return React.createElement(
@@ -27114,7 +27130,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-Grid {\n  padding-bottom: 12px;\n  position: relative;\n  background-color: #fff;\n  width: 100%;\n  /*needed to remove gaps between cells*/\n  font-size: 0px;\n}\n.b-Grid__cell {\n  background-color: #fff;\n  overflow: hidden;\n  font-size: 0px;\n  border: 1px solid #eee;\n  text-align: center;\n}\n.b-Grid__expanded-arrow {\n  font-size: 58px;\n  margin-top: -30px;\n  color: #eee;\n  pointer-events: none;\n}\n.b-Grid__expanded-arrow--hidden {\n  display: none;\n}\n.b-Expander {\n  background-color: #eee;\n  width: 100%;\n  font-size: 12px;\n  overflow: hidden;\n  max-height: 500px;\n  position: relative;\n}\n.b-Expander .animateWrapper {\n  margin-top: -500px;\n  transition: margin-top 550ms ease-out;\n  -webkit-transition: margin-top 550ms ease-out;\n}\n", ""]);
+	exports.push([module.id, ".b-Grid {\n  padding-bottom: 12px;\n  position: relative;\n  background-color: #fff;\n  width: 100%;\n  /*needed to remove gaps between cells*/\n  font-size: 0px;\n}\n.b-Grid__cell {\n  background-color: #fff;\n  overflow: hidden;\n  font-size: 0px;\n  border: 1px solid #eee;\n  text-align: center;\n}\n.b-Grid__expanded-arrow {\n  font-size: 58px;\n  margin-top: -30px;\n  color: #eee;\n  pointer-events: none;\n}\n.b-Grid__expanded-arrow--hidden {\n  display: none;\n}\n.b-Expander {\n  background-color: #eee;\n  width: 100%;\n  font-size: 12px;\n  overflow: hidden;\n  max-height: 500px;\n  position: relative;\n}\n.b-Expander .animateWrapper {\n  transition: margin-top 550ms ease-out;\n  -webkit-transition: margin-top 550ms ease-out;\n}\n", ""]);
 
 	// exports
 
@@ -27905,12 +27921,16 @@
 
 	    getDefaultProps: function getDefaultProps() {
 	        return {
+	            scenes: [],
 	            devices: []
 	        };
 	    },
 
 	    getInitialState: function getInitialState() {
-	        return { editMode: false };
+	        return {
+	            // If we don't have any scenes, then we immediately enter in edit mode
+	            editMode: this.props.scenes.length === 0
+	        };
 	    },
 
 	    edit: function edit() {
@@ -27925,20 +27945,15 @@
 	        var body;
 	        var btns;
 
-	        var scenes = this.props.scenes.items;
+	        var scenes = this.props.scenes;
 	        var gridCells = [];
 	        if (this.state.editMode) {
 	            body = scenes.map(function (scene) {
-	                var saveState;
-
-	                // Check for input validation errors from the server
-	                saveState = this.props.scenes.saveState[scene.id] || {};
-
 	                return React.createElement(
 	                    'div',
 	                    _extends({}, classes('scene-info'), { key: scene.id || scene.clientId }),
 	                    React.createElement(SceneInfo, {
-	                        scenes: this.props.scenes.items,
+	                        scenes: this.props.scenes,
 	                        devices: this.props.devices,
 	                        scene: scene,
 	                        readOnlyFields: 'id',
@@ -31091,6 +31106,7 @@
 	                    content: React.createElement(FeatureControl, {
 	                        key: feature.id,
 	                        id: feature.id,
+	                        height: 300,
 	                        onAttrChanged: this.attrChanged,
 	                        didMount: this.expanderMounted,
 	                        willUnmount: this.expanderUnmounted,
@@ -31753,7 +31769,7 @@
 
 
 	// module
-	exports.push([module.id, ".b-ControlApp {\n  /* bootstrap hack: fix content width inside hidden tabs */\n  /* bootstrap hack end */\n}\n.b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp__empty-message-automations {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp .tab-content {\n  max-width: 768px;\n  margin: 0 auto;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n.b-ControlApp .tab-content > .tab-pane:not(.active),\n.b-ControlApp .pill-content > .pill-pane:not(.active) {\n  display: block;\n  height: 0;\n  overflow-y: hidden;\n}\n", ""]);
+	exports.push([module.id, ".b-ControlApp {\n  padding-bottom: 150px;\n  /* bootstrap hack: fix content width inside hidden tabs */\n  /* bootstrap hack end */\n}\n.b-ControlApp__spinner {\n  width: 100%;\n  position: absolute;\n  top: 120px;\n  text-align: center;\n  font-size: 25px;\n}\n.b-ControlApp__empty-message {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 40px;\n}\n.b-ControlApp__empty-message-zones {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 67px;\n}\n.b-ControlApp__empty-message-scenes {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp__empty-message-automations {\n  margin: 12px;\n  font-weight: 200;\n  font-size: 20px;\n  margin-top: 20px;\n}\n.b-ControlApp .tab-content {\n  max-width: 768px;\n  margin: 0 auto;\n}\n.b-ControlApp .nav-tabs {\n  border-bottom: 2px solid #337ab7;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li.active > a:focus,\n.b-ControlApp .nav-tabs > li.active > a:hover {\n  border-width: 0;\n  background-color: #337ab7;\n}\n.b-ControlApp .nav-tabs > li > a {\n  border: none;\n  color: #fff;\n  opacity: 0.6;\n  text-align: center;\n  min-width: 70px;\n  font-size: 25px;\n}\n.b-ControlApp .nav-tabs > li.active > a,\n.b-ControlApp .nav-tabs > li > a:hover {\n  border: none;\n  color: #fff !important;\n  background: transparent;\n  opacity: 1.0;\n}\n.b-ControlApp .nav-tabs > li > a::after {\n  content: \"\";\n  background: #fff;\n  height: 4px;\n  position: absolute;\n  width: 100%;\n  left: 0px;\n  bottom: -1px;\n  transition: all 250ms ease 0s;\n  transform: scale(0);\n}\n.b-ControlApp .nav-tabs > li.active > a::after,\n.b-ControlApp .nav-tabs > li:hover > a::after {\n  transform: scale(1);\n}\n.b-ControlApp .tab-nav > li > a::after {\n  background: #21527d none repeat scroll 0% 0%;\n  color: #fff;\n}\n.b-ControlApp .hideTabContent {\n  /* Have to hide visibility not display because otherwise the with of the content\n        isn't set and then the grid computes the wrong width */\n  visibility: hidden;\n}\n.b-ControlApp .tab-content > .tab-pane:not(.active),\n.b-ControlApp .pill-content > .pill-pane:not(.active) {\n  display: block;\n  height: 0;\n  overflow-y: hidden;\n}\n", ""]);
 
 	// exports
 
@@ -31770,14 +31786,12 @@
 	var systemReducer = __webpack_require__(315);
 	var scenesReducer = __webpack_require__(316);
 	var loadStatusReducer = __webpack_require__(318);
-	var errorReducer = __webpack_require__(319);
-	var automationReducer = __webpack_require__(320);
+	var automationReducer = __webpack_require__(319);
 
 	var rootReducer = Redux.combineReducers({
 	    system: systemReducer,
 	    scenes: scenesReducer,
 	    appLoadStatus: loadStatusReducer,
-	    errors: errorReducer,
 	    automations: automationReducer
 	});
 
@@ -31824,14 +31838,7 @@
 	            devices: []
 	        },
 
-	        scenes: {
-	            // array of scene objects
-	            items: [],
-
-	            // TODO: Rethink
-	            // Save state of the different scenes, will be keyed by id, or  client id if no id
-	            saveState: {}
-	        },
+	        scenes: [],
 
 	        // Initial load of the app
 	        appLoadStatus: {
@@ -31841,11 +31848,7 @@
 	        },
 
 	        // Array of all the automation scripts loaded in the system
-	        automations: [],
-
-	        // An array of errors that should be displayed in the app
-	        //TODO: delete
-	        errors: []
+	        automations: []
 	    };
 	};
 
@@ -32007,23 +32010,20 @@
 	            break;
 
 	        case Constants.SCENE_LOAD_ALL_RAW:
-	            newState = Object.assign({}, newState);
 	            action.data.sort(function (a, b) {
 	                return a.name.localeCompare(b.name);
 	            });
-	            newState.items = action.data;
+	            newState = action.data;
 	            break;
 
 	        case Constants.SCENE_NEW_CLIENT:
-	            newState = Object.assign({}, newState);
-	            newState.items = [{
+	            newState = [{
 	                clientId: uuid.v4()
-	            }].concat(newState.items);
+	            }].concat(newState);
 	            break;
 
 	        case Constants.SCENE_CREATE_RAW:
-	            newState = Object.assign({}, newState);
-	            newState.items = newState.items.map(function (scene) {
+	            newState = newState.map(function (scene) {
 	                // Replace with actual scene from the server
 	                if (scene.clientId === action.clientId) {
 	                    delete action.data.clientId;
@@ -32034,8 +32034,7 @@
 	            break;
 
 	        case Constants.SCENE_UPDATE_RAW:
-	            newState = Object.assign({}, newState);
-	            newState.items = newState.items.map(function (scene) {
+	            newState = newState.map(function (scene) {
 	                // Replace with actual scene from the server
 	                if (scene.id === action.id) {
 	                    return action.data;
@@ -32048,19 +32047,17 @@
 	            break;
 
 	        case Constants.SCENE_DESTROY_RAW:
-	            newState = Object.assign({}, newState);
-
-	            for (i = 0; i < newState.items.length; ++i) {
+	            for (i = 0; i < newState.length; ++i) {
 	                var found = false;
-	                if (action.clientId && action.clientId === newState.items[i].clientId) {
+	                if (action.clientId && action.clientId === newState[i].clientId) {
 	                    found = true;
 	                }
-	                if (action.id && action.id === newState.items[i].id) {
+	                if (action.id && action.id === newState[i].id) {
 	                    found = true;
 	                }
 	                if (found) {
-	                    newState.items = newState.items.slice();
-	                    newState.items.splice(i, 1);
+	                    newState = newState.slice();
+	                    newState.splice(i, 1);
 	                    break;
 	                }
 	            }
@@ -32075,12 +32072,11 @@
 	        case Constants.SCENE_COMMAND_SAVE_RAW:
 	        case Constants.SCENE_COMMAND_SAVE_FAIL:
 	        case Constants.SCENE_COMMAND_DELETE_RAW:
-	            newState = Object.assign({}, newState);
-	            var scenes = newState.items;
+	            var scenes = newState;
 	            for (i = 0; i < scenes.length; ++i) {
 	                if (scenes[i].id === action.sceneId) {
-	                    newState.items = newState.items.slice();
-	                    newState.items[i].commands = CommandsReducer(scenes[i].commands || [], action);
+	                    newState = newState.slice();
+	                    newState[i].commands = CommandsReducer(scenes[i].commands || [], action);
 	                    break;
 	                }
 	            }
@@ -32187,30 +32183,6 @@
 	    var newState = state;
 
 	    switch (action.type) {
-	        case Constants.ERROR:
-	            newState = [action.data].concat(newState);
-	            break;
-
-	        default:
-	            newState = state || initialState().errors;
-	    }
-
-	    return newState;
-	};
-
-/***/ },
-/* 320 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Constants = __webpack_require__(206);
-	var initialState = __webpack_require__(314);
-
-	module.exports = function (state, action) {
-	    var newState = state;
-
-	    switch (action.type) {
 	        case Constants.AUTOMATION_LOAD_ALL:
 	            break;
 
@@ -32231,7 +32203,7 @@
 	};
 
 /***/ },
-/* 321 */
+/* 320 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32247,9 +32219,9 @@
 	    name: 'Login',
 	    prefix: 'b-'
 	});
-	__webpack_require__(322);
+	__webpack_require__(321);
 
-	var logo = __webpack_require__(324);
+	var logo = __webpack_require__(323);
 
 	var Login = React.createClass({
 	    displayName: 'Login',
@@ -32352,13 +32324,13 @@
 	module.exports = Login;
 
 /***/ },
-/* 322 */
+/* 321 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(323);
+	var content = __webpack_require__(322);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(214)(content, {});
@@ -32378,7 +32350,7 @@
 	}
 
 /***/ },
-/* 323 */
+/* 322 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(213)();
@@ -32386,13 +32358,13 @@
 
 
 	// module
-	exports.push([module.id, ".b-Login {\n  margin: 20px;\n  font-weight: 200;\n  max-width: 500px;\n  margin: 0 auto;\n}\n.b-Login__header {\n  margin-top: 60px;\n  text-align: center;\n}\n.b-Login__header-logo {\n  width: 210px;\n}\n.b-Login__login-form {\n  margin-top: 50px;\n}\n.b-Login__need-credentials {\n  margin-top: 30px;\n}\n.b-Login__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-Login__error--hidden {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, ".b-Login {\n  font-weight: 200;\n  max-width: 500px;\n  margin: 0 auto;\n  padding: 30px;\n}\n.b-Login__header {\n  margin-top: 60px;\n  text-align: center;\n}\n.b-Login__header-logo {\n  width: 210px;\n}\n.b-Login__login-form {\n  margin-top: 50px;\n}\n.b-Login__need-credentials {\n  margin-top: 30px;\n}\n.b-Login__error {\n  color: #a94442;\n  background-color: #f2dede;\n  border-radius: 4px;\n  padding: 8px;\n  border: 1px solid #ccc;\n  margin-bottom: 12px;\n  margin-top: 12px;\n}\n.b-Login__error--hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
 
 /***/ },
-/* 324 */
+/* 323 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "images/logo-c798f38ab35c213e1300afc6ef651810.png";
