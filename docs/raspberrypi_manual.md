@@ -84,7 +84,6 @@ At the end of the file add the env variables:
 export GOROOT=/usr/local/go
 export PATH="$PATH:$GOROOT/bin"
 export GOPATH=/home/gohome/go
-cd /home/gohome/go/src/github.com/markdaws/gohome
 ```
 At this point we will log out of the SSH session and log back in as the gohome user
 ```bash
