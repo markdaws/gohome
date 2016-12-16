@@ -10,13 +10,56 @@ IMPORTANT: goHOME requires go 1.7 or above, if you have an older version you wil
 Raspberry PI is a cheap PC (around $25) that is popular for home automation, if you want to install goHOME on a Raspberry PI [here](raspberrypi_manual.md) are some detailed instructions.
 
 ###Other systems
-If you want to install goHOME on other systems, Mac, PC etc. then you will need to ...
-//TODO:
+If you want to install goHOME on other systems, Mac, PC etc. then you will need to manually build the goHOME project, currently binaries are not pre-built.  You will need to:
+
+  - Install git (source control): https://git-scm.com/
+  - Install golang https://golang.org/dl/
+  - Setup your GOPATH https://golang.org/doc/code.html#GOPATH
+
+Once you have done this, run the following commands:
+```bash
+go get github.com/markdaws/gohome
+```
+
+Change to the source directory which will be $GOPATH/src/github.com/markdaws/gohome and build the app, running:
+```bash
+go build -o gohome ./main
+```
+
+Once that runs there will be an executable called gohome. You need to add a user to be able to log into the app, for example we will add a user "bob" with password "foobar" by running:
+```bash
+./gohome --set-password bob foobar
+```
+
+Then start the server:
+```bash
+./gohome --server
+```
+In the output you will see a line like (note the IP address is probably different):
+```
+WWW Server starting, listening on 192.168.0.10:8000
+```
+You can now load your browser and log in the to goHOME app!
 
 ##Adding hardware to your system
-To see a list of the currently supported hardware, go here 
+To see a list of the currently supported hardware, go [here](supported_hardware.md) If you want some other piece of hardware to be supported you can create an issue, but note that to add it we need real hardware to test so you can either try to add it to the goHOME source code yourself, or donate some hardware to the project :) I do buy as many devices as I can out of my personal money but there is a limit.
 
-//TODO: If the hardware you own isn't supported, you can either try to add it yourself.
+###IMPORTANT - before you begin
+Before trying to add your hardware to goHOME you will need to set it up, such as connecting it to your router, giving it an IP address etc, you need to do this via the app supplied by the manufacturer, once you have set it up then you can add it to goHOME.  goHOME doesn't support configuring the initial state of the device, most of the time that ability is hidden by the manufacturers and not exposed to 3rd parties.
+
+To add new hardware, go to the hardware tab
+
+![](img/add_hardware_1.png)
+
+Choose the product you want to add, in this example we will add a Belkin WeMo Maker device. IMPORTANT: Make sure if there are any instructions shown in the UI you follow them, different hardware may require extra information, or for you to do something like hit a physical "scan" button on the hardware device before you try to import it.
+
+Here we see that we found one WeMo device, and two features, a sensor and switch connected to the device. If you don't want to import a feature, you can uncheck the tick (maybe you don't use some of the features of a device). When you are ready hit the "Import" button, if there are any errors you will see items change to red, click on them for more info. If all goes well everything goes green
+
+![](img/add_hardware_3.png)
+
+Now the device is imported, close the edit mode by clicking on the "X" in the top right and swap back to the feature tab, you should see the features with their current state
+
+![](img/add_hardware_4.png)
 
 ##Features
 A feature is a piece of functionality that a hardware device supports. Currently supported feature types are:
@@ -40,6 +83,12 @@ Once you have setup your system and have some features, simply click on the feat
 Once you have imported devices and configured your system, you will want to make a copy of the system config file. It is good practise to make a backup before you add new hardware incase something goes wrong or you make changes you are unhappy with. 
 
 By default goHOME stores your system configuration in a file called gohome.json in the same directory where the gohome executable is located. If you want to change the location of the system file you can modify the [config](docs/config.md) file.
+
+To see the contents of your config and system file and be able to quickly copy the contents to back up, log in and then look at the following URLs:
+
+http://[YOUR_IP_ADDRES]/config
+
+http://[YOUR_IP_ADDRESS]/system
 
 ##Adding Scenes
 A scene is simply a group of actions that should be executed when the user activates the scene, for example, a movie scene might execute the following commands:
@@ -79,7 +128,5 @@ To get started creating some automation, follow the steps in [this](docs/automat
 ##TODO:
   - Connecting to goHOME remotely
   - Upgrading gohome
-  - Update config docs, updating file requies reboot of gohome executable
-  - Supported Hardware
   - FAQ delete
   - Device stops working (belkin), changes address, port
