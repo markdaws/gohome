@@ -3,6 +3,7 @@ var ReactRedux = require('react-redux');
 var Api = require('../utils/API.js');
 var SystemActions = require('../actions/SystemActions.js');
 var ImportGroup = require('./ImportGroup.jsx');
+var Spinner = require('./Spinner.jsx');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
@@ -111,7 +112,7 @@ var DiscoverDevices = React.createClass({
                 <div {...classes('discover')}>
                     <button {...classes('', '', (this.state.discovering ? 'disabled' : '') + ' btn btn-primary')}
                         onClick={this.discover}>Discover</button>
-                    <i {...classes('spinner', this.state.discovering ? '' : 'hidden', 'fa fa-spinner fa-spin')}></i>
+                    <Spinner hidden={!this.state.discovering} />
                 </div>
                 {errors}
                 <div {...classes('import-group')}>

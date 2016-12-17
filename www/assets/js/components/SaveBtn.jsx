@@ -1,4 +1,5 @@
 var React = require('react');
+var Spinner = require('./Spinner.jsx');
 
 var SaveBtn = React.createClass({
     getDefaultProps: function() {
@@ -19,9 +20,7 @@ var SaveBtn = React.createClass({
             case SaveBtn.STATUS.Saving:
                 btnType = 'btn-primary';
                 body = (
-                    <div>
-                        <i className="fa fa-spinner fa-spin"></i>
-                    </div>
+                    <Spinner />
                 );
                 break;
             case SaveBtn.STATUS.Error:

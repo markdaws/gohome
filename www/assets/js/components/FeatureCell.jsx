@@ -60,7 +60,7 @@ var FeatureCell = React.createClass({
         var color = 'yellow';
         switch(this.props.feature.type) {
             case Feature.Type.LightZone:
-                icon1 = 'icon ion-ios-lightbulb-outline';
+                icon1 = 'icomoon-ion-ios-lightbulb-outline';
 
                 var isOff = true
                 var onOffVal = attrs[Feature.LightZone.AttrIDs.OnOff].value;
@@ -97,7 +97,7 @@ var FeatureCell = React.createClass({
                 break;
 
             case Feature.Type.Switch:
-                icon1 = 'icon ion-ios-bolt-outline';
+                icon1 = 'icomoon-ion-ios-bolt-outline';
                 var onOffVal = attrs[Feature.Switch.AttrIDs.OnOff].value;
                 if (!onOffVal) {
                     val = '';
@@ -110,7 +110,7 @@ var FeatureCell = React.createClass({
                 break;
 
             case Feature.Type.Outlet:
-                icon1 = 'icon ion-outlet';
+                icon1 = 'icomoon-ion-outlet';
                 var onOffVal = attrs[Feature.Outlet.AttrIDs.OnOff].value;
                 if (!onOffVal) {
                     val = '';
@@ -123,8 +123,8 @@ var FeatureCell = React.createClass({
                 break;
 
             case Feature.Type.WindowTreatment:
-                icon1 = 'icon ion-ios-arrow-thin-up';
-                icon2 = 'icon ion-ios-arrow-thin-down';
+                icon1 = 'icomoon-ion-ios-arrow-thin-up';
+                icon2 = 'icomoon-ion-ios-arrow-thin-down';
                 val = attrs[Feature.WindowTreatment.AttrIDs.Offset].value;
                 if (val == null) {
                     val = '';
@@ -138,7 +138,7 @@ var FeatureCell = React.createClass({
                 break;
 
             case Feature.Type.HeatZone:
-                icon1 = 'icon ion-ios-flame-outline';
+                icon1 = 'icomoon-ion-ios-flame-outline';
                 var current = attrs[Feature.HeatZone.AttrIDs.CurrentTemp].value;
                 var target = attrs[Feature.HeatZone.AttrIDs.TargetTemp].value;
 
@@ -152,7 +152,7 @@ var FeatureCell = React.createClass({
                 break;
 
             case Feature.Type.Sensor:
-                icon1 = 'icon ion-ios-pulse';
+                icon1 = 'icomoon-ion-ios-pulse';
 
                 // Each sensor has only one attribute, pick it out
                 var attribute = attrs[Object.keys(attrs)[0]];
@@ -164,7 +164,7 @@ var FeatureCell = React.createClass({
                 break;
 
             default:
-                icon1 = 'icon ion-ios-help-empty';
+                icon1 = 'icomoon-ion-ios-help-empty';
         }
 
         var icon1Cmp, icon2Cmp;

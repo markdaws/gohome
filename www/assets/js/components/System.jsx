@@ -30,7 +30,7 @@ var System = React.createClass({
             body = <Import/>;
             header = (
                 <button {...classes('exit', '', 'btn btn-default pull-right')} onClick={this.cancelImport}>
-                    <i className="fa fa-times"></i>
+                    <i className="icon-cancel"></i>
                 </button>
             );
         } else {
@@ -47,7 +47,7 @@ var System = React.createClass({
             header = (
                 <div {...classes('header', '', 'clearfix')}>
                     <button className="btn btn-default pull-right" onClick={this.importProduct}>
-                        <i className="ion-arrow-down-c"></i>
+                        <i className="icomoon-ion-ios-arrow-thin-down"></i>
                     </button>
                 </div>
             );

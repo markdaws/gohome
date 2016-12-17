@@ -29,7 +29,11 @@ var API = {
     },
 
     monitorGroups: function(monitorId) {
-        var conn = new WebSocket('ws:' + this.url('/api/v1/monitor/groups/' + monitorId));
+        var protocol = 'ws:';
+        if (window.location.protocol === 'https:') {
+            protocol = 'wss:';
+        }
+        var conn = new WebSocket(protocol + this.url('/api/v1/monitor/groups/' + monitorId));
         return conn;
     },
 

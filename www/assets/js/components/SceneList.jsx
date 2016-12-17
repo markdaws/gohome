@@ -66,10 +66,10 @@ var SceneList = React.createClass({
             btns = (
                 <div {...classes('buttons', '', 'clearfix')}>
                     <button className="btn btn-default btnNew pull-left" onClick={this.props.newClientScene}>
-                        <i className="fa fa-plus"></i>
+                        <i className="icon-plus"></i>
                     </button>
                     <button className="btn btn-default btnDone pull-right" onClick={this.endEdit}>
-                        <i className="fa fa-times"></i>
+                        <i className="icon-cancel"></i>
                     </button>
                 </div>
             );
@@ -85,7 +85,7 @@ var SceneList = React.createClass({
             btns = (
                 <div {...classes('buttons', '', 'clearfix')}>
                     <button className="btn btn-default btnEdit pull-right" onClick={this.edit}>
-                        <i className="fa fa-cog" aria-hidden="true"></i>
+                        <i className="icon-cog" aria-hidden="true"></i>
                     </button>
                 </div>
             );

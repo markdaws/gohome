@@ -290,7 +290,7 @@ var FeatureList = React.createClass({
                 <div>
                     <div {...classes('buttons', 'editing', 'clearfix')}>
                         <button className="btn btn-default btnDone pull-right" onClick={this.endEdit}>
-                            <i className="fa fa-times"></i>
+                            <i className="icon-cancel"></i>
                         </button>
                     </div>
                 </div>
@@ -364,7 +364,7 @@ var FeatureList = React.createClass({
             btns = (
                 <div {...classes('buttons', '', 'clearfix')}>
                     <button className="btn btn-default btnEdit pull-right" onClick={this.edit}>
-                        <i className="fa fa-cog" aria-hidden="true"></i>
+                        <i className="icon-cog" aria-hidden="true"></i>
                     </button>
                 </div>
             );

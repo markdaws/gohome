@@ -12,7 +12,7 @@ var SceneListGridCell = React.createClass({
         return (
             <div {...classes()}>
                 <div {...classes('icon')}>
-                    <i className="icon ion-ios-settings"></i>
+                    <i className="icomoon-ion-ios-settings"></i>
                 </div>
                 <div {...classes('name')}>
                     {this.props.scene.name}

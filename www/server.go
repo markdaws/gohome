@@ -1,18 +1,22 @@
 package www
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
-	gzip "github.com/NYTimes/gziphandler"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
+	"github.com/markdaws/gohome/log"
 	"github.com/urfave/negroni"
 )
 
@@ -43,20 +47,104 @@ func ListenAndServe(
 	return server.listenAndServe(addr)
 }
 
-func cacheHandler(prefix string, h http.Handler) func(w http.ResponseWriter, r *http.Request) {
+var cacheMutex sync.RWMutex
+var cachedFiles = make(map[string][]byte)
+
+// For low horsepower devices such as the Raspberry PI, IO such as reading files and CPU intensive operations
+// like GZIP can take multiple seconds for larger files, so here we read the files in and gzip them, the bytes
+// are then cached in memory so subsequent requests are faster. Only the first cold hit will be slower to load.
+func cacheHandler(prefix string, gzipFile bool, distRoot string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		callStartTime := time.Now().UnixNano()
+
+		originalPath := r.URL.Path
+
 		if prefix != "" {
+			// We want to remove the timestamp, that comes before the file name
 			temp := strings.Replace(r.URL.Path, prefix, "", -1)
-			index := strings.Index(temp, "/")
-			URLNoTimestamp := prefix + temp[index+1:]
-			r.URL.Path = URLNoTimestamp
+			r.URL.Path = prefix + temp[strings.Index(temp, "/")+1:]
 		}
+
+		// Make sure caller is not trying to get out of the base path
+		fullPath := distRoot + r.URL.Path
+		cleanPath := filepath.Clean(fullPath)
+		if strings.HasPrefix(cleanPath, "../") {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		ext := filepath.Ext(r.URL.Path)
 
 		// Since all resources include cache busting values in the URL each time we have a new build,
 		// we just set the max cache values here
 		w.Header().Add("Cache-Control", "public; max-age=31536000")
 		w.Header().Add("Expires", time.Now().AddDate(1, 0, 0).Format(http.TimeFormat))
-		h.ServeHTTP(w, r)
+		w.Header().Add("Content-Type", mime.TypeByExtension(ext))
+
+		if gzipFile {
+			w.Header().Add("Content-Encoding", "gzip")
+		}
+
+		cacheMutex.RLock()
+		b, inCache := cachedFiles[originalPath]
+		cacheMutex.RUnlock()
+
+		var readStartTime int64
+		var readEndTime int64
+		var zipStartTime int64
+		var zipEndTime int64
+		var acceptsGZIP bool
+
+		if !inCache {
+			readStartTime = time.Now().UnixNano()
+			var err error
+			b, err = ioutil.ReadFile(cleanPath)
+			readEndTime = time.Now().UnixNano()
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			accept := r.Header.Get("Accept-Encoding")
+			if strings.Index(accept, "gzip") != -1 {
+				acceptsGZIP = true
+			}
+
+			if gzipFile && acceptsGZIP {
+				var gb bytes.Buffer
+				zipStartTime = time.Now().UnixNano()
+				gz := gzip.NewWriter(&gb)
+				if _, err := gz.Write(b); err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				if err := gz.Flush(); err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				if err := gz.Close(); err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				zipEndTime = time.Now().UnixNano()
+
+				b = gb.Bytes()
+			}
+
+			cacheMutex.Lock()
+			cachedFiles[originalPath] = b
+			cacheMutex.Unlock()
+		}
+
+		writeStartTime := time.Now().UnixNano()
+		w.Write(b)
+		writeEndTime := time.Now().UnixNano()
+
+		log.V("webserver - [%s], %dKB, accept gzip: %t, in cache: %t, read:%dms, zip:%dms, write:%dms, total:%dms",
+			originalPath, len(b)/1024, acceptsGZIP, inCache, (readEndTime-readStartTime)/1000000, (zipEndTime-zipStartTime)/1000000,
+			(writeEndTime-writeStartTime)/1000000, (writeEndTime-callStartTime)/1000000)
 	}
 }
 
@@ -68,8 +156,8 @@ func (s *Server) listenAndServe(addr string) error {
 	mime.AddExtensionType(".woff", "application/font-woff")
 	mime.AddExtensionType(".woff2", "application/font-woff2")
 	mime.AddExtensionType(".eot", "application/vnd.ms-fontobject")
-
-	fileHandler := http.FileServer(http.Dir(s.rootPath + "/dist/"))
+	mime.AddExtensionType(".svg", "image/svg+xml")
+	mime.AddExtensionType(".ttf", "application/font-sfnt")
 
 	sub := r.PathPrefix("/").Subrouter()
 
@@ -78,14 +166,15 @@ func (s *Server) listenAndServe(addr string) error {
 	// /images/12345/foo.png which will redirect to foo.png on the filesystem. This allows you to either
 	// put a hash value in the file name of an asset or some cache busting value like the build time in the
 	// URL instead of having to rename files
-	sub.HandleFunc("/js/{filename}", cacheHandler("", gzip.GzipHandler(fileHandler)))
-	sub.HandleFunc("/js/{timestamp}/{filename}", cacheHandler("/js/", gzip.GzipHandler(fileHandler)))
-	sub.HandleFunc("/css/{filename}", cacheHandler("", gzip.GzipHandler(fileHandler)))
-	sub.HandleFunc("/css/{timestamp}/{filename}", cacheHandler("/css/", gzip.GzipHandler(fileHandler)))
-	sub.HandleFunc("/fonts/{filename}", cacheHandler("", fileHandler))
-	sub.HandleFunc("/fonts/{timestamp}/{filename}", cacheHandler("/fonts/", fileHandler))
-	sub.HandleFunc("/images/{filename}", cacheHandler("", fileHandler))
-	sub.HandleFunc("/images/{timestamp}/{filename}", cacheHandler("/images/", fileHandler))
+	distPath := s.rootPath + "/dist"
+	sub.HandleFunc("/js/{filename}", cacheHandler("", true, distPath))
+	sub.HandleFunc("/js/{timestamp}/{filename}", cacheHandler("/js/", true, distPath))
+	sub.HandleFunc("/css/{filename}", cacheHandler("", true, distPath))
+	sub.HandleFunc("/css/{timestamp}/{filename}", cacheHandler("/css/", true, distPath))
+	sub.HandleFunc("/fonts/{filename}", cacheHandler("", false, distPath))
+	sub.HandleFunc("/fonts/{timestamp}/{filename}", cacheHandler("/fonts/", false, distPath))
+	sub.HandleFunc("/images/{filename}", cacheHandler("", false, distPath))
+	sub.HandleFunc("/images/{timestamp}/{filename}", cacheHandler("/images/", false, distPath))
 
 	r.HandleFunc("/api/v1/users/{login}/sessions", apiNewSessionHandler(s.system, s.sessions)).Methods("POST")
 	r.HandleFunc("/logout", logoutHandler(s.system, s.rootPath))
@@ -97,7 +186,6 @@ func (s *Server) listenAndServe(addr string) error {
 	RegisterDeviceHandlers(apiRouter, s)
 	RegisterDiscoveryHandlers(apiRouter, s)
 	RegisterMonitorHandlers(apiRouter, s)
-	//RegisterUserHandlers(apiRouter, s)
 	RegisterAutomationHandlers(apiRouter, s)
 
 	r.PathPrefix("/api").Handler(negroni.New(

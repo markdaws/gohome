@@ -35,7 +35,7 @@ var DeviceCell = React.createClass({
         this.setState({checkboxChecked: evt.target.checked});
         this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
     },
-    
+
     render: function() {
         var chkBx;
         if (this.props.showCheckbox) {
@@ -60,7 +60,7 @@ var DeviceCell = React.createClass({
             <div {...classes('', state)}>
                 {chkBx}
                 <div {...classes('icon')}>
-                    <i className="icon ion-cube"></i>
+                    <i className="icomoon-ion-cube"></i>
                 </div>
                 <div {...classes('name')}>
                     {this.props.device.name}

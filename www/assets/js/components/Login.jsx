@@ -9,7 +9,7 @@ var classes = new BEMHelper({
 });
 require('../../css/components/Login.less')
 
-const logo = require('../../images/logo.png');
+const logo = require('../../images/logo-min.png');
 
 var Login = React.createClass({
     getInitialState: function() {

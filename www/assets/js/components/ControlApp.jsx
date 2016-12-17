@@ -7,6 +7,7 @@ var AutomationList = require('./AutomationList.jsx');
 var Logging = require('./Logging.jsx');
 var SceneActions = require('../actions/SceneActions.js');
 var SystemActions = require('../actions/SystemActions.js');
+var Spinner = require('./Spinner.jsx');
 var BEMHelper = require('react-bem-helper');
 
 var classes = new BEMHelper({
@@ -61,58 +62,50 @@ var ControlApp = React.createClass({
                 <ul className="nav nav-tabs" role="tablist">
                     <li role="presentation" className="active">
                         <a href="#features" role="tab" aria-controls="features" data-toggle="tab">
-                            <i className="fa fa-code-fork"></i>
+                            <i className="icon-fork"></i>
                         </a>
                     </li>
                     <li role="presentation" className="">
                         <a href="#scenes" role="tab" aria-controls="scenes" data-toggle="tab">
-                            <i className="fa fa-sliders"></i>
+                            <i className="icon-sliders"></i>
                         </a>
                     </li>
                     <li role="presentation" className="">
                         <a href="#automation" role="tab" aria-controls="automation" data-toggle="tab">
-                            <i className="fa fa-cogs"></i>
+                            <i className="icon-cog-alt"></i>
                         </a>
                     </li>
                     <li role="presentation" className="">
                         <a href="#system" role="tab" aria-controls="system" data-toggle="tab">
-                            <i className="fa fa-tablet"></i>
+                            <i className="icon-tablet"></i>
                         </a>
                     </li>
                 </ul>
                 <div className="tab-content">
                     <div role="tabpanel" className="tab-pane active" id="features">
+                        <Spinner hidden={this.props.appLoadStatus.devicesLoaded} />
                         <div className={(this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent")}>
                             {featureBody}
                         </div>
-                        <div {...classes('spinner')}>
-                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.devicesLoaded ? "hidden" : "")}></i>
-                        </div>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="scenes">
+                        <Spinner hidden={this.props.appLoadStatus.scenesLoaded} />
                         <div className={(this.props.appLoadStatus.scenesLoaded ? "" : "hideTabContent")}>
                             <SceneList scenes={this.props.scenes} devices={this.props.devices} />
                             {emptySceneBody}
                         </div>
-                        <div {...classes('spinner')}>
-                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
-                        </div>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="automation">
+                        <Spinner hidden={this.props.appLoadStatus.automationLoaded} />
                         <div className={(this.props.appLoadStatus.automationLoaded ? "" : "hideTabContent")}>
                             <AutomationList automations={this.props.automations} />
                             {emptyAutomationBody}
                         </div>
-                        <div {...classes('spinner')}>
-                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.automationLoaded ? "hidden" : "")}></i>
-                        </div>
                     </div>
                     <div role="tabpanel" className="tab-pane fade" id="system">
+                        <Spinner hidden={this.props.appLoadStatus.devicesLoaded} />
                         <div className={(this.props.appLoadStatus.devicesLoaded ? "" : "hideTabContent")}>
                             <System devices={this.props.devices}/>
-                        </div>
-                        <div {...classes('spinner')}>
-                            <i className={"fa fa-spinner fa-spin " + (this.props.appLoadStatus.scenesLoaded ? "hidden" : "")}></i>
                         </div>
                     </div>
                 </div>

@@ -38,7 +38,7 @@
   },
   "scripts": {
     "dev": "rm -rf dist/ && node_modules/webpack/bin/webpack.js --watch --config ./webpack.config.js",
-    "prod": "rm -rf dist/ && webpack -p --colors --profile"
+    "prod": "rm -rf dist/ && (export NODE_ENV='production'; webpack -p --colors --profile)"
   },
   "repository": {
     "type": "git",

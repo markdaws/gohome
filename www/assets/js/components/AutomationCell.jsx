@@ -11,7 +11,7 @@ const AutomationCell = ({automation}) => {
     return (
         <div {...classes()}>
             <div {...classes('icon')}>
-                <i className="icon ion-ios-cog-outline"></i>
+                <i className="icomoon-ion-ios-cog-outline"></i>
             </div>
             <div {...classes('name')}>
                 {automation.name}
