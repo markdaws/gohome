@@ -1,4 +1,4 @@
-package api
+package www
 
 import (
 	"encoding/json"
@@ -22,20 +22,20 @@ import (
 )
 
 // RegisterDeviceHandlers registers the REST API routes relating to devices
-func RegisterDeviceHandlers(r *mux.Router, s *apiServer) {
-	r.HandleFunc("/api/v1/devices",
+func RegisterDeviceHandlers(r *mux.Router, s *Server) {
+	r.HandleFunc("/v1/devices",
 		apiDevicesHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/devices",
+	r.HandleFunc("/v1/devices",
 		apiAddDeviceHandler(s.systemSavePath, s.system)).Methods("POST")
-	r.HandleFunc("/api/v1/devices/{id}/features",
+	r.HandleFunc("/v1/devices/{id}/features",
 		apiDeviceAddFeatureHandler(s.systemSavePath, s.system)).Methods("POST")
-	r.HandleFunc("/api/v1/devices/{id}",
+	r.HandleFunc("/v1/devices/{id}",
 		apiDeviceHandlerDelete(s.systemSavePath, s.system)).Methods("DELETE")
-	r.HandleFunc("/api/v1/devices/{id}",
+	r.HandleFunc("/v1/devices/{id}",
 		apiDeviceHandlerUpdate(s.systemSavePath, s.system)).Methods("PUT")
-	r.HandleFunc("/api/v1/devices/{id}/features/{fid}",
+	r.HandleFunc("/v1/devices/{id}/features/{fid}",
 		apiDeviceUpdateFeatureHandler(s.systemSavePath, s.system)).Methods("PUT")
-	r.HandleFunc("/api/v1/devices/{id}/features/{fid}/apply",
+	r.HandleFunc("/v1/devices/{id}/features/{fid}/apply",
 		apiDeviceApplyFeaturesAttrsHandler(s.systemSavePath, s.system)).Methods("PUT")
 }
 

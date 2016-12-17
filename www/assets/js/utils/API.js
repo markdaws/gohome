@@ -1,4 +1,4 @@
-var BASE = '//' + window.location.hostname + ':5000';
+var BASE = '//' + window.location.host;
 
 /*
  API provides helper methods to access all of the gohome REST APIs

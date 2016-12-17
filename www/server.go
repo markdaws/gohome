@@ -10,15 +10,18 @@ import (
 	"time"
 
 	gzip "github.com/NYTimes/gziphandler"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
+	"github.com/urfave/negroni"
 )
 
-type wwwServer struct {
-	rootPath string
-	system   *gohome.System
-	sessions *gohome.Sessions
-	cfg      *gohome.Config
+type Server struct {
+	rootPath       string
+	system         *gohome.System
+	systemSavePath string
+	sessions       *gohome.Sessions
+	cfg            *gohome.Config
 }
 
 // ListenAndServe creates a new WWW server, that handles API calls and also
@@ -27,13 +30,15 @@ func ListenAndServe(
 	rootPath string,
 	addr string,
 	system *gohome.System,
+	systemSavePath string,
 	sessions *gohome.Sessions,
 	cfg *gohome.Config) error {
-	server := &wwwServer{
-		rootPath: rootPath,
-		system:   system,
-		sessions: sessions,
-		cfg:      cfg,
+	server := &Server{
+		rootPath:       rootPath,
+		system:         system,
+		systemSavePath: systemSavePath,
+		sessions:       sessions,
+		cfg:            cfg,
 	}
 	return server.listenAndServe(addr)
 }
@@ -55,7 +60,7 @@ func cacheHandler(prefix string, h http.Handler) func(w http.ResponseWriter, r *
 	}
 }
 
-func (s *wwwServer) listenAndServe(addr string) error {
+func (s *Server) listenAndServe(addr string) error {
 
 	r := mux.NewRouter()
 
@@ -86,13 +91,31 @@ func (s *wwwServer) listenAndServe(addr string) error {
 	r.HandleFunc("/logout", logoutHandler(s.system, s.rootPath))
 	r.HandleFunc("/config", configHandler(s.cfg, s.sessions))
 	r.HandleFunc("/system", systemHandler(s.cfg, s.sessions))
+
+	apiRouter := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
+	RegisterSceneHandlers(apiRouter, s)
+	RegisterDeviceHandlers(apiRouter, s)
+	RegisterDiscoveryHandlers(apiRouter, s)
+	RegisterMonitorHandlers(apiRouter, s)
+	//RegisterUserHandlers(apiRouter, s)
+	RegisterAutomationHandlers(apiRouter, s)
+
+	r.PathPrefix("/api").Handler(negroni.New(
+		negroni.HandlerFunc(CheckValidSession(s.sessions)),
+		negroni.Wrap(apiRouter),
+	))
+
 	r.HandleFunc("/", rootHandler(s.rootPath))
 
 	server := &http.Server{
 		Addr:         addr,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		Handler:      r,
+		Handler: handlers.CORS(
+			handlers.AllowedMethods([]string{"PUT", "POST", "DELETE", "GET", "OPTIONS", "UPGRADE"}),
+			handlers.AllowedOrigins([]string{"*"}),
+			handlers.AllowedHeaders([]string{"content-type"}),
+		)(r),
 	}
 	return server.ListenAndServe()
 }

@@ -1,4 +1,4 @@
-package api
+package www
 
 import (
 	"encoding/json"
@@ -12,23 +12,23 @@ import (
 )
 
 // RegisterMonitorHandlers registers all of the monitor specific REST API routes
-func RegisterMonitorHandlers(r *mux.Router, s *apiServer) {
+func RegisterMonitorHandlers(r *mux.Router, s *Server) {
 	//TODO: Need a way to check the SID used for the user against the current valid
 	//SIDs and make sure it has not expired, otherwise someone can listen forever
 	wsHelper := NewWSHelper(s.system.Services.Monitor, s.system.Services.EvtBus)
 
 	// Clients call to subscribe to items, api returns a monitorID that can then be used
 	// to subscribe and unsubscribe to notifications
-	r.HandleFunc("/api/v1/monitor/groups", apiSubscribeHandler(s.system, wsHelper)).Methods("POST")
+	r.HandleFunc("/v1/monitor/groups", apiSubscribeHandler(s.system, wsHelper)).Methods("POST")
 
 	// extends the timeout period for a monitor groups
-	r.HandleFunc("/api/v1/monitor/groups/{monitorID}", apiRefreshSubscribeHandler(s.system, wsHelper)).Methods("PUT")
+	r.HandleFunc("/v1/monitor/groups/{monitorID}", apiRefreshSubscribeHandler(s.system, wsHelper)).Methods("PUT")
 
 	// deletes a monitor group
-	r.HandleFunc("/api/v1/monitor/groups/{monitorID}", apiUnsubscribeHandler(s.system, wsHelper)).Methods("DELETE")
+	r.HandleFunc("/v1/monitor/groups/{monitorID}", apiUnsubscribeHandler(s.system, wsHelper)).Methods("DELETE")
 
 	// web socket for receiving new events
-	r.HandleFunc("/api/v1/monitor/groups/{monitorID}", wsHelper.HTTPHandler())
+	r.HandleFunc("/v1/monitor/groups/{monitorID}", wsHelper.HTTPHandler())
 
 }
 

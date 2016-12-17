@@ -1,4 +1,4 @@
-package api
+package www
 
 import (
 	"encoding/json"
@@ -10,9 +10,9 @@ import (
 )
 
 // RegisterAutomationHandlers registers all of the automation specific API REST routes
-func RegisterAutomationHandlers(r *mux.Router, s *apiServer) {
-	r.HandleFunc("/api/v1/automations", apiAutomationHandler(s.system)).Methods("GET")
-	r.HandleFunc("/api/v1/automations/{ID}/test", apiAutomationTestHandler(s.system)).Methods("POST")
+func RegisterAutomationHandlers(r *mux.Router, s *Server) {
+	r.HandleFunc("/v1/automations", apiAutomationHandler(s.system)).Methods("GET")
+	r.HandleFunc("/v1/automations/{ID}/test", apiAutomationTestHandler(s.system)).Methods("POST")
 }
 
 func apiAutomationHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {

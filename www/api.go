@@ -1,67 +1,14 @@
-package api
+package www
 
 import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"time"
 
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/log"
 	"github.com/markdaws/gohome/validation"
-	"github.com/urfave/negroni"
 )
-
-type apiServer struct {
-	systemSavePath string
-	system         *gohome.System
-	sessions       *gohome.Sessions
-}
-
-// ListenAndServe creates a new WWW server, that handles API calls and also
-// runs the gohome website
-func ListenAndServe(
-	systemSavePath string,
-	addr string,
-	system *gohome.System,
-	sessions *gohome.Sessions) error {
-	server := &apiServer{
-		systemSavePath: systemSavePath,
-		system:         system,
-		sessions:       sessions,
-	}
-	return server.listenAndServe(addr)
-}
-
-func (s *apiServer) listenAndServe(addr string) error {
-
-	r := mux.NewRouter()
-
-	RegisterSceneHandlers(r, s)
-	RegisterDeviceHandlers(r, s)
-	RegisterDiscoveryHandlers(r, s)
-	RegisterMonitorHandlers(r, s)
-	RegisterUserHandlers(r, s)
-	RegisterAutomationHandlers(r, s)
-
-	n := negroni.New()
-	n.Use(negroni.HandlerFunc(CheckValidSession(s.sessions)))
-	n.UseHandler(r)
-
-	server := &http.Server{
-		Addr:         addr,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		Handler: handlers.CORS(
-			handlers.AllowedMethods([]string{"PUT", "POST", "DELETE", "GET", "OPTIONS", "UPGRADE"}),
-			handlers.AllowedOrigins([]string{"*"}),
-			handlers.AllowedHeaders([]string{"content-type"}),
-		)(n),
-	}
-	return server.ListenAndServe()
-}
 
 func CheckValidSession(sessions *gohome.Sessions) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 

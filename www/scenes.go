@@ -1,4 +1,4 @@
-package api
+package www
 
 import (
 	"encoding/json"
@@ -18,25 +18,25 @@ import (
 )
 
 // RegisterSceneHandlers registers all of the scene specific API REST routes
-func RegisterSceneHandlers(r *mux.Router, s *apiServer) {
-	r.HandleFunc("/api/v1/scenes", apiScenesHandler(s.system)).Methods("GET")
+func RegisterSceneHandlers(r *mux.Router, s *Server) {
+	r.HandleFunc("/v1/scenes", apiScenesHandler(s.system)).Methods("GET")
 
-	r.HandleFunc("/api/v1/scenes/{ID}",
+	r.HandleFunc("/v1/scenes/{ID}",
 		apiSceneHandlerUpdate(s.systemSavePath, s.system)).Methods("PUT")
 
-	r.HandleFunc("/api/v1/scenes",
+	r.HandleFunc("/v1/scenes",
 		apiSceneHandlerCreate(s.systemSavePath, s.system)).Methods("POST")
 
-	r.HandleFunc("/api/v1/scenes/{sceneID}/commands/{commandID}",
+	r.HandleFunc("/v1/scenes/{sceneID}/commands/{commandID}",
 		apiSceneHandlerCommandDelete(s.systemSavePath, s.system)).Methods("DELETE")
 
-	r.HandleFunc("/api/v1/scenes/{sceneID}/commands",
+	r.HandleFunc("/v1/scenes/{sceneID}/commands",
 		apiSceneHandlerCommandAdd(s.systemSavePath, s.system)).Methods("POST")
 
-	r.HandleFunc("/api/v1/scenes/{ID}",
+	r.HandleFunc("/v1/scenes/{ID}",
 		apiSceneHandlerDelete(s.systemSavePath, s.system)).Methods("DELETE")
 
-	r.HandleFunc("/api/v1/scenes/active",
+	r.HandleFunc("/v1/scenes/active",
 		apiActiveScenesHandler(s.system)).Methods("POST")
 }
 

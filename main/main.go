@@ -11,7 +11,6 @@ import (
 	"github.com/go-home-iot/upnp"
 	"github.com/kardianos/osext"
 	"github.com/markdaws/gohome"
-	"github.com/markdaws/gohome/api"
 	"github.com/markdaws/gohome/clock"
 	"github.com/markdaws/gohome/intg"
 	"github.com/markdaws/gohome/log"
@@ -148,21 +147,22 @@ func startServer() {
 		for {
 			endPoint := cfg.WWWAddr + ":" + cfg.WWWPort
 			log.V("WWW Server starting, listening on %s", endPoint)
-			err := www.ListenAndServe("./www", endPoint, sys, sessions, &cfg)
+			err := www.ListenAndServe("./www", endPoint, sys, cfg.SystemPath, sessions, &cfg)
 			log.E("error with WWW server, shutting down: %s\n", err)
 			time.Sleep(time.Second * 5)
 		}
 	}()
 
-	go func() {
-		for {
-			endPoint := cfg.APIAddr + ":" + cfg.APIPort
-			log.V("API Server starting, listening on %s", endPoint)
-			err := api.ListenAndServe(cfg.SystemPath, endPoint, sys, sessions)
-			log.E("error with API server, shutting down: %s\n", err)
-			time.Sleep(time.Second * 5)
-		}
-	}()
+	/*
+		go func() {
+			for {
+				endPoint := cfg.APIAddr + ":" + cfg.APIPort
+				log.V("API Server starting, listening on %s", endPoint)
+				err := api.ListenAndServe(cfg.SystemPath, endPoint, sys, sessions)
+				log.E("error with API server, shutting down: %s\n", err)
+				time.Sleep(time.Second * 5)
+			}
+		}()*/
 
 	// Load all of the automation scripts
 	autos, err := gohome.LoadAutomation(sys, cfg.AutomationPath)

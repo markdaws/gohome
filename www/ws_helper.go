@@ -1,4 +1,4 @@
-package api
+package www
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package api
+package www
 
 import (
 	"encoding/json"
@@ -13,14 +13,14 @@ import (
 )
 
 // RegisterDiscoveryHandlers registers all of the discovery specific API REST routes
-func RegisterDiscoveryHandlers(r *mux.Router, s *apiServer) {
+func RegisterDiscoveryHandlers(r *mux.Router, s *Server) {
 
 	// Get a list of all the devices that we can discover
-	r.HandleFunc("/api/v1/discovery/discoverers",
+	r.HandleFunc("/v1/discovery/discoverers",
 		apiListDiscoveryHandler(s.system)).Methods("GET")
 
 	// Scan the network for all devices corresponding to the discovery ID
-	r.HandleFunc("/api/v1/discovery/discoverers/{discovererID}",
+	r.HandleFunc("/v1/discovery/discoverers/{discovererID}",
 		apiDiscoveryHandler(s.system)).Methods("POST")
 }
 
