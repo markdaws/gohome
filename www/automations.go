@@ -23,7 +23,10 @@ func apiAutomationHandler(system *gohome.System) func(http.ResponseWriter, *http
 		automations := system.Automations()
 		items := make([]jsonAutomation, len(automations))
 		for _, automation := range automations {
-			items[i] = jsonAutomation{Name: automation.Name}
+			items[i] = jsonAutomation{
+				Name:   automation.Name,
+				TempID: automation.TempID,
+			}
 			i++
 		}
 
@@ -36,7 +39,7 @@ func apiAutomationHandler(system *gohome.System) func(http.ResponseWriter, *http
 func apiAutomationTestHandler(system *gohome.System) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		automationID := mux.Vars(r)["ID"]
-		automation := system.AutomationByID(automationID)
+		automation := system.AutomationByTempID(automationID)
 		if automation == nil {
 			respBadRequest(fmt.Sprintf("invalid automation ID: %s", automationID), w)
 			return

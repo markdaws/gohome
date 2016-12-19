@@ -15,7 +15,7 @@ class Automation extends React.Component {
     }
 
     handleClick(event) {
-        Api.automationTest(this.props.automation.id, function(err, data) {
+        Api.automationTest(this.props.automation.tempId, function(err, data) {
             if (err) {
                 //TODO: Show error/success
                 console.error(err);

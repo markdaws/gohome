@@ -314,11 +314,16 @@ func (s *System) AddAutomation(a *Automation) {
 	s.mutex.Unlock()
 }
 
-// AutomationByID returns the automation instance with the specified ID, nil if not found
-func (s *System) AutomationByID(ID string) *Automation {
+// AutomationByTempID returns the automation instance with the specified TempID, nil if not found
+func (s *System) AutomationByTempID(ID string) *Automation {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	return s.automation[ID]
+	for _, auto := range s.automation {
+		if auto.TempID == ID {
+			return auto
+		}
+	}
+	return nil
 }
 
 // Users returns a map of all the users, keyed by user ID

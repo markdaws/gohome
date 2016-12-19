@@ -13,6 +13,8 @@ import (
 	"github.com/markdaws/gohome/cmd"
 	"github.com/markdaws/gohome/feature"
 	"github.com/markdaws/gohome/log"
+
+	"github.com/Machiel/slugify"
 )
 
 // automationSys provides access to system information, just enough for the automation type to function
@@ -28,6 +30,7 @@ type automationSys interface {
 // of conditions which when evaluating to true cause the automation actions to execute
 type Automation struct {
 	Name    string
+	TempID  string
 	Enabled bool
 	Trigger Trigger
 	evtbus.Consumer
@@ -259,7 +262,12 @@ func NewAutomation(sys automationSys, config string) (*Automation, error) {
 	}
 
 	finalAuto := &Automation{
-		Name:    auto.Name,
+		Name: auto.Name,
+
+		// Automation doesn't have a permanent ID since we load them from files each time the
+		// system starts, we give it a temp ID so that the client can reference it in API calls
+		// but it is called TempID since you shouldn't store it for any reason
+		TempID:  slugify.Slugify(auto.Name),
 		Enabled: *auto.Enabled,
 	}
 

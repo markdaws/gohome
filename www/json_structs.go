@@ -8,8 +8,8 @@ import (
 )
 
 type jsonAutomation struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	TempID string `json:"tempId"`
+	Name   string `json:"name"`
 }
 
 type jsonCommand struct {
