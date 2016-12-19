@@ -7,6 +7,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/Machiel/slugify",
+			"Comment": "1.0-2-g9c8f186",
+			"Rev": "9c8f186ad6ea352ad2709ad0ec08f2ecc8a1b424"
+		},
+		{
 			"ImportPath": "github.com/NYTimes/gziphandler",
 			"Rev": "172fbbbb329cf7e031dd3ab35766186fc2081eab"
 		},
