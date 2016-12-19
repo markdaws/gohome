@@ -123,7 +123,7 @@ var CommandInfo = React.createClass({
         return (
             <div {...classes('','', 'well well-sm clearfix')}>
                 <button {...classes('btn-delete', '', 'btn btn-link pull-right')} onClick={this.deleteCommand}>
-                    <i className="glyphicon glyphicon-trash"></i>
+                    <i>&#x2717;</i>
                 </button>
                 {uiCmd}
                 <div {...classes('save-btn', '', 'pull-right')}>

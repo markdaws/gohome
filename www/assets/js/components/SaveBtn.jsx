@@ -35,7 +35,7 @@ var SaveBtn = React.createClass({
                 btnType = "btn-success";
                 body = (
                     <div>
-                        <span className="glyphicon glyphicon-ok"></span>
+                        <i>&#x2713;</i>
                     </div>
                 );
                 break;

@@ -176,7 +176,7 @@ var Grid = React.createClass({
                         height: this.state.cellHeight,
                     }}>
                     {content}
-                    <i {...classes('expanded-arrow', index !== selectedIndex ? 'hidden' : '', 'fa fa-caret-up')}></i>
+                    <i {...classes('expanded-arrow', index !== selectedIndex ? 'hidden' : '', '')}>&#x25B2;</i>
                 </div>
             );
         }

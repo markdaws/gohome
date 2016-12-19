@@ -172,7 +172,7 @@ var SceneInfo = React.createClass({
         return (
             <div {...classes('', '', 'well well-sm')}>
                 <button {...classes('delete', '', 'btn btn-link pull-right')} onClick={this.deleteScene}>
-                    <i className="glyphicon glyphicon-trash"></i>
+                    <i>&#x2717;</i>
                 </button>
                 <div className={this.addErr("form-group", "name")}>
                     <label {...classes('label', '', 'control-label')} htmlFor={this.uid("name")}>Name*</label>

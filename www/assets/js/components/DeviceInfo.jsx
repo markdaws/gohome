@@ -179,7 +179,7 @@ var DeviceInfo = React.createClass({
         if (this.props.deleteDevice) {
             deleteBtn = (
                 <button {...classes('delete', '', 'btn btn-link pull-right')} onClick={this.deleteDevice}>
-                    <i className="glyphicon glyphicon-trash"></i>
+                    <i>&#x2717;</i>
                 </button>
             );
         }
