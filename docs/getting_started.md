@@ -10,7 +10,9 @@ IMPORTANT: goHOME requires go 1.7 or above, if you have an older version you wil
 Raspberry PI is a cheap PC (around $25) that is popular for home automation, if you want to install goHOME on a Raspberry PI [here](raspberrypi_manual.md) are some detailed instructions.
 
 ###Other systems
-If you want to install goHOME on other systems, Mac, PC etc. then you will need to manually build the goHOME project, currently binaries are not pre-built.  You will need to:
+If you want to install goHOME on other systems, Mac, PC etc. then you will need to manually build the goHOME project, currently binaries are not pre-built.  
+
+####Building the executable
 
   - Install git (source control): https://git-scm.com/
   - Install golang https://golang.org/dl/
@@ -26,11 +28,14 @@ Change to the source directory which will be $GOPATH/src/github.com/markdaws/goh
 go build -o gohome ./main
 ```
 
-Once that runs there will be an executable called gohome. You need to add a user to be able to log into the app, for example we will add a user "bob" with password "foobar" by running:
+####Adding a user account
+You need to add a user to be able to log into the app, for example we will add a user "bob" with password "foobar" by running the gohome executable in the source directory $GOPATH/src/github.com/markdaws/gohome
+
 ```bash
 ./gohome --set-password bob foobar
 ```
 
+####Starting the server
 Then start the server:
 ```bash
 ./gohome --server
