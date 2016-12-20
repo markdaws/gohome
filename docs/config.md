@@ -24,12 +24,6 @@ NOTE: If you change the contents on config.json, you will need to stop and start
   //The port to use for the WWW server, defaults to "8000"
   wwwPort: "",
 
-  //The IP address for the API server. By default gohome looks for the first non loopback address
-  apiAddr: "",
-
-  //The port to use for the API server, defaults to "5000"
-  apiPort: "",
-
   //The IP address used for a UPNP notify server, gohome looks for the first non loopback address
   upnpNotifyAddr: "",
 
