@@ -24,11 +24,11 @@ If you have invested money in buying these hardware devices, it sucks when a man
 For a list of the supported hardware, click <a href="docs/supported_hardware.md">here</a>.  If you want support for a piece of hardware that is not on the list, file an issue.
 
 ##Documentation
-//TODO: Core
+###[Core Concepts](docs/core_concepts.md)
 //TODO: Architecture
 ###[Getting Started](docs/getting_started.md)
 ###[Supported Hardware](docs/supported_hardware.md)
-###[Raspberry PI Setup](docs/raspberry_pi.md)
+###[Raspberry PI Setup](docs/raspberrypi_manual.md)
 ###[FAQ](docs/faq.md)
 ###[Automation](docs/automation.md)
 
@@ -69,9 +69,9 @@ In the output you will see a line like (note the IP address is probably differen
 WWW Server starting, listening on 192.168.0.10:8000
 ```
 
-###gohome web UI
+###goHOME web UI
 The web UI is developed using the React framework: https://facebook.github.io/react/ In order to develop the web UI:
- 1. Setup the goHome Server, following the above instructions
+ 1. Setup the goHOME Server, following the above instructions
  2. Install node.js: https://nodejs.org
  3. Change to the gohome/www directory
  4. Run:
