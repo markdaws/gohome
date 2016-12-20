@@ -70,12 +70,13 @@ func (e *FeatureReportingEvt) String() string {
 // starts and has no initial value, this will fire even if the value didn't change on the hardware intially
 type FeatureAttrsChangedEvt struct {
 	FeatureID string
+	Context   string
 	Attrs     map[string]*attr.Attribute
 }
 
 // String returns a debug string
 func (e *FeatureAttrsChangedEvt) String() string {
-	return fmt.Sprintf("FeatureAttrsChangedEvt[ID:%s, Attrs:%s]", e.FeatureID, e.Attrs)
+	return fmt.Sprintf("FeatureAttrsChangedEvt[ID:%s, Context:%s, Attrs:%s]", e.FeatureID, e.Context, e.Attrs)
 }
 
 // DeviceProducingEvt is raised when a device starts producing events in the system

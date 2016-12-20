@@ -108,6 +108,11 @@ func (d *lbdgpro2whDevice) Stream(r io.Reader, handler func(Event)) error {
 	scanner := bufio.NewScanner(r)
 	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 
+		// Return nothing if at end of file and no data passed
+		if atEOF && len(data) == 0 {
+			return 0, nil, nil
+		}
+
 		//Match first instance of ~OUTPUT|~DEVICE.*\r\n
 		str := string(data[0:])
 		indices := regexp.MustCompile("[~|#][OUTPUT|DEVICE].+\r\n").FindStringIndex(str)
@@ -121,12 +126,16 @@ func (d *lbdgpro2whDevice) Stream(r io.Reader, handler func(Event)) error {
 			token = nil
 			err = nil
 		}
+
+		// If at end of file with data return the data
+		if atEOF {
+			return len(data), data, nil
+		}
+
 		return
 	}
 
 	scanner.Split(split)
-
-	//TODO: Context
 
 	for scanner.Scan() {
 		orig := scanner.Text()

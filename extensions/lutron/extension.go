@@ -13,16 +13,16 @@ func (e *extension) EventsForDevice(sys *gohome.System, d *gohome.Device) *gohom
 	switch d.ModelNumber {
 	case "l-bdgpro2-wh":
 		evts := &gohome.ExtEvents{}
-		evts.Producer = &eventProducer{
+
+		// event implements both interfaces
+		consumerProducer := &event{
 			Name:   d.Name,
 			System: sys,
 			Device: d,
 		}
-		evts.Consumer = &eventConsumer{
-			Name:   d.Name,
-			System: sys,
-			Device: d,
-		}
+		evts.Producer = consumerProducer
+		evts.Consumer = consumerProducer
+
 		return evts
 	default:
 		return nil

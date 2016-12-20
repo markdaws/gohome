@@ -80,7 +80,7 @@ var Login = React.createClass({
                 </div>
 
                 <div {...classes('need-credentials')}>
-                    Don't have a login/password, or forgot your details, click <a href="https://github.com/markdaws/gohome">here</a> and follow the instructions.
+                    Don't have a login/password, or forgot your details, click <a href="https://github.com/markdaws/gohome/blob/master/docs/getting_started.md#adding-a-user-account">here</a> and follow the instructions.
                 </div>
             </div>
         );

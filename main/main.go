@@ -241,9 +241,12 @@ func loadSystem() (*gohome.System, gohome.Config) {
 
 		err = store.SaveSystem(cfg.SystemPath, sys)
 		if err != nil {
+			// If we can't save the system, the app won't work, panic
 			panic("Failed to save initial system: " + err.Error())
 		}
 	} else if err != nil {
+		// If we can't load the existing system, something went really wrong, panic
+		// so that the server doesn't start with a blank system
 		panic("Failed to load system: " + err.Error())
 	}
 

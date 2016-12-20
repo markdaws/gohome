@@ -12,10 +12,6 @@
 			"Rev": "9c8f186ad6ea352ad2709ad0ec08f2ecc8a1b424"
 		},
 		{
-			"ImportPath": "github.com/NYTimes/gziphandler",
-			"Rev": "172fbbbb329cf7e031dd3ab35766186fc2081eab"
-		},
-		{
 			"ImportPath": "github.com/cpucycle/astrotime",
 			"Rev": "9c7d514efdb561775030eaf8f1a9ae6bddb3a2ca"
 		},
@@ -34,7 +30,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/connection-pool",
-			"Rev": "a33e8200e2959c09ffe248500c9adeaee3a7ac07"
+			"Rev": "5c8eb4fb198a8af10fdb70a93e7e5efe107b270a"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/event-bus",
@@ -58,7 +54,7 @@
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/lutron",
-			"Rev": "09b4ac00ddd4d857e488918100fcdd3518ea1b10"
+			"Rev": "c70bbca14c4d9e822195282afa1938a5282e69ca"
 		},
 		{
 			"ImportPath": "github.com/go-home-iot/upnp",
@@ -69,11 +65,6 @@
 			"Rev": "a5b47d31c556af34a302ce5d659e6fea44d90de0"
 		},
 		{
-			"ImportPath": "github.com/gorilla/context",
-			"Comment": "v1.1-4-gaed02d1",
-			"Rev": "aed02d124ae4a0e94fea4541c8effd05bf0c8296"
-		},
-		{
 			"ImportPath": "github.com/gorilla/handlers",
 			"Comment": "v1.1-11-ga577578",
 			"Rev": "a5775781a543af3c6b9f5baf10995e4d14168950"
@@ -82,16 +73,6 @@
 			"ImportPath": "github.com/gorilla/mux",
 			"Comment": "v1.1-13-g9fa818a",
 			"Rev": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e"
-		},
-		{
-			"ImportPath": "github.com/gorilla/securecookie",
-			"Comment": "v1.1-5-gfa5329f",
-			"Rev": "fa5329f913702981df43dcb2a380bac429c810b5"
-		},
-		{
-			"ImportPath": "github.com/gorilla/sessions",
-			"Comment": "v1.1",
-			"Rev": "ca9ada44574153444b00d3fd9c8559e4cc95f896"
 		},
 		{
 			"ImportPath": "github.com/gorilla/websocket",

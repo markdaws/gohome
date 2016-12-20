@@ -110,6 +110,9 @@ func cacheHandler(prefix string, gzipFile bool, distRoot string) func(w http.Res
 				acceptsGZIP = true
 			}
 
+			//TODO: Need to cache gzip and unzipped bytes, incase cache
+			//gzip bytes but then a client which does not support gzip
+			//makes a request
 			if gzipFile && acceptsGZIP {
 				var gb bytes.Buffer
 				zipStartTime = time.Now().UnixNano()

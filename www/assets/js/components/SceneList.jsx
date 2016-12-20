@@ -27,8 +27,7 @@ var SceneList = React.createClass({
 
     getInitialState: function() {
         return {
-            // If we don't have any scenes, then we immediately enter in edit mode
-            editMode: this.props.scenes.length === 0
+            editMode: false
         };
     },
 

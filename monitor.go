@@ -42,6 +42,8 @@ func (cb *ChangeBatch) String() string {
 	return fmt.Sprintf("ChangeBatch[monitorID: %s, #features:%d]", cb.MonitorID, len(cb.Features))
 }
 
+const MonitorContext = "__MONITOR__"
+
 // Monitor keeps track of the current feature attribute values in the system and reports
 // updates to clients
 type Monitor struct {
@@ -232,6 +234,10 @@ func (m *Monitor) Unsubscribe(monitorID string) {
 		monitorID, emptyFeatureToGroupCount)
 }
 
+func (m *Monitor) featureAttrsChanged(featureID string, attrs map[string]*attr.Attribute) {
+	m.featureReporting(featureID, attrs)
+}
+
 func (m *Monitor) featureReporting(featureID string, attrs map[string]*attr.Attribute) {
 	m.mutex.RLock()
 	groups, ok := m.featureToGroups[featureID]
@@ -304,6 +310,7 @@ func (m *Monitor) featureReporting(featureID string, attrs map[string]*attr.Attr
 
 	m.system.Services.EvtBus.Enqueue(&FeatureAttrsChangedEvt{
 		FeatureID: featureID,
+		Context:   MonitorContext,
 		Attrs:     updatedAttrs,
 	})
 }
@@ -380,6 +387,14 @@ func (m *Monitor) StartConsuming(c chan evtbus.Event) {
 			switch evt := e.(type) {
 			case *FeatureReportingEvt:
 				m.featureReporting(evt.FeatureID, evt.Attrs)
+
+			case *FeatureAttrsChangedEvt:
+				// If this is an events we raised, ignore, vs receiving this
+				// from other parts of the system
+				if evt.Context == MonitorContext {
+					continue
+				}
+				m.featureAttrsChanged(evt.FeatureID, evt.Attrs)
 
 			case *DeviceProducingEvt:
 				m.deviceProducing(evt)

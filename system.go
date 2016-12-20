@@ -1,6 +1,8 @@
 package gohome
 
 import (
+	"math/rand"
+	"strconv"
 	"sync"
 
 	"github.com/go-home-iot/event-bus"
@@ -64,8 +66,9 @@ func NewSystem(name string) *System {
 func (s *System) NewID() string {
 	ID, err := uuid.NewV4()
 	if err != nil {
-		//TODO: Fail gracefully from this, keep looping?
-		panic("failed to generate unique id in call to NextGlobalID:" + err.Error())
+		// fallback, return random number
+		log.E("failed to generate ID: %s", err)
+		return strconv.Itoa(rand.Int())
 	}
 	return ID.String()
 }

@@ -1,8 +1,11 @@
 package lutron
 
 import (
+	"fmt"
+	"sync"
 	"time"
 
+	"github.com/go-home-iot/connection-pool"
 	"github.com/go-home-iot/event-bus"
 	lutronExt "github.com/go-home-iot/lutron"
 	"github.com/markdaws/gohome"
@@ -11,16 +14,21 @@ import (
 	"github.com/markdaws/gohome/log"
 )
 
-type eventConsumer struct {
-	Name   string
-	System *gohome.System
-	Device *gohome.Device
+type event struct {
+	Name               string
+	System             *gohome.System
+	Device             *gohome.Device
+	producing          bool
+	waitingForResponse bool
+	scannerConn        *pool.Connection
+	gotResponse        bool
+	scannerMutex       sync.RWMutex
 }
 
-func (c *eventConsumer) ConsumerName() string {
-	return "LutronEventConsumer"
+func (c *event) ConsumerName() string {
+	return "LutronEvent"
 }
-func (c *eventConsumer) StartConsuming(ch chan evtbus.Event) {
+func (c *event) StartConsuming(ch chan evtbus.Event) {
 	go func() {
 		dev, err := lutronExt.DeviceFromModelNumber(c.Device.ModelNumber)
 		if err != nil {
@@ -49,6 +57,9 @@ func (c *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 						continue
 					}
 
+					// Set a timeout to make sure we get a valid response
+					c.responseTimeout()
+
 					// Here we simply ask the for levels, the Lutron gateway will then stream back
 					// the results at some point in time, which we will process in the producer loop
 					// below, since this is all async
@@ -62,22 +73,47 @@ func (c *eventConsumer) StartConsuming(ch chan evtbus.Event) {
 		}
 	}()
 }
-func (c *eventConsumer) StopConsuming() {
+func (c *event) StopConsuming() {
 	//TODO:
 }
 
-type eventProducer struct {
-	Name      string
-	System    *gohome.System
-	Device    *gohome.Device
-	producing bool
+func (p *event) responseTimeout() {
+	p.scannerMutex.Lock()
+	if p.waitingForResponse {
+		p.scannerMutex.Unlock()
+		return
+	}
+	p.waitingForResponse = true
+	p.scannerMutex.Unlock()
+
+	p.gotResponse = false
+
+	// When we get a request for data, we will wait and if we haven't received any response
+	// by 30 seconds we will assume the lutron smart bridge connection for the scanner is lost
+	// and will forcefully close the connection
+	go func() {
+		time.Sleep(time.Second * 30)
+
+		p.scannerMutex.RLock()
+		if !p.gotResponse {
+			log.V("no response from lutron smart bridge after 30 seconds, closing connection")
+
+			// Force close the connection
+			p.scannerConn.Conn.Close()
+		}
+		p.scannerMutex.RUnlock()
+
+		p.scannerMutex.Lock()
+		p.waitingForResponse = false
+		p.scannerMutex.Unlock()
+	}()
 }
 
-func (p *eventProducer) ProducerName() string {
-	return "LutronEventProducer: " + p.Name
+func (p *event) ProducerName() string {
+	return "LutronEvent: " + p.Name
 }
 
-func (p *eventProducer) StartProducing(b *evtbus.Bus) {
+func (p *event) StartProducing(b *evtbus.Bus) {
 	p.producing = true
 
 	go func() {
@@ -108,7 +144,10 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 				Device: p.Device,
 			})
 
+			p.scannerConn = conn
 			err = dev.Stream(conn, func(evt lutronExt.Event) {
+				p.gotResponse = true
+
 				if !p.producing {
 					return
 				}
@@ -206,8 +245,14 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 					// Don't care, ignore
 				}
 			})
+			p.scannerConn = nil
 
 			log.V("%s stopped streaming events", p.Device)
+
+			// stream doesn't always return an error, if the underlyinc connection closes
+			if err == nil {
+				err = fmt.Errorf("unknown error, stream ended unexpectedly")
+			}
 			p.Device.Connections.Release(conn, err)
 
 			if err != nil {
@@ -217,7 +262,6 @@ func (p *eventProducer) StartProducing(b *evtbus.Bus) {
 	}()
 }
 
-func (p *eventProducer) StopProducing() {
+func (p *event) StopProducing() {
 	p.producing = false
-	//TODO: Stop the scanner
 }
