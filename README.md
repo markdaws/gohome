@@ -1,9 +1,11 @@
 <p align="center">
 <img src="logo.png" />
 </p>
-goHOME is an open source home automation client + server, aimed at allowing home owners to have full control over their home automation hardware.
+goHOME is an open source home automation client + server, aimed at allowing home owners to have full control over their home automation hardware. It provides a single fully open and customizable UI to control many different pieces of home automation hardware under one UI. The project also runs on cheap hardware like a Raspberry PI.
 
 Note - still in alpha development, do not use just yet :)
+
+//TODO: Pics
 
 ##Why use an open source home automation project?
 ###Unified User Interface
@@ -18,39 +20,54 @@ You want all of your devices to be able to work with one another.  By providing 
 ###Device/Service obsolescence
 If you have invested money in buying these hardware devices, it sucks when a manufacturer decides to shut down the service that controls the device or no longer provide support for the control app etc.  By using goHOME the aim is that we can make sure you can control and monitor your devices forever, even long after the manufacturer has given up providing support. 
 
-##Lofty Project Aims
-I have a roadmap for where I would like to go with this project:
-  - Control Hardware
-  - Monitor Hardware
-  - Raspberry PI support, allowing goHOME to run 24/7 on a cheap small device
-  - Recipes, allow programing locally like IFTTT support
-  - Out of the box solution for hardware makers as a whitelabel UI
-//TODO:
-
 ##Supported Hardware
-###Lutron Caseta Wireless Smart Bridge
-###Flux WIFI Bulbs
-###ConnectedByTCP Bulbs
-###Belkin WeMo Insight Switch
-###Belkin WeMo Maker
+For a list of the supported hardware, click <a href="docs/supported_hardware.md">here</a>.  If you want support for a piece of hardware that is not on the list, file an issue.
 
 ##Documentation
-###Buttons
-###Commands
-###Devices
-###[Events](docs/events.md)
-###Recipes
-###[Scenes](docs/scene.md)
-###[Zones](docs/zone.md)
-###[HTTP API](docs/api.md)
+//TODO: Core
+//TODO: Architecture
+###[Getting Started](docs/getting_started.md)
+###[Supported Hardware](docs/supported_hardware.md)
+###[Raspberry PI Setup](docs/raspberry_pi.md)
+###[FAQ](docs/faq.md)
+###[Automation](docs/automation.md)
 
 ##Development
 Currently there are two main parts to the project, the golang powered server and the web UI.
 
-###gohome Server
-The goHome server is developed using golang (http://golang.org) In order to develop the code:
-//TODO:
-go build -o gohome main/main.go && gohome
+###goHOME Server
+The goHOME server is developed using golang (http://golang.org) In order to develop the code:
+
+  - Install git (source control): https://git-scm.com/
+  - Install golang https://golang.org/dl/
+  - Setup your GOPATH https://golang.org/doc/code.html#GOPATH
+
+Once you have done this, run the following commands:
+```bash
+go get github.com/markdaws/gohome
+```
+
+Change to the source directory which will be $GOPATH/src/github.com/markdaws/gohome and build the app, running:
+```bash
+go build -o gohome ./main
+```
+
+####Adding a user account
+You need to add a user to be able to log into the app, for example we will add a user "bob" with password "foobar" by running the gohome executable in the source directory $GOPATH/src/github.com/markdaws/gohome
+
+```bash
+./gohome --set-password bob foobar
+```
+
+####Starting the server
+Then start the server:
+```bash
+./gohome --server
+```
+In the output you will see a line like (note the IP address is probably different):
+```
+WWW Server starting, listening on 192.168.0.10:8000
+```
 
 ###gohome web UI
 The web UI is developed using the React framework: https://facebook.github.io/react/ In order to develop the web UI:
@@ -62,11 +79,14 @@ The web UI is developed using the React framework: https://facebook.github.io/re
  ```bash
  npm install
  ```
- 5. Start the web server and webpack with the --watch option, any file changes are automatically picked up and rebuilt:
+ 5. Run webpack to monitor file changes and build the UI:
  
  ```bash
- npm start
+ npm run dev
  ```
-The server starts on port 8000  http://localhost:8000
 
 ####NOTE - All web UI code is located at gohome/www/assets
+####NOTE - IF you want a production build of the UI, with minified source, run
+```bash
+npm run prod
+```
