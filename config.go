@@ -27,12 +27,6 @@ type Config struct {
 	// WWWPort is the port for the WWW server
 	WWWPort string `json:"wwwPort"`
 
-	// APIAddr is the IP address of the API server
-	APIAddr string `json:"apiAddr"`
-
-	// APIPort is the port number of the API server
-	APIPort string `json:"apiPort"`
-
 	// UPNPNotifyAddr is the IP of the UPNP Notify server
 	UPNPNotifyAddr string `json:"upnpNotifyAddr"`
 
@@ -42,8 +36,6 @@ type Config struct {
 	// Location specifies the lat/long where the home is physically located. This is needed
 	// if you want to get accurate sunrise/sunset times
 	Location location `json:"location"`
-
-	//TODO: TimeZone?
 }
 
 func (c *Config) Merge(cfg Config) {
@@ -61,12 +53,6 @@ func (c *Config) Merge(cfg Config) {
 	}
 	if c.WWWPort == "" {
 		c.WWWPort = cfg.WWWPort
-	}
-	if c.APIAddr == "" {
-		c.APIAddr = cfg.APIAddr
-	}
-	if c.APIPort == "" {
-		c.APIPort = cfg.APIPort
 	}
 	if c.UPNPNotifyAddr == "" {
 		c.UPNPNotifyAddr = cfg.UPNPNotifyAddr
@@ -100,8 +86,6 @@ func NewDefaultConfig(systemPath string) *Config {
 		AutomationPath: systemPath + "/automation",
 		WWWAddr:        addr,
 		WWWPort:        "8000",
-		APIAddr:        addr,
-		APIPort:        "5000",
 		UPNPNotifyAddr: addr,
 		UPNPNotifyPort: "8001",
 		Location:       location{},

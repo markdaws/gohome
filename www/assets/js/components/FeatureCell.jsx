@@ -1,16 +1,16 @@
-var React = require('react');
-var Feature = require('../feature.js');
-var Attribute = require('../attribute.js');
-var BEMHelper = require('react-bem-helper');
+import React from 'react'
+import Feature from '../feature.js';
+import Attribute from '../attribute.js';
+import BEMHelper from 'react-bem-helper';
 
 var classes = new BEMHelper({
     name: 'FeatureCell',
     prefix: 'b-'
 });
-require('../../css/components/FeatureCell.less')
+import '../../css/components/FeatureCell.less'
 
 var FeatureCell = React.createClass({
-    getDefaultProps: function() {
+    getDefaultProps() {
         return {
             hasError: false,
             hasSuccess: false,
@@ -21,36 +21,36 @@ var FeatureCell = React.createClass({
         }
     },
 
-    getInitialState: function() {
+    getInitialState() {
         return {
             attrs: this.props.feature.attrs,
             checkboxChecked: this.props.checkboxChecked
         };
     },
 
-    isChecked: function() {
+    isChecked() {
         return this.state.checkboxChecked;
     },
 
-    checkboxClicked: function(evt) {
+    checkboxClicked(evt) {
         evt.stopPropagation();
     },
 
-    checkboxChanged: function(evt) {
+    checkboxChanged(evt) {
         this.setState({checkboxChecked: evt.target.checked});
         this.props.chkBxChanged && this.props.chkBxChanged(this.props.id, evt.target.checked);
     },
 
-    setAttrs: function(attrs) {
+    setAttrs(attrs) {
         this.setState({ attrs: attrs });
     },
 
-    shouldComponentUpdate: function(nextProps, nextState) {
+    shouldComponentUpdate(nextProps, nextState) {
         //TODO: Fix
         return true;
     },
 
-    render: function() {
+    render() {
         var icon1, icon2;
 
         var name = this.props.feature.name;
@@ -60,65 +60,70 @@ var FeatureCell = React.createClass({
         var color = 'yellow';
         switch(this.props.feature.type) {
             case Feature.Type.LightZone:
-                icon1 = 'icomoon-ion-ios-lightbulb-outline';
+                {
+                    icon1 = 'icomoon-ion-ios-lightbulb-outline';
 
-                var isOff = true
-                var onOffVal = attrs[Feature.LightZone.AttrIDs.OnOff].value;
-                if (!onOffVal) {
-                    val = '';
-                } else {
-                    if (onOffVal === 2) {
-                        isOff = false
-                        opacity = 1;
-                    }
-                    val = Attribute.OnOff.States[onOffVal];
-                }
-
-                if (!isOff && attrs[Feature.LightZone.AttrIDs.HSL]) {
-                    color = attrs[Feature.LightZone.AttrIDs.HSL].value;
-                    if (color == null) {
-                        opacity = 0;
-                    } else {
-                        opacity = 1;
-                    }
-                }
-
-                if (!isOff && attrs[Feature.LightZone.AttrIDs.Brightness]) {
-                    // The light zone supports brightness, show the current intensity
-                    val = attrs[Feature.LightZone.AttrIDs.Brightness].value;
-                    if (val == null) {
+                    let isOff = true
+                    let onOffVal = attrs[Feature.LightZone.AttrIDs.OnOff].value;
+                    if (!onOffVal) {
                         val = '';
                     } else {
-                        opacity = val / 100;
-                        val = parseInt(val, 10) + '%';
+                        if (onOffVal === 2) {
+                            isOff = false
+                            opacity = 1;
+                        }
+                        val = Attribute.OnOff.States[onOffVal];
+                    }
+
+                    if (!isOff && attrs[Feature.LightZone.AttrIDs.HSL]) {
+                        color = attrs[Feature.LightZone.AttrIDs.HSL].value;
+                        if (color == null) {
+                            opacity = 0;
+                        } else {
+                            opacity = 1;
+                        }
+                    }
+
+                    if (!isOff && attrs[Feature.LightZone.AttrIDs.Brightness]) {
+                        // The light zone supports brightness, show the current intensity
+                        val = attrs[Feature.LightZone.AttrIDs.Brightness].value;
+                        if (val == null) {
+                            val = '';
+                        } else {
+                            opacity = val / 100;
+                            val = parseInt(val, 10) + '%';
+                        }
                     }
                 }
-
                 break;
 
             case Feature.Type.Switch:
-                icon1 = 'icomoon-ion-ios-bolt-outline';
-                var onOffVal = attrs[Feature.Switch.AttrIDs.OnOff].value;
-                if (!onOffVal) {
-                    val = '';
-                } else {
-                    if (onOffVal === 2) {
-                        opacity = 1;
+                {
+                    icon1 = 'icomoon-ion-ios-bolt-outline';
+                    let onOffVal = attrs[Feature.Switch.AttrIDs.OnOff].value;
+                    if (!onOffVal) {
+                        val = '';
+                    } else {
+                        if (onOffVal === 2) {
+                            opacity = 1;
+                        }
+                        val = Attribute.OnOff.States[onOffVal];
                     }
-                    val = Attribute.OnOff.States[onOffVal];
                 }
                 break;
 
             case Feature.Type.Outlet:
-                icon1 = 'icomoon-ion-outlet';
-                var onOffVal = attrs[Feature.Outlet.AttrIDs.OnOff].value;
-                if (!onOffVal) {
-                    val = '';
-                } else {
-                    if (onOffVal === 2) {
-                        opacity = 1;
+                {
+                    icon1 = 'icomoon-ion-outlet';
+                    let onOffVal = attrs[Feature.Outlet.AttrIDs.OnOff].value;
+                    if (!onOffVal) {
+                        val = '';
+                    } else {
+                        if (onOffVal === 2) {
+                            opacity = 1;
+                        }
+                        val = Attribute.OnOff.States[onOffVal];
                     }
-                    val = Attribute.OnOff.States[onOffVal];
                 }
                 break;
 
@@ -139,8 +144,8 @@ var FeatureCell = React.createClass({
 
             case Feature.Type.HeatZone:
                 icon1 = 'icomoon-ion-ios-flame-outline';
-                var current = attrs[Feature.HeatZone.AttrIDs.CurrentTemp].value;
-                var target = attrs[Feature.HeatZone.AttrIDs.TargetTemp].value;
+                const current = attrs[Feature.HeatZone.AttrIDs.CurrentTemp].value;
+                const target = attrs[Feature.HeatZone.AttrIDs.TargetTemp].value;
 
                 if (current == null || target == null) {
                     val = '';
@@ -155,7 +160,7 @@ var FeatureCell = React.createClass({
                 icon1 = 'icomoon-ion-ios-pulse';
 
                 // Each sensor has only one attribute, pick it out
-                var attribute = attrs[Object.keys(attrs)[0]];
+                let attribute = attrs[Object.keys(attrs)[0]];
                 if (!attribute.value) {
                     val = '';
                 } else {
@@ -167,7 +172,7 @@ var FeatureCell = React.createClass({
                 icon1 = 'icomoon-ion-ios-help-empty';
         }
 
-        var icon1Cmp, icon2Cmp;
+        let icon1Cmp, icon2Cmp;
         icon1Cmp = <i className={icon1}></i>;
         if (icon2) {
             icon2Cmp = <i className={icon2}></i>;
@@ -177,7 +182,7 @@ var FeatureCell = React.createClass({
             val = null;
         }
 
-        var chkBx;
+        let chkBx;
         if (this.props.showCheckbox) {
             chkBx = (
                 <input
@@ -190,7 +195,7 @@ var FeatureCell = React.createClass({
             );
         }
 
-        var state = '';
+        let state = '';
         if (this.props.hasError) {
             state = 'error';
         } else if (this.props.hasSuccess) {
