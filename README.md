@@ -1,11 +1,12 @@
 <p align="center">
 <img src="logo.png" />
 </p>
-goHOME is an open source home automation client + server, aimed at allowing home owners to have full control over their home automation hardware. It provides a single fully open and customizable UI to control many different pieces of home automation hardware under one UI. The project also runs on cheap hardware like a Raspberry PI.
+goHOME is an open source home automation project, aimed at allowing home owners to have full control over their home automation hardware in a single UI. The project is designed to run on cheap hardware like a Raspberry PI.
 
-Note - still in alpha development, do not use just yet :)
-
-//TODO: Pics
+Here it is in action, controlling some Lutron Lights and a Belkin WeMo Insight Outlet
+<p align="center">
+<img src="https://github.com/markdaws/gohome-assets/blob/master/gohome_demo_720.gif" />
+</p>
 
 ##Why use an open source home automation project?
 ###Unified User Interface
@@ -25,10 +26,12 @@ For a list of the supported hardware, click <a href="docs/supported_hardware.md"
 
 ##Documentation
 ###[Core Concepts](docs/core_concepts.md)
-//TODO: Architecture
 ###[Getting Started](docs/getting_started.md)
 ###[Supported Hardware](docs/supported_hardware.md)
 ###[Raspberry PI Setup](docs/raspberrypi_manual.md)
 ###[FAQ](docs/faq.md)
 ###[Automation](docs/automation.md)
 ###[Development](docs/development.md)
+
+##Feedback
+If you have any issues, you can file a Github issue on this project, if you have any questions, feel free to email me: mark@gohome.io
