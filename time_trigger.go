@@ -92,7 +92,6 @@ func (t *TimeTrigger) scheduleExact() {
 	// execute
 	hasDate := t.At.Year() != 0
 
-	count := 0
 	for {
 		// Hook to let callers know the trigger is evaluating
 		if t.Evaluating != nil {
@@ -100,24 +99,19 @@ func (t *TimeTrigger) scheduleExact() {
 		}
 
 		now := t.Time.Now()
-		count++
-		if count > 5 {
-			return
-		}
 
 		if hasDate {
+			// If the At value has a date then this is an exact date/time so it will only
+			// fire at most once, so we can exit this function once the trigger has executed.
+
 			// Was this for before the current date, if so ignore
 			delta := t.At.Sub(now)
 			if delta < 0 {
 				return
 			}
 
-			// If the At value has a date then this trigger is for an explicit date/time
-			// so it's only executed once
 			<-t.Time.After(delta)
 			t.Triggered()
-
-			// don't run again, was an explicit date/time trigger
 			return
 		} else {
 			// Make sure this is a day of the week we should execute this trigger

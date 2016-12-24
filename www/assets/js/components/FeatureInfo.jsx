@@ -109,7 +109,6 @@ var FeatureInfo = React.createClass({
             );
         }
 
-        //TODO: Attrs
         return (
             <div {...classes('', '', 'well well-sm')}>
               <div className={this.addErr('form-group', 'name')}>

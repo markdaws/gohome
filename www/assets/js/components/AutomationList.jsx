@@ -1,40 +1,29 @@
-var React = require('react');
-var AutomationCell = require('./AutomationCell.jsx');
-var Automation = require('./Automation.jsx');
-var Grid = require('./Grid.jsx');
-var BEMHelper = require('react-bem-helper');
-var Feature = require('../feature.js');
+import React from 'React';
+import AutomationCell from './AutomationCell.jsx';
+import Automation from './Automation.jsx';
+import Grid from './Grid.jsx';
+import BEMHelper from 'react-bem-helper';
 
 var classes = new BEMHelper({
     name: 'AutomationList',
     prefix: 'b-'
 });
-require('../../css/components/AutomationList.less')
+import '../../css/components/AutomationList.less'
 
-var AutomationList = React.createClass({
-    getDefaultProps: function() {
+const AutomationList = ({automations = []}) => {
+    const gridCells = automations.map(function(automation) {
         return {
-            automations: []
+            key: automation.tempId,
+            cell: <AutomationCell automation={automation} />,
+            content: <Automation automation={automation} key={automation.tempId}/>
         };
-    },
+    });
 
-    render: function() {
-        var gridCells = this.props.automations.map(function(automation) {
-            return {
-                // Note: automations don't have an ID
-                key: automation.name,
-                cell: <AutomationCell automation={automation} />,
-                content: <Automation automation={automation} key={automation.name}/>
-            };
-        });
-
-        return (
-            <div {...classes()}>
-                <h2 {...classes('header')}>Automation</h2>
-                <Grid cells={gridCells} />
-            </div>
-        );
-    }
-});
-
+    return (
+        <div {...classes()}>
+            <h2 {...classes('header')}>Automation</h2>
+            <Grid cells={gridCells} />
+        </div>
+    );
+}
 module.exports = AutomationList;
