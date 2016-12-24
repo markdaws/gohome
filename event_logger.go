@@ -28,11 +28,13 @@ func (c *EventLogger) StartConsuming(ch chan evtbus.Event) {
 	log.V("EventLogger - start consuming events")
 
 	go func() {
-		f, err := os.Create(c.Path)
+		f, err := os.OpenFile(c.Path, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
 		if err != nil {
-			log.E(fmt.Sprintf("failed to open event log for writing, log path: %s, err: %s", c.Path, err))
+			log.E(fmt.Sprintf("EventLogger - failed to open event log for writing, log path: %s, err: %s", c.Path, err))
 			return
 		}
+		log.V("EventLogger - writing events to: %s", c.Path)
+
 		defer f.Close()
 
 		for e := range ch {
