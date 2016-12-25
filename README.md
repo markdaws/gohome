@@ -3,12 +3,21 @@
 </p>
 goHOME is an open source home automation project, aimed at allowing home owners to have full control over their home automation hardware in a single UI. The project is designed to run on cheap hardware like a Raspberry PI.
 
-Here it is in action, controlling some Lutron Lights and a Belkin WeMo Insight Outlet
+##Demo (import + control)
 <p align="center">
 <img src="https://github.com/markdaws/gohome-assets/blob/master/gohome_demo_720.gif" />
 </p>
 
-##Why use an open source home automation project?
+##Screenshots
+<img src="https://github.com/markdaws/gohome-assets/blob/master/features.png" />
+<img src="https://github.com/markdaws/gohome-assets/blob/master/add_hardware.png" />
+
+##Why should I use this project?
+  - One UI to monitor and control all your home automation hardware
+  - Added functionality - add new features to your hardware the vendor doesn't support
+  - Interop - allows different hardware devices to talk and be automated together
+  - A UI that doesn't suck - hardware makers are terrible at UI
+
 ###Unified User Interface
 I have home automation devices from many different manufacturers in my home, each device requires a different control app, either logging in to a browser app, or installing a mobile phone app, so to control my home I have to use serveral apps. Having one consistent UI where you can control all your devices is a big win for ease of use.  Also, software is not a primary focus of hardware manufacturers, the UIs to control these devices is generally pretty terrible, an after thought. With goHOME the aim is to provide a great user experience and allow the community to customize and provide enahanced experiences not available in the original manufacturer apps.
 
