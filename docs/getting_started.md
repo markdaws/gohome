@@ -91,6 +91,8 @@ By default goHOME stores your system configuration in a file called gohome.json 
 
 To see the contents of your config and system file and be able to quickly copy the contents to back up, log in and then look at the following URLs:
 
+WARNING: goHOME currently only supports http, not https, so if you have exposed your goHOME server to the outside world, make sure you connect via some secure method such as a VPN, especially if you access the URLs below, because these files may contain login credentials for 3rd party services that will then be exposed to others if you access then via http.
+
 http://[YOUR_IP_ADDRES]/config
 
 http://[YOUR_IP_ADDRESS]/system
