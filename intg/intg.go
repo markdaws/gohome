@@ -4,7 +4,6 @@ import (
 	"github.com/markdaws/gohome"
 	"github.com/markdaws/gohome/extensions/belkin"
 	"github.com/markdaws/gohome/extensions/connectedbytcp"
-	"github.com/markdaws/gohome/extensions/example"
 	"github.com/markdaws/gohome/extensions/fluxwifi"
 	"github.com/markdaws/gohome/extensions/honeywell"
 	"github.com/markdaws/gohome/extensions/lutron"
@@ -31,9 +30,11 @@ func RegisterExtensions(sys *gohome.System) error {
 	log.V("register extension - lutron")
 	sys.Extensions.Register(lutron.NewExtension())
 
-	// An example piece of hardware
-	log.V("register extension - example")
-	sys.Extensions.Register(example.NewExtension())
+	/*
+		// An example piece of hardware
+		log.V("register extension - example")
+		sys.Extensions.Register(example.NewExtension())
+	*/
 
 	//Uncomment for testing
 	log.V("register extension - testing")

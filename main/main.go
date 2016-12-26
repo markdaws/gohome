@@ -21,7 +21,7 @@ import (
 func main() {
 
 	runServer := flag.Bool("server", false, "run the goHOME server")
-	setPassword := flag.Bool("set-password", false, "set the password for a user, creates a user is login nof found. --set-password mark mypwd")
+	setPassword := flag.Bool("set-password", false, "set the password for a user, creates a user if login not found. --set-password mark mypwd")
 
 	flag.Parse()
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-home-iot/event-bus"
 	"github.com/markdaws/gohome/clock"
+	"github.com/markdaws/gohome/log"
 )
 
 const (
@@ -33,13 +34,12 @@ const (
 // TimeTrigger is a trigger that can be used to execute actions either at sunrise/sunset or at an exact
 // time.  You can also specify for the trigger to only fire on certain days of the week
 type TimeTrigger struct {
-	Mode       string
-	Offset     time.Duration
-	At         time.Time
-	Days       uint32
-	Time       clock.Time
-	Evaluating func()
-	Triggered  func()
+	Name      string
+	Mode      string
+	At        time.Time
+	Days      uint32
+	Time      clock.Time
+	Triggered func()
 }
 
 func (t *TimeTrigger) Trigger() {
@@ -92,60 +92,50 @@ func (t *TimeTrigger) scheduleExact() {
 	// execute
 	hasDate := t.At.Year() != 0
 
-	for {
-		// Hook to let callers know the trigger is evaluating
-		if t.Evaluating != nil {
-			t.Evaluating()
-		}
-
-		now := t.Time.Now()
-
-		if hasDate {
-			// If the At value has a date then this is an exact date/time so it will only
-			// fire at most once, so we can exit this function once the trigger has executed.
-
-			// Was this for before the current date, if so ignore
-			delta := t.At.Sub(now)
-			if delta < 0 {
-				return
-			}
-
-			<-t.Time.After(delta)
-			t.Triggered()
+	if hasDate {
+		// Was this for before the current date, if so ignore
+		delta := t.At.Sub(t.Time.Now())
+		if delta < 0 {
 			return
-		} else {
-			// Make sure this is a day of the week we should execute this trigger
-			dayOfWeekOrdinal := int(now.Weekday())
-
-			// Convert time.Weekday to our representation of days of week
-			daysValue := uint32(math.Pow(2, float64(dayOfWeekOrdinal)))
-
-			// This is a day of the week when we should execute this actions
-			if (t.Days & daysValue) != 0 {
-				// Figure out when the next time will be
-				absoluteAt := time.Date(now.Year(), now.Month(), now.Day(), t.At.Hour(), t.At.Minute(), t.At.Second(), 0, now.Location())
-				delta := absoluteAt.Sub(now)
-
-				// Make sure we haven't gone past the time
-				if delta >= 0 {
-					<-t.Time.After(delta)
-					t.Triggered()
-				}
-			}
-
-			// Wait until the following day before we check again
-			now = t.Time.Now()
-			next := time.Date(now.Year(), now.Month(), now.Day(), t.At.Hour(), t.At.Minute(), t.At.Second(), 0, now.Location())
-			next = next.Add(time.Hour * 24)
-
-			<-t.Time.After(next.Sub(now))
 		}
+
+		<-t.Time.After(delta)
+		t.Triggered()
+		return
+	}
+
+	for {
+		now := t.Time.Now()
+		absoluteAt := t.nextTriggerTime()
+
+		log.V("TimeTrigger[%s] - next trigger time: %s", t.Name, absoluteAt)
+		delta := absoluteAt.Sub(now)
+
+		// Sleep until the correct time
+		<-t.Time.After(delta)
+		t.scheduleAction()
+
+		// Small wait to make sure we don't re-run the automation on the same day
+		time.Sleep(time.Second * 1)
 	}
 }
 
+func (t *TimeTrigger) nextTriggerTime() time.Time {
+	now := t.Time.Now()
+	absoluteAt := time.Date(now.Year(), now.Month(), now.Day(), t.At.Hour(), t.At.Minute(), t.At.Second(), 0, now.Location())
+	delta := absoluteAt.Sub(now)
+
+	if delta < 0 {
+		// Event was before this time on this day, go to the next day
+		absoluteAt = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		absoluteAt = absoluteAt.Add(time.Hour * 24)
+		absoluteAt = time.Date(absoluteAt.Year(), absoluteAt.Month(), absoluteAt.Day(),
+			t.At.Hour(), t.At.Minute(), t.At.Second(), 0, now.Location())
+	}
+	return absoluteAt
+}
+
 func (t *TimeTrigger) scheduleAction() {
-	// Got a sunrise event - see if we should fire the trigger now or if we
-	// need to add an offset and if it should fire on this day of the week
 	now := t.Time.Now()
 
 	// Make sure this is a day of the week we should execute this trigger
@@ -155,9 +145,6 @@ func (t *TimeTrigger) scheduleAction() {
 	daysValue := uint32(math.Pow(2, float64(dayOfWeekOrdinal)))
 
 	if (t.Days & daysValue) != 0 {
-		go func() {
-			<-t.Time.After(t.Offset)
-			t.Triggered()
-		}()
+		t.Triggered()
 	}
 }

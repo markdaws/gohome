@@ -110,7 +110,13 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			nil,
 			auth)
 
-		for _, buttonMap := range deviceMap["Buttons"].([]interface{}) {
+		btns, ok := deviceMap["Buttons"].([]interface{})
+		if !ok {
+			//no buttons
+			return device
+		}
+
+		for _, buttonMap := range btns {
 			button := buttonMap.(map[string]interface{})
 			btnNumber := strconv.FormatFloat(button["Number"].(float64), 'f', 0, 64)
 
@@ -126,7 +132,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			btn.Description = ""
 			btn.Address = btnNumber
 			btn.DeviceID = device.ID
-			device.AddFeature(btn)
+			//TODO: Put back in device.AddFeature(btn)
 		}
 		return device
 	}
@@ -135,7 +141,8 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		var scenes = []*gohome.Scene{}
 		buttons, ok := deviceMap["Buttons"].([]interface{})
 		if !ok {
-			return nil, badConfig(errors.New("missing Buttons key, or value not array"))
+			// no buttons
+			return nil, nil
 		}
 
 		for _, buttonMap := range buttons {
@@ -203,10 +210,11 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 		}
 
 		var deviceID = strconv.FormatFloat(device["ID"].(float64), 'f', 0, 64)
+		var deviceName string = device["Name"].(string)
 		if deviceID == smartBridgeProID {
 			dev := makeDevice(
 				"l-bdgpro2-wh",
-				"Smart Bridge - Hub",
+				deviceName,
 				uiFields["ipaddress"],
 				device,
 				nil,
@@ -228,7 +236,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			// first is the IP address to talk to it, but then it also have the DeviceID which is needed
 			// to press the buttons, so here, we make another device and assign the buttons to this
 			// new device and use the lutron hub solely for communicating to.
-			sbpSceneDevice := makeDevice("", "Smart Bridge - Buttons", deviceID, device, sbp, nil)
+			sbpSceneDevice := makeDevice("", "Buttons ["+deviceName+"]", deviceID, device, sbp, nil)
 			scenes, err := makeScenes(device, sbpSceneDevice)
 			if err != nil {
 				return nil, err

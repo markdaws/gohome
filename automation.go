@@ -708,7 +708,7 @@ func parseTrigger(sys automationSys, auto automationIntermediate, triggered func
 		}
 
 		timeTrigger := &TimeTrigger{
-			//Offset - don't support right now
+			Name:      auto.Name,
 			At:        at,
 			Mode:      mode,
 			Days:      days,

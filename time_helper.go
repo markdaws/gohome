@@ -27,7 +27,7 @@ func (th *TimeHelper) StartProducing(b *evtbus.Bus) {
 	th.Produce = true
 
 	if th.Latitude == 0 && th.Longitude == 0 {
-		log.V("Sunrise/Sunset events will not be fired, location not set.  Update config.json with the correct lat/long values")
+		log.V("Sunrise/Sunset events will not be fired, location not set.  Update config.json with the correct lat/long values then restart the server")
 		return
 	}
 
