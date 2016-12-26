@@ -132,7 +132,7 @@ func (d *discoverer) ScanDevices(sys *gohome.System, uiFields map[string]string)
 			btn.Description = ""
 			btn.Address = btnNumber
 			btn.DeviceID = device.ID
-			//TODO: Put back in device.AddFeature(btn)
+			device.AddFeature(btn)
 		}
 		return device
 	}
