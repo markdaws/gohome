@@ -14,7 +14,7 @@ go get github.com/markdaws/gohome
 
 Change to the source directory which will be $GOPATH/src/github.com/markdaws/gohome and build the app, running:
 ```bash
-go build -o gohome ./main
+go build ./exec/gohome
 ```
 
 ###Adding a user account
