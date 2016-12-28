@@ -1,16 +1,16 @@
 Automation allows you to program your home devices to execute commands based on certain conditions. For example, you might want to turn on the outside lights at sunset or open all your window shades at sunrise.  You also might want to respond to other events such as turning on all your lights if the garage door sensor changes to an 'open' state after 10pm.
 
-In order to write automation there are a few basic concepts you need to understand. 
+In order to write automation there are a few basic concepts you need to understand.
 
 ##Triggers & Actions
 Automation consists fo two main parts:
  - Trigger: a trigger is an event or set of conditions that specify when you want your automation to execute. For example, a trigger may be a time trigger, that will execute at a specific date and time, or at 4pm every day or at sunrise. A trigger may also be an event like 'sensor state changed' or 'button pressed' which you want to be able to respond to.
- 
+
  - Actions: actions are all of the actions that you wish to execute when the trigger fires. For example you may specify multiple actions to execute when the "sunrise" trigger fires, such as: "turn on kitchen lights", "open bedroom shades", "turn on coffee maker"
- 
+
 ##Creating Automation Scripts
 Currenly there is no UI to create automation scripts, they are written by hand.
- 
+
 ###File Location
 When writing automation scripts, you need to tell goHOME the directory where all your scripts are located. By default goHOME will look in the directory where the gohome executable is located, under a directory call "automation".  If you want to change this location you can modify your config.json file, see [here](config.md).
 
@@ -24,13 +24,13 @@ yaml is a compact and human friendly way to describe data.  If you've never writ
 
 ###Finding errors in your script
 When writing your automation, you may have errors in your script.  To check if your script is valid, save the file, then restart the gohome executable, if you look at the app log on startup it will say something like:
-"automation - [script name]" 
+"automation - [script name]"
 if it loads successfully. It is fails to load there will be an error written to the output.
 
 ###Testing Automation
 When you are writing some automation, rather than having to wait until the trigger fires to test your script to make sure it executes as expected, you can test the automation and make it execute immediately.  Once you have written the file, restart the goHOME server and the new script will be loaded, no in the UI, click on the "automation" tab in the app header, you will see your automation listed in the UI. IF you click on the item, a "Test" button will appear, clicking on it will immediately execute your automation, so you can verify it is working as expected.
 
-![](automation.png)
+![](img/automation.png)
 
 ###Syntax
 Here is an example automation script, lets call it sunset.yaml More details on the exact syntax and all allowable values are listed after this example.
@@ -126,7 +126,7 @@ Values: sunset|sunrise|yyyy/MM/dd HH:mm:ss|HH:mm:ss
 Values: sun|mon|tues|wed|thurs|fri|sat
 
 If you don't specify a "days" key then the trigger fires every day (as long at the time was not specified with a date and time). You can specify any number of days separated by a | character. For example, to specify the trigger should fire on Tuesday and Friday you would use the value tues|fri
- 
+
 ###Feature Trigger
 A feature trigger can be used to detect when values associated with a feature change, for example, a light turns on, or a sensor state changes to a certain value.  You can also specify that the event has to occur a certain number of times (within a specific time period) to execute. I find this useful for having a triple tap event on the light switch button next to my front door that turns off all my lights when I triple tap the button, ver handy when leaving the house.
 
