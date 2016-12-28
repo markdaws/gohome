@@ -1,5 +1,5 @@
 <p align="center">
-<img src="logo.png" />
+<img src="https://github.com/markdaws/gohome-assets/blob/master/logo.png" />
 </p>
 goHOME is an open source home automation project, aimed at allowing home owners to have full control over their home automation hardware in a single UI. The project is designed to run on cheap hardware like a Raspberry PI.
 
