@@ -103,7 +103,7 @@ cd /home/gohome/go/src/github.com/markdaws/gohome
 ```
 Then build the application
 ```bash
-go build -o gohome ./main
+go build ./exec/gohome
 ```
 
 ##Creating a goHOME login
