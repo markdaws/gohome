@@ -84,6 +84,7 @@ At the end of the file add the env variables:
 export GOROOT=/usr/local/go
 export PATH="$PATH:$GOROOT/bin"
 export GOPATH=/home/gohome/go
+export PATH="$PATH:$GOPATH/bin"
 ```
 At this point we will log out of the SSH session and log back in as the gohome user
 ```bash
@@ -101,27 +102,35 @@ Change to the goHOME source directory
 ```bash
 cd /home/gohome/go/src/github.com/markdaws/gohome
 ```
-Then build the application
+Then build the applications
 ```bash
-go build ./exec/gohome
+./build.sh
 ```
 
-##Creating a goHOME login
-The goHOME application doesn't have a default user after you build the source, for security reasons, so before you can log in you will need to create a user, to do this, make sure you are in the gohome source directory
+Once the build has completed, you will see two binaries in the $GOPATH/bin directory:
+  - ghadmin: An admin tool for creating a new project and adding new users
+  - ghserver: The goHOME server executable
+  
+##Creating your project
+goHOME needs tow main files, a config file that specifies settings, like which IP address and port to use for the web server and a system file that contains all of your pject information, such as which hardware you have imported, user information etc. The first thing we have to do is init these files, choose a directory somewhere that you want to store these files, then run the following command (the argument specifies the directory where the goHOME source code is located):
 ```bash
-/home/gohome/go/src/github.com/markdaws/gohome
+ghadmin --init $GOPATH/src/github.com/markdaws/gohome
+```
+After the command runs, in the current directory you will see a config.json and gohome.json file, take a look inside. If there are any settings you want to change in config.json you can make them now.
+
+##Adding a user account
+You need to add a user to be able to log into the app, for example we will add a user "bob" with password "foobar", you have to specify the location of the config.json file that was created in the previous step:
+
+```bash
+ghadmin --config=/path/to/my/config.json --set-password bob foobar
 ```
 
-The run gohome app with the "--set-password" option, this will create a user. For example, to create a user with login "bob" and password foobar, you would run:
-```bash
-./gohome --set-password bob foobar
-```
 NOTE: If you are putting special chars in your password, enclose it in double quotes so that it is not interpretted by the shell.
 
 ##Running the app
 Finally, phew. Now we can launch the gohome app, run
 ```bash
-./gohome --server &
+ghserver --config=/path/to/my/config.json &
 ```
 
 You will see the app output some information to the terminal, you should see a line like:
@@ -147,7 +156,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/home/gohome/go/src/github.com/markdaws/gohome/gohome --server
+ExecStart=/home/gohome/go/ghserver --config=/home/gohome/go/src/github.com/markdaws/gohome/config.json
 Restart=always
 User=gohome
 WorkingDirectory=/home/gohome/go/src/github.com/markdaws/gohome
