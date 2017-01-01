@@ -13,7 +13,7 @@ var HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
 module.exports = {
     entry: './assets/js/gohome.js',
     output: {
-        path: './dist/',
+        path: '../../dist/',
         filename: 'js/[name]-[hash].js'
     },
     module: {
