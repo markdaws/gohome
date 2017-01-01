@@ -7,6 +7,7 @@
 _obj
 _test
 .DS_Store
+.vscode
 node_modules
 
 # Architecture specific extensions/prefixes
