@@ -156,7 +156,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/home/gohome/go/ghserver --config=/home/gohome/go/src/github.com/markdaws/gohome/config.json
+ExecStart=/home/gohome/go/bin/ghserver --config=/home/gohome/go/src/github.com/markdaws/gohome/config.json
 Restart=always
 User=gohome
 WorkingDirectory=/home/gohome/go/src/github.com/markdaws/gohome
