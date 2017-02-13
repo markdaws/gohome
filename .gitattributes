@@ -1,3 +1,4 @@
 pkg/www/assets/js/ext/* linguist-vendored
 pkg/www/assets/js/gohome-out.js linguist-vendored
 pkg/www/assets/css/ext/* linguist-vendored
+dist/* linguist-vendored
