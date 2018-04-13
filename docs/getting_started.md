@@ -1,18 +1,18 @@
-##What does goHOME do?
+## What does goHOME do?
 The tl;dr for goHOME is that it enables you to monitor and control many pieces of home automation hardware through once common user interface. It also allows you to extend the functionality of various pieces of hardware with new features not supported by the original hardware manufacturers, such as scheduling, interop between different pieces of hardware (when my lutron lights turn on, set my Philips hue lights to 50%).
 
-##Installing goHOME
+## Installing goHOME
 Since goHOME is controlling devices in your home, you need to have the app running 24/7.  You can install the app on any computer architecture that is supported by the go programming language: https://golang.org/dl/
 
 IMPORTANT: goHOME requires go 1.7 or above, if you have an older version you will need to update to 1.7 or newer.
 
-###Raspberry PI
+### Raspberry PI
 Raspberry PI is a cheap PC (around $25) that is popular for home automation, if you want to install goHOME on a Raspberry PI [here](raspberrypi_manual.md) are some detailed instructions.
 
-###Other systems
+### Other systems
 If you want to install goHOME on other systems, Mac, PC etc. then you will need to manually build the goHOME project, currently binaries are not pre-built.  
 
-####Building the executables
+#### Building the executables
   - Install git (source control): https://git-scm.com/
   - Install golang https://golang.org/dl/
   - Setup your GOPATH https://golang.org/doc/code.html#GOPATH
@@ -34,21 +34,21 @@ Once the build has completed, you will see two binaries in the $GOPATH/bin direc
   - ghadmin: An admin tool for creating a new project and adding new users
   - ghserver: The goHOME server executable
   
-####Creating your project
+#### Creating your project
 goHOME needs tow main files, a config file that specifies settings, like which IP address and port to use for the web server and a system file that contains all of your pject information, such as which hardware you have imported, user information etc. The first thing we have to do is init these files, choose a directory somewhere that you want to store these files, then run the following command (the argument specifies the directory where the goHOME source code is located):
 ```bash
 ghadmin --init $GOPATH/src/github.com/markdaws/gohome
 ```
 After the command runs, in the current directory you will see a config.json and gohome.json file, take a look inside. If there are any settings you want to change in config.json you can make them now.
 
-####Adding a user account
+#### Adding a user account
 You need to add a user to be able to log into the app, for example we will add a user "bob" with password "foobar", you have to specify the location of the config.json file that was created in the previous step:
 
 ```bash
 ghadmin --config=/path/to/my/config.json --set-password bob foobar
 ```
 
-####Starting the server
+#### Starting the server
 The server is responsible for communicating with all of your home automation hardware and serving the web UI. To start the server:
 ```bash
 ghserver --config=/path/to/my/config.json
@@ -59,10 +59,10 @@ WWW Server starting, listening on 192.168.0.10:8000
 ```
 You can now load your browser and log in the to goHOME app!
 
-##Adding hardware to your system
+## Adding hardware to your system
 To see a list of the currently supported hardware, go [here](supported_hardware.md) If you want some other piece of hardware to be supported you can create an issue, but note that to add it we need real hardware to test so you can either try to add it to the goHOME source code yourself, or donate some hardware to the project :) I do buy as many devices as I can out of my personal money but there is a limit.
 
-###IMPORTANT - before you begin
+### IMPORTANT - before you begin
 Before trying to add your hardware to goHOME you will need to set it up, such as connecting it to your router, giving it an IP address etc, you need to do this via the app supplied by the manufacturer, once you have set it up then you can add it to goHOME.  goHOME doesn't support configuring the initial state of the device, most of the time that ability is hidden by the manufacturers and not exposed to 3rd parties.
 
 To add new hardware, go to the hardware tab
@@ -79,7 +79,7 @@ Now the device is imported, close the edit mode by clicking on the "X" in the to
 
 ![](img/add_hardware_4.png)
 
-##Features
+## Features
 A feature is a piece of functionality that a hardware device supports. Currently supported feature types are:
 
   - Lights
@@ -97,7 +97,7 @@ Once you have setup your system and have some features, simply click on the feat
 
 ![](img/feature_control.png)
 
-##Backing up your system
+## Backing up your system
 Once you have imported devices and configured your system, you will want to make a copy of the system config file. It is good practise to make a backup before you add new hardware incase something goes wrong or you make changes you are unhappy with. 
 
 By default goHOME stores your system configuration in a file called gohome.json in the same directory where the gohome executable is located. If you want to change the location of the system file you can modify the [config](docs/config.md) file.
@@ -110,7 +110,7 @@ http://[YOUR_IP_ADDRES]/config
 
 http://[YOUR_IP_ADDRESS]/system
 
-##Adding Scenes
+## Adding Scenes
 A scene is simply a group of actions that should be executed when the user activates the scene, for example, a movie scene might execute the following commands:
   - Turn off all lights in the living room
   - Close shades in the living room
@@ -140,12 +140,12 @@ That's it, now you can exit the edit scene mode by scrolling back to the top and
 
 ![](img/scene_create_7.png)
 
-##Creating automation
+## Creating automation
 Automation allows you to define actions that should run under certain conditions, for example, at sunset close all my window shades, or if I triple tap a certain light switch turn off all the lights in my house, or every day at 4pm turn on my garden sprinklers.
 
 To get started creating some automation, follow the steps in [this](docs/automation.md) document.
 
-##TODO:
+## TODO:
   - Connecting to goHOME remotely
   - Upgrading gohome
   - FAQ delete
