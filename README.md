@@ -43,4 +43,4 @@ For a list of the supported hardware, click <a href="docs/supported_hardware.md"
 ### [Development](docs/development.md)
 
 ## Feedback
-If you have any issues, you can file a Github issue on this project, if you have any questions, feel free to email me: mark@gohome.io
+If you have any issues, you can file a Github issue on this project.
